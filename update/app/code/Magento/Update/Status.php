@@ -85,7 +85,7 @@ class Status
     public function get()
     {
         if (file_exists($this->statusFilePath)) {
-            return file_get_contents($this->statusFilePath);
+            return $this->hideSensitiveData(file_get_contents($this->statusFilePath));
         }
         return '';
     }
@@ -96,6 +96,7 @@ class Status
      * Add information to a temporary file which is used for status display on a web page and to a permanent status log.
      *
      * @param string $text
+     * @param string $severity
      * @return $this
      * @throws \RuntimeException
      */
@@ -121,6 +122,19 @@ class Status
         $this->writeMessageToFile($text, $this->logFilePath, false);
         $this->writeMessageToFile($text, $this->statusFilePath, false);
         return $this;
+    }
+
+    /**
+     * Hide sensitive data before it will be showed on a web page
+     *
+     * @param string $text
+     * @return string
+     */
+    private function hideSensitiveData($text)
+    {
+        $text = preg_replace("/(Module) '(\w+)_(\w+)'/", "$1 '$2_******'", $text);
+        $text = preg_replace('#' . MAGENTO_BP . '#', '{magento_root}', $text);
+        return $text;
     }
 
     /**
