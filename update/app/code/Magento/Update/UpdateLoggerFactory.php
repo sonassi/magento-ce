@@ -28,10 +28,10 @@ class UpdateLoggerFactory
      *
      */
     public function __construct(
-        $logFile = MAGENTO_BP . '/var/log/update.log',
+        $logFile = '/var/log/update.log',
         $channelName = 'update-cron'
     ) {
-        $this->logFile = $logFile;
+        $this->logFile = MAGENTO_BP . $logFile;
         $this->channelName = $channelName;
     }
 

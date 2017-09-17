@@ -31,6 +31,20 @@ class BracesFixerTest extends AbstractFixerTestBase
         return array(
             array(
                 '<?php
+class Foo
+{
+    public function A()
+    {
+        ?>
+        Test<?php echo $foobar; ?>Test
+        <?php
+        $a = 1;
+    }
+}
+',
+            ),
+            array(
+                '<?php
     if (true) {
         $a = 1;
     } else {
@@ -82,7 +96,7 @@ class BracesFixerTest extends AbstractFixerTestBase
                 '<?php
     try {
         echo 1;
-    } catch (Exception $2) {
+    } catch (Exception $e) {
         echo 2;
     }',
                 '<?php
@@ -90,7 +104,7 @@ class BracesFixerTest extends AbstractFixerTestBase
     {
         echo 1;
     }
-    catch (Exception $2)
+    catch (Exception $e)
     {
         echo 2;
     }',
@@ -126,6 +140,13 @@ class BracesFixerTest extends AbstractFixerTestBase
         self::${$type}[$rule] = $pattern + self::${$type}["rules"];
     }
                 ',
+            ),
+            array(
+                '<?php
+    if /* 1 */ (2) {
+    }',
+                '<?php
+    if /* 1 */ (2) {}',
             ),
         );
     }
@@ -254,15 +275,15 @@ if (true) {
             ),
             array(
                 '<?php
-for ($i = 1; $i < 10; ++$) {
+for ($i = 1; $i < 10; ++$i) {
     echo $i;
 }
-for ($i = 1; $i < 10; ++$) {
+for ($i = 1; $i < 10; ++$i) {
     echo $i;
 }',
                 '<?php
-for ($i = 1; $i < 10; ++$) echo $i;
-for ($i = 1; $i < 10; ++$) { echo $i; }',
+for ($i = 1; $i < 10; ++$i) echo $i;
+for ($i = 1; $i < 10; ++$i) { echo $i; }',
             ),
             array(
                 '<?php
@@ -695,30 +716,6 @@ if(true) if(true) echo 1; else echo 2; else echo 3;',
             ),
             array(
                 '<?php
-if (true) {
-    try {
-        echo 1;
-    } catch (Exception $e) {
-        echo 2;
-    } catch (Exception $e) {
-        echo 3;
-    }
-} else {
-    echo 4;
-}',
-                '<?php
-if (true)
-    try
-        echo 1;
-    catch(Exception $e)
-        echo 2;
-    catch(Exception $e)
-        echo 3;
-else
-    echo 4;',
-            ),
-            array(
-                '<?php
 foreach ($data as $val) {
     // test val
     if ($val === "errors") {
@@ -809,6 +806,24 @@ class Foo
         return \Foo::{$foo}($bar);
     }',
             ),
+            array(
+                '<?php
+    class C
+    {
+        public function __construct(
+        )
+        //comment
+        {
+        }
+    }',
+                '<?php
+    class C {
+        public function __construct(
+        )
+        //comment
+        {}
+    }',
+            ),
         );
     }
 
@@ -867,7 +882,6 @@ class Foo
             ),
             array(
                 '<?php
-<?php
 
 abstract class Foo
 {
@@ -1101,7 +1115,7 @@ class Foo
                 '<?php
     filter(function () {
         return true;
-    })
+    });
 ',
             ),
             array(
@@ -1141,6 +1155,50 @@ class Foo
             return 1;
         }
     );',
+            ),
+            array(
+                '<?php
+    $fnc = function ($a, $b) {// random comment
+        return 0;
+    };',
+                '<?php
+    $fnc = function ($a, $b) // random comment
+    {
+        return 0;
+    };',
+            ),
+            array(
+                '<?php
+    $fnc = function ($a, $b) {# random comment
+        return 0;
+    };',
+                '<?php
+    $fnc = function ($a, $b) # random comment
+    {
+        return 0;
+    };',
+            ),
+            array(
+                '<?php
+    $fnc = function ($a, $b) /* random comment */ {
+        return 0;
+    };',
+                '<?php
+    $fnc = function ($a, $b) /* random comment */
+    {
+        return 0;
+    };',
+            ),
+            array(
+                '<?php
+    $fnc = function ($a, $b) /** random comment */ {
+        return 0;
+    };',
+                '<?php
+    $fnc = function ($a, $b) /** random comment */
+    {
+        return 0;
+    };',
             ),
         );
     }
@@ -1218,9 +1276,9 @@ class Foo
             ),
             array(
                 '<?php
-    $foo = function& () use ($bar) {}',
+    $foo = function& () use ($bar) {};',
                 '<?php
-    $foo = function& ()use($bar){}',
+    $foo = function& ()use($bar){};',
             ),
             array(
                 '<?php
@@ -1271,33 +1329,132 @@ while (true) {
         echo "finish!";
     }',
             ),
+        );
+    }
+
+    /**
+     * @dataProvider provide70Cases
+     * @requires PHP 7.0
+     */
+    public function test70($expected, $input = null)
+    {
+        $this->makeTest($expected, $input);
+    }
+
+    public function provide70Cases()
+    {
+        return array(
             array(
                 '<?php
-try {
-    try {
-        echo 1;
-    } catch (Exception $e) {
-        echo 2;
-    } catch (Exception $e) {
-        echo 3;
-    } finally {
-        echo 4;
-    }
-} catch (Exception $e) {
-    echo 5;
+$message = (new class() implements FooInterface
+{
+});',
+                '<?php
+$message = (new class() implements FooInterface{});',
+            ),
+            array(
+                '<?php $message = (new class()
+{
+});',
+                '<?php $message = (new class() {});',
+            ),
+            array(
+                '<?php
+if (1) {
+    $message = (new class() extends Foo
+    {
+        public function bar()
+        {
+            echo 1;
+        }
+    });
 }',
                 '<?php
-try
-    try
-        echo 1;
-    catch(Exception $e)
-        echo 2;
-    catch(Exception $e)
-        echo 3;
-    finally
-        echo 4;
-catch(Exception $e)
-    echo 5;',
+if (1) {
+  $message = (new class() extends Foo
+  {
+    public function bar() { echo 1; }
+  });
+}',
+            ),
+            array(
+                '<?php
+    class Foo
+    {
+        public function use()
+        {
+        }
+
+        public function use1(): string
+        {
+        }
+    }
+                ',
+                '<?php
+    class Foo
+    {
+        public function use() {
+        }
+
+        public function use1(): string {
+        }
+    }
+                ',
+            ),
+            array(
+                '<?php
+    $a = function (int $foo): string {
+        echo $foo;
+    };
+
+    $b = function (int $foo) use ($bar): string {
+        echo $foo . $bar;
+    };
+
+    function a()
+    {
+    }
+                ',
+                '<?php
+    $a = function (int $foo): string
+    {
+        echo $foo;
+    };
+
+    $b = function (int $foo) use($bar): string
+    {
+        echo $foo . $bar;
+    };
+
+    function a() {
+    }
+                ',
+            ),
+            array(
+                '<?php
+    class Something
+    {
+        public function sth(): string
+        {
+            return function (int $foo) use ($bar): string { return $bar; };
+        }
+    }
+                ',
+            ),
+            array(
+'<?php
+use function some\a\{
+     test1,
+    test2
+ };
+test();',
+            ),
+            array(
+                '<?php
+use some\a\{ClassA, ClassB, ClassC as C};
+use function some\a\{fn_a, fn_b, fn_c};
+use const some\a\{ConstA, ConstB, ConstC};
+',
             ),
         );
     }
@@ -1327,6 +1484,36 @@ if (true) {
             ),
             array(
                 "<?php if (true) {\r\n\r\n// CRLF newline\r\n}",
+            ),
+        );
+    }
+
+    /**
+     * TODO: remove on 2.x line.
+     *
+     * @dataProvider provideDontAddNewLineAfterCurlyBraceOfStringCharacterAccess
+     */
+    public function testDontAddNewLineAfterCurlyBraceOfStringCharacterAccess($expected, $input = null)
+    {
+        $this->makeTest($expected, $input);
+    }
+
+    public function provideDontAddNewLineAfterCurlyBraceOfStringCharacterAccess()
+    {
+        return array(
+            array(
+                '<?php
+if (true) {
+    $property{0} = strtolower($property{0});
+}',
+            ),
+            array(
+                '<?php
+if (1) {
+    echo $items{0}->foo;
+    echo $collection->items{1}->property;
+}
+',
             ),
         );
     }

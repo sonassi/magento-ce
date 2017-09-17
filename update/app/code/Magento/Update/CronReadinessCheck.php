@@ -54,13 +54,23 @@ class CronReadinessCheck
         if ($permissionInfo->containsPaths())
         {
             $error = '';
+            $outputString = '';
             if (!empty($permissionInfo->getNonWritablePaths())) {
                 $error .= '<br/>Found non-writable path(s):<br/>' .
                     implode('<br/>', $permissionInfo->getNonWritablePaths());
+                $outputString = 'Cron readiness check failure! Found non-writable paths:'
+                    . PHP_EOL
+                    . "\t"
+                    . implode(PHP_EOL . "\t", $permissionInfo->getNonWritablePaths());
             }
             if (!empty($permissionInfo->getNonReadablePaths())) {
                 $error .= '<br/>Found non-readable path(s):<br/>' .
                     implode('<br/>', $permissionInfo->getNonReadablePaths());
+                $outputString .= PHP_EOL
+                    . 'Cron readiness check failure! Found non-readable paths:'
+                    . PHP_EOL
+                    . "\t"
+                    . implode(PHP_EOL . "\t", $permissionInfo->getNonReadablePaths());
             }
             $resultJsonRawData[self::KEY_READINESS_CHECKS][self::KEY_ERROR] = $error;
             $resultJsonRawData[self::KEY_READINESS_CHECKS][self::KEY_FILE_PERMISSIONS_VERIFIED] = false;
@@ -81,9 +91,7 @@ class CronReadinessCheck
         file_put_contents(MAGENTO_BP . '/var/' . self::CRON_JOB_STATUS_FILE, $resultJson);
 
         // If non-accessible paths are found, log an 'error' entry for the same in update.log
-        if ( !$success ) {
-            $outputString = 'Cron readiness check failure! Found following non-writable paths' . PHP_EOL;
-            $outputString .=  "\t" . implode(PHP_EOL . "\t", $nonWritablePaths);
+        if ( !$success && !empty($outputString) ) {
             $updateLoggerFactory = new UpdateLoggerFactory();
             $logger = $updateLoggerFactory->create();
             $logger->log(\Psr\Log\LogLevel::ERROR, $outputString);
