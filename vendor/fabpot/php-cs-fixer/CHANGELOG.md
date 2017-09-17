@@ -3,6 +3,31 @@ CHANGELOG for PHP CS Fixer
 
 This file contains changelogs for stable releases only.
 
+Changelog for v1.12.2
+---------------------
+
+* bug #2191 PhpdocToCommentFixer - fix false positive for docblock of variable (keradus)
+* bug #2193 UnneededControlParenthesesFixer - Fix more return cases. (SpacePossum)
+* bug #2198 FileCacheManager - fix exception message and undefined property (j0k3r)
+* minor #2170 Add dollar sign prefix for consistency (bcremer)
+* minor #2190 .travis.yml - improve Travis speed for tags (keradus)
+* minor #2196 PhpdocTypesFixer - support iterable type (GrahamCampbell)
+* minor #2197 Update cookbook and readme (g105b, SpacePossum)
+* minor #2203 README.rst - change formatting (ro0NL)
+* minor #2204 FixCommand - clean unused var (keradus)
+* minor #2205 Add integration test for iterable type (keradus)
+
+Changelog for v1.12.1
+---------------------
+
+* bug #2144 Remove temporary files not deleted by destructor on failure (adawolfa)
+* bug #2150 SelfUpdateCommand: resolve symlink (julienfalque)
+* bug #2162 Fix issue where an exception is thrown if the cache file exists but is empty. (ikari7789)
+* bug #2164 OperatorsSpacesFixer - Do not unalign double arrow and equals operators (SpacePossum)
+* bug #2167 Rewrite file removal (keradus)
+* minor #2152 Code cleanup (keradus)
+* minor #2154 ShutdownFileRemoval - Fixed file header (GrahamCampbell)
+
 Changelog for v1.12.0
 ---------------------
 

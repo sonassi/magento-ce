@@ -38,7 +38,7 @@ class SelfUpdateCommand extends Command
 The <info>%command.name%</info> command replace your php-cs-fixer.phar by the
 latest version from cs.sensiolabs.org.
 
-<info>php php-cs-fixer.phar %command.name%</info>
+<info>$ php php-cs-fixer.phar %command.name%</info>
 
 EOT
             )
@@ -71,7 +71,7 @@ EOT
         }
 
         $remoteFilename = $this->buildVersionFileUrl($remoteTag);
-        $localFilename = $_SERVER['argv'][0];
+        $localFilename = realpath($_SERVER['argv'][0]) ?: $_SERVER['argv'][0];
         $tempFilename = basename($localFilename, '.phar').'-tmp.phar';
 
         try {

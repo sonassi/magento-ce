@@ -47,6 +47,7 @@ return array(
     'Seld\\PharUtils\\' => array($vendorDir . '/seld/phar-utils/src'),
     'Seld\\JsonLint\\' => array($vendorDir . '/seld/jsonlint/src/Seld/JsonLint'),
     'Seld\\CliPrompt\\' => array($vendorDir . '/seld/cli-prompt/src'),
+    'Psr\\Log\\' => array($vendorDir . '/psr/log/Psr/Log'),
     'Pelago\\' => array($vendorDir . '/pelago/emogrifier/Classes'),
     'Monolog\\' => array($vendorDir . '/monolog/monolog/src/Monolog'),
     'Magento\\Wishlist\\' => array($vendorDir . '/magento/module-wishlist'),
