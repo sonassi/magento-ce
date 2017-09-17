@@ -14,7 +14,7 @@
  *
  * @category   Mage
  * @package    Mage_Adminhtml
- * @copyright  Copyright (c) 2004-2007 Irubin Consulting Inc. DBA Varien (http://www.varien.com)
+ * @copyright  Copyright (c) 2008 Irubin Consulting Inc. DBA Varien (http://www.varien.com)
  * @license    http://opensource.org/licenses/osl-3.0.php  Open Software License (OSL 3.0)
  */
 
@@ -24,6 +24,7 @@
  *
  * @category   Mage
  * @package    Mage_Adminhtml
+ * @author      Magento Core Team <core@magentocommerce.com>
  */
 class Mage_Adminhtml_System_StoreController extends Mage_Adminhtml_Controller_Action
 {
@@ -305,14 +306,14 @@ class Mage_Adminhtml_System_StoreController extends Mage_Adminhtml_Controller_Ac
         }
 
         if ($this->getRequest()->getParam('create_backup')) {
-            $backup = Mage::getModel('backup/backup')
-                ->setTime(time())
-                ->setType('db')
-                ->setPath(Mage::getBaseDir('var')  . DS . 'backups');
-
             try {
-                $dbDump = Mage::getModel('backup/db')->renderSql();
-                $backup->setFile($dbDump);
+                $backupDb = Mage::getModel('backup/db');
+                $backup   = Mage::getModel('backup/backup')
+                    ->setTime(time())
+                    ->setType('db')
+                    ->setPath(Mage::getBaseDir("var") . DS . "backups");
+
+                $backupDb->createBackup($backup);
                 $session->addSuccess(Mage::helper('core')->__('Database was successfuly backed up.'));
             }
             catch (Mage_Core_Exception $e) {
@@ -360,14 +361,14 @@ class Mage_Adminhtml_System_StoreController extends Mage_Adminhtml_Controller_Ac
         }
 
         if ($this->getRequest()->getParam('create_backup')) {
-            $backup = Mage::getModel('backup/backup')
-                ->setTime(time())
-                ->setType('db')
-                ->setPath(Mage::getBaseDir('var')  . DS . 'backups');
-
             try {
-                $dbDump = Mage::getModel('backup/db')->renderSql();
-                $backup->setFile($dbDump);
+                $backupDb = Mage::getModel('backup/db');
+                $backup   = Mage::getModel('backup/backup')
+                    ->setTime(time())
+                    ->setType('db')
+                    ->setPath(Mage::getBaseDir("var") . DS . "backups");
+
+                $backupDb->createBackup($backup);
                 $session->addSuccess(Mage::helper('core')->__('Database was successfuly backed up.'));
             }
             catch (Mage_Core_Exception $e) {
@@ -415,14 +416,14 @@ class Mage_Adminhtml_System_StoreController extends Mage_Adminhtml_Controller_Ac
         }
 
         if ($this->getRequest()->getParam('create_backup')) {
-            $backup = Mage::getModel('backup/backup')
-                ->setTime(time())
-                ->setType('db')
-                ->setPath(Mage::getBaseDir('var')  . DS . 'backups');
-
             try {
-                $dbDump = Mage::getModel('backup/db')->renderSql();
-                $backup->setFile($dbDump);
+                $backupDb = Mage::getModel('backup/db');
+                $backup   = Mage::getModel('backup/backup')
+                    ->setTime(time())
+                    ->setType('db')
+                    ->setPath(Mage::getBaseDir("var") . DS . "backups");
+
+                $backupDb->createBackup($backup);
                 $session->addSuccess(Mage::helper('core')->__('Database was successfuly backed up.'));
             }
             catch (Mage_Core_Exception $e) {

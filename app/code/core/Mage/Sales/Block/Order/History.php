@@ -14,7 +14,7 @@
  *
  * @category   Mage
  * @package    Mage_Sales
- * @copyright  Copyright (c) 2004-2007 Irubin Consulting Inc. DBA Varien (http://www.varien.com)
+ * @copyright  Copyright (c) 2008 Irubin Consulting Inc. DBA Varien (http://www.varien.com)
  * @license    http://opensource.org/licenses/osl-3.0.php  Open Software License (OSL 3.0)
  */
 
@@ -23,6 +23,7 @@
  *
  * @category   Mage
  * @package    Mage_Sales
+ * @author      Magento Core Team <core@magentocommerce.com>
  */
 
 class Mage_Sales_Block_Order_History extends Mage_Core_Block_Template
@@ -33,16 +34,17 @@ class Mage_Sales_Block_Order_History extends Mage_Core_Block_Template
         parent::__construct();
         $this->setTemplate('sales/order/history.phtml');
 
+        //TODO: add full name logic
         $orders = Mage::getResourceModel('sales/order_collection')
             ->addAttributeToSelect('*')
-            ->joinAttribute('shipping_firstname', 'order_address/firstname', 'shipping_address_id')
-            ->joinAttribute('shipping_lastname', 'order_address/lastname', 'shipping_address_id')
+            ->joinAttribute('shipping_firstname', 'order_address/firstname', 'shipping_address_id', null, 'left')
+            ->joinAttribute('shipping_lastname', 'order_address/lastname', 'shipping_address_id', null, 'left')
             ->addAttributeToFilter('customer_id', Mage::getSingleton('customer/session')->getCustomer()->getId())
             ->addAttributeToSort('created_at', 'desc')
         ;
 
         $this->setOrders($orders);
-        
+
         Mage::app()->getFrontController()->getAction()->getLayout()->getBlock('root')->setHeaderTitle(Mage::helper('sales')->__('My Orders'));
     }
 
@@ -76,7 +78,7 @@ class Mage_Sales_Block_Order_History extends Mage_Core_Block_Template
     {
         return $this->getUrl('*/*/reorder', array('order_id' => $order->getId()));
     }
-    
+
     public function getBackUrl()
     {
         return $this->getUrl('customer/account/');

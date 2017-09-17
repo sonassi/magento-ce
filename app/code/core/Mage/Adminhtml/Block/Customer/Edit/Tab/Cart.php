@@ -14,7 +14,7 @@
  *
  * @category   Mage
  * @package    Mage_Adminhtml
- * @copyright  Copyright (c) 2004-2007 Irubin Consulting Inc. DBA Varien (http://www.varien.com)
+ * @copyright  Copyright (c) 2008 Irubin Consulting Inc. DBA Varien (http://www.varien.com)
  * @license    http://opensource.org/licenses/osl-3.0.php  Open Software License (OSL 3.0)
  */
 
@@ -24,6 +24,7 @@
  *
  * @category   Mage
  * @package    Mage_Adminhtml
+ * @author      Magento Core Team <core@magentocommerce.com>
  */
 class Mage_Adminhtml_Block_Customer_Edit_Tab_Cart extends Mage_Adminhtml_Block_Widget_Grid
 {
@@ -52,6 +53,8 @@ class Mage_Adminhtml_Block_Customer_Edit_Tab_Cart extends Mage_Adminhtml_Block_W
         else {
             $collection = new Varien_Data_Collection();
         }
+
+        $collection->addFieldToFilter('parent_item_id', array('null' => true));
 
         $this->setCollection($collection);
 
@@ -108,7 +111,7 @@ class Mage_Adminhtml_Block_Customer_Edit_Tab_Cart extends Mage_Adminhtml_Block_W
                 array(
                     'caption' =>  Mage::helper('customer')->__('Delete'),
                     'url'     =>  '#',
-                    'onclick' =>  'return cartControl.removeItem($entity_id);'
+                    'onclick' =>  'return ' . $this->getJsObjectName() . 'cartControl.removeItem($item_id);'
                 )
             )
         ));

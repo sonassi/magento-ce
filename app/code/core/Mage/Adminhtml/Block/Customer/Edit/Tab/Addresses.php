@@ -14,7 +14,7 @@
  *
  * @category   Mage
  * @package    Mage_Adminhtml
- * @copyright  Copyright (c) 2004-2007 Irubin Consulting Inc. DBA Varien (http://www.varien.com)
+ * @copyright  Copyright (c) 2008 Irubin Consulting Inc. DBA Varien (http://www.varien.com)
  * @license    http://opensource.org/licenses/osl-3.0.php  Open Software License (OSL 3.0)
  */
 
@@ -23,6 +23,7 @@
  *
  * @category   Mage
  * @package    Mage_Adminhtml
+ * @author      Magento Core Team <core@magentocommerce.com>
  */
 class Mage_Adminhtml_Block_Customer_Edit_Tab_Addresses extends Mage_Adminhtml_Block_Widget_Form
 {
@@ -84,6 +85,10 @@ class Mage_Adminhtml_Block_Customer_Edit_Tab_Addresses extends Mage_Adminhtml_Bl
         $addressModel = Mage::getModel('customer/address');
 
         $this->_setFieldset($addressModel->getAttributes(), $fieldset);
+
+        if ($streetElement = $form->getElement('street')) {
+            $streetElement->setLineCount(Mage::helper('customer/address')->getStreetLines());
+        }
 
         if ($regionElement = $form->getElement('region')) {
             $regionElement->setRenderer(Mage::getModel('adminhtml/customer_renderer_region'));

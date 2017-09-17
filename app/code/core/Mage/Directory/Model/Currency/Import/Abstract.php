@@ -14,13 +14,14 @@
  *
  * @category   Mage
  * @package    Mage_Directory
- * @copyright  Copyright (c) 2004-2007 Irubin Consulting Inc. DBA Varien (http://www.varien.com)
+ * @copyright  Copyright (c) 2008 Irubin Consulting Inc. DBA Varien (http://www.varien.com)
  * @license    http://opensource.org/licenses/osl-3.0.php  Open Software License (OSL 3.0)
  */
 
 /**
  * Abstract model for import currency
  *
+ * @author      Magento Core Team <core@magentocommerce.com>
  */
 abstract class Mage_Directory_Model_Currency_Import_Abstract
 {
@@ -87,7 +88,7 @@ abstract class Mage_Directory_Model_Currency_Import_Abstract
         $data = array();
         $currencies = $this->_getCurrencyCodes();
         $defaultCurrencies = $this->_getDefaultCurrencyCodes();
-        set_time_limit(0);
+        @set_time_limit(0);
         foreach ($defaultCurrencies as $currencyFrom) {
             if (!isset($data[$currencyFrom])) {
                 $data[$currencyFrom] = array();

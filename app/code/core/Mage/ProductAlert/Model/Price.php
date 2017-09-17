@@ -14,7 +14,7 @@
  *
  * @category   Mage
  * @package    Mage_ProductAlert
- * @copyright  Copyright (c) 2004-2007 Irubin Consulting Inc. DBA Varien (http://www.varien.com)
+ * @copyright  Copyright (c) 2008 Irubin Consulting Inc. DBA Varien (http://www.varien.com)
  * @license    http://opensource.org/licenses/osl-3.0.php  Open Software License (OSL 3.0)
  */
 
@@ -24,6 +24,7 @@
  *
  * @category   Mage
  * @package    Mage_ProductAlert
+ * @author      Magento Core Team <core@magentocommerce.com>
  */
 class Mage_ProductAlert_Model_Price extends Mage_Core_Model_Abstract
 {

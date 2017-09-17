@@ -14,7 +14,7 @@
  *
  * @category   Mage
  * @package    Mage_Cms
- * @copyright  Copyright (c) 2004-2007 Irubin Consulting Inc. DBA Varien (http://www.varien.com)
+ * @copyright  Copyright (c) 2008 Irubin Consulting Inc. DBA Varien (http://www.varien.com)
  * @license    http://opensource.org/licenses/osl-3.0.php  Open Software License (OSL 3.0)
  */
 
@@ -23,6 +23,7 @@
  *
  * @category   Mage
  * @package    Mage_Cms
+ * @author      Magento Core Team <core@magentocommerce.com>
  */
 
 class Mage_Cms_Model_Mysql4_Page extends Mage_Core_Model_Mysql4_Abstract
@@ -49,10 +50,10 @@ class Mage_Cms_Model_Mysql4_Page extends Mage_Core_Model_Mysql4_Abstract
         }
 
         if (! $object->getId()) {
-            $object->setCreationTime(now());
+            $object->setCreationTime(Mage::getSingleton('core/date')->gmtDate());
         }
 
-        $object->setUpdateTime(now());
+        $object->setUpdateTime(Mage::getSingleton('core/date')->gmtDate());
 
         if (!$object->getCustomThemeFrom()) {
             $object->setCustomThemeFrom(new Zend_Db_Expr('NULL'));

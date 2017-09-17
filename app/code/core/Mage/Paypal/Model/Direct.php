@@ -14,7 +14,7 @@
  *
  * @category   Mage
  * @package    Mage_Paypal
- * @copyright  Copyright (c) 2004-2007 Irubin Consulting Inc. DBA Varien (http://www.varien.com)
+ * @copyright  Copyright (c) 2008 Irubin Consulting Inc. DBA Varien (http://www.varien.com)
  * @license    http://opensource.org/licenses/osl-3.0.php  Open Software License (OSL 3.0)
  */
 
@@ -22,6 +22,7 @@
  *
  * PayPal Direct Module
  *
+ * @author      Magento Core Team <core@magentocommerce.com>
  */
 class Mage_Paypal_Model_Direct extends Mage_Payment_Model_Method_Cc
 {
@@ -220,9 +221,9 @@ class Mage_Paypal_Model_Direct extends Mage_Payment_Model_Method_Cc
     public function void(Varien_Object $payment)
     {
         $error = false;
-        if($payment->getCcTransId()){
+        if($payment->getVoidTransactionId()){
             $api = $this->getApi();
-            $api->setAuthorizationId($payment->getCcTransId());
+            $api->setAuthorizationId($payment->getVoidTransactionId());
             if ($api->callDoVoid()!==false){
                  $payment->setStatus('SUCCESS')
                     ->setCcTransId($api->getTransactionId());

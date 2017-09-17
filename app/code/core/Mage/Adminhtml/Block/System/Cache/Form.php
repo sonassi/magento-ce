@@ -14,7 +14,7 @@
  *
  * @category   Mage
  * @package    Mage_Adminhtml
- * @copyright  Copyright (c) 2004-2007 Irubin Consulting Inc. DBA Varien (http://www.varien.com)
+ * @copyright  Copyright (c) 2008 Irubin Consulting Inc. DBA Varien (http://www.varien.com)
  * @license    http://opensource.org/licenses/osl-3.0.php  Open Software License (OSL 3.0)
  */
 
@@ -24,6 +24,7 @@
  *
  * @category   Mage
  * @package    Mage_Adminhtml
+ * @author      Magento Core Team <core@magentocommerce.com>
  */
 class Mage_Adminhtml_Block_System_Cache_Form extends Mage_Adminhtml_Block_Widget_Form
 {
@@ -60,21 +61,28 @@ class Mage_Adminhtml_Block_System_Cache_Form extends Mage_Adminhtml_Block_Widget
             ));
         }
 
-        $fieldset = $form->addFieldset('catalog', array(
-            'legend'=>$hlp->__('Catalog')
-        ));
+//        $fieldset = $form->addFieldset('catalog', array(
+//            'legend'=>$hlp->__('Catalog')
+//        ));
 
-        $fieldset->addField('refresh_catalog_rewrites', 'checkbox', array(
-            'name'=>'refresh_catalog_rewrites',
-            'label'=>$hlp->__('Refresh Catalog Rewrites'),
-            'value'=>1,
-        ));
+//        $fieldset->addField('refresh_catalog_rewrites', 'checkbox', array(
+//            'name'=>'refresh_catalog_rewrites',
+//            'label'=>$hlp->__('Refresh Catalog Rewrites'),
+//            'value'=>1,
+//        ));
+//
+//        $fieldset->addField('clear_images_cache', 'checkbox', array(
+//            'name'=>'clear_images_cache',
+//            'label'=>$hlp->__('Clear Images Cache'),
+//            'value'=>1,
+//        ));
+//
+//        $fieldset->addField('refresh_layered_navigation', 'checkbox', array(
+//            'name'=>'refresh_layered_navigation',
+//            'label'=>$hlp->__('Refresh Layered Navigation Indices'),
+//            'value'=>1,
+//        ));
 
-        $fieldset->addField('clear_images_cache', 'checkbox', array(
-            'name'=>'clear_images_cache',
-            'label'=>$hlp->__('Clear Images Cache'),
-            'value'=>1,
-        ));
 /*
         $fieldset = $form->addFieldset('database', array(
             'legend'=>$hlp->__('Database')
@@ -93,5 +101,4 @@ class Mage_Adminhtml_Block_System_Cache_Form extends Mage_Adminhtml_Block_Widget
 
         return $this;
     }
-
 }

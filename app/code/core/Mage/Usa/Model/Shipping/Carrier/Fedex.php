@@ -14,7 +14,7 @@
  *
  * @category   Mage
  * @package    Mage_Usa
- * @copyright  Copyright (c) 2004-2007 Irubin Consulting Inc. DBA Varien (http://www.varien.com)
+ * @copyright  Copyright (c) 2008 Irubin Consulting Inc. DBA Varien (http://www.varien.com)
  * @license    http://opensource.org/licenses/osl-3.0.php  Open Software License (OSL 3.0)
  */
 
@@ -23,6 +23,7 @@
  *
  * @category   Mage
  * @package    Mage_Usa
+ * @author      Magento Core Team <core@magentocommerce.com>
  */
 class Mage_Usa_Model_Shipping_Carrier_Fedex
     extends Mage_Usa_Model_Shipping_Carrier_Abstract
@@ -116,6 +117,7 @@ class Mage_Usa_Model_Shipping_Carrier_Fedex
         }
 
         $r->setValue($request->getPackageValue());
+        $r->setValueWithDiscount($request->getPackageValueWithDiscount());
 
         $this->_rawRequest = $r;
 
@@ -143,7 +145,6 @@ class Mage_Usa_Model_Shipping_Carrier_Fedex
     protected function _getXmlQuotes()
     {
         $r = $this->_rawRequest;
-
         $xml = new SimpleXMLElement('<FDXRateAvailableServicesRequest/>');
 
         $xml->addAttribute('xmlns:api', 'http://www.fedex.com/fsmapi');
@@ -279,7 +280,8 @@ class Mage_Usa_Model_Shipping_Carrier_Fedex
 
         $declaredValue = $xml->addChild('DeclaredValue');
             $declaredValue->addChild('Value', $r->getValue());
-            $declaredValue->addChild('CurrencyCode', 'USD');
+//            $declaredValue->addChild('CurrencyCode', 'USD');
+            $declaredValue->addChild('CurrencyCode', Mage::app()->getBaseCurrencyCode());
 
         if ($this->getConfigData('residence_delivery')) {
             $specialServices = $xml->addChild('SpecialServices');

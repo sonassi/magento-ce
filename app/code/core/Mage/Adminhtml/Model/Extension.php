@@ -14,7 +14,7 @@
  *
  * @category   Mage
  * @package    Mage_Adminhtml
- * @copyright  Copyright (c) 2004-2007 Irubin Consulting Inc. DBA Varien (http://www.varien.com)
+ * @copyright  Copyright (c) 2008 Irubin Consulting Inc. DBA Varien (http://www.varien.com)
  * @license    http://opensource.org/licenses/osl-3.0.php  Open Software License (OSL 3.0)
  */
 
@@ -281,6 +281,9 @@ class Mage_Adminhtml_Model_Extension extends Varien_Object
     {
         $pear = Varien_Pear::getInstance();
         $dir = Mage::getBaseDir('var').DS.'pear';
+        if (!Mage::getConfig()->createDirIfNotExists($dir)) {
+            return false;
+        }
     	$curDir = getcwd();
     	chdir($dir);
         $result = $pear->run('mage-package', array(), array('package.xml'));

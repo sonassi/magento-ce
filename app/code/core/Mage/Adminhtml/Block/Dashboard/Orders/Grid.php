@@ -14,7 +14,7 @@
  *
  * @category   Mage
  * @package    Mage_Adminhtml
- * @copyright  Copyright (c) 2004-2007 Irubin Consulting Inc. DBA Varien (http://www.varien.com)
+ * @copyright  Copyright (c) 2008 Irubin Consulting Inc. DBA Varien (http://www.varien.com)
  * @license    http://opensource.org/licenses/osl-3.0.php  Open Software License (OSL 3.0)
  */
 
@@ -23,6 +23,7 @@
  *
  * @category   Mage
  * @package    Mage_Adminhtml
+ * @author      Magento Core Team <core@magentocommerce.com>
  */
 
 class Mage_Adminhtml_Block_Dashboard_Orders_Grid extends Mage_Adminhtml_Block_Dashboard_Grid
@@ -36,15 +37,13 @@ class Mage_Adminhtml_Block_Dashboard_Orders_Grid extends Mage_Adminhtml_Block_Da
 
     protected function _prepareCollection()
     {
+        //TODO: add full name logic
         $collection = Mage::getResourceModel('reports/order_collection')
-            ->addAttributeToSelect('*')
             ->addItemCountExpr()
             ->addExpressionAttributeToSelect('customer',
                 "IFNULL(CONCAT({{customer_firstname}},' ',{{customer_lastname}}), '{$this->__('Guest')}')",
-                array(
-                    'customer_firstname',
-                    'customer_lastname'
-                ))
+                array('customer_firstname','customer_lastname')
+            )
             ->setOrder('created_at');
 
         if($this->getParam('store') || $this->getParam('website') || $this->getParam('group')) {

@@ -14,7 +14,7 @@
  *
  * @category   Mage
  * @package    Mage_CatalogSearch
- * @copyright  Copyright (c) 2004-2007 Irubin Consulting Inc. DBA Varien (http://www.varien.com)
+ * @copyright  Copyright (c) 2008 Irubin Consulting Inc. DBA Varien (http://www.varien.com)
  * @license    http://opensource.org/licenses/osl-3.0.php  Open Software License (OSL 3.0)
  */
 
@@ -23,6 +23,7 @@
  *
  * @category   Mage
  * @package    Mage_CatalogSearch
+ * @author      Magento Core Team <core@magentocommerce.com>
  */
 class Mage_CatalogSearch_Model_Advanced extends Varien_Object
 {
@@ -46,7 +47,7 @@ class Mage_CatalogSearch_Model_Advanced extends Varien_Object
                 ->setOrder('attribute_id', 'asc')
                 ->load();
             foreach ($attributes as $attribute) {
-            	$attribute->setEntity($product->getResource());
+                $attribute->setEntity($product->getResource());
             }
             $this->setData('attributes', $attributes);
         }
@@ -90,7 +91,7 @@ class Mage_CatalogSearch_Model_Advanced extends Varien_Object
                 }
             }
 
-            if ($condition) {
+            if (false !== $condition) {
                 $this->addSearchCriteria($attribute, $value);
 
                 if (in_array($code, $filteredAttributes))
@@ -142,7 +143,12 @@ class Mage_CatalogSearch_Model_Advanced extends Varien_Object
             $value = implode(', ', $value);
         } else if ($attribute->getFrontendInput() == 'select' || $attribute->getFrontendInput() == 'multiselect') {
             $value = $attribute->getSource()->getOptionText($value);
-            $value = $value['label'];
+            if (is_array($value))
+                $value = $value['label'];
+        } else if ($attribute->getFrontendInput() == 'boolean') {
+            $value = $value == 1
+                ? Mage::helper('catalogsearch')->__('Yes')
+                : Mage::helper('catalogsearch')->__('No');
         }
 
         $this->_searchCriterias[] = array('name'=>$name, 'value'=>$value);
@@ -156,15 +162,8 @@ class Mage_CatalogSearch_Model_Advanced extends Varien_Object
     public function getProductCollection(){
         if (is_null($this->_productCollection)) {
             $this->_productCollection = Mage::getResourceModel('catalogsearch/advanced_collection')
-                ->addAttributeToSelect('url_key')
-                ->addAttributeToSelect('name')
-                ->addAttributeToSelect('price')
-                ->addAttributeToSelect('special_price')
-                ->addAttributeToSelect('special_from_date')
-                ->addAttributeToSelect('special_to_date')
-                ->addAttributeToSelect('description')
-                ->addAttributeToSelect('image')
-                ->addAttributeToSelect('small_image')
+                ->addAttributeToSelect(Mage::getSingleton('catalog/config')->getProductAttributes())
+                ->addMinimalPrice()
                 ->addStoreFilter();
                 Mage::getSingleton('catalog/product_status')->addVisibleFilterToCollection($this->_productCollection);
                 Mage::getSingleton('catalog/product_visibility')->addVisibleInSearchFilterToCollection($this->_productCollection);

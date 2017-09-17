@@ -14,16 +14,21 @@
  *
  * @category   Mage
  * @package    Mage_Customer
- * @copyright  Copyright (c) 2004-2007 Irubin Consulting Inc. DBA Varien (http://www.varien.com)
+ * @copyright  Copyright (c) 2008 Irubin Consulting Inc. DBA Varien (http://www.varien.com)
  * @license    http://opensource.org/licenses/osl-3.0.php  Open Software License (OSL 3.0)
  */
 
 /**
  * Customer address helper
  *
+ * @author      Magento Core Team <core@magentocommerce.com>
  */
 class Mage_Customer_Helper_Address extends Mage_Core_Helper_Abstract
 {
+    protected $_config;
+    protected $_streetLines;
+    protected $_formatTemplate = array();
+
     /**
      * Addresses url
      */
@@ -54,5 +59,28 @@ class Mage_Customer_Helper_Address extends Mage_Core_Helper_Abstract
         } else {
             return $renderer;
         }
+    }
+
+    public function getConfig($key, $store=null)
+    {
+        if (is_null($this->_config)) {
+            $this->_config = Mage::getStoreConfig('customer/address');
+        }
+        return isset($this->_config[$key]) ? $this->_config[$key] : null;
+    }
+
+    public function getStreetLines($store=null)
+    {
+        if (is_null($this->_streetLines)) {
+            $lines = $this->getConfig('street_lines', $store);
+            $this->_streetLines = min(4, max(1, (int)$lines));
+        }
+        return $this->_streetLines;
+    }
+
+    public function getFormat($code)
+    {
+        $format = Mage::getSingleton('customer/address_config')->getFormatByCode($code);
+        return $format->getRenderer() ? $format->getRenderer()->getFormat() : '';
     }
 }

@@ -14,7 +14,7 @@
  *
  * @category   Mage
  * @package    Mage_Sendfriend
- * @copyright  Copyright (c) 2004-2007 Irubin Consulting Inc. DBA Varien (http://www.varien.com)
+ * @copyright  Copyright (c) 2008 Irubin Consulting Inc. DBA Varien (http://www.varien.com)
  * @license    http://opensource.org/licenses/osl-3.0.php  Open Software License (OSL 3.0)
  */
 
@@ -96,6 +96,11 @@ class Mage_Sendfriend_ProductController extends Mage_Core_Controller_Front_Actio
         if (!$product || !$product->isVisibleInCatalog() || !$data) {
             $this->_forward('noRoute');
             return;
+        }
+
+        $categoryId = $this->getRequest()->getParam('cat_id', null);
+        if ($categoryId && $category = Mage::getModel('catalog/category')->load($categoryId)) {
+            Mage::register('current_category', $category);
         }
 
         $sendToFriendModel->setSender($this->getRequest()->getPost('sender'));

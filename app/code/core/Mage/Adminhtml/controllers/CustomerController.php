@@ -14,7 +14,7 @@
  *
  * @category   Mage
  * @package    Mage_Adminhtml
- * @copyright  Copyright (c) 2004-2007 Irubin Consulting Inc. DBA Varien (http://www.varien.com)
+ * @copyright  Copyright (c) 2008 Irubin Consulting Inc. DBA Varien (http://www.varien.com)
  * @license    http://opensource.org/licenses/osl-3.0.php  Open Software License (OSL 3.0)
  */
 
@@ -23,6 +23,7 @@
  *
  * @category   Mage
  * @package    Mage_Adminhtml
+ * @author      Magento Core Team <core@magentocommerce.com>
  */
 class Mage_Adminhtml_CustomerController extends Mage_Adminhtml_Controller_Action
 {
@@ -194,10 +195,25 @@ class Mage_Adminhtml_CustomerController extends Mage_Adminhtml_Controller_Action
                     $customer->setPassword($customer->generatePassword());
                 }
 
-                $customer->save();
-                if ($isNewCustomer && $customer->hasData('sendemail') && $customer->getWebsiteId()) {
-                    $customer->sendNewAccountEmail();
+                // force new customer active
+                if ($isNewCustomer) {
+                    $customer->setForceConfirmed(true);
                 }
+
+                $customer->save();
+
+                // send welcome email
+                if ($customer->getWebsiteId() && $customer->hasData('sendemail')) {
+                    if ($isNewCustomer) {
+                        $customer->sendNewAccountEmail();
+                    }
+                    // confirm not confirmed customer
+                    elseif ((!$customer->getConfirmation())) {
+                        $customer->sendNewAccountEmail('confirmed');
+                    }
+                }
+
+                // TODO? Send confirmation link, if deactivating account
 
                 if ($newPassword = $customer->getNewPassword()) {
                     if ($newPassword == 'auto') {
@@ -271,6 +287,15 @@ class Mage_Adminhtml_CustomerController extends Mage_Adminhtml_Controller_Action
     }
 
     /**
+     * Customer last orders grid for ajax
+     *
+     */
+    public function lastOrdersAction() {
+        $this->_initCustomer();
+        $this->getResponse()->setBody($this->getLayout()->createBlock('adminhtml/customer_edit_tab_view_orders')->toHtml());
+    }
+
+    /**
      * Customer newsletter grid
      *
      */
@@ -302,17 +327,88 @@ class Mage_Adminhtml_CustomerController extends Mage_Adminhtml_Controller_Action
         $this->getResponse()->setBody($this->getLayout()->createBlock('adminhtml/customer_edit_tab_wishlist')->toHtml());
     }
 
+    /**
+     * Customer last view wishlist for ajax
+     *
+     */
+    public function viewWishlistAction()
+    {
+        $this->_initCustomer();
+        $this->getResponse()->setBody($this->getLayout()->createBlock('adminhtml/customer_edit_tab_view_wishlist')->toHtml());
+    }
+
+    /**
+     * [Handle and then] get a cart grid contents
+     *
+     * @return string
+     */
     public function cartAction()
     {
         $this->_initCustomer();
+        $websiteId = $this->getRequest()->getParam('website_id');
+
+        // delete an item from cart
         if ($deleteItemId = $this->getRequest()->getPost('delete')) {
-            $quote = Mage::getModel('sales/quote')->loadByCustomer(Mage::registry('current_customer'));
+            $quote = Mage::getModel('sales/quote')
+                ->setWebsite(Mage::app()->getWebsite($websiteId))
+                ->loadByCustomer(Mage::registry('current_customer'));
+            $item = $quote->getItemById($deleteItemId);
             $quote->removeItem($deleteItemId);
             $quote->save();
         }
-        $websiteId = $this->getRequest()->getParam('website_id');
+
         $this->getResponse()->setBody(
             $this->getLayout()->createBlock('adminhtml/customer_edit_tab_cart', '', array('website_id'=>$websiteId))
+                ->toHtml()
+        );
+    }
+
+    /**
+     * Get shopping cart to view only
+     *
+     */
+    public function viewCartAction()
+    {
+        $this->_initCustomer();
+
+        $this->getResponse()->setBody(
+            $this->getLayout()->createBlock('adminhtml/customer_edit_tab_view_cart')
+                ->setWebsiteId($this->getRequest()->getParam('website_id'))
+                ->toHtml()
+        );
+    }
+
+    /**
+     * Get shopping carts from all websites for specified client
+     *
+     * @return string
+     */
+    public function cartsAction()
+    {
+        $this->_initCustomer();
+        $this->getResponse()->setBody(
+            $this->getLayout()->createBlock('adminhtml/customer_edit_tab_carts')->toHtml()
+        );
+    }
+
+    public function productReviewsAction()
+    {
+        $this->_initCustomer();
+        $this->getResponse()->setBody(
+            $this->getLayout()->createBlock('adminhtml/review_grid', 'admin.customer.reviews')
+                ->setCustomerId(Mage::registry('current_customer')->getId())
+                ->setUseAjax(true)
+                ->toHtml()
+        );
+    }
+
+    public function productTagsAction()
+    {
+        $this->_initCustomer();
+        $this->getResponse()->setBody(
+            $this->getLayout()->createBlock('adminhtml/customer_edit_tab_tag', 'admin.customer.tags')
+                ->setCustomerId(Mage::registry('current_customer')->getId())
+                ->setUseAjax(true)
                 ->toHtml()
         );
     }

@@ -14,7 +14,7 @@
  *
  * @category   Mage
  * @package    Mage_CatalogRule
- * @copyright  Copyright (c) 2004-2007 Irubin Consulting Inc. DBA Varien (http://www.varien.com)
+ * @copyright  Copyright (c) 2008 Irubin Consulting Inc. DBA Varien (http://www.varien.com)
  * @license    http://opensource.org/licenses/osl-3.0.php  Open Software License (OSL 3.0)
  */
 
@@ -42,8 +42,6 @@ CREATE TABLE {$this->getTable('catalogrule')} (
   PRIMARY KEY  (`rule_id`),
   KEY `sort_order` (`is_active`,`sort_order`,`to_date`,`from_date`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8;
-
-insert  into {$this->getTable('catalogrule')}(`rule_id`,`name`,`description`,`from_date`,`to_date`,`store_ids`,`customer_group_ids`,`is_active`,`conditions_serialized`,`actions_serialized`,`stop_rules_processing`,`sort_order`) values (1,'Sony Sale','20% discount on all Sony products.','2007-08-25','2007-08-26','4','1',1,'a:5:{s:4:\"type\";s:34:\"catalogrule/rule_condition_combine\";s:9:\"attribute\";s:3:\"all\";s:8:\"operator\";s:1:\"1\";s:5:\"value\";b:1;s:10:\"conditions\";a:2:{i:0;a:4:{s:4:\"type\";s:34:\"catalogrule/rule_condition_product\";s:9:\"attribute\";s:12:\"manufacturer\";s:8:\"operator\";s:2:\"==\";s:5:\"value\";s:4:\"Sony\";}i:1;a:4:{s:4:\"type\";s:34:\"catalogrule/rule_condition_product\";s:9:\"attribute\";s:5:\"price\";s:8:\"operator\";s:2:\"<=\";s:5:\"value\";s:3:\"100\";}}}','a:5:{s:4:\"type\";s:34:\"catalogrule/rule_action_collection\";s:9:\"attribute\";N;s:8:\"operator\";s:1:\"=\";s:5:\"value\";N;s:7:\"actions\";a:1:{i:0;a:4:{s:4:\"type\";s:31:\"catalogrule/rule_action_product\";s:9:\"attribute\";s:10:\"rule_price\";s:8:\"operator\";s:10:\"by_percent\";s:5:\"value\";s:2:\"20\";}}}',1,0),(3,'CODEDEMOSTORE','10% off all Toshiba laptops','2007-08-06','2009-08-23','1','0,1,2,4',1,'a:5:{s:4:\"type\";s:34:\"catalogrule/rule_condition_combine\";s:9:\"attribute\";s:3:\"all\";s:8:\"operator\";s:1:\"1\";s:5:\"value\";b:1;s:10:\"conditions\";a:1:{i:0;a:4:{s:4:\"type\";s:34:\"catalogrule/rule_condition_product\";s:9:\"attribute\";s:12:\"manufacturer\";s:8:\"operator\";s:2:\"==\";s:5:\"value\";s:6:\"M285-E\";}}}','a:5:{s:4:\"type\";s:34:\"catalogrule/rule_action_collection\";s:9:\"attribute\";N;s:8:\"operator\";s:1:\"=\";s:5:\"value\";N;s:7:\"actions\";a:1:{i:0;a:4:{s:4:\"type\";s:31:\"catalogrule/rule_action_product\";s:9:\"attribute\";s:10:\"rule_price\";s:8:\"operator\";s:10:\"by_percent\";s:5:\"value\";s:2:\"10\";}}}',0,0);
 
 
 -- DROP TABLE IF EXISTS {$this->getTable('catalogrule_product')};

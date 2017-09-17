@@ -14,7 +14,7 @@
  *
  * @category   Mage
  * @package    Mage_Adminhtml
- * @copyright  Copyright (c) 2004-2007 Irubin Consulting Inc. DBA Varien (http://www.varien.com)
+ * @copyright  Copyright (c) 2008 Irubin Consulting Inc. DBA Varien (http://www.varien.com)
  * @license    http://opensource.org/licenses/osl-3.0.php  Open Software License (OSL 3.0)
  */
 class Mage_Adminhtml_Block_System_Design_Edit_Tab_General extends Mage_Adminhtml_Block_Widget_Form
@@ -54,7 +54,7 @@ class Mage_Adminhtml_Block_System_Design_Edit_Tab_General extends Mage_Adminhtml
             'title'    => Mage::helper('core')->__('Date From'),
             'name'     => 'date_from',
             'image'    => $this->getSkinUrl('images/grid-cal.gif'),
-            'required' => true,
+            //'required' => true,
         ));
 
         $fieldset->addField('date_to', 'date', array(
@@ -62,7 +62,7 @@ class Mage_Adminhtml_Block_System_Design_Edit_Tab_General extends Mage_Adminhtml
             'title'    => Mage::helper('core')->__('Date To'),
             'name'     => 'date_to',
             'image'    => $this->getSkinUrl('images/grid-cal.gif'),
-            'required' => true,
+            //'required' => true,
         ));
 
         $formData = Mage::getSingleton('adminhtml/session')->getDesignData(true);

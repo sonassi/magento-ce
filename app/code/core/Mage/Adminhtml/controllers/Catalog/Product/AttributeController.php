@@ -14,7 +14,7 @@
  *
  * @category   Mage
  * @package    Mage_Adminhtml
- * @copyright  Copyright (c) 2004-2007 Irubin Consulting Inc. DBA Varien (http://www.varien.com)
+ * @copyright  Copyright (c) 2008 Irubin Consulting Inc. DBA Varien (http://www.varien.com)
  * @license    http://opensource.org/licenses/osl-3.0.php  Open Software License (OSL 3.0)
  */
 
@@ -23,6 +23,7 @@
  *
  * @category   Mage
  * @package    Mage_Adminhtml
+ * @author      Magento Core Team <core@magentocommerce.com>
  */
 
 class Mage_Adminhtml_Catalog_Product_AttributeController extends Mage_Adminhtml_Controller_Action
@@ -128,6 +129,7 @@ class Mage_Adminhtml_Catalog_Product_AttributeController extends Mage_Adminhtml_
     {
         if ($data = $this->getRequest()->getPost()) {
             $model = Mage::getModel('catalog/entity_attribute');
+            /* @var $model Mage_Catalog_Model_Entity_Attribute */
 
             if ($id = $this->getRequest()->getParam('attribute_id')) {
 
@@ -140,13 +142,15 @@ class Mage_Adminhtml_Catalog_Product_AttributeController extends Mage_Adminhtml_
                     $this->_redirect('*/*/');
                     return;
                 }
+
                 $data['attribute_code'] = $model->getAttributeCode();
                 $data['is_user_defined'] = $model->getIsUserDefined();
                 $data['frontend_input'] = $model->getFrontendInput();
-
             }
 
-            $data['backend_type'] = $model->getBackendTypeByInput($data['frontend_input']);
+            if (is_null($model->getIsUserDefined()) || $model->getIsUserDefined() != 0) {
+                $data['backend_type'] = $model->getBackendTypeByInput($data['frontend_input']);
+            }
 
             $defaultValueField = $model->getDefaultValueByInput($data['frontend_input']);
             if ($defaultValueField) {

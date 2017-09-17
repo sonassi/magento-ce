@@ -14,7 +14,7 @@
  *
  * @category   Mage
  * @package    Mage_Adminhtml
- * @copyright  Copyright (c) 2004-2007 Irubin Consulting Inc. DBA Varien (http://www.varien.com)
+ * @copyright  Copyright (c) 2008 Irubin Consulting Inc. DBA Varien (http://www.varien.com)
  * @license    http://opensource.org/licenses/osl-3.0.php  Open Software License (OSL 3.0)
  */
 
@@ -23,6 +23,7 @@
  *
  * @category   Mage
  * @package    Mage_Adminhtml
+ * @author      Magento Core Team <core@magentocommerce.com>
  */
 
 class Mage_Adminhtml_Tax_Class_CustomerController extends Mage_Adminhtml_Controller_Action
@@ -93,7 +94,7 @@ class Mage_Adminhtml_Tax_Class_CustomerController extends Mage_Adminhtml_Control
             return;
         }
 
-        $ruleCollection = Mage::getModel('tax/rule')
+        $ruleCollection = Mage::getModel('tax/calculation_rule')
             ->getCollection()
             ->setClassTypeFilter('CUSTOMER', $classId);
 

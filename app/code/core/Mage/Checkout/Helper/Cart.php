@@ -14,13 +14,14 @@
  *
  * @category   Mage
  * @package    Mage_Checkout
- * @copyright  Copyright (c) 2004-2007 Irubin Consulting Inc. DBA Varien (http://www.varien.com)
+ * @copyright  Copyright (c) 2008 Irubin Consulting Inc. DBA Varien (http://www.varien.com)
  * @license    http://opensource.org/licenses/osl-3.0.php  Open Software License (OSL 3.0)
  */
 
 /**
  * Shopping cart helper
  *
+ * @author      Magento Core Team <core@magentocommerce.com>
  */
 class Mage_Checkout_Helper_Cart extends Mage_Core_Helper_Url
 {
@@ -54,25 +55,32 @@ class Mage_Checkout_Helper_Cart extends Mage_Core_Helper_Url
             /**
              * go to category view page
              */
-            $continueShoppingUrl = $currentCategory->getUrl();
+          
+            //$continueShoppingUrl = $currentCategory->getUrl();
+            $continueShoppingUrl = $this->_getRequest()->getRequestUri();
         } else {
             $continueShoppingUrl = $this->_getUrl('*/*/*', array('_current'=>true));
         }
-
+	
         $params = array(
             Mage_Core_Controller_Front_Action::PARAM_NAME_URL_ENCODED => Mage::helper('core')->urlEncode($continueShoppingUrl),
             'product' => $product->getId()
         );
+        
+       // $params = array("me"=>$this->_getRequest()->getRequestUri());
 
-        if ($this->_getRequest()->getModuleName() == 'checkout'
+        if ($this->_getRequest()->getRouteName() == 'checkout'
             && $this->_getRequest()->getControllerName() == 'cart') {
             $params['in_cart'] = 1;
         }
-
+        
+       
+        	
+    
         if (count($additional)){
             $params = array_merge($params, $additional);
         }
-
+       
         return $this->_getUrl('checkout/cart/add', $params);
     }
 
@@ -111,19 +119,43 @@ class Mage_Checkout_Helper_Cart extends Mage_Core_Helper_Url
         return Mage::getSingleton('checkout/session')->getQuote();
     }
 
+    /**
+     * Get shopping cart items count
+     *
+     * @return int
+     */
     public function getItemsCount()
     {
         return $this->getCart()->getItemsCount();
     }
 
+    /**
+     * Get shopping cart summary qty
+     *
+     * @return decimal
+     */
     public function getItemsQty()
     {
         return $this->getCart()->getItemsQty();
     }
 
+    /**
+     * Get shopping cart items summary (inchlude config settings)
+     *
+     * @return decimal
+     */
     public function getSummaryCount()
     {
         return Mage::getSingleton('checkout/cart')->getSummaryQty();
     }
 
+    /**
+     * Check qoute for virtual products only
+     *
+     * @return bool
+     */
+    public function getIsVirtualQuote()
+    {
+        return $this->getQuote()->isVirtual();
+    }
 }

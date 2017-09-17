@@ -14,7 +14,7 @@
  *
  * @category   design_default
  * @package    Mage
- * @copyright  Copyright (c) 2004-2007 Irubin Consulting Inc. DBA Varien (http://www.varien.com)
+ * @copyright  Copyright (c) 2008 Irubin Consulting Inc. DBA Varien (http://www.varien.com)
  * @license    http://opensource.org/licenses/osl-3.0.php  Open Software License (OSL 3.0)
  */
 ?>
@@ -29,7 +29,7 @@
                 <tr>
                     <td>
                     <address>
-                        <?php echo nl2br($_address->toString("{{firstname}} {{lastname}}\n{{street}}\n{{city}}, {{regionName}} {{postcode}}\nT: {{telephone}}")) ?>
+                        <?php echo $_address->format('html') ?>
                     </address>
                     <p>
                         <strong><a href="<?php echo $this->getUrl('customer/address/form', array('address'=>$_address->getAddressId())) ?>" class="red-link"><?php echo $this->__('Edit Address') ?></a></strong>
@@ -53,7 +53,7 @@
                 <tr>
                     <td>
                     <address>
-                        <?php echo nl2br($_address->toString("{{firstname}} {{lastname}}\n{{street}}\n{{city}}, {{regionName}} {{postcode}}\nT: {{telephone}}")) ?>
+                        <?php echo $_address->format('html') ?>
                     </address>
                     <p>
                         <strong><a href="<?php echo $this->getUrl('customer/address/form', array('address'=>$_address->getAddressId())) ?>" class="red-link"><?php echo $this->__('Edit Address') ?></a></strong><span class="separator">&nbsp;|&nbsp;</span><strong><a href="#" onclick="return deleteAddress('<?php echo $_address->getAddressId() ?>');" class="red-link"><?php echo $this->__('Delete Address') ?></a></strong>
@@ -74,7 +74,7 @@
 </table>
 <div class="buttons-container">
     <a href="<?php echo $this->getUrl('customer/account/') ?>" class="float-left">&laquo; <?php echo $this->__('Back') ?></a>
-    <input type="button" onclick="window.location='<?php echo $this->getUrl('customer/address/form') ?>';" value="<?php echo $this->__('New Address') ?>" class="input-button">
+    <input type="button" onclick="window.location='<?php echo $this->getUrl('customer/address/form') ?>';" value="<?php echo $this->__('New Address') ?>" class="input-button" />
 </div>
 <script type="text/javascript">
     function deleteAddress(addressId) {

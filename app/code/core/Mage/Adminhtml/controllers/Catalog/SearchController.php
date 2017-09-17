@@ -14,7 +14,7 @@
  *
  * @category   Mage
  * @package    Mage_Adminhtml
- * @copyright  Copyright (c) 2004-2007 Irubin Consulting Inc. DBA Varien (http://www.varien.com)
+ * @copyright  Copyright (c) 2008 Irubin Consulting Inc. DBA Varien (http://www.varien.com)
  * @license    http://opensource.org/licenses/osl-3.0.php  Open Software License (OSL 3.0)
  */
 
@@ -86,10 +86,10 @@ class Mage_Adminhtml_Catalog_SearchController extends Mage_Adminhtml_Controller_
 
             if ($queryText = $this->getRequest()->getParam('query_text')) {
                 $model->load($queryText);
-                if ($this->getRequest()->getParam('id') != $model->getId()) {
+                if ($this->getRequest()->getParam('query_id') != $model->getId()) {
                     Mage::getSingleton('adminhtml/session')->addError(Mage::helper('catalog')->__('Search Term with such search query already exist.'));
                     Mage::getSingleton('adminhtml/session')->setPageData($data);
-                    $this->_redirect('*/*/edit', array('id' => $this->getRequest()->getParam('id')));
+                    $this->_redirect('*/*/edit', array('id' => $this->getRequest()->getParam('query_id')));
                     return;
                 }
             }
@@ -132,7 +132,7 @@ class Mage_Adminhtml_Catalog_SearchController extends Mage_Adminhtml_Controller_
         Mage::getSingleton('adminhtml/session')->addError(Mage::helper('catalog')->__('Unable to find a search term to delete'));
         $this->_redirect('*/*/');
     }
-    
+
     public function massDeleteAction()
     {
         $searchIds = $this->getRequest()->getParam('search');

@@ -14,7 +14,7 @@
  *
  * @category   Mage
  * @package    Mage_Wishlist
- * @copyright  Copyright (c) 2004-2007 Irubin Consulting Inc. DBA Varien (http://www.varien.com)
+ * @copyright  Copyright (c) 2008 Irubin Consulting Inc. DBA Varien (http://www.varien.com)
  * @license    http://opensource.org/licenses/osl-3.0.php  Open Software License (OSL 3.0)
  */
 
@@ -24,9 +24,12 @@
  *
  * @category   Mage
  * @package    Mage_Wishlist
+ * @author      Magento Core Team <core@magentocommerce.com>
  */
 class Mage_Wishlist_Model_Mysql4_Wishlist extends Mage_Core_Model_Mysql4_Abstract
 {
+
+    protected $_itemsCount = null;
 
     protected $_customerIdFieldName = 'customer_id';
 
@@ -48,11 +51,18 @@ class Mage_Wishlist_Model_Mysql4_Wishlist extends Mage_Core_Model_Mysql4_Abstrac
 
     public function fetchItemsCount(Mage_Wishlist_Model_Wishlist $wishlist)
     {
-        $read = $this->_getReadAdapter();
-        $select = $read->select()->from($this->getTable('wishlist/item'), 'count(*)')
-           ->where('wishlist_id=?', $wishlist->getId())
-           ->where('store_id in (?)', $wishlist->getSharedStoreIds());
-        return $read->fetchOne($select);
+        if (is_null($this->_itemsCount)) {
+            $collection = $wishlist->getProductCollection()
+                //->addAttributeToFilter('store_id', array('in'=>$wishlist->getSharedStoreIds()))
+                ->addStoreFilter();
+
+            Mage::getSingleton('catalog/product_status')->addVisibleFilterToCollection($collection);
+            Mage::getSingleton('catalog/product_visibility')->addVisibleInCatalogFilterToCollection($collection);
+
+            $this->_itemsCount = $collection->getSize();
+        }
+
+        return $this->_itemsCount;
     }
 
 }

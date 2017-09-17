@@ -14,7 +14,7 @@
  *
  * @category   Mage
  * @package    Mage_Adminhtml
- * @copyright  Copyright (c) 2004-2007 Irubin Consulting Inc. DBA Varien (http://www.varien.com)
+ * @copyright  Copyright (c) 2008 Irubin Consulting Inc. DBA Varien (http://www.varien.com)
  * @license    http://opensource.org/licenses/osl-3.0.php  Open Software License (OSL 3.0)
  */
 
@@ -24,6 +24,7 @@
  *
  * @category   Mage
  * @package    Mage_Adminhtml
+ * @author      Magento Core Team <core@magentocommerce.com>
  */
 class Mage_Adminhtml_Model_System_Config_Backend_Product_Alert_Cron extends Mage_Core_Model_Config_Data
 {
@@ -51,7 +52,7 @@ class Mage_Adminhtml_Model_System_Config_Backend_Product_Alert_Cron extends Mage
             intval($time[0]),                                   # Hour
             ($frequncy == $frequencyMonthly) ? '1' : '*',       # Day of the Month
             '*',                                                # Month of the Year
-            ($frequncy == $frequencyDaily) ? '1' : '*',         # Day of the Week
+            ($frequncy == $frequencyWeekly) ? '1' : '*',         # Day of the Week
         );
 
         $cronExprString     = join(' ', $cronExprArray);

@@ -14,7 +14,7 @@
  *
  * @category   Mage
  * @package    Mage_ProductAlert
- * @copyright  Copyright (c) 2004-2007 Irubin Consulting Inc. DBA Varien (http://www.varien.com)
+ * @copyright  Copyright (c) 2008 Irubin Consulting Inc. DBA Varien (http://www.varien.com)
  * @license    http://opensource.org/licenses/osl-3.0.php  Open Software License (OSL 3.0)
  */
 
@@ -24,6 +24,7 @@
  *
  * @category   Mage
  * @package    Mage_ProductAlert
+ * @author      Magento Core Team <core@magentocommerce.com>
  */
 class Mage_ProductAlert_Model_Email extends Mage_Core_Model_Abstract
 {
@@ -241,6 +242,10 @@ class Mage_ProductAlert_Model_Email extends Mage_Core_Model_Abstract
         Mage::getDesign()->setStore($storeId);
         Mage::getDesign()->setArea('frontend');
 
+        $translate = Mage::getSingleton('core/translate');
+        /* @var $translate Mage_Core_Model_Translate */
+        $translate->setTranslateInline(false);
+
         if ($this->_type == 'price') {
             $this->_getPriceBlock()->setStoreCode($storeCode);
             foreach ($this->_priceProducts as $product) {
@@ -277,6 +282,9 @@ class Mage_ProductAlert_Model_Email extends Mage_Core_Model_Abstract
                     'alertGrid'     => $block
                 )
             );
+
+        $translate->setTranslateInline(true);
+
         return true;
     }
 }

@@ -14,7 +14,7 @@
  *
  * @category   Mage
  * @package    Mage_Adminhtml
- * @copyright  Copyright (c) 2004-2007 Irubin Consulting Inc. DBA Varien (http://www.varien.com)
+ * @copyright  Copyright (c) 2008 Irubin Consulting Inc. DBA Varien (http://www.varien.com)
  * @license    http://opensource.org/licenses/osl-3.0.php  Open Software License (OSL 3.0)
  */
 class Mage_Adminhtml_Block_Cms_Page_Edit_Tab_Design extends Mage_Adminhtml_Block_Widget_Form
@@ -34,7 +34,8 @@ class Mage_Adminhtml_Block_Cms_Page_Edit_Tab_Design extends Mage_Adminhtml_Block
         $model = Mage::registry('cms_page');
 
         $fieldset = $form->addFieldset('design_fieldset', array(
-            'legend'=>Mage::helper('cms')->__('Custom Design')
+            'legend'=>Mage::helper('cms')->__('Custom Design'),
+						'class'=>'cms-edit-form',
         ));
 
     	$fieldset->addField('custom_theme', 'select', array(
@@ -69,7 +70,7 @@ class Mage_Adminhtml_Block_Cms_Page_Edit_Tab_Design extends Mage_Adminhtml_Block
         $fieldset->addField('layout_update_xml', 'editor', array(
             'name'      => 'layout_update_xml',
             'label'     => Mage::helper('cms')->__('Layout Update XML'),
-            'style'     => 'width:98%'
+            'style'     => 'width:98%; height:300px;'
         ));
 
         $form->setValues($model->getData());

@@ -14,32 +14,75 @@
  *
  * @category   Mage
  * @package    Mage_GoogleCheckout
- * @copyright  Copyright (c) 2004-2007 Irubin Consulting Inc. DBA Varien (http://www.varien.com)
+ * @copyright  Copyright (c) 2008 Irubin Consulting Inc. DBA Varien (http://www.varien.com)
  * @license    http://opensource.org/licenses/osl-3.0.php  Open Software License (OSL 3.0)
  */
 
 class Mage_GoogleCheckout_RedirectController extends Mage_Core_Controller_Front_Action
 {
-    public function checkoutAction()
+    /**
+     *  Send request to Google Checkout and return Responce Api
+     *
+     *  @param    none
+     *  @return	  object Mage_GoogleCheckout_Model_Api_Xml_Checkout
+     */
+    protected function _getApi ()
     {
         $session = Mage::getSingleton('checkout/session');
 
-        $api = Mage::getModel('googlecheckout/api')
-            ->setAnalyticsData($this->getRequest()->getPost('analyticsdata'))
-            ->checkout($session->getQuote());
+        $api = Mage::getModel('googlecheckout/api');
 
-        $response = $api->getResponse();
+        if (!$session->getQuote()->hasItems()) {
+            $this->getResponse()->setRedirect(Mage::getUrl('checkout/cart'));
+            $api->setError(true);
+        }
+
+        if (!$api->getError()) {
+            $api = $api->setAnalyticsData($this->getRequest()->getPost('analyticsdata'))
+                ->checkout($session->getQuote());
+
+            $response = $api->getResponse();
+            if ($api->getError()) {
+                Mage::getSingleton('checkout/session')->addError($api->getError());
+            } else {
+                if (Mage::getStoreConfigFlag('google/checkout/hide_cart_contents')) {
+                    $session->setGoogleCheckoutQuoteId($session->getQuoteId());
+                    $session->unsQuoteId();
+                }
+            }
+        }
+        return $api;
+    }
+
+    public function checkoutAction()
+    {
+        $api = $this->_getApi();
+
         if ($api->getError()) {
-            Mage::getSingleton('checkout/session')->addError($api->getError());
             $url = Mage::getUrl('checkout/cart');
         } else {
             $url = $api->getRedirectUrl();
-            if (Mage::getStoreConfigFlag('google/checkout/hide_cart_contents')) {
-                $session->setGoogleCheckoutQuoteId($session->getQuoteId());
-                $session->unsQuoteId();
-            }
         }
         $this->getResponse()->setRedirect($url);
+    }
+
+    /**
+     * When a customer chooses Google Checkout on Checkout/Payment page
+     *
+     */
+    public function redirectAction()
+    {
+        $api = $this->_getApi();
+
+        if ($api->getError()) {
+            $this->getResponse()->setRedirect(Mage::getUrl('checkout/cart'));
+            return;
+        } else {
+            $url = $api->getRedirectUrl();
+            $this->loadLayout();
+            $this->getLayout()->getBlock('googlecheckout_redirect')->setRedirectUrl($url);
+            $this->renderLayout();
+        }
     }
 
     public function cartAction()
@@ -63,11 +106,12 @@ class Mage_GoogleCheckout_RedirectController extends Mage_Core_Controller_Front_
         if ($quoteId = $session->getGoogleCheckoutQuoteId()) {
             $quote = Mage::getModel('sales/quote')->load($quoteId)
                 ->setIsActive(false)->save();
+            $session->unsQuoteId();
         }
 
-        if (Mage::getStoreConfigFlag('google/checkout/hide_cart_contents')) {
-            $session->unsGoogleCheckoutQuoteId();
-        }
+//        if (Mage::getStoreConfigFlag('google/checkout/hide_cart_contents')) {
+//            $session->unsGoogleCheckoutQuoteId();
+//        }
 
         $url = Mage::getStoreConfig('google/checkout/continue_shopping_url');
         if (empty($url)) {

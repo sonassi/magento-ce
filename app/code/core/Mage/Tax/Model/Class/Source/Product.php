@@ -14,14 +14,14 @@
  *
  * @category   Mage
  * @package    Mage_Tax
- * @copyright  Copyright (c) 2004-2007 Irubin Consulting Inc. DBA Varien (http://www.varien.com)
+ * @copyright  Copyright (c) 2008 Irubin Consulting Inc. DBA Varien (http://www.varien.com)
  * @license    http://opensource.org/licenses/osl-3.0.php  Open Software License (OSL 3.0)
  */
 
 
 class Mage_Tax_Model_Class_Source_Product extends Mage_Eav_Model_Entity_Attribute_Source_Abstract
 {
-	public function getAllOptions($withEmpty = true)
+	public function getAllOptions($withEmpty = false)
 	{
 		if (is_null($this->_options)) {
 			$this->_options = Mage::getResourceModel('tax/class_collection')
@@ -31,6 +31,7 @@ class Mage_Tax_Model_Class_Source_Product extends Mage_Eav_Model_Entity_Attribut
 		}
 
 		$options = $this->_options;
+        array_unshift($options, array('value'=>'0', 'label'=>Mage::helper('tax')->__('None')));
         if ($withEmpty) {
             array_unshift($options, array('value'=>'', 'label'=>Mage::helper('tax')->__('-- Please Select --')));
         }

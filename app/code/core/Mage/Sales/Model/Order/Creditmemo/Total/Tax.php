@@ -14,7 +14,7 @@
  *
  * @category   Mage
  * @package    Mage_Sales
- * @copyright  Copyright (c) 2004-2007 Irubin Consulting Inc. DBA Varien (http://www.varien.com)
+ * @copyright  Copyright (c) 2008 Irubin Consulting Inc. DBA Varien (http://www.varien.com)
  * @license    http://opensource.org/licenses/osl-3.0.php  Open Software License (OSL 3.0)
  */
 
@@ -27,6 +27,9 @@ class Mage_Sales_Model_Order_Creditmemo_Total_Tax extends Mage_Sales_Model_Order
         $baseTotalTax   = 0;
 
         foreach ($creditmemo->getAllItems() as $item) {
+            if ($item->getOrderItem()->isDummy()) {
+                continue;
+            }
             $orderItemTax     = $item->getOrderItem()->getTaxAmount();
             $baseOrderItemTax = $item->getOrderItem()->getBaseTaxAmount();
             $orderItemQty = $item->getOrderItem()->getQtyOrdered();
@@ -44,6 +47,17 @@ class Mage_Sales_Model_Order_Creditmemo_Total_Tax extends Mage_Sales_Model_Order
                 $totalTax += $tax;
                 $baseTotalTax += $baseTax;
             }
+        }
+
+        if ($invoice = $creditmemo->getInvoice()) {
+            $totalTax += $invoice->getShippingTaxAmount();
+            $baseTotalTax += $invoice->getBaseShippingTaxAmount();
+
+            $creditmemo->setShippingTaxAmount($invoice->getShippingTaxAmount());
+            $creditmemo->setBaseShippingTaxAmount($invoice->getBaseShippingTaxAmount());
+        } else {
+            $totalTax += $creditmemo->getShippingTaxAmount();
+            $baseTotalTax += $creditmemo->getBaseShippingTaxAmount();
         }
 
         $creditmemo->setTaxAmount($totalTax);

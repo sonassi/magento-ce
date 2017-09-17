@@ -14,7 +14,7 @@
  *
  * @category   Mage
  * @package    Mage_Core
- * @copyright  Copyright (c) 2004-2007 Irubin Consulting Inc. DBA Varien (http://www.varien.com)
+ * @copyright  Copyright (c) 2008 Irubin Consulting Inc. DBA Varien (http://www.varien.com)
  * @license    http://opensource.org/licenses/osl-3.0.php  Open Software License (OSL 3.0)
  */
 
@@ -25,6 +25,9 @@ class Mage_Core_Model_Design_Package
     const DEFAULT_PACKAGE   = 'default';
     const DEFAULT_THEME     = 'default';
     const FALLBACK_THEME    = 'default';
+
+    private static $_regexMatchCache      = array();
+    private static $_customThemeTypeCache = array();
 
     /**
      * Current Store for generation ofr base_dir and base_url
@@ -117,14 +120,58 @@ class Mage_Core_Model_Design_Package
 
 	/**
 	 * Set package name
+	 * In case of any problem, the default will be set.
 	 *
 	 * @param  string $name
 	 * @return Mage_Core_Model_Design_Package
 	 */
-	public function setPackageName($name)
+	public function setPackageName($name = '')
 	{
-		$this->_name = $name;
-		return $this;
+        if (empty($name)) {
+            // see, if exceptions for user-agents defined in config
+    	    $customPackage = $this->_checkUserAgentAgainstRegexps('design/package/ua_regexp');
+    	    if ($customPackage) {
+    	        $this->_name = $customPackage;
+            }
+            else {
+                $this->_name = Mage::getStoreConfig('design/package/name');
+            }
+        }
+        else {
+            $this->_name = $name;
+        }
+        // make sure not to crash, if wrong package specified
+        if (!$this->designPackageExists($this->_name, $this->getArea())) {
+	        $this->_name = self::DEFAULT_PACKAGE;
+	    }
+	    return $this;
+	}
+
+	/**
+	 * Set store/package/area at once, and get respective values, that were before
+	 *
+	 * $storePackageArea must be assoc array. The keys may be:
+	 * 'store', 'package', 'area'
+	 *
+	 * @param array $storePackageArea
+	 * @return array
+	 */
+	public function setAllGetOld($storePackageArea)
+	{
+	    $oldValues = array();
+	    if (array_key_exists('store', $storePackageArea)) {
+	        $oldValues['store'] = $this->getStore();
+	        $this->setStore($storePackageArea['store']);
+	    }
+	    if (array_key_exists('package', $storePackageArea)) {
+	        $oldValues['package'] = $this->getPackageName();
+	        $this->setPackageName($storePackageArea['package']);
+	    }
+	    if (array_key_exists('area', $storePackageArea)) {
+	        $oldValues['area'] = $this->getArea();
+	        $this->setArea($storePackageArea['area']);
+	    }
+	    return $oldValues;
 	}
 
 	/**
@@ -134,13 +181,15 @@ class Mage_Core_Model_Design_Package
 	 */
 	public function getPackageName()
 	{
-		if (is_null($this->_name)) {
-			$this->_name = Mage::getStoreConfig('design/package/name');
-			if (empty($this->_name)) {
-				$this->_name = self::DEFAULT_PACKAGE;
-			}
-		}
-		return $this->_name;
+	    if (null === $this->_name) {
+	        $this->setPackageName();
+	    }
+	    return $this->_name;
+	}
+
+	public function designPackageExists($packageName, $area = self::DEFAULT_AREA)
+	{
+	    return is_dir(Mage::getBaseDir('design') . DS . $area . DS . $packageName);
 	}
 
 	/**
@@ -170,14 +219,25 @@ class Mage_Core_Model_Design_Package
 	public function getTheme($type)
 	{
 		if (empty($this->_theme[$type])) {
-			$this->_theme[$type] = Mage::getStoreConfig('design/theme/'.$type);
+			$this->_theme[$type] = Mage::getStoreConfig('design/theme/'.$type, $this->getStore());
 			if ($type!=='default' && empty($this->_theme[$type])) {
 				$this->_theme[$type] = $this->getTheme('default');
 				if (empty($this->_theme[$type])) {
 					$this->_theme[$type] = self::DEFAULT_THEME;
 				}
+
+				// "locale", "layout", "template"
 			}
 		}
+
+		// + "default", "skin"
+
+		// set exception value for theme, if defined in config
+        $customThemeType = $this->_checkUserAgentAgainstRegexps("design/theme/{$type}_ua_regexp");
+        if ($customThemeType) {
+            $this->_theme[$type] = $customThemeType;
+        }
+
 		return $this->_theme[$type];
 	}
 
@@ -200,6 +260,9 @@ class Mage_Core_Model_Design_Package
 		if (empty($params['_theme'])) {
 			$params['_theme'] = $this->getTheme( (isset($params['_type'])) ? $params['_type'] : '' );
 		}
+    	if (empty($params['_default'])) {
+    		$params['_default'] = false;
+    	}
 		return $this;
 	}
 
@@ -295,9 +358,6 @@ class Mage_Core_Model_Design_Package
     {
     	Varien_Profiler::start(__METHOD__);
     	$this->updateParamDefaults($params);
-    	if (empty($params['_default'])) {
-    		$params['_default'] = false;
-    	}
 		$filename = $this->validateFile($file, $params);
 		if (false===$filename) {
 			$params['_theme'] = $this->getFallbackTheme();
@@ -422,5 +482,45 @@ class Mage_Core_Model_Design_Package
         }
 
         return $result;
+    }
+
+    /**
+     * Get regex rules from config and check user-agent against them
+     *
+     * Rules must be stored in config as a serialized array(['regexp']=>'...', ['value'] => '...')
+     * Will return false or found string.
+     *
+     * @param string $regexpsConfigPath
+     * @return mixed
+     */
+    protected function _checkUserAgentAgainstRegexps($regexpsConfigPath)
+    {
+        if (!empty($_SERVER['HTTP_USER_AGENT'])) {
+            if (!empty(self::$_customThemeTypeCache[$regexpsConfigPath])) {
+                return self::$_customThemeTypeCache[$regexpsConfigPath];
+            }
+            $configValueSerialized = Mage::getStoreConfig($regexpsConfigPath);
+            if ($configValueSerialized) {
+                $regexps = @unserialize($configValueSerialized);
+                if (!empty($regexps)) {
+                    foreach ($regexps as $rule) {
+                        if (!empty(self::$_regexMatchCache[$rule['regexp']][$_SERVER['HTTP_USER_AGENT']])) {
+                            self::$_customThemeTypeCache[$regexpsConfigPath] = $rule['value'];
+                            return $rule['value'];
+                        }
+                        $regexp = $rule['regexp'];
+                        if (false === strpos($regexp, '/', 0)) {
+                            $regexp = '/' . $regexp . '/';
+                        }
+                        if (@preg_match($regexp, $_SERVER['HTTP_USER_AGENT'])) {
+                            self::$_regexMatchCache[$rule['regexp']][$_SERVER['HTTP_USER_AGENT']] = true;
+                            self::$_customThemeTypeCache[$regexpsConfigPath] = $rule['value'];
+                            return $rule['value'];
+                        }
+                    }
+                }
+            }
+        }
+        return false;
     }
 }

@@ -14,7 +14,7 @@
  *
  * @category   Mage
  * @package    Mage_Sales
- * @copyright  Copyright (c) 2004-2007 Irubin Consulting Inc. DBA Varien (http://www.varien.com)
+ * @copyright  Copyright (c) 2008 Irubin Consulting Inc. DBA Varien (http://www.varien.com)
  * @license    http://opensource.org/licenses/osl-3.0.php  Open Software License (OSL 3.0)
  */
 
@@ -23,6 +23,7 @@
  *
  * @category   Mage
  * @package    Mage_Sales
+ * @author      Magento Core Team <core@magentocommerce.com>
  */
 
 class Mage_Shipping_TrackingController extends Mage_Core_Controller_Front_Action
@@ -66,8 +67,9 @@ class Mage_Shipping_TrackingController extends Mage_Core_Controller_Front_Action
         $id = $this->getRequest()->getParam('order_id');
 
         $order = Mage::getModel('sales/order')->load($id);
+        $customerId = Mage::getSingleton('customer/session')->getCustomerId();
 
-        if (!$order->getId() || !$order->belongsToCurrentCustomer()) {
+        if (!$order->getId() || !$customerId || $order->getCustomerId() != $customerId) {
             return false;
         }
         return $order;

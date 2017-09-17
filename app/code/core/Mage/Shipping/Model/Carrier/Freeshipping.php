@@ -14,7 +14,7 @@
  *
  * @category   Mage
  * @package    Mage_Shipping
- * @copyright  Copyright (c) 2004-2007 Irubin Consulting Inc. DBA Varien (http://www.varien.com)
+ * @copyright  Copyright (c) 2008 Irubin Consulting Inc. DBA Varien (http://www.varien.com)
  * @license    http://opensource.org/licenses/osl-3.0.php  Open Software License (OSL 3.0)
  */
 
@@ -24,6 +24,7 @@
  *
  * @category   Mage
  * @package    Mage_Shipping
+ * @author      Magento Core Team <core@magentocommerce.com>
  */
 class Mage_Shipping_Model_Carrier_Freeshipping
     extends Mage_Shipping_Model_Carrier_Abstract
@@ -45,9 +46,8 @@ class Mage_Shipping_Model_Carrier_Freeshipping
         }
 
         $result = Mage::getModel('shipping/rate_result');
-
-        $packageValue = $request->getBaseCurrency()->convert($request->getPackageValue(), $request->getPackageCurrency());
-
+//      $packageValue = $request->getBaseCurrency()->convert($request->getPackageValueWithDiscount(), $request->getPackageCurrency());
+        $packageValue = $request->getPackageValueWithDiscount();
         $allow = ($request->getFreeShipping())
             || ($packageValue >= $this->getConfigData('free_shipping_subtotal'));
 

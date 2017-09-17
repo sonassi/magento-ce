@@ -14,7 +14,7 @@
  *
  * @category   Mage
  * @package    Mage_Adminhtml
- * @copyright  Copyright (c) 2004-2007 Irubin Consulting Inc. DBA Varien (http://www.varien.com)
+ * @copyright  Copyright (c) 2008 Irubin Consulting Inc. DBA Varien (http://www.varien.com)
  * @license    http://opensource.org/licenses/osl-3.0.php  Open Software License (OSL 3.0)
  */
 
@@ -23,17 +23,10 @@
  *
  * @category   Mage
  * @package    Mage_Adminhtml
+ * @author      Magento Core Team <core@magentocommerce.com>
  */
-class Mage_Adminhtml_Sales_Order_InvoiceController extends Mage_Adminhtml_Controller_Action
+class Mage_Adminhtml_Sales_Order_InvoiceController extends Mage_Adminhtml_Controller_Sales_Invoice
 {
-    /**
-     * Additional initialization
-     */
-    protected function _construct()
-    {
-        $this->setUsedModuleName('Mage_Sales');
-    }
-
     protected function _getItemQtys()
     {
         $data = $this->getRequest()->getParam('invoice');
@@ -42,7 +35,7 @@ class Mage_Adminhtml_Sales_Order_InvoiceController extends Mage_Adminhtml_Contro
             //$this->_getSession()->setInvoiceItemQtys($qtys);
         }
         /*elseif ($this->_getSession()->getInvoiceItemQtys()) {
-        	$qtys = $this->_getSession()->getInvoiceItemQtys();
+            $qtys = $this->_getSession()->getInvoiceItemQtys();
         }*/
         else {
             $qtys = array();
@@ -55,7 +48,7 @@ class Mage_Adminhtml_Sales_Order_InvoiceController extends Mage_Adminhtml_Contro
      *
      * @return Mage_Sales_Model_Order_Invoice
      */
-    protected function _initInvoice()
+    protected function _initInvoice($update = false)
     {
         $invoice = false;
         if ($invoiceId = $this->getRequest()->getParam('invoice_id')) {
@@ -83,18 +76,28 @@ class Mage_Adminhtml_Sales_Order_InvoiceController extends Mage_Adminhtml_Contro
 
             $savedQtys = $this->_getItemQtys();
             foreach ($order->getAllItems() as $orderItem) {
-                if (!$orderItem->getQtyToInvoice()) {
+
+                if (!$orderItem->isDummy() && !$orderItem->getQtyToInvoice()) {
+                    continue;
+                }
+
+                if (!$update && $orderItem->isDummy() && !empty($savedQtys) && !$this->_needToAddDummy($orderItem, $savedQtys)) {
                     continue;
                 }
                 $item = $convertor->itemToInvoiceItem($orderItem);
+
                 if (isset($savedQtys[$orderItem->getId()])) {
                     $qty = $savedQtys[$orderItem->getId()];
                 }
                 else {
-                    $qty = $orderItem->getQtyToInvoice();
+                    if ($orderItem->isDummy()) {
+                        $qty = 1;
+                    } else {
+                        $qty = $orderItem->getQtyToInvoice();
+                    }
                 }
                 $item->setQty($qty);
-            	$invoice->addItem($item);
+                $invoice->addItem($item);
             }
             $invoice->collectTotals();
         }
@@ -111,6 +114,7 @@ class Mage_Adminhtml_Sales_Order_InvoiceController extends Mage_Adminhtml_Contro
      */
     protected function _saveInvoice($invoice)
     {
+        $invoice->getOrder()->setIsInProcess(true);
         $transactionSave = Mage::getModel('core/resource_transaction')
             ->addObject($invoice)
             ->addObject($invoice->getOrder())
@@ -124,12 +128,60 @@ class Mage_Adminhtml_Sales_Order_InvoiceController extends Mage_Adminhtml_Contro
         $convertor  = Mage::getModel('sales/convert_order');
         $shipment    = $convertor->toShipment($invoice->getOrder());
 
-        foreach ($invoice->getAllItems() as $item) {
-            $qty = min($item->getQty(), $item->getOrderItem()->getQtyToShip());
-            $shipmentItem = $convertor->itemToShipmentItem($item->getOrderItem());
-            $shipmentItem->setQty($qty);
-            $shipment->addItem($shipmentItem);
+        $savedQtys = $this->_getItemQtys();
+        $skipedParent = array();
+        //echo "<pre>";
+        foreach ($invoice->getOrder()->getAllItems() as $item) {
+            //echo "\n".$item->getSku();
+            /*
+             * if this is child and its parent was skipped
+             * bc of something we need to skip child also
+             */
+            if ($item->getParentItem() && isset($skipedParent[$item->getParentItem()->getId()])){
+                continue;
+            }
+            //echo "1";
+            if (isset($savedQtys[$item->getId()])) {
+                $qty = min($savedQtys[$item->getId()], $item->getQtyToShip());
+            } else {
+                $qty = $item->getQtyToShip();
+            }
+            //echo "2";
+            if (!$item->isDummy(true) && !$item->getQtyToShip()) {
+                continue;
+            }
+            //echo "3";
+            /**
+             * if this is a dummy item and we don't need it. we skip it.
+             * also if this item is parent we need to mark that we skipped
+             * it so children will be also skipped
+             */
+            if ($item->isDummy(true) && !$this->_needToAddDummyForShipment($item, $savedQtys)) {
+                if ($item->getChildrenItems()) {
+                    $skipedParent[$item->getId()] = 1;
+                }
+                continue;
+            }
+            //echo "4";
+            if ($item->getIsVirtual()) {
+                continue;
+            }
+            //echo "5";
+            $shipItem = $convertor->itemToShipmentItem($item);
+
+            if ($item->isDummy(true)) {
+                $qty = 1;
+            }
+            //echo "Qty:".$qty;
+            $shipItem->setQty($qty);
+            $shipment->addItem($shipItem);
         }
+        //die;
+        if (!count($shipment->getAllItems())) {
+            // no need to create empty shipment
+            return false;
+        }
+
         $shipment->register();
 
         if ($tracks = $this->getRequest()->getPost('tracking')) {
@@ -149,9 +201,10 @@ class Mage_Adminhtml_Sales_Order_InvoiceController extends Mage_Adminhtml_Contro
     {
         if ($invoice = $this->_initInvoice()) {
             $this->loadLayout()
-                ->_setActiveMenu('sales/order')
-                ->_addContent($this->getLayout()->createBlock('adminhtml/sales_order_invoice_view')->updateBackButtonUrl())
-                ->renderLayout();
+                ->_setActiveMenu('sales/order');
+            $this->getLayout()->getBlock('sales_invoice_view')
+                ->updateBackButtonUrl($this->getRequest()->getParam('come_from'));
+            $this->renderLayout();
         }
         else {
             $this->_forward('noRoute');
@@ -178,11 +231,11 @@ class Mage_Adminhtml_Sales_Order_InvoiceController extends Mage_Adminhtml_Contro
         if ($invoice = $this->_initInvoice()) {
             $this->loadLayout()
                 ->_setActiveMenu('sales/order')
-                ->_addContent($this->getLayout()->createBlock('adminhtml/sales_order_invoice_create'))
                 ->renderLayout();
         }
         else {
-            $this->_forward('noRoute');
+            // $this->_forward('noRoute');
+            $this->_redirect('*/sales_order/view', array('order_id'=>$this->getRequest()->getParam('order_id')));
         }
     }
 
@@ -192,9 +245,9 @@ class Mage_Adminhtml_Sales_Order_InvoiceController extends Mage_Adminhtml_Contro
     public function updateQtyAction()
     {
         try {
-            $invoice = $this->_initInvoice();
-            $response = $this->getLayout()->createBlock('adminhtml/sales_order_invoice_create_items')
-                ->toHtml();
+            $invoice = $this->_initInvoice(true);
+            $this->loadLayout();
+            $response = $this->getLayout()->getBlock('order_items')->toHtml();
         }
         catch (Mage_Core_Exception $e) {
             $response = array(
@@ -223,8 +276,8 @@ class Mage_Adminhtml_Sales_Order_InvoiceController extends Mage_Adminhtml_Contro
         try {
             if ($invoice = $this->_initInvoice()) {
 
-                if (!empty($data['do_capture'])) {
-                    $invoice->setCaptureRequested(true);
+                if (!empty($data['capture_case'])) {
+                    $invoice->setRequestedCaptureCase($data['capture_case']);
                 }
 
                 if (!empty($data['comment_text'])) {
@@ -237,13 +290,17 @@ class Mage_Adminhtml_Sales_Order_InvoiceController extends Mage_Adminhtml_Contro
                     $invoice->setEmailSent(true);
                 }
 
+                $invoice->getOrder()->setIsInProcess(true);
+
                 $transactionSave = Mage::getModel('core/resource_transaction')
                     ->addObject($invoice)
                     ->addObject($invoice->getOrder());
                 $shipment = false;
                 if (!empty($data['do_shipment'])) {
                     $shipment = $this->_prepareShipment($invoice);
-                    $transactionSave->addObject($shipment);
+                    if ($shipment) {
+                        $transactionSave->addObject($shipment);
+                    }
                 }
                 $transactionSave->save();
 
@@ -259,7 +316,12 @@ class Mage_Adminhtml_Sales_Order_InvoiceController extends Mage_Adminhtml_Contro
                     $shipment->sendEmail(!empty($data['send_email']));
                 }
 
-                $this->_getSession()->addSuccess($this->__('Invoice was successfully created'));
+                if (!empty($data['do_shipment'])) {
+                    $this->_getSession()->addSuccess($this->__('Invoice and shipment was successfully created.'));
+                }
+                else {
+                    $this->_getSession()->addSuccess($this->__('Invoice was successfully created.'));
+                }
 
                 $this->_redirect('*/sales_order/view', array('order_id' => $invoice->getOrderId()));
                 return;
@@ -365,9 +427,8 @@ class Mage_Adminhtml_Sales_Order_InvoiceController extends Mage_Adminhtml_Contro
             $invoice->sendUpdateEmail(!empty($data['is_customer_notified']), $data['comment']);
             $invoice->save();
 
-            $response = $this->getLayout()->createBlock('adminhtml/sales_order_comments_view')
-                ->setEntity($invoice)
-                ->toHtml();
+            $this->loadLayout();
+            $response = $this->getLayout()->getBlock('invoice_comments')->toHtml();
         }
         catch (Mage_Core_Exception $e) {
             $response = array(
@@ -386,16 +447,63 @@ class Mage_Adminhtml_Sales_Order_InvoiceController extends Mage_Adminhtml_Contro
         $this->getResponse()->setBody($response);
     }
 
-    public function printAction()
-    {
-        if ($invoiceId = $this->getRequest()->getParam('invoice_id')) {
-            if ($invoice = Mage::getModel('sales/order_invoice')->load($invoiceId)) {
-                $pdf = Mage::getModel('sales/order_pdf_invoice')->getPdf(array($invoice));
-                $this->_prepareDownloadResponse('invoice'.Mage::getSingleton('core/date')->date('Y-m-d_H-i-s').'.pdf', $pdf->render(), 'application/pdf');
+    /**
+     * Decides if we need to create dummy invoice item or not
+     * for eaxample we don't need create dummy parent if all
+     * children are not in process
+     *
+     * @param Mage_Sales_Model_Order_Item $item
+     * @param array $qtys
+     * @return bool
+     */
+    protected function _needToAddDummy($item, $qtys) {
+        if ($item->getHasChildren()) {
+            foreach ($item->getChildrenItems() as $child) {
+                if (isset($qtys[$child->getId()]) && $qtys[$child->getId()] > 0) {
+                    return true;
+                }
             }
-        }
-        else {
-            $this->_forward('noRoute');
+            return false;
+        } else if($item->getParentItem()) {
+            if (isset($qtys[$item->getParentItem()->getId()]) && $qtys[$item->getParentItem()->getId()] > 0) {
+                return true;
+            }
+            return false;
         }
     }
+
+    /**
+     * Decides if we need to create dummy shipment item or not
+     * for eaxample we don't need create dummy parent if all
+     * children are not in process
+     *
+     * @param Mage_Sales_Model_Order_Item $item
+     * @param array $qtys
+     * @return bool
+     */
+    protected function _needToAddDummyForShipment($item, $qtys) {
+        if ($item->getHasChildren()) {
+            foreach ($item->getChildrenItems() as $child) {
+                if ($child->getIsVirtual()) {
+                    continue;
+                }
+                if (isset($qtys[$child->getId()]) && $qtys[$child->getId()] > 0) {
+                    return true;
+                }
+            }
+            if ($item->isShipSeparately()) {
+                return true;
+            }
+            return false;
+        } else if($item->getParentItem()) {
+            if ($item->getIsVirtual()) {
+                return false;
+            }
+            if (isset($qtys[$item->getParentItem()->getId()]) && $qtys[$item->getParentItem()->getId()] > 0) {
+                return true;
+            }
+            return false;
+        }
+    }
+
 }

@@ -14,7 +14,7 @@
  *
  * @category   Mage
  * @package    Mage_Customer
- * @copyright  Copyright (c) 2004-2007 Irubin Consulting Inc. DBA Varien (http://www.varien.com)
+ * @copyright  Copyright (c) 2008 Irubin Consulting Inc. DBA Varien (http://www.varien.com)
  * @license    http://opensource.org/licenses/osl-3.0.php  Open Software License (OSL 3.0)
  */
 
@@ -24,6 +24,7 @@
  *
  * @category   Mage
  * @package    Mage_Customer
+ * @author      Magento Core Team <core@magentocommerce.com>
  */
 class Mage_Customer_AddressController extends Mage_Core_Controller_Front_Action
 {
@@ -54,6 +55,11 @@ class Mage_Customer_AddressController extends Mage_Core_Controller_Front_Action
         if (count($this->_getSession()->getCustomer()->getAddresses())) {
             $this->loadLayout();
             $this->_initLayoutMessages('customer/session');
+            $this->_initLayoutMessages('catalog/session');
+            
+            if ($block = $this->getLayout()->getBlock('address_book')) {
+                $block->setRefererUrl($this->_getRefererUrl());
+            }
             $this->renderLayout();
         }
         else {

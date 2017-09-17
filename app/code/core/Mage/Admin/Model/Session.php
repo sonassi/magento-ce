@@ -14,7 +14,7 @@
  *
  * @category   Mage
  * @package    Mage_Admin
- * @copyright  Copyright (c) 2004-2007 Irubin Consulting Inc. DBA Varien (http://www.varien.com)
+ * @copyright  Copyright (c) 2008 Irubin Consulting Inc. DBA Varien (http://www.varien.com)
  * @license    http://opensource.org/licenses/osl-3.0.php  Open Software License (OSL 3.0)
  */
 
@@ -24,6 +24,7 @@
  *
  * @category   Mage
  * @package    Mage_Admin
+ * @author      Magento Core Team <core@magentocommerce.com>
  */
 class Mage_Admin_Model_Session extends Mage_Core_Model_Session_Abstract
 {
@@ -52,10 +53,22 @@ class Mage_Admin_Model_Session extends Mage_Core_Model_Session_Abstract
         } else {
             if ($user->getId()) {
                 $session = Mage::getSingleton('admin/session');
+                $session->setIsFirstVisit(true);
                 $session->setUser($user);
                 $session->setAcl(Mage::getResourceModel('admin/acl')->loadAcl());
                 if ($request) {
-                    header('Location: '.$request->getRequestUri());
+                    /**
+                     * Added hack as $_GET['ft'] param for redirecting to dashboard
+                     * if _prepareDownloadResponse used when user is not logged in
+                     */
+                    $requestUriInfo = parse_url($request->getRequestUri());
+                    if (isset($requestUriInfo['query']) && $requestUriInfo['query'] != '') {
+                        $requestUriPostfix = '&ft';
+                    } else {
+                        $requestUriPostfix = '?ft';
+                    }
+
+                    header('Location: '.$request->getRequestUri() . $requestUriPostfix);
                     exit;
                 }
             } else {

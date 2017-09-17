@@ -14,7 +14,7 @@
  *
  * @category   design_default
  * @package    Mage
- * @copyright  Copyright (c) 2004-2007 Irubin Consulting Inc. DBA Varien (http://www.varien.com)
+ * @copyright  Copyright (c) 2008 Irubin Consulting Inc. DBA Varien (http://www.varien.com)
  * @license    http://opensource.org/licenses/osl-3.0.php  Open Software License (OSL 3.0)
  */
 ?>
@@ -23,11 +23,12 @@
 </div>
 <h4><?php echo $this->__("You're reviewing: %s", $this->htmlEscape($this->getProductInfo()->getName())) ?></h4>
 <form action="<?php echo $this->getAction() ?>" method="post" id="review-form">
-<div>
+<fieldset>
     <?php if( $this->getRatings() && $this->getRatings()->getSize()): ?>
-    <strong><?php echo $this->__('How do you rate this product?') ?><span class="required">*</span></strong><br/>
+    <div class="product-review-box">
+    <strong><?php echo $this->__('How do you rate this product?') ?><span class="required">*</span></strong><br />
     <span id="input-message-box"></span>
-    <table class="data-table product-review-box field-row" id="product-review-table" cellspacing="0">
+    <table class="data-table" id="product-review-table" cellspacing="0">
         <thead>
             <tr>
                 <th>&nbsp;</th>
@@ -46,7 +47,7 @@
             <?php $_iterator = 1; ?>
             <?php foreach ($_rating->getOptions() as $_option): ?>
                 <!--<td <?php if($_iterator == 5): ?>class="last"<?php endif; ?> style="width:60px;"><input type="radio" <?php if($_iterator == 5): $_iterator=0; ?>class="validate-one-required-by-name"<?php endif; ?> name="ratings[<?php echo $_rating->getId() ?>]" id="<?php echo $_rating->getRatingCode() ?>_<?php echo $_option->getValue() ?>" value="<?php echo $_option->getId() ?>"/></td>-->
-                <td <?php if($_iterator == 5): ?>class="last"<?php endif; ?> style="width:60px;"><input type="radio" name="ratings[<?php echo $_rating->getId() ?>]" id="<?php echo $_rating->getRatingCode() ?>_<?php echo $_option->getValue() ?>" value="<?php echo $_option->getId() ?>"/></td>
+                <td<?php if($_iterator == 5): ?> class="last"<?php endif; ?> style="width:60px;"><input type="radio" name="ratings[<?php echo $_rating->getId() ?>]" id="<?php echo $_rating->getRatingCode() ?>_<?php echo $_option->getValue() ?>" value="<?php echo $_option->getId() ?>" /></td>
             <?php $_iterator++ ?>
             <?php endforeach; ?>
             </tr>
@@ -56,29 +57,31 @@
     </table>
     <input type="hidden" name="validate_rating" class="validate-rating" value="" />
     <script type="text/javascript">decorateTable('product-review-table')</script>
+    </div>
     <?php endif; ?>
         <?php // do not remove div - some problem whith validator in IE ?>
         <div>
-        <label for="nickname_field"><?php echo $this->__('Nickname') ?><span class="required">*</span></label><br/>
-        <input class="input-text required-entry" name="nickname" id="nickname_field" style="width: 450px;" type="text" value="<?php echo $this->htmlEscape($data->getNickname()) ?>"/>
+        <label for="nickname_field"><?php echo $this->__('Nickname') ?><span class="required">*</span></label><br />
+        <input class="input-text required-entry" name="nickname" id="nickname_field" style="width: 450px;" type="text" value="<?php echo $this->htmlEscape($data->getNickname()) ?>" />
         </div>
 
         <div>
-        <label for="summary_field"><?php echo $this->__('Summary of Your Review') ?><span class="required">*</span></label><br/>
-        <input name="title" class="input-text  required-entry" id="summary_field" style="width: 450px;" type="text" value="<?php echo $this->htmlEscape($data->getTitle()) ?>"/>
+        <label for="summary_field"><?php echo $this->__('Summary of Your Review') ?><span class="required">*</span></label><br />
+        <input name="title" class="input-text  required-entry" id="summary_field" style="width: 450px;" type="text" value="<?php echo $this->htmlEscape($data->getTitle()) ?>" />
         </div>
 
         <div>
-        <label for="review_field"><?php echo $this->__('Review') ?><span class="required">*</span></label><br/>
+        <label for="review_field"><?php echo $this->__('Review') ?><span class="required">*</span></label><br />
         <textarea class="required-entry" name="detail" id="review_field" cols="53" rows="10" style="width: 450px;"><?php echo $this->htmlEscape($data->getDetail()) ?></textarea>
         </div>
 
     <div class="button-set">
         <button class="form-button right" type="submit"><span><?php echo $this->__('Submit Review') ?></span></button>
     </div>
-</div>
+</fieldset>
 </form>
 <script type="text/javascript">
+//<![CDATA[
     var dataForm = new VarienForm('review-form');
 
     Validation.addAllThese(
@@ -110,4 +113,5 @@
             }]
     ]
     );
+//]]>
 </script>

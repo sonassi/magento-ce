@@ -14,7 +14,7 @@
  *
  * @category   Mage
  * @package    Mage_Adminhtml
- * @copyright  Copyright (c) 2004-2007 Irubin Consulting Inc. DBA Varien (http://www.varien.com)
+ * @copyright  Copyright (c) 2008 Irubin Consulting Inc. DBA Varien (http://www.varien.com)
  * @license    http://opensource.org/licenses/osl-3.0.php  Open Software License (OSL 3.0)
  */
 
@@ -30,8 +30,7 @@ class Mage_Adminhtml_Model_Search_Customer extends Varien_Object
             return $this;
         }
         $collection = Mage::getResourceModel('customer/customer_collection')
-            ->addAttributeToSelect('firstname', 'inner')
-            ->addAttributeToSelect('lastname', 'inner')
+            ->addNameToSelect()
             ->joinAttribute('company', 'customer_address/company', 'default_billing', null, 'left')
             ->addAttributeToFilter(array(
                 array('attribute'=>'firstname', 'like'=>$this->getQuery().'%'),
@@ -45,7 +44,7 @@ class Mage_Adminhtml_Model_Search_Customer extends Varien_Object
             $arr[] = array(
                 'id'            => 'customer/1/'.$customer->getId(),
                 'type'          => 'Customer',
-                'name'          => $customer->getFirstname().' '.$customer->getLastname(),
+                'name'          => $customer->getName(),
                 'description'   => $customer->getCompany(),
                 'url'           => Mage::helper('adminhtml')->getUrl('*/customer/edit', array('id'=>$customer->getId())),
             );

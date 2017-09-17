@@ -14,7 +14,7 @@
  *
  * @category   Mage
  * @package    Mage_PaypalUk
- * @copyright  Copyright (c) 2004-2007 Irubin Consulting Inc. DBA Varien (http://www.varien.com)
+ * @copyright  Copyright (c) 2008 Irubin Consulting Inc. DBA Varien (http://www.varien.com)
  * @license    http://opensource.org/licenses/osl-3.0.php  Open Software License (OSL 3.0)
  */
 
@@ -22,6 +22,7 @@
  *
  * PayPalUk Direct Module
  *
+ * @author      Magento Core Team <core@magentocommerce.com>
  */
 class Mage_PaypalUk_Model_Direct extends Mage_Payment_Model_Method_Cc
 {
@@ -54,10 +55,13 @@ class Mage_PaypalUk_Model_Direct extends Mage_Payment_Model_Method_Cc
         }
         parent::assignData($data);
         $info = $this->getInfoInstance();
-        $info->setCcSsIssue($data->getCcSsIssue())
-            ->setCcSsStartMonth($data->getCcSsStartMonth())
-            ->setCcSsStartYear($data->getCcSsStartYear())
-        ;
+
+        if ($data->getCcType()=='SS') {
+            $info->setCcSsIssue($data->getCcSsIssue())
+                ->setCcSsStartMonth($data->getCcSsStartMonth())
+                ->setCcSsStartYear($data->getCcSsStartYear())
+            ;
+        }
         return $this;
     }
 
@@ -149,9 +153,9 @@ class Mage_PaypalUk_Model_Direct extends Mage_Payment_Model_Method_Cc
     public function void(Varien_Object $payment)
     {
         $error = false;
-        if ($payment->getCcTransId()) {
+        if ($payment->getVoidTransactionId()) {
              $api = $this->getApi()
-                ->setTransactionId($payment->getCcTransId())
+                ->setTransactionId($payment->getVoidTransactionId())
                 ->setPayment($payment);
 
              if ($api->void()!==false) {

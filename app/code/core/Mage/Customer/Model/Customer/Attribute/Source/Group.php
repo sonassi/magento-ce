@@ -14,7 +14,7 @@
  *
  * @category   Mage
  * @package    Mage_Customer
- * @copyright  Copyright (c) 2004-2007 Irubin Consulting Inc. DBA Varien (http://www.varien.com)
+ * @copyright  Copyright (c) 2008 Irubin Consulting Inc. DBA Varien (http://www.varien.com)
  * @license    http://opensource.org/licenses/osl-3.0.php  Open Software License (OSL 3.0)
  */
 
@@ -23,18 +23,18 @@
  *
  * @category   Mage
  * @package    Mage_Customer
+ * @author      Magento Core Team <core@magentocommerce.com>
  */
 class Mage_Customer_Model_Customer_Attribute_Source_Group extends Mage_Eav_Model_Entity_Attribute_Source_Table
 {
     public function getAllOptions()
     {
         if (!$this->_options) {
-            $this->_options = Mage::getResourceModel('customer/group_collection')->load()->toOptionArray();
-            foreach ($this->_options as $i=>$o) {
-                if ($o['value']==0) {
-                    unset($this->_options[$i]);
-                }
-            }
+            $this->_options = Mage::getResourceModel('customer/group_collection')
+                ->setRealGroupsFilter()
+                ->load()
+                ->toOptionArray()
+            ;
         }
         return $this->_options;
     }

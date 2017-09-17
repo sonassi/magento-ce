@@ -14,7 +14,7 @@
  *
  * @category   Mage
  * @package    Mage_Dataflow
- * @copyright  Copyright (c) 2004-2007 Irubin Consulting Inc. DBA Varien (http://www.varien.com)
+ * @copyright  Copyright (c) 2008 Irubin Consulting Inc. DBA Varien (http://www.varien.com)
  * @license    http://opensource.org/licenses/osl-3.0.php  Open Software License (OSL 3.0)
  */
 
@@ -24,10 +24,12 @@
  *
  * @category   Mage
  * @package    Mage_Dataflow
+ * @author      Magento Core Team <core@magentocommerce.com>
  */
 abstract class Mage_Dataflow_Model_Convert_Container_Abstract
     implements Mage_Dataflow_Model_Convert_Container_Interface
 {
+    protected $_batchParams = array();
 
     protected $_vars;
 
@@ -41,7 +43,7 @@ abstract class Mage_Dataflow_Model_Convert_Container_Abstract
 
     public function getVar($key, $default=null)
     {
-        if (!isset($this->_vars[$key])) {
+        if (!isset($this->_vars[$key]) || (!is_array($this->_vars[$key]) && strlen($this->_vars[$key]) == 0)) {
             return $default;
         }
         return $this->_vars[$key];
@@ -175,4 +177,19 @@ abstract class Mage_Dataflow_Model_Convert_Container_Abstract
         return $this;
     }
 
+    public function setBatchParams($data)
+    {
+        if (is_array($data)) {
+            $this->_batchParams = $data;
+        }
+        return $this;
+    }
+
+    public function getBatchParams($key = null)
+    {
+        if (!empty($key)) {
+            return isset($this->_batchParams[$key]) ? $this->_batchParams[$key] : null;
+        }
+        return $this->_batchParams;
+    }
 }

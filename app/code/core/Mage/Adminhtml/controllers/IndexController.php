@@ -14,7 +14,7 @@
  *
  * @category   Mage
  * @package    Mage_Adminhtml
- * @copyright  Copyright (c) 2004-2007 Irubin Consulting Inc. DBA Varien (http://www.varien.com)
+ * @copyright  Copyright (c) 2008 Irubin Consulting Inc. DBA Varien (http://www.varien.com)
  * @license    http://opensource.org/licenses/osl-3.0.php  Open Software License (OSL 3.0)
  */
 
@@ -33,13 +33,9 @@ class Mage_Adminhtml_IndexController extends Mage_Adminhtml_Controller_Action
 
     public function indexAction()
     {
-        $url = Mage::getSingleton('admin/session')->getUser()->findFirstAvailableMenu();
+        $url = Mage::getSingleton('admin/session')->getUser()->getStatrupPageUrl();
 
-        if (Mage::getSingleton('admin/session')->isAllowed('dashboard') || $url == '') {
-            $this->_redirect('*/dashboard');
-        } else {
-            $this->_redirect($url);
-        }
+        $this->_redirect($url);
         return;
 
         $this->loadLayout();
@@ -72,6 +68,7 @@ class Mage_Adminhtml_IndexController extends Mage_Adminhtml_Controller_Action
     public function logoutAction()
     {
         $auth = Mage::getSingleton('admin/session')->unsetAll();
+        Mage::getSingleton('adminhtml/session')->unsetAll();
         Mage::getSingleton('adminhtml/session')->addSuccess(Mage::helper('adminhtml')->__('You successfully logged out.'));
         $this->_redirect('*');
     }
@@ -170,7 +167,7 @@ class Mage_Adminhtml_IndexController extends Mage_Adminhtml_Controller_Action
                         $user->save();
                         $user->setPlainPassword($pass);
                         $user->sendNewPasswordEmail();
-                        Mage::getSingleton('adminhtml/session')->addSuccess(Mage::helper('adminhtml')->__('The new password have sent to your email address. Please check your email and click back to login.'));
+                        Mage::getSingleton('adminhtml/session')->addSuccess(Mage::helper('adminhtml')->__('A new password was sent to your email address. Please check your email and click Back to Login.'));
                         $email = '';
                     }
                     break;

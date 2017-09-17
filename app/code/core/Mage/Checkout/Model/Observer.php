@@ -14,7 +14,7 @@
  *
  * @category   Mage
  * @package    Mage_Checkout
- * @copyright  Copyright (c) 2004-2007 Irubin Consulting Inc. DBA Varien (http://www.varien.com)
+ * @copyright  Copyright (c) 2008 Irubin Consulting Inc. DBA Varien (http://www.varien.com)
  * @license    http://opensource.org/licenses/osl-3.0.php  Open Software License (OSL 3.0)
  */
 
@@ -23,6 +23,7 @@
  *
  * @category   Mage
  * @package    Mage_Checkout
+ * @author      Magento Core Team <core@magentocommerce.com>
  */
 class Mage_Checkout_Model_Observer
 {
@@ -47,9 +48,10 @@ class Mage_Checkout_Model_Observer
         }
     }
 
-    public function sales_quote_save_after($observer)
+    public function salesQuoteSaveAfter($observer)
     {
         $quote = $observer->getEvent()->getQuote();
+        /* @var $quote Mage_Sales_Model_Quote */
         if ($quote->getIsCheckoutCart()) {
             Mage::getSingleton('checkout/session')->getQuoteId($quote->getId());
         }

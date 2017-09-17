@@ -14,7 +14,7 @@
  *
  * @category   Mage
  * @package    Mage_Adminhtml
- * @copyright  Copyright (c) 2004-2007 Irubin Consulting Inc. DBA Varien (http://www.varien.com)
+ * @copyright  Copyright (c) 2008 Irubin Consulting Inc. DBA Varien (http://www.varien.com)
  * @license    http://opensource.org/licenses/osl-3.0.php  Open Software License (OSL 3.0)
  */
 
@@ -23,9 +23,15 @@
  *
  * @category   Mage
  * @package    Mage_Adminhtml
+ * @author      Magento Core Team <core@magentocommerce.com>
  */
 class Mage_Adminhtml_Report_ProductController extends Mage_Adminhtml_Controller_Action
 {
+    /**
+     * init
+     *
+     * @return Mage_Adminhtml_Report_ProductController
+     */
     public function _initAction()
     {
         $this->loadLayout()
@@ -116,6 +122,7 @@ class Mage_Adminhtml_Report_ProductController extends Mage_Adminhtml_Controller_
     {
         $fileName   = 'products_lowstock.csv';
         $content    = $this->getLayout()->createBlock('adminhtml/report_product_lowstock_grid')
+            ->setSaveParametersInSession(true)
             ->getCsv();
 
         $this->_prepareDownloadResponse($fileName, $content);
@@ -128,6 +135,7 @@ class Mage_Adminhtml_Report_ProductController extends Mage_Adminhtml_Controller_
     {
         $fileName   = 'products_lowstock.xml';
         $content    = $this->getLayout()->createBlock('adminhtml/report_product_lowstock_grid')
+            ->setSaveParametersInSession(true)
             ->getExcel($fileName);
 
         $this->_prepareDownloadResponse($fileName, $content);

@@ -14,7 +14,7 @@
  *
  * @category   Mage
  * @package    Mage_Adminhtml
- * @copyright  Copyright (c) 2004-2007 Irubin Consulting Inc. DBA Varien (http://www.varien.com)
+ * @copyright  Copyright (c) 2008 Irubin Consulting Inc. DBA Varien (http://www.varien.com)
  * @license    http://opensource.org/licenses/osl-3.0.php  Open Software License (OSL 3.0)
  */
 
@@ -23,6 +23,7 @@
  *
  * @category   Mage
  * @package    Mage_Adminhtml
+ * @author      Magento Core Team <core@magentocommerce.com>
  */
 
 class Mage_Adminhtml_Block_Urlrewrite_Edit_Form extends Mage_Adminhtml_Block_Widget_Form
@@ -134,21 +135,21 @@ class Mage_Adminhtml_Block_Urlrewrite_Edit_Form extends Mage_Adminhtml_Block_Wid
         }
 
 
-        $fieldset->addField('target_path', 'text', array(
-            'label'     => $this->__('Target Path'),
-            'title'     => $this->__('Target Path'),
-            'name'      => 'target_path',
-            'required'  => true,
-            'disabled'  => true,
-            'value'     => $model->getTargetPath()
-        ));
-
         $fieldset->addField('request_path', 'text', array(
             'label'     => $this->__('Request Path'),
             'title'     => $this->__('Request Path'),
             'name'      => 'request_path',
             'required'  => true,
             'value'     => $model->getRequestPath()
+        ));
+
+        $fieldset->addField('target_path', 'text', array(
+            'label'     => $this->__('Target Path'),
+            'title'     => $this->__('Target Path'),
+            'name'      => 'target_path',
+            'required'  => true,
+            'disabled'  => true,
+            'value'     => $model->getTargetPath(),
         ));
 
         $fieldset->addField('options', 'select', array(

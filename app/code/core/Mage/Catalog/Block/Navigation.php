@@ -14,7 +14,7 @@
  *
  * @category   Mage
  * @package    Mage_Catalog
- * @copyright  Copyright (c) 2004-2007 Irubin Consulting Inc. DBA Varien (http://www.varien.com)
+ * @copyright  Copyright (c) 2008 Irubin Consulting Inc. DBA Varien (http://www.varien.com)
  * @license    http://opensource.org/licenses/osl-3.0.php  Open Software License (OSL 3.0)
  */
 
@@ -24,6 +24,7 @@
  *
  * @category   Mage
  * @package    Mage_Catalog
+ * @author      Magento Core Team <core@magentocommerce.com>
  */
 class Mage_Catalog_Block_Navigation extends Mage_Core_Block_Template
 {
@@ -147,6 +148,7 @@ class Mage_Catalog_Block_Navigation extends Mage_Core_Block_Template
         }
 
         $html.= ' class="level'.$level;
+        $html.= ' nav-'.str_replace('/', '-', $category->getRequestPath());
         if ($this->isCategoryActive($category)) {
             $html.= ' active';
         }
@@ -163,7 +165,7 @@ class Mage_Catalog_Block_Navigation extends Mage_Core_Block_Template
             $html .= ' parent';
         }
         $html.= '">'."\n";
-        $html.= '<a href="'.$this->getCategoryUrl($category).'"><span>'.$category->getName().'</span></a>'."\n";
+        $html.= '<a href="'.$this->getCategoryUrl($category).'"><span>'.$this->htmlEscape($category->getName()).'</span></a>'."\n";
         //$html.= '<span>'.$level.'</span>';
 
         if ($hasChildren){
@@ -232,7 +234,7 @@ class Mage_Catalog_Block_Navigation extends Mage_Core_Block_Template
         }
 
         $html.= '>'."\n";
-        $html.= '<a href="'.$this->getCategoryUrl($category).'"><span>'.$category->getName().'</span></a>'."\n";
+        $html.= '<a href="'.$this->getCategoryUrl($category).'"><span>'.$this->htmlEscape($category->getName()).'</span></a>'."\n";
 
         if (in_array($category->getId(), $this->getCurrentCategoryPath())){
             $children = $category->getChildren();

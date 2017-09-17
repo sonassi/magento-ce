@@ -14,13 +14,14 @@
  *
  * @category   Mage
  * @package    Mage_Payment
- * @copyright  Copyright (c) 2004-2007 Irubin Consulting Inc. DBA Varien (http://www.varien.com)
+ * @copyright  Copyright (c) 2008 Irubin Consulting Inc. DBA Varien (http://www.varien.com)
  * @license    http://opensource.org/licenses/osl-3.0.php  Open Software License (OSL 3.0)
  */
 
 /**
  * Payment method abstract model
  *
+ * @author      Magento Core Team <core@magentocommerce.com>
  */
 abstract class Mage_Payment_Model_Method_Abstract extends Varien_Object
 {
@@ -136,6 +137,16 @@ abstract class Mage_Payment_Model_Method_Abstract extends Varien_Object
     public function canUseForMultishipping()
     {
         return $this->_canUseForMultishipping;
+    }
+
+    /**
+     * Can be edit order (renew order)
+     *
+     * @return bool
+     */
+    public function canEdit()
+    {
+        return true;
     }
 
     /**
@@ -277,6 +288,18 @@ abstract class Mage_Payment_Model_Method_Abstract extends Varien_Object
         return $this;
     }
 
+    public function processInvoice($invoice, $payment)
+    {
+        $invoice->setTransactionId($payment->getLastTransId());
+        return $this;
+    }
+
+    public function processBeforeRefund($invoice, $payment)
+    {
+        $payment->setRefundTransactionId($invoice->getTransactionId());
+        return $this;
+    }
+
     /**
      * Refund money
      *
@@ -295,6 +318,12 @@ abstract class Mage_Payment_Model_Method_Abstract extends Varien_Object
         return $this;
     }
 
+    public function processCreditmemo($creditmemo, $payment)
+    {
+        $creditmemo->setTransactionId($payment->getLastTransId());
+        return $this;
+    }
+
     /**
      * Cancel payment (GoogleCheckout)
      *
@@ -306,6 +335,11 @@ abstract class Mage_Payment_Model_Method_Abstract extends Varien_Object
         return $this;
     }
 
+    public function processBeforeVoid($invoice, $payment)
+    {
+        $payment->setVoidTransactionId($invoice->getTransactionId());
+        return $this;
+    }
 
     /**
      * Void payment

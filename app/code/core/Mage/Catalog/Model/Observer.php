@@ -14,7 +14,7 @@
  *
  * @category   Mage
  * @package    Mage_Catalog
- * @copyright  Copyright (c) 2004-2007 Irubin Consulting Inc. DBA Varien (http://www.varien.com)
+ * @copyright  Copyright (c) 2008 Irubin Consulting Inc. DBA Varien (http://www.varien.com)
  * @license    http://opensource.org/licenses/osl-3.0.php  Open Software License (OSL 3.0)
  */
 
@@ -28,6 +28,8 @@ class Mage_Catalog_Model_Observer
             Mage::app()->reinitStores();
             Mage::getModel('catalog/url')->refreshRewrites($store->getId());
         }
+        Mage::getResourceModel('catalog/product')->refreshEnabledIndex($store);
+        return $this;
     }
 
     public function storeAdd($observer)
@@ -35,7 +37,10 @@ class Mage_Catalog_Model_Observer
         $store = $observer->getEvent()->getStore();
         /* @var $store Mage_Core_Model_Store */
         Mage::app()->reinitStores();
+        Mage::getConfig()->reinit();
         Mage::getModel('catalog/url')->refreshRewrites($store->getId());
+        Mage::getResourceModel('catalog/product')->refreshEnabledIndex($store);
+        return $this;
     }
 
     public function storeGroupSave($observer)
@@ -48,11 +53,19 @@ class Mage_Catalog_Model_Observer
                 Mage::getModel('catalog/url')->refreshRewrites($store->getId());
             }
         }
+        return $this;
     }
 
     public function categoryMove($observer)
     {
         $categoryId = $observer->getEvent()->getCategoryId();
         Mage::getModel('catalog/url')->refreshCategoryRewrite($categoryId);
+        return $this;
+    }
+
+    public function catalogProductImportAfter($observer)
+    {
+        Mage::getModel('catalog/url')->refreshRewrites();
+        return $this;
     }
 }

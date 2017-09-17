@@ -14,7 +14,7 @@
  *
  * @category   Mage
  * @package    Mage_Adminhtml
- * @copyright  Copyright (c) 2004-2007 Irubin Consulting Inc. DBA Varien (http://www.varien.com)
+ * @copyright  Copyright (c) 2008 Irubin Consulting Inc. DBA Varien (http://www.varien.com)
  * @license    http://opensource.org/licenses/osl-3.0.php  Open Software License (OSL 3.0)
  */
 
@@ -24,6 +24,7 @@
  *
  * @category   Mage
  * @package    Mage_Adminhtml
+ * @author      Magento Core Team <core@magentocommerce.com>
  */
 class Mage_Adminhtml_Block_Cms_Page extends Mage_Adminhtml_Block_Widget_Grid_Container
 {
@@ -34,7 +35,7 @@ class Mage_Adminhtml_Block_Cms_Page extends Mage_Adminhtml_Block_Widget_Grid_Con
     public function __construct()
     {
         $this->_controller = 'cms_page';
-        $this->_headerText = Mage::helper('cms')->__('CMS Pages');
+        $this->_headerText = Mage::helper('cms')->__('Manage Pages');
         $this->_addButtonLabel = Mage::helper('cms')->__('Add New Page');
         parent::__construct();
     }

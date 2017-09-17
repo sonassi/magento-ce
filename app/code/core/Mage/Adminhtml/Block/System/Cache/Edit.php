@@ -14,7 +14,7 @@
  *
  * @category   Mage
  * @package    Mage_Adminhtml
- * @copyright  Copyright (c) 2004-2007 Irubin Consulting Inc. DBA Varien (http://www.varien.com)
+ * @copyright  Copyright (c) 2008 Irubin Consulting Inc. DBA Varien (http://www.varien.com)
  * @license    http://opensource.org/licenses/osl-3.0.php  Open Software License (OSL 3.0)
  */
 
@@ -23,14 +23,15 @@
  *
  * @category   Mage
  * @package    Mage_Adminhtml
+ * @author      Magento Core Team <core@magentocommerce.com>
  */
 class Mage_Adminhtml_Block_System_Cache_Edit extends Mage_Adminhtml_Block_Widget
 {
     public function __construct()
     {
         parent::__construct();
-        $this->setTemplate('system/config/edit.phtml');
-        $this->setTitle('Manage Cache');
+        $this->setTemplate('system/cache/edit.phtml');
+        $this->setTitle('Cache Management');
     }
 
     protected function _prepareLayout()
@@ -63,5 +64,26 @@ class Mage_Adminhtml_Block_System_Cache_Edit extends Mage_Adminhtml_Block_Widget
                 ->initForm()
         );
         return $this;
+    }
+
+    public function getCatalogData()
+    {
+        return array(
+            'refresh_catalog_rewrites'   => array(
+                'name'      => 'refresh_catalog_rewrites',
+                'label'     => Mage::helper('adminhtml')->__('Catalog Rewrites'),
+                'action'    => Mage::helper('adminhtml')->__('Refresh'),
+            ),
+            'clear_images_cache'         => array(
+                'name'      => 'clear_images_cache',
+                'label'     => Mage::helper('adminhtml')->__('Images Cache'),
+                'action'    => Mage::helper('adminhtml')->__('Clear'),
+            ),
+            'refresh_layered_navigation' => array(
+                'name'      => 'refresh_layered_navigation',
+                'label'     => Mage::helper('adminhtml')->__('Layered Navigation Indices'),
+                'action'    => Mage::helper('adminhtml')->__('Refresh'),
+            )
+        );
     }
 }

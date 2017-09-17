@@ -14,7 +14,7 @@
  *
  * @category   Mage
  * @package    Mage_GoogleCheckout
- * @copyright  Copyright (c) 2004-2007 Irubin Consulting Inc. DBA Varien (http://www.varien.com)
+ * @copyright  Copyright (c) 2008 Irubin Consulting Inc. DBA Varien (http://www.varien.com)
  * @license    http://opensource.org/licenses/osl-3.0.php  Open Software License (OSL 3.0)
  */
 
@@ -24,6 +24,7 @@ class Mage_GoogleCheckout_Model_Payment extends Mage_Payment_Model_Method_Abstra
     const ACTION_AUTHORIZE_CAPTURE = 1;
 
     protected $_code  = 'googlecheckout';
+    protected $_formBlockType = 'googlecheckout/form';
 
     /**
      * Availability options
@@ -35,8 +36,39 @@ class Mage_GoogleCheckout_Model_Payment extends Mage_Payment_Model_Method_Abstra
     protected $_canRefund               = true;
     protected $_canVoid                 = true;
     protected $_canUseInternal          = false;
-    protected $_canUseCheckout          = false;
+    protected $_canUseCheckout          = true;
     protected $_canUseForMultishipping  = false;
+
+    /**
+     * Can be edit order (renew order)
+     *
+     * @return bool
+     */
+    public function canEdit()
+    {
+        return false;
+    }
+
+    /**
+     * Return true if the method can be used at this time
+     * Use google/checkout/active flag of admin module config
+     *
+     * @return bool
+     */
+    public function isAvailable($quote=null)
+    {
+        return Mage::getStoreConfig('google/checkout/active') > 0;
+    }
+
+    /**
+     *  Return Order Place Redirect URL
+     *
+     *  @return	  string Order Redirect URL
+     */
+    public function getOrderPlaceRedirectUrl()
+    {
+        return Mage::getUrl('googlecheckout/redirect/redirect');
+    }
 
     /**
      * Authorize

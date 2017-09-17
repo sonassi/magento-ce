@@ -14,7 +14,7 @@
  *
  * @category   Mage
  * @package    Mage_Catalog
- * @copyright  Copyright (c) 2004-2007 Irubin Consulting Inc. DBA Varien (http://www.varien.com)
+ * @copyright  Copyright (c) 2008 Irubin Consulting Inc. DBA Varien (http://www.varien.com)
  * @license    http://opensource.org/licenses/osl-3.0.php  Open Software License (OSL 3.0)
  */
 
@@ -24,6 +24,7 @@
  *
  * @category   Mage
  * @package    Mage_Catalog
+ * @author      Magento Core Team <core@magentocommerce.com>
  */
 class Mage_Catalog_Model_Layer extends Varien_Object
 {
@@ -37,8 +38,7 @@ class Mage_Catalog_Model_Layer extends Varien_Object
     {
         $collection = $this->getData('product_collection');
         if (is_null($collection)) {
-            $collection = $this->getCurrentCategory()->getProductCollection()
-                ->addCategoryFilter($this->getCurrentCategory());
+            $collection = $this->getCurrentCategory()->getProductCollection();
             $this->prepareProductCollection($collection);
             $this->setData('product_collection', $collection);
         }
@@ -47,38 +47,36 @@ class Mage_Catalog_Model_Layer extends Varien_Object
     }
 
     /**
-     * Enter description here...
+     * Initialize product collection
      *
      * @param Mage_Catalog_Model_Resource_Eav_Mysql4_Product_Collection $collection
      * @return Mage_Catalog_Model_Layer
      */
     public function prepareProductCollection($collection)
     {
-        $collection->addAttributeToSelect('name')
-            ->addAttributeToSelect('url_key')
-
-            ->addAttributeToSelect('price')
-            ->addAttributeToSelect('special_price')
-            ->addAttributeToSelect('special_from_date')
-            ->addAttributeToSelect('special_to_date')
-            //->joinMinimalPrice()
+        $collection->addAttributeToSelect(Mage::getSingleton('catalog/config')->getProductAttributes())
             ->addMinimalPrice()
-
-            ->addAttributeToSelect('description')
-            ->addAttributeToSelect('short_description')
-
-            ->addAttributeToSelect('image')
-            ->addAttributeToSelect('thumbnail')
-            ->addAttributeToSelect('small_image')
-
-            ->addAttributeToSelect('tax_class_id')
-
+            ->addFinalPrice()
+            ->addTaxPercents()
             ->addStoreFilter();
 
         Mage::getSingleton('catalog/product_status')->addVisibleFilterToCollection($collection);
         Mage::getSingleton('catalog/product_visibility')->addVisibleInCatalogFilterToCollection($collection);
         $collection->addUrlRewrite($this->getCurrentCategory()->getId());
 
+        return $this;
+    }
+
+    /**
+     * Apply layer
+     * Method is colling after apply all filters, can be used
+     * for prepare some index data before getting information
+     * about existing intexes
+     *
+     * @return Mage_Catalog_Model_Layer
+     */
+    public function apply()
+    {
         return $this;
     }
 
@@ -134,6 +132,7 @@ class Mage_Catalog_Model_Layer extends Varien_Object
             ->addIsFilterableFilter()
             ->setOrder('position', 'ASC')
             ->load();
+
         foreach ($collection as $item) {
             Mage::getResourceSingleton('catalog/product')->getAttribute($item);
             $item->setEntity($entity);

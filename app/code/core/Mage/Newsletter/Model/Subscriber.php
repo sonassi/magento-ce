@@ -14,7 +14,7 @@
  *
  * @category   Mage
  * @package    Mage_Newsletter
- * @copyright  Copyright (c) 2004-2007 Irubin Consulting Inc. DBA Varien (http://www.varien.com)
+ * @copyright  Copyright (c) 2008 Irubin Consulting Inc. DBA Varien (http://www.varien.com)
  * @license    http://opensource.org/licenses/osl-3.0.php  Open Software License (OSL 3.0)
  */
 
@@ -23,6 +23,7 @@
  *
  * @category   Mage
  * @package    Mage_Newsletter
+ * @author      Magento Core Team <core@magentocommerce.com>
  */
 class Mage_Newsletter_Model_Subscriber extends Varien_Object
 {
@@ -168,6 +169,11 @@ class Mage_Newsletter_Model_Subscriber extends Varien_Object
     	return $this->_isStatusChanged;
     }
 
+    /**
+     * Return customer subscription status
+     *
+     * @return bool
+     */
     public function isSubscribed()
     {
     	if($this->getId() && $this->getStatus()==self::STATUS_SUBSCRIBED) {
@@ -418,13 +424,20 @@ class Mage_Newsletter_Model_Subscriber extends Varien_Object
             return $this;
         }
 
+        $translate = Mage::getSingleton('core/translate');
+        /* @var $translate Mage_Core_Model_Translate */
+        $translate->setTranslateInline(false);
+
     	Mage::getModel('core/email_template')
     		->sendTransactional(
     		    Mage::getStoreConfig(self::XML_PATH_CONFIRM_EMAIL_TEMPLATE),
     		    Mage::getStoreConfig(self::XML_PATH_CONFIRM_EMAIL_IDENTITY),
     		    $this->getEmail(),
     		    $this->getName(),
-    		    array('subscriber'=>$this));
+    		    array('subscriber'=>$this)
+		    );
+
+	    $translate->setTranslateInline(true);
 
     	return $this;
     }
@@ -435,13 +448,21 @@ class Mage_Newsletter_Model_Subscriber extends Varien_Object
             return $this;
         }
 
+        $translate = Mage::getSingleton('core/translate');
+        /* @var $translate Mage_Core_Model_Translate */
+        $translate->setTranslateInline(false);
+
     	Mage::getModel('core/email_template')
     		->sendTransactional(
     		    Mage::getStoreConfig(self::XML_PATH_SUCCESS_EMAIL_TEMPLATE),
     		    Mage::getStoreConfig(self::XML_PATH_SUCCESS_EMAIL_IDENTITY),
     		    $this->getEmail(),
     		    $this->getName(),
-    		    array('subscriber'=>$this));
+    		    array('subscriber'=>$this)
+		    );
+
+	    $translate->setTranslateInline(true);
+
     	return $this;
     }
 
@@ -450,13 +471,22 @@ class Mage_Newsletter_Model_Subscriber extends Varien_Object
         if(!Mage::getStoreConfig(self::XML_PATH_UNSUBSCRIBE_EMAIL_TEMPLATE) || !Mage::getStoreConfig(self::XML_PATH_UNSUBSCRIBE_EMAIL_IDENTITY))  {
             return $this;
         }
+
+        $translate = Mage::getSingleton('core/translate');
+        /* @var $translate Mage_Core_Model_Translate */
+        $translate->setTranslateInline(false);
+
         Mage::getModel('core/email_template')
     		->sendTransactional(
     		    Mage::getStoreConfig(self::XML_PATH_UNSUBSCRIBE_EMAIL_TEMPLATE),
     		    Mage::getStoreConfig(self::XML_PATH_UNSUBSCRIBE_EMAIL_IDENTITY),
     		    $this->getEmail(),
     		    $this->getName(),
-    		    array('subscriber'=>$this));
+    		    array('subscriber'=>$this)
+		    );
+
+	    $translate->setTranslateInline(true);
+
     	return $this;
     }
 }

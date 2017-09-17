@@ -14,7 +14,7 @@
  *
  * @category   Mage
  * @package    Mage_Adminhtml
- * @copyright  Copyright (c) 2004-2007 Irubin Consulting Inc. DBA Varien (http://www.varien.com)
+ * @copyright  Copyright (c) 2008 Irubin Consulting Inc. DBA Varien (http://www.varien.com)
  * @license    http://opensource.org/licenses/osl-3.0.php  Open Software License (OSL 3.0)
  */
 
@@ -23,6 +23,7 @@
  *
  * @category   Mage
  * @package    Mage_Adminhtml
+ * @author      Magento Core Team <core@magentocommerce.com>
  */
 class Mage_Adminhtml_Block_Promo_Widget_Chooser_Sku extends Mage_Adminhtml_Block_Widget_Grid
 {
@@ -30,8 +31,8 @@ class Mage_Adminhtml_Block_Promo_Widget_Chooser_Sku extends Mage_Adminhtml_Block
     public function __construct($arguments=array())
     {
         parent::__construct($arguments);
+        $this->setId('skuChooserGrid');
         $form = $this->getJsFormObject();
-        $this->setId("{$form}_widget_chooser_sku");
         $this->setRowClickCallback("$form.chooserGridRowClick.bind($form)");
         $this->setCheckboxCheckCallback("$form.chooserGridCheckboxCheck.bind($form)");
         $this->setRowInitCallback("$form.chooserGridRowInit.bind($form)");

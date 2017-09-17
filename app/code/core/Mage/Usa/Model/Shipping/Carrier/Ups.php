@@ -14,7 +14,7 @@
  *
  * @category   Mage
  * @package    Mage_Usa
- * @copyright  Copyright (c) 2004-2007 Irubin Consulting Inc. DBA Varien (http://www.varien.com)
+ * @copyright  Copyright (c) 2008 Irubin Consulting Inc. DBA Varien (http://www.varien.com)
  * @license    http://opensource.org/licenses/osl-3.0.php  Open Software License (OSL 3.0)
  */
 
@@ -24,6 +24,7 @@
  *
  * @category   Mage
  * @package    Mage_Usa
+ * @author      Magento Core Team <core@magentocommerce.com>
  */
 class Mage_Usa_Model_Shipping_Carrier_Ups
     extends Mage_Usa_Model_Shipping_Carrier_Abstract
@@ -137,6 +138,7 @@ class Mage_Usa_Model_Shipping_Carrier_Ups
         }
 
         $r->setValue($request->getPackageValue());
+        $r->setValueWithDiscount($request->getPackageValueWithDiscount());
 
         if ($request->getUpsUnitMeasure()) {
             $unit = $request->getUpsUnitMeasure();
@@ -582,7 +584,6 @@ XMLRequest;
             $xml->loadString($xmlResponse);
             $arr = $xml->getXpath("//RatingServiceSelectionResponse/Response/ResponseStatusCode/text()");
             $success = (int)$arr[0][0];
-            $result = Mage::getModel('shipping/rate_result');
             if($success===1){
                 $arr = $xml->getXpath("//RatingServiceSelectionResponse/RatedShipment");
                 $allowedMethods = explode(",", $this->getConfigData('allowed_methods'));
@@ -605,7 +606,7 @@ XMLRequest;
             }
         }
 
-
+        $result = Mage::getModel('shipping/rate_result');
         $defaults = $this->getDefaults();
         if (empty($priceArr)) {
             $error = Mage::getModel('shipping/rate_result_error');

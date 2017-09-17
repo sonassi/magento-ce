@@ -14,7 +14,7 @@
  *
  * @category   Varien
  * @package    Varien_Io
- * @copyright  Copyright (c) 2004-2007 Irubin Consulting Inc. DBA Varien (http://www.varien.com)
+ * @copyright  Copyright (c) 2008 Irubin Consulting Inc. DBA Varien (http://www.varien.com)
  * @license    http://opensource.org/licenses/osl-3.0.php  Open Software License (OSL 3.0)
  */
 
@@ -26,6 +26,7 @@
  *
  * @category   Varien
  * @package    Varien_Io
+ * @author      Magento Core Team <core@magentocommerce.com>
  * @link        http://www.php.net/manual/en/function.ssh2-connect.php
  */
 class Varien_Io_Sftp extends Varien_Io_Abstract

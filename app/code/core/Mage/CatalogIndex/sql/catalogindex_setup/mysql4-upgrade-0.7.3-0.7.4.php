@@ -14,7 +14,7 @@
  *
  * @category   Mage
  * @package    Mage_CatalogIndex
- * @copyright  Copyright (c) 2004-2007 Irubin Consulting Inc. DBA Varien (http://www.varien.com)
+ * @copyright  Copyright (c) 2008 Irubin Consulting Inc. DBA Varien (http://www.varien.com)
  * @license    http://opensource.org/licenses/osl-3.0.php  Open Software License (OSL 3.0)
  */
 
@@ -28,6 +28,6 @@ TRUNCATE {$installer->getTable('catalogindex_price')};
 TRUNCATE {$installer->getTable('catalogindex_minimal_price')};
 ");
 
-Mage::getModel('catalogindex/indexer')->plainReindex();
+//Mage::getModel('catalogindex/indexer')->plainReindex();
 
 $installer->endSetup();

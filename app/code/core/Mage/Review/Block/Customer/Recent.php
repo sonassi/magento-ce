@@ -14,7 +14,7 @@
  *
  * @category   Mage
  * @package    Mage_Review
- * @copyright  Copyright (c) 2004-2007 Irubin Consulting Inc. DBA Varien (http://www.varien.com)
+ * @copyright  Copyright (c) 2008 Irubin Consulting Inc. DBA Varien (http://www.varien.com)
  * @license    http://opensource.org/licenses/osl-3.0.php  Open Software License (OSL 3.0)
  */
 
@@ -23,6 +23,7 @@
  *
  * @category   Mage
  * @package    Mage_Review
+ * @author      Magento Core Team <core@magentocommerce.com>
  */
 
 class Mage_Review_Block_Customer_Recent extends Mage_Core_Block_Template
@@ -60,7 +61,7 @@ class Mage_Review_Block_Customer_Recent extends Mage_Core_Block_Template
 
     public function getReviewLink()
     {
-        return Mage::getUrl('customer/review/view/');
+        return Mage::getUrl('review/customer/view/');
     }
 
     public function getProductLink()
@@ -75,11 +76,11 @@ class Mage_Review_Block_Customer_Recent extends Mage_Core_Block_Template
 
     public function getAllReviewsUrl()
     {
-        return Mage::getUrl('customer/review');
+        return Mage::getUrl('review/customer');
     }
 
     public function getReviewUrl($id)
     {
-        return Mage::getUrl('customer/review/view', array('id' => $id));
+        return Mage::getUrl('review/customer/view', array('id' => $id));
     }
 }

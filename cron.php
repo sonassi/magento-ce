@@ -14,17 +14,21 @@
  *
  * @category   Mage
  * @package    Mage
- * @copyright  Copyright (c) 2004-2007 Irubin Consulting Inc. DBA Varien (http://www.varien.com)
+ * @copyright  Copyright (c) 2008 Irubin Consulting Inc. DBA Varien (http://www.varien.com)
  * @license    http://opensource.org/licenses/osl-3.0.php  Open Software License (OSL 3.0)
  */
 
 require 'app/Mage.php';
 
-Mage::app('default');
+Mage::app('admin');
 
 if (!Mage::app()->isInstalled()) {
     echo "Application is not installed yet, please complete install wizard first.";
 }
+
+// Only for urls
+// Don't remove this
+$_SERVER['SCRIPT_FILENAME'] = 'index.php';
 
 try {
     Mage::getConfig()->init()->loadEventObservers('crontab');

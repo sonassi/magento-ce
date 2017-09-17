@@ -14,7 +14,7 @@
  *
  * @category   Mage
  * @package    Mage_Tag
- * @copyright  Copyright (c) 2004-2007 Irubin Consulting Inc. DBA Varien (http://www.varien.com)
+ * @copyright  Copyright (c) 2008 Irubin Consulting Inc. DBA Varien (http://www.varien.com)
  * @license    http://opensource.org/licenses/osl-3.0.php  Open Software License (OSL 3.0)
  */
 
@@ -23,6 +23,7 @@
  *
  * @category   Mage
  * @package    Mage_Tag
+ * @author      Magento Core Team <core@magentocommerce.com>
  */
 
 class Mage_Tag_CustomerController extends Mage_Core_Controller_Front_Action
@@ -49,9 +50,14 @@ class Mage_Tag_CustomerController extends Mage_Core_Controller_Front_Action
 
         $this->loadLayout();
         $this->_initLayoutMessages('tag/session');
+         $this->_initLayoutMessages('catalog/session');
 
         if ($navigationBlock = $this->getLayout()->getBlock('customer_account_navigation')) {
             $navigationBlock->setActive('tag/customer');
+        }
+
+        if ($block = $this->getLayout()->getBlock('customer_tags')) {
+            $block->setRefererUrl($this->_getRefererUrl());
         }
 
         $this->renderLayout();
@@ -72,6 +78,7 @@ class Mage_Tag_CustomerController extends Mage_Core_Controller_Front_Action
                 $navigationBlock->setActive('tag/customer');
             }
 
+            $this->_initLayoutMessages('checkout/session');
             $this->renderLayout();
         }
         else {

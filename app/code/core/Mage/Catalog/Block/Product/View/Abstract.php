@@ -14,7 +14,7 @@
  *
  * @category   Mage
  * @package    Mage_Catalog
- * @copyright  Copyright (c) 2004-2007 Irubin Consulting Inc. DBA Varien (http://www.varien.com)
+ * @copyright  Copyright (c) 2008 Irubin Consulting Inc. DBA Varien (http://www.varien.com)
  * @license    http://opensource.org/licenses/osl-3.0.php  Open Software License (OSL 3.0)
  */
 
@@ -23,41 +23,23 @@
  *
  * @category   Mage
  * @package    Mage_Catalog
+ * @author      Magento Core Team <core@magentocommerce.com>
  */
-abstract class Mage_Catalog_Block_Product_View_Abstract extends Mage_Core_Block_Template
+abstract class Mage_Catalog_Block_Product_View_Abstract extends Mage_Catalog_Block_Product_Abstract
 {
     /**
-     * Retrieve currently viewed product object
+     * Retrive product
      *
      * @return Mage_Catalog_Model_Product
      */
     public function getProduct()
     {
-        return Mage::registry('current_product');
+        $product = parent::getProduct();
+        if (is_null($product->getTypeInstance()->getStoreFilter())) {
+            $product->getTypeInstance()->setStoreFilter(Mage::app()->getStore());
+        }
+
+        return $product;
     }
 
-    public function getTierPrices()
-    {
-        $product = $this->getProduct();
-        $prices  = $product->getFormatedTierPrice();
-        $res = array();
-        if (is_array($prices)) {
-            foreach ($prices as $price) {
-                $price['price_qty'] = $price['price_qty']*1;
-                if ($product->getPrice() != $product->getFinalPrice()) {
-                    if ($price['price']<$product->getFinalPrice()) {
-                        $price['savePercent'] = ceil(100 - (( 100/$product->getFinalPrice() ) * $price['price'] ));
-                        $res[] = $price;
-                    }
-                }
-                else {
-                    if ($price['price']<$product->getPrice()) {
-                        $price['savePercent'] = ceil(100 - (( 100/$product->getPrice() ) * $price['price'] ));
-                        $res[] = $price;
-                    }
-                }
-            }
-        }
-        return $res;
-    }
 }

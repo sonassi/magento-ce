@@ -14,7 +14,7 @@
  *
  * @category   Mage
  * @package    Mage_Sales
- * @copyright  Copyright (c) 2004-2007 Irubin Consulting Inc. DBA Varien (http://www.varien.com)
+ * @copyright  Copyright (c) 2008 Irubin Consulting Inc. DBA Varien (http://www.varien.com)
  * @license    http://opensource.org/licenses/osl-3.0.php  Open Software License (OSL 3.0)
  */
 
@@ -198,8 +198,8 @@ foreach ($attributes as $code => $params) {
                 "_table_{$code}.attribute_id = {$attributes[$code]['attribute_id']} AND _table_{$code}.entity_id = e.entity_id",
                 array($code => 'value'));
         $select->join(
-            array("_eav_atr_" => $this->getTable('eav/attribute')),
-            "_eav_atr_.attribute_id = {$attributes[$code]['attribute_id']}",
+            array("_eav_atr_{$code}" => $this->getTable('eav/attribute')),
+            "_eav_atr_{$code}.attribute_id = {$attributes[$code]['attribute_id']}",
             array()
         );
         $attributeIds[] = $attributes[$code]['attribute_id'];

@@ -14,7 +14,7 @@
  *
  * @category   Mage
  * @package    Mage_Adminhtml
- * @copyright  Copyright (c) 2004-2007 Irubin Consulting Inc. DBA Varien (http://www.varien.com)
+ * @copyright  Copyright (c) 2008 Irubin Consulting Inc. DBA Varien (http://www.varien.com)
  * @license    http://opensource.org/licenses/osl-3.0.php  Open Software License (OSL 3.0)
  */
 
@@ -23,6 +23,7 @@
  *
  * @category   Mage
  * @package    Mage_Adminhtml
+ * @author      Magento Core Team <core@magentocommerce.com>
  */
 class Mage_Adminhtml_Catalog_CategoryController extends Mage_Adminhtml_Controller_Action
 {
@@ -33,11 +34,21 @@ class Mage_Adminhtml_Catalog_CategoryController extends Mage_Adminhtml_Controlle
      */
     protected function _initCategory()
     {
-        $category = Mage::getModel('catalog/category');
-        $category->setStoreId($this->getRequest()->getParam('store'));
+        $categoryId = (int) $this->getRequest()->getParam('id');
+        $storeId    = (int) $this->getRequest()->getParam('store');
 
-        if ($id = (int) $this->getRequest()->getParam('id')) {
-                $category->load($id);
+        $category = Mage::getModel('catalog/category');
+        $category->setStoreId($storeId);
+
+        if ($categoryId) {
+            $category->load($categoryId);
+            if ($storeId) {
+                $rootId = Mage::app()->getStore($storeId)->getRootCategoryId();
+                if (!in_array($rootId, $category->getPathIds())) {
+                    $this->_redirect('*/*/', array('_current'=>true, 'id'=>null));
+                    return false;
+                }
+            }
         }
 
         Mage::register('category', $category);
@@ -71,6 +82,9 @@ class Mage_Adminhtml_Catalog_CategoryController extends Mage_Adminhtml_Controlle
             ->setContainerCssClass('catalog-categories');
 
         $category = $this->_initCategory();
+        if (!$category) {
+            return;
+        }
         $data = Mage::getSingleton('adminhtml/session')->getCategoryData(true);
         if (isset($data['general'])) {
             $category->addData($data['general']);

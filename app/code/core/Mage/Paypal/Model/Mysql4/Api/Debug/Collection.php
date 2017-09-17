@@ -14,7 +14,7 @@
  *
  * @category   Mage
  * @package    Mage_Paypal
- * @copyright  Copyright (c) 2004-2007 Irubin Consulting Inc. DBA Varien (http://www.varien.com)
+ * @copyright  Copyright (c) 2008 Irubin Consulting Inc. DBA Varien (http://www.varien.com)
  * @license    http://opensource.org/licenses/osl-3.0.php  Open Software License (OSL 3.0)
  */
 
@@ -22,6 +22,7 @@
  *
  * PayPal API Debug Resource Collection
  *
+ * @author      Magento Core Team <core@magentocommerce.com>
  */
 class Mage_Paypal_Model_Mysql4_Api_Debug_Collection extends Mage_Core_Model_Mysql4_Collection_Abstract
 {

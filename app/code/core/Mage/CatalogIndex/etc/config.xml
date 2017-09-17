@@ -15,22 +15,37 @@
  *
  * @category   Mage
  * @package    Mage_CatalogIndex
- * @copyright  Copyright (c) 2004-2007 Irubin Consulting Inc. DBA Varien (http://www.varien.com)
+ * @copyright  Copyright (c) 2008 Irubin Consulting Inc. DBA Varien (http://www.varien.com)
  * @license    http://opensource.org/licenses/osl-3.0.php  Open Software License (OSL 3.0)
  */
 -->
 <config>
     <modules>
         <Mage_CatalogIndex>
-            <version>0.7.4</version>
-            <depends>
-                <Mage_Catalog />
-                <Mage_Eav />
-            </depends>
+            <version>0.7.6</version>
         </Mage_CatalogIndex>
     </modules>
 
     <global>
+        <catalog>
+            <product>
+                <type>
+                    <simple>
+                        <index_data_retreiver>catalogindex/data_simple</index_data_retreiver>
+                    </simple>
+                    <grouped>
+                        <index_data_retreiver>catalogindex/data_grouped</index_data_retreiver>
+                    </grouped>
+                    <configurable>
+                        <index_data_retreiver>catalogindex/data_configurable</index_data_retreiver>
+                    </configurable>
+                    <virtual>
+                        <index_data_retreiver>catalogindex/data_virtual</index_data_retreiver>
+                    </virtual>
+                </type>
+            </product>
+        </catalog>
+
         <models>
             <catalogindex>
                 <class>Mage_CatalogIndex_Model</class>
@@ -85,6 +100,15 @@
         </catalogindex>
 
         <events>
+            <store_add>
+                <observers>
+                    <catalogindex>
+                        <type>singleton</type>
+                        <class>catalogindex/observer</class>
+                        <method>processStoreAdd</method>
+                    </catalogindex>
+                </observers>
+            </store_add>
             <catalog_product_save_after>
                 <observers>
                     <catalogindex>
@@ -98,8 +122,8 @@
                 <observers>
                     <catalogindex>
                         <type>singleton</type>
-                        <class>catalogindex/indexer</class>
-                        <method>plainReindex</method>
+                        <class>catalogindex/observer</class>
+                        <method>processAttributeChangeEvent</method>
                     </catalogindex>
                 </observers>
             </catalog_entity_attribute_save_after>
@@ -125,8 +149,8 @@
                 <observers>
                     <catalogindex>
                         <type>singleton</type>
-                        <class>catalogindex/indexer</class>
-                        <method>plainReindex</method>
+                        <class>catalogindex/observer</class>
+                        <method>processPriceScopeChange</method>
                     </catalogindex>
                 </observers>
             </system_config_price_scope_save_after>
@@ -134,11 +158,20 @@
                 <observers>
                     <catalogindex>
                         <type>singleton</type>
-                        <class>catalogindex/indexer</class>
-                        <method>plainReindex</method>
+                        <class>catalogindex/observer</class>
+                        <method>processPriceRuleApplication</method>
                     </catalogindex>
                 </observers>
             </catalogrule_after_apply>
+            <catalog_product_import_after>
+                <observers>
+                    <catalogindex>
+                        <type>singleton</type>
+                        <class>catalogindex/observer</class>
+                        <method>catalogProductImportAfter</method>
+                    </catalogindex>
+                </observers>
+            </catalog_product_import_after>
         </events>
     </global>
 
@@ -146,7 +179,7 @@
         <jobs>
             <catalogindex_reindex_all>
                 <schedule><cron_expr>0 2 * * *</cron_expr></schedule>
-                <run><model>catalogindex/indexer::plainReindex</model></run>
+                <run><model>catalogindex/observer::reindexAll</model></run>
             </catalogindex_reindex_all>
         </jobs>
     </crontab>

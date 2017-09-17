@@ -14,7 +14,7 @@
  *
  * @category   Mage
  * @package    Mage_Shipping
- * @copyright  Copyright (c) 2004-2007 Irubin Consulting Inc. DBA Varien (http://www.varien.com)
+ * @copyright  Copyright (c) 2008 Irubin Consulting Inc. DBA Varien (http://www.varien.com)
  * @license    http://opensource.org/licenses/osl-3.0.php  Open Software License (OSL 3.0)
  */
 
@@ -24,6 +24,7 @@
  *
  * @category   Mage
  * @package    Mage_Shipping
+ * @author      Magento Core Team <core@magentocommerce.com>
  */
 class Mage_Shipping_Model_Carrier_Flatrate
     extends Mage_Shipping_Model_Carrier_Abstract
@@ -49,13 +50,23 @@ class Mage_Shipping_Model_Carrier_Flatrate
             $shippingPrice = $this->getConfigData('price');
         } elseif ($this->getConfigData('type') == 'I') { // per item
             $shippingPrice = $request->getPackageQty() * $this->getConfigData('price');
+
+            if ($request->getAllItems()) {
+                foreach ($request->getAllItems() as $item) {
+                    if ($item->getFreeShipping() && !$item->getProduct()->getTypeInstance()->isVirtual()) {
+                        $shippingPrice -= $item->getQty() * $this->getConfigData('price');
+                    }
+                }
+            }
         } else {
             $shippingPrice = false;
         }
 
+
+
         $shippingPrice = $this->getFinalPriceWithHandlingFee($shippingPrice);
 
-        if ($shippingPrice) {
+        if ($shippingPrice !== false) {
             $method = Mage::getModel('shipping/rate_result_method');
 
             $method->setCarrier('flatrate');
@@ -63,6 +74,10 @@ class Mage_Shipping_Model_Carrier_Flatrate
 
             $method->setMethod('flatrate');
             $method->setMethodTitle($this->getConfigData('name'));
+
+            if ($request->getFreeShipping() === true) {
+                $shippingPrice = '0.00';
+            }
 
             $method->setPrice($shippingPrice);
             $method->setCost($shippingPrice);

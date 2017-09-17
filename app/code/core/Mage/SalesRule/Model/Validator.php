@@ -14,7 +14,7 @@
  *
  * @category   Mage
  * @package    Mage_SalesRule
- * @copyright  Copyright (c) 2004-2007 Irubin Consulting Inc. DBA Varien (http://www.varien.com)
+ * @copyright  Copyright (c) 2008 Irubin Consulting Inc. DBA Varien (http://www.varien.com)
  * @license    http://opensource.org/licenses/osl-3.0.php  Open Software License (OSL 3.0)
  */
 
@@ -79,7 +79,8 @@ class Mage_SalesRule_Model_Validator extends Mage_Core_Model_Abstract
                 /**
                  * too many times used for this customer
                  */
-                if ($ruleId = $rule->getId() && $rule->getUsesPerCustomer()) {
+                $ruleId = $rule->getId();
+                if ($ruleId && $rule->getUsesPerCustomer()) {
                     $ruleCustomer->loadByCustomerRule($customerId, $ruleId);
                     if ($ruleCustomer->getId()) {
                         if ($ruleCustomer->getTimesUsed() >= $rule->getUsesPerCustomer()) {
@@ -107,8 +108,11 @@ class Mage_SalesRule_Model_Validator extends Mage_Core_Model_Abstract
 			if (!$rule->getActions()->validate($item)) {
 			    continue;
 			}
-
-			$qty = $rule->getDiscountQty() ? min($item->getQty(), $rule->getDiscountQty()) : $item->getQty();
+            $qty = $item->getQty();
+            if ($item->getParentItem()) {
+                $qty*= $item->getParentItem()->getQty();
+            }
+			$qty = $rule->getDiscountQty() ? min($qty, $rule->getDiscountQty()) : $qty;
 			$rulePercent = $rule->getDiscountAmount();
             $discountAmount = 0;
             $baseDiscountAmount = 0;
@@ -121,8 +125,8 @@ class Mage_SalesRule_Model_Validator extends Mage_Core_Model_Abstract
 				    if ($step = $rule->getDiscountStep()) {
 				        $qty = floor($qty/$step)*$step;
 				    }
-					$discountAmount    = $qty*$item->getCalculationPrice()*$rulePercent/100;
-					$baseDiscountAmount= $qty*$item->getBaseCalculationPrice()*$rulePercent/100;
+					$discountAmount    = ($qty*$item->getCalculationPrice() - $item->getDiscountAmount()) * $rulePercent/100;
+					$baseDiscountAmount= ($qty*$item->getBaseCalculationPrice() - $item->getBaseDiscountAmount()) * $rulePercent/100;
 
 					if (!$rule->getDiscountQty() || $rule->getDiscountQty()>$qty) {
 						$discountPercent = min(100, $item->getDiscountPercent()+$rulePercent);
@@ -137,25 +141,26 @@ class Mage_SalesRule_Model_Validator extends Mage_Core_Model_Abstract
 				    break;
 
 				case 'by_fixed':
+				    if ($step = $rule->getDiscountStep()) {
+				        $qty = floor($qty/$step)*$step;
+				    }
 				    $quoteAmount = $quote->getStore()->convertPrice($rule->getDiscountAmount());
 					$discountAmount    = $qty*$quoteAmount;
 					$baseDiscountAmount= $qty*$rule->getDiscountAmount();
 					break;
 
 		        case 'cart_fixed':
-					$cartRules = $address->getCartFixedRules();
-					if (!$cartRules) {
-					    $cartRules = array();
-					}
-		            if (!empty($cartRules[$rule->getId()])) {
-		                break;
+		            $cartRules = $address->getCartFixedRules();
+		            if (!isset($cartRules[$rule->getId()])) {
+		                $cartRules[$rule->getId()] = $rule->getDiscountAmount();
 		            }
-					$cartRules[$rule->getId()] = true;
-					$address->setCartFixedRules($cartRules);
-
-					$quoteAmount = $quote->getStore()->convertPrice($rule->getDiscountAmount());
-					$discountAmount    = $quoteAmount;
-					$baseDiscountAmount= $rule->getDiscountAmount();
+		            if ($cartRules[$rule->getId()] > 0) {
+    				    $quoteAmount = $quote->getStore()->convertPrice($cartRules[$rule->getId()]);
+    				    $discountAmount = min($item->getRowTotal(), $quoteAmount);
+    				    $baseDiscountAmount = min($item->getBaseRowTotal(), $cartRules[$rule->getId()]);
+    				    $cartRules[$rule->getId()] -= $baseDiscountAmount;
+		            }
+				    $address->setCartFixedRules($cartRules);
 				    break;
 
 		        case 'buy_x_get_y':
@@ -180,9 +185,24 @@ class Mage_SalesRule_Model_Validator extends Mage_Core_Model_Abstract
 		            break;
 			}
 
+            $result = new Varien_Object(array(
+                'discount_amount'      => $discountAmount, 
+                'base_discount_amount' => $baseDiscountAmount,
+            ));
+            Mage::dispatchEvent('salesrule_validator_process', array(
+                'rule'    => $rule,
+                'item'    => $item,
+                'address' => $address,
+                'quote'   => $quote,
+                'qty'     => $qty,
+                'result'  => $result,
+            ));
+            
+            $discountAmount = $result->getDiscountAmount();
+            $baseDiscountAmount = $result->getBaseDiscountAmount();
+
             $discountAmount     = $quote->getStore()->roundPrice($discountAmount);
             $baseDiscountAmount = $quote->getStore()->roundPrice($baseDiscountAmount);
-
             $discountAmount     = min($item->getDiscountAmount()+$discountAmount, $item->getRowTotal());
             $baseDiscountAmount = min($item->getBaseDiscountAmount()+$baseDiscountAmount, $item->getBaseRowTotal());
 

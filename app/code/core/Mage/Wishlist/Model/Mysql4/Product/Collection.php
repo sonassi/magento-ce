@@ -14,7 +14,7 @@
  *
  * @category   Mage
  * @package    Mage_Wishlist
- * @copyright  Copyright (c) 2004-2007 Irubin Consulting Inc. DBA Varien (http://www.varien.com)
+ * @copyright  Copyright (c) 2008 Irubin Consulting Inc. DBA Varien (http://www.varien.com)
  * @license    http://opensource.org/licenses/osl-3.0.php  Open Software License (OSL 3.0)
  */
 
@@ -24,6 +24,7 @@
  *
  * @category   Mage
  * @package    Mage_Wishlist
+ * @author      Magento Core Team <core@magentocommerce.com>
  */
 class Mage_Wishlist_Model_Mysql4_Product_Collection extends Mage_Catalog_Model_Resource_Eav_Mysql4_Product_Collection
 {
@@ -36,7 +37,7 @@ class Mage_Wishlist_Model_Mysql4_Product_Collection extends Mage_Catalog_Model_R
             'product_id=e_id',
             array(
                 'product_id' => 'product_id',
-                'description' => 'description',
+                'wishlist_item_description' => 'description',
                 'store_id' => 'store_id',
                 'added_at' => 'added_at',
                 'wishlist_id' => 'wishlist_id',

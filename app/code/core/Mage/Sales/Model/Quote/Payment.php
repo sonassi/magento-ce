@@ -14,7 +14,7 @@
  *
  * @category   Mage
  * @package    Mage_Sales
- * @copyright  Copyright (c) 2004-2007 Irubin Consulting Inc. DBA Varien (http://www.varien.com)
+ * @copyright  Copyright (c) 2008 Irubin Consulting Inc. DBA Varien (http://www.varien.com)
  * @license    http://opensource.org/licenses/osl-3.0.php  Open Software License (OSL 3.0)
  */
 
@@ -36,11 +36,6 @@ class Mage_Sales_Model_Quote_Payment extends Mage_Payment_Model_Info
         $this->_init('sales/quote_payment');
     }
 
-    public function __destruct()
-    {
-        unset($this->_quote);
-    }
-
     /**
      * Declare quote model instance
      *
@@ -50,6 +45,7 @@ class Mage_Sales_Model_Quote_Payment extends Mage_Payment_Model_Info
     public function setQuote(Mage_Sales_Model_Quote $quote)
     {
         $this->_quote = $quote;
+        $this->setQuoteId($quote->getId());
         return $this;
     }
 

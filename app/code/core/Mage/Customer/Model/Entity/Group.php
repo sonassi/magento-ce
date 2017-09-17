@@ -14,13 +14,14 @@
  *
  * @category   Mage
  * @package    Mage_Customer
- * @copyright  Copyright (c) 2004-2007 Irubin Consulting Inc. DBA Varien (http://www.varien.com)
+ * @copyright  Copyright (c) 2008 Irubin Consulting Inc. DBA Varien (http://www.varien.com)
  * @license    http://opensource.org/licenses/osl-3.0.php  Open Software License (OSL 3.0)
  */
 
 /**
  * Customer group resource model
  *
+ * @author      Magento Core Team <core@magentocommerce.com>
  */
 class Mage_Customer_Model_Entity_Group extends Mage_Core_Model_Mysql4_Abstract
 {
@@ -28,11 +29,11 @@ class Mage_Customer_Model_Entity_Group extends Mage_Core_Model_Mysql4_Abstract
     {
         $this->_init('customer/customer_group', 'customer_group_id');
         $this->_uniqueFields = array(array(
-            'field' => 'customer_group_code', 
+            'field' => 'customer_group_code',
             'title' => Mage::helper('customer')->__('Customer Group')
         ));
     }
-    
+
     protected function _beforeDelete(Mage_Core_Model_Abstract $group)
     {
         if ($group->usesAsDefault()) {
@@ -40,7 +41,7 @@ class Mage_Customer_Model_Entity_Group extends Mage_Core_Model_Mysql4_Abstract
         }
         return parent::_beforeDelete($group);
     }
-    
+
     protected function _afterDelete(Mage_Core_Model_Abstract $group)
     {
         $customerCollection = Mage::getResourceModel('customer/customer_collection')
@@ -49,7 +50,7 @@ class Mage_Customer_Model_Entity_Group extends Mage_Core_Model_Mysql4_Abstract
         foreach ($customerCollection as $customer) {
             $defaultGroupId = Mage::getStoreConfig(Mage_Customer_Model_Group::XML_PATH_DEFAULT_ID, $customer->getStoreId());
             $customer->setGroupId($defaultGroupId);
-        	$customer->getResource()->saveAttribute($customer, 'group_id');
+        	$customer->save();
         }
         return parent::_afterDelete($group);
     }

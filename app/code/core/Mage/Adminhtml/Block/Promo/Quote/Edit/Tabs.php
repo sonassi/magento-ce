@@ -14,7 +14,7 @@
  *
  * @category   Mage
  * @package    Mage_Adminhtml
- * @copyright  Copyright (c) 2004-2007 Irubin Consulting Inc. DBA Varien (http://www.varien.com)
+ * @copyright  Copyright (c) 2008 Irubin Consulting Inc. DBA Varien (http://www.varien.com)
  * @license    http://opensource.org/licenses/osl-3.0.php  Open Software License (OSL 3.0)
  */
 
@@ -24,6 +24,7 @@
  * @category    Mage
  * @category   Mage
  * @package    Mage_Adminhtml
+ * @author      Magento Core Team <core@magentocommerce.com>
  */
 class Mage_Adminhtml_Block_Promo_Quote_Edit_Tabs extends Mage_Adminhtml_Block_Widget_Tabs
 {
@@ -33,7 +34,7 @@ class Mage_Adminhtml_Block_Promo_Quote_Edit_Tabs extends Mage_Adminhtml_Block_Wi
         parent::__construct();
         $this->setId('promo_catalog_edit_tabs');
         $this->setDestElementId('edit_form');
-        $this->setTitle(Mage::helper('salesrule')->__('Checkout Price Rule'));
+        $this->setTitle(Mage::helper('salesrule')->__('Shopping Cart Price Rule'));
     }
 
     protected function _beforeToHtml()

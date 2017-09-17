@@ -14,7 +14,7 @@
  *
  * @category   design_default
  * @package    Mage
- * @copyright  Copyright (c) 2004-2007 Irubin Consulting Inc. DBA Varien (http://www.varien.com)
+ * @copyright  Copyright (c) 2008 Irubin Consulting Inc. DBA Varien (http://www.varien.com)
  * @license    http://opensource.org/licenses/osl-3.0.php  Open Software License (OSL 3.0)
  */
 ?>
@@ -38,15 +38,15 @@ $_block = $this;
     </li>
 </ul>
 <div class="grid">
-<table cellspacing="0" class="data" id="<?php echo $_block->getHtmlId() ?>_grid" width="100%">
-    <col width="120"/>
+<table cellspacing="0" class="data border" id="<?php echo $_block->getHtmlId() ?>_grid" width="100%">
+    <col width="120" />
     <col />
-    <col width="100"/>
+    <col width="100" />
     <?php foreach ($_block->getImageTypes() as $typeId=>$type): ?>
-    <col width="70" />
+    <col />
     <?php endforeach; ?>
-    <col width="70"/>
-    <col width="70"/>
+    <col width="70" />
+    <col width="70" />
     <thead>
         <tr class="headings">
             <th><?php echo Mage::helper('catalog')->__('Image') ?></th>
@@ -56,7 +56,7 @@ $_block = $this;
             <th><?php echo $type['label'] ?></th>
             <?php endforeach; ?>
             <th><?php echo Mage::helper('catalog')->__('Exclude') ?></th>
-            <th><?php echo Mage::helper('catalog')->__('Remove') ?></th>
+            <th class="last"><?php echo Mage::helper('catalog')->__('Remove') ?></th>
         </tr>
     </thead>
     <tbody id="<?php echo $_block->getHtmlId() ?>_list">

@@ -14,13 +14,14 @@
  *
  * @category   Mage
  * @package    Mage_Dataflow
- * @copyright  Copyright (c) 2004-2007 Irubin Consulting Inc. DBA Varien (http://www.varien.com)
+ * @copyright  Copyright (c) 2008 Irubin Consulting Inc. DBA Varien (http://www.varien.com)
  * @license    http://opensource.org/licenses/osl-3.0.php  Open Software License (OSL 3.0)
  */
 
 /**
  * Convert profile
  *
+ * @author      Magento Core Team <core@magentocommerce.com>
  */
 class Mage_Dataflow_Model_Profile extends Mage_Core_Model_Abstract
 {
@@ -49,7 +50,7 @@ class Mage_Dataflow_Model_Profile extends Mage_Core_Model_Abstract
         parent::_beforeSave();
 
         $actionsXML = $this->getData('actions_xml');
-        if (0 < strlen($actionsXML) && false === simplexml_load_string('<data>'.$actionsXML.'</data>', null, LIBXML_NOERROR)) {
+        if (strlen($actionsXML) < 0 && @simplexml_load_string('<data>'.$actionsXML.'</data>', null, LIBXML_NOERROR) === false) {
             Mage::throwException(Mage::helper("dataflow")->__("Actions XML is not valid."));
         }
 
@@ -72,6 +73,10 @@ class Mage_Dataflow_Model_Profile extends Mage_Core_Model_Abstract
             $this->_parseGuiData();
 
             $this->setGuiData(serialize($this->getGuiData()));
+        }
+
+        if ($this->_getResource()->isProfileExists($this->getName(), $this->getId())) {
+            Mage::throwException(Mage::helper("dataflow")->__("Profile with such name already exists."));
         }
     }
 
@@ -308,6 +313,12 @@ class Mage_Dataflow_Model_Profile extends Mage_Core_Model_Abstract
 
         // Need to rewrite the whole xml action format
         if ($import) {
+            $numberOfRecords = isset($p['import']['number_of_records']) ? $p['import']['number_of_records'] : 1;
+            $decimalSeparator = isset($p['import']['decimal_separator']) ? $p['import']['decimal_separator'] : '.';
+            $parseFileXmlInter .= '    <var name="number_of_records">'
+                . $numberOfRecords . '</var>' . $nl;
+            $parseFileXmlInter .= '    <var name="decimal_separator"><![CDATA['
+                . $decimalSeparator . ']]></var>' . $nl;
         	if ($this->getDataTransfer()==='interactive') {
         		$xml = $parseFileXmlInter;
                 $xml .= '    <var name="adapter">'.$adapters[$this->getEntityType()].'</var>'.$nl;

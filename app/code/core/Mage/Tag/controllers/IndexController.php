@@ -14,7 +14,7 @@
  *
  * @category   Mage
  * @package    Mage_Tag
- * @copyright  Copyright (c) 2004-2007 Irubin Consulting Inc. DBA Varien (http://www.varien.com)
+ * @copyright  Copyright (c) 2008 Irubin Consulting Inc. DBA Varien (http://www.varien.com)
  * @license    http://opensource.org/licenses/osl-3.0.php  Open Software License (OSL 3.0)
  */
 
@@ -23,6 +23,7 @@
  *
  * @category   Mage
  * @package    Mage_Tag
+ * @author      Magento Core Team <core@magentocommerce.com>
  */
 
 class Mage_Tag_IndexController extends Mage_Core_Controller_Front_Action
@@ -74,7 +75,7 @@ class Mage_Tag_IndexController extends Mage_Core_Controller_Front_Action
                             $tagRelationModel = Mage::getModel('tag/tag_relation');
                             $tagRelationModel->loadByTagCustomer($productId,
                                 $tagModel->getId(),
-                                $session->getCustomerId(),
+                                $customerId,
                                 Mage::app()->getStore()->getId()
                             );
 

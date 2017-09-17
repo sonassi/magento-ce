@@ -14,7 +14,7 @@
  *
  * @category   Mage
  * @package    Mage_Core
- * @copyright  Copyright (c) 2004-2007 Irubin Consulting Inc. DBA Varien (http://www.varien.com)
+ * @copyright  Copyright (c) 2008 Irubin Consulting Inc. DBA Varien (http://www.varien.com)
  * @license    http://opensource.org/licenses/osl-3.0.php  Open Software License (OSL 3.0)
  */
 
@@ -24,6 +24,7 @@
  *
  * @category   Mage
  * @package    Mage_Core
+ * @author      Magento Core Team <core@magentocommerce.com>
  */
 abstract class Mage_Core_Model_Abstract extends Varien_Object
 {
@@ -138,10 +139,10 @@ abstract class Mage_Core_Model_Abstract extends Varien_Object
      */
     public function getId()
     {
-        if ($this->getIdFieldName()) {
-            return $this->getData($this->getIdFieldName());
+        if ($fieldName = $this->getIdFieldName()) {
+            return $this->_getData($fieldName);
         } else {
-            return $this->getData('id');
+            return $this->_getData('id');
         }
     }
 
@@ -339,5 +340,10 @@ abstract class Mage_Core_Model_Abstract extends Varien_Object
     public function getResource()
     {
         return $this->_getResource();
+    }
+
+    public function getEntityId()
+    {
+        return $this->_getData('entity_id');
     }
 }

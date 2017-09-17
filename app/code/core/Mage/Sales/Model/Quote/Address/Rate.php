@@ -14,7 +14,7 @@
  *
  * @category   Mage
  * @package    Mage_Sales
- * @copyright  Copyright (c) 2004-2007 Irubin Consulting Inc. DBA Varien (http://www.varien.com)
+ * @copyright  Copyright (c) 2008 Irubin Consulting Inc. DBA Varien (http://www.varien.com)
  * @license    http://opensource.org/licenses/osl-3.0.php  Open Software License (OSL 3.0)
  */
 
@@ -28,16 +28,11 @@ class Mage_Sales_Model_Quote_Address_Rate extends Mage_Shipping_Model_Rate_Abstr
         $this->_init('sales/quote_address_rate');
     }
 
-    public function __destruct()
-    {
-        unset($this->_address);
-    }
-
     protected function _beforeSave()
     {
         parent::_beforeSave();
         if ($this->getAddress()) {
-            $this->setParentId($this->getAddress()->getId());
+            $this->setAddressId($this->getAddress()->getId());
         }
         return $this;
     }

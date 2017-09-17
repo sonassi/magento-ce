@@ -14,7 +14,7 @@
  *
  * @category   Mage
  * @package    Mage_Catalog
- * @copyright  Copyright (c) 2004-2007 Irubin Consulting Inc. DBA Varien (http://www.varien.com)
+ * @copyright  Copyright (c) 2008 Irubin Consulting Inc. DBA Varien (http://www.varien.com)
  * @license    http://opensource.org/licenses/osl-3.0.php  Open Software License (OSL 3.0)
  */
 
@@ -40,9 +40,7 @@ class Mage_Catalog_Block_Product_Send extends Mage_Catalog_Block_Product_Abstrac
 
     public function getUserName()
     {
-    	$firstName =(string)Mage::getSingleton('customer/session')->getCustomer()->getfirstname();
-    	$lastName = (string)Mage::getSingleton('customer/session')->getCustomer()->getlastname();
-        return $firstName.' '.$lastName;
+    	return Mage::getSingleton('customer/session')->getCustomer()->getName();
     }
 
     public function getEmail()

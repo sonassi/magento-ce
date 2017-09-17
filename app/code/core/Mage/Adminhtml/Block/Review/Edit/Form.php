@@ -14,7 +14,7 @@
  *
  * @category   Mage
  * @package    Mage_Adminhtml
- * @copyright  Copyright (c) 2004-2007 Irubin Consulting Inc. DBA Varien (http://www.varien.com)
+ * @copyright  Copyright (c) 2008 Irubin Consulting Inc. DBA Varien (http://www.varien.com)
  * @license    http://opensource.org/licenses/osl-3.0.php  Open Software License (OSL 3.0)
  */
 
@@ -23,6 +23,7 @@
  *
  * @category   Mage
  * @package    Mage_Adminhtml
+ * @author      Magento Core Team <core@magentocommerce.com>
  */
 
 class Mage_Adminhtml_Block_Review_Edit_Form extends Mage_Adminhtml_Block_Widget_Form
@@ -84,7 +85,7 @@ class Mage_Adminhtml_Block_Review_Edit_Form extends Mage_Adminhtml_Block_Widget_
             'label'     => Mage::helper('review')->__('Status'),
             'required'  => true,
             'name'      => 'status_id',
-            'values'    => $statuses,
+            'values'    => Mage::helper('review')->translateArray($statuses),
         ));
 
         /**
@@ -92,7 +93,7 @@ class Mage_Adminhtml_Block_Review_Edit_Form extends Mage_Adminhtml_Block_Widget_
          */
         if (!Mage::app()->isSingleStoreMode()) {
             $fieldset->addField('select_stores', 'multiselect', array(
-                'label'     => Mage::helper('review')->__('Visible Ins'),
+                'label'     => Mage::helper('review')->__('Visible In'),
                 'required'  => true,
                 'name'      => 'stores[]',
                 'values'    => Mage::getSingleton('adminhtml/system_store')->getStoreValuesForForm()

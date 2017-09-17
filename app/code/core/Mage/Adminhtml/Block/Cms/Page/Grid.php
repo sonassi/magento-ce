@@ -14,7 +14,7 @@
  *
  * @category   Mage
  * @package    Mage_Adminhtml
- * @copyright  Copyright (c) 2004-2007 Irubin Consulting Inc. DBA Varien (http://www.varien.com)
+ * @copyright  Copyright (c) 2008 Irubin Consulting Inc. DBA Varien (http://www.varien.com)
  * @license    http://opensource.org/licenses/osl-3.0.php  Open Software License (OSL 3.0)
  */
 
@@ -23,6 +23,7 @@
  *
  * @category   Mage
  * @package    Mage_Adminhtml
+ * @author      Magento Core Team <core@magentocommerce.com>
  */
 class Mage_Adminhtml_Block_Cms_Page_Grid extends Mage_Adminhtml_Block_Widget_Grid
 {
@@ -41,6 +42,7 @@ class Mage_Adminhtml_Block_Cms_Page_Grid extends Mage_Adminhtml_Block_Widget_Gri
         /* @var $collection Mage_Cms_Model_Mysql4_Page_Collection */
         $collection->setFirstStoreFlag(true);
         $this->setCollection($collection);
+
         return parent::_prepareCollection();
     }
 
@@ -62,7 +64,7 @@ class Mage_Adminhtml_Block_Cms_Page_Grid extends Mage_Adminhtml_Block_Widget_Gri
 
         $layouts = array();
         foreach (Mage::getConfig()->getNode('global/cms/layouts')->children() as $layoutName=>$layoutConfig) {
-        	$layouts[$layoutName] = (string)$layoutConfig->label;
+            $layouts[$layoutName] = (string)$layoutConfig->label;
         }
 
         $this->addColumn('root_template', array(
@@ -77,12 +79,14 @@ class Mage_Adminhtml_Block_Cms_Page_Grid extends Mage_Adminhtml_Block_Widget_Gri
          */
         if (!Mage::app()->isSingleStoreMode()) {
             $this->addColumn('store_id', array(
-                'header'    => Mage::helper('cms')->__('Store View'),
-                'index'     => 'store_id',
-                'type'      => 'store',
-                'store_all' => true,
-                'store_view' => true,
-                'filter_condition_callback' => array($this, '_filterStoreCondition'),
+                'header'        => Mage::helper('cms')->__('Store View'),
+                'index'         => 'store_id',
+                'type'          => 'store',
+                'store_all'     => true,
+                'store_view'    => true,
+                'sortable'      => false,
+                'filter_condition_callback'
+                                => array($this, '_filterStoreCondition'),
             ));
         }
 
@@ -135,9 +139,8 @@ class Mage_Adminhtml_Block_Cms_Page_Grid extends Mage_Adminhtml_Block_Widget_Gri
         if (!$value = $column->getFilter()->getValue()) {
             return;
         }
-        $res = Mage::getSingleton('core/resource');
-        $collection->getSelect()->join(array('s'=>$res->getTableName('cms/page_store')), 's.page_id=main_table.page_id')
-            ->where('s.store_id=0 or s.store_id=?', $value);
+
+        $this->getCollection()->addStoreFilter($value);
     }
 
     /**

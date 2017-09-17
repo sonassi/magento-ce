@@ -14,7 +14,7 @@
  *
  * @category   Mage
  * @package    Mage_Core
- * @copyright  Copyright (c) 2004-2007 Irubin Consulting Inc. DBA Varien (http://www.varien.com)
+ * @copyright  Copyright (c) 2008 Irubin Consulting Inc. DBA Varien (http://www.varien.com)
  * @license    http://opensource.org/licenses/osl-3.0.php  Open Software License (OSL 3.0)
  */
 
@@ -24,8 +24,9 @@ $installer = $this;
 $installer->startSetup();
 
 $installer->run("
-alter table {$this->getTable('salesrule')}
-    ,add column `times_used` int (11)UNSIGNED  DEFAULT '0' NOT NULL  after `simple_free_shipping`;
+ALTER TABLE `{$this->getTable('salesrule')}`
+    ADD COLUMN `times_used` int (11) unsigned DEFAULT '0' NOT NULL
+        AFTER `simple_free_shipping`;
 ");
 
 $installer->endSetup();

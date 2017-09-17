@@ -14,7 +14,7 @@
  *
  * @category   Mage
  * @package    Mage_Catalog
- * @copyright  Copyright (c) 2004-2007 Irubin Consulting Inc. DBA Varien (http://www.varien.com)
+ * @copyright  Copyright (c) 2008 Irubin Consulting Inc. DBA Varien (http://www.varien.com)
  * @license    http://opensource.org/licenses/osl-3.0.php  Open Software License (OSL 3.0)
  */
 
@@ -23,6 +23,7 @@
  *
  * @category   Mage
  * @package    Mage_Catalog
+ * @author      Magento Core Team <core@magentocommerce.com>
  */
 class Mage_Catalog_Helper_Category extends Mage_Core_Helper_Abstract
 {
@@ -49,11 +50,13 @@ class Mage_Catalog_Helper_Category extends Mage_Core_Helper_Abstract
             return array();
         }
 
+        $recursionLevel = max(0, (int) Mage::app()->getStore()->getConfig('catalog/navigation/max_depth'));
+
         $tree = $category->getTreeModel();
         /* @var $tree Mage_Catalog_Model_Resource_Eav_Mysql4_Category_Tree */
 
         $nodes = $tree->loadNode($parent)
-            ->loadChildren()
+            ->loadChildren($recursionLevel)
             ->getChildren();
 
         $tree->addCollectionData(null, $sorted, $parent, $toLoad, true);

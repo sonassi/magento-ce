@@ -14,7 +14,7 @@
  *
  * @category   Mage
  * @package    Mage_Core
- * @copyright  Copyright (c) 2004-2007 Irubin Consulting Inc. DBA Varien (http://www.varien.com)
+ * @copyright  Copyright (c) 2008 Irubin Consulting Inc. DBA Varien (http://www.varien.com)
  * @license    http://opensource.org/licenses/osl-3.0.php  Open Software License (OSL 3.0)
  */
 
@@ -34,6 +34,7 @@
  *
  * @category   Mage
  * @package    Mage_Core
+ * @author      Magento Core Team <core@magentocommerce.com>
  */
 class Mage_Core_Model_Email_Template extends Varien_Object
 {
@@ -146,6 +147,11 @@ class Mage_Core_Model_Email_Template extends Varien_Object
            $this->setTemplateSubject($matches[1]);
            $templateText = str_replace($matches[0], '', $templateText);
         }
+
+        /**
+         * Remove comment lines
+         */
+        $templateText = preg_replace('#\{\*.*\*\}#suU', '', $templateText);
 
         $this->setTemplateText($templateText);
         $this->setId($templateId);
@@ -326,22 +332,24 @@ class Mage_Core_Model_Email_Template extends Varien_Object
     public function sendTransactional($templateId, $sender, $email, $name, $vars=array(), $storeId=null)
     {
     	if (is_null($storeId)) {
-    		$storeId = Mage::app()->getStore()->getId();
+    	    if ($this->getDesignConfig() && $this->getDesignConfig()->getStore()) {
+                $storeId = $this->getDesignConfig()->getStore();
+    	    }
+    	    else {
+    	        $storeId = Mage::app()->getStore();
+    	    }
     	}
-    	/*$templateId = Mage::getStoreConfig("trans_email/trans_{$transCode}/template", $storeId);
-    	$identity = Mage::getStoreConfig("trans_email/trans_{$transCode}/identity", $storeId);*/
-        if (is_numeric($templateId)) {
+
+    	if (is_numeric($templateId)) {
     	   $this->load($templateId);
         } else {
            $this->loadDefault($templateId);
         }
 
     	if (!$this->getId()) {
-//foreach (debug_backtrace() as $i=>$step) {
-//    echo "[$i] {$step['file']}:{$step['line']}\n";
-//}
     		throw Mage::exception('Mage_Core', Mage::helper('core')->__('Invalid transactional email code: '.$templateId));
     	}
+
     	if (!is_array($sender)) {
     	    $this->setSenderName(Mage::getStoreConfig('trans_email/ident_'.$sender.'/name', $storeId));
     	    $this->setSenderEmail(Mage::getStoreConfig('trans_email/ident_'.$sender.'/email', $storeId));
@@ -400,7 +408,8 @@ class Mage_Core_Model_Email_Template extends Varien_Object
         if ($this->getDesignConfig()) {
             $this->getDesignConfig()
                 ->setOldArea(Mage::getDesign()->getArea())
-                ->setOldStore(Mage::getDesign()->getStore());
+                ->setOldStore(Mage::getDesign()->getStore())
+                ->setOldThemeSkin(Mage::getDesign()->getTheme('skin'));
 
             if ($this->getDesignConfig()->getArea()) {
                 Mage::getDesign()->setArea($this->getDesignConfig()->getArea());
@@ -408,7 +417,9 @@ class Mage_Core_Model_Email_Template extends Varien_Object
 
             if ($this->getDesignConfig()->getStore()) {
                 Mage::getDesign()->setStore($this->getDesignConfig()->getStore());
+                Mage::getDesign()->setTheme('skin', '');
             }
+
         }
         return $this;
     }
@@ -422,6 +433,7 @@ class Mage_Core_Model_Email_Template extends Varien_Object
 
             if ($this->getDesignConfig()->getOldStore()) {
                 Mage::getDesign()->setStore($this->getDesignConfig()->getOldStore());
+                Mage::getDesign()->setTheme('skin', $this->getDesignConfig()->getOldThemeSkin());
             }
         }
         return $this;
@@ -434,7 +446,7 @@ class Mage_Core_Model_Email_Template extends Varien_Object
             	$this->getMail()->addBcc($email);
             }
         }
-        elseif($bcc) {
+        elseif ($bcc) {
             $this->getMail()->addBcc($bcc);
         }
         return $this;

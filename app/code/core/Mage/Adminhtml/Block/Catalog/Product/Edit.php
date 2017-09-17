@@ -14,7 +14,7 @@
  *
  * @category   Mage
  * @package    Mage_Adminhtml
- * @copyright  Copyright (c) 2004-2007 Irubin Consulting Inc. DBA Varien (http://www.varien.com)
+ * @copyright  Copyright (c) 2008 Irubin Consulting Inc. DBA Varien (http://www.varien.com)
  * @license    http://opensource.org/licenses/osl-3.0.php  Open Software License (OSL 3.0)
  */
 
@@ -23,6 +23,7 @@
  *
  * @category   Mage
  * @package    Mage_Adminhtml
+ * @author      Magento Core Team <core@magentocommerce.com>
  */
 class Mage_Adminhtml_Block_Catalog_Product_Edit extends Mage_Adminhtml_Block_Widget
 {
@@ -167,43 +168,6 @@ class Mage_Adminhtml_Block_Catalog_Product_Edit extends Mage_Adminhtml_Block_Wid
             $setId = $this->getRequest()->getParam('set', null);
         }
         return $setId;
-    }
-
-    public function getRelatedProductsJSON()
-    {
-        $result = array();
-        foreach ($this->getProduct()->getRelatedProducts() as $product) {
-            $result[$product->getId()] = $product->toArray(array('qty', 'position'));
-        }
-        return $result ? Zend_Json_Encoder::encode($result) : '{}';
-    }
-
-
-    public function getUpSellProductsJSON()
-    {
-        $result = array();
-        foreach ($this->getProduct()->getUpSellProducts() as $product) {
-            $result[$product->getId()] = $product->toArray(array('qty', 'position'));
-        }
-        return $result ? Zend_Json_Encoder::encode($result) : '{}';
-    }
-
-    public function getCrossSellProductsJSON()
-    {
-        $result = array();
-        foreach ($this->getProduct()->getCrossSellProducts() as $product) {
-            $result[$product->getId()] = $product->toArray(array('qty', 'position'));
-        }
-        return $result ? Zend_Json_Encoder::encode($result) : '{}';
-    }
-
-    public function getSuperGroupProductJSON()
-    {
-        $result = array();
-        foreach ($this->getProduct()->getTypeInstance()->getAssociatedProducts() as $product) {
-            $result[$product->getEntityId()] = $product->toArray(array('qty', 'position'));
-        }
-        return $result ? Zend_Json_Encoder::encode($result) : '{}';
     }
 
     public function getIsGrouped()

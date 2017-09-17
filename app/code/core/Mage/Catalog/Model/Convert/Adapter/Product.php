@@ -14,7 +14,7 @@
  *
  * @category   Mage
  * @package    Mage_Catalog
- * @copyright  Copyright (c) 2004-2007 Irubin Consulting Inc. DBA Varien (http://www.varien.com)
+ * @copyright  Copyright (c) 2008 Irubin Consulting Inc. DBA Varien (http://www.varien.com)
  * @license    http://opensource.org/licenses/osl-3.0.php  Open Software License (OSL 3.0)
  */
 
@@ -49,34 +49,19 @@ class Mage_Catalog_Model_Convert_Adapter_Product
 
     protected $_attributes = array();
 
-    protected $_configs = array(
-        'min_qty', 'backorders', 'min_sale_qty', 'max_sale_qty'
-    );
+    protected $_configs = array();
 
-    protected $_requiredFields = array(
-        'name', 'description', 'short_description', 'weight', 'price',
-        'tax_class_id'
-    );
+    protected $_requiredFields = array();
 
-    protected $_ignoreFields = array(
-        'entity_id', 'attribute_set', 'attribute_set_id', 'type', 'type_id',
-        'category_ids'
-    );
+    protected $_ignoreFields = array();
 
-    protected $_imageFields = array(
-        'image', 'small_image', 'thumbnail'
-    );
+    protected $_imageFields = array();
 
-    protected $_inventorySimpleFields = array(
-        'qty', 'min_qty', 'use_config_min_qty', 'is_qty_decimal', 'backorders',
-        'use_config_backorders', 'min_sale_qty', 'use_config_min_sale_qty',
-        'max_sale_qty', 'use_config_max_sale_qty', 'is_in_stock',
-        'notify_stock_qty', 'use_config_notify_stock_qty'
-    );
+    protected $_inventorySimpleFields = array();
 
-    protected $_inventoryOtherFields = array(
-        'is_in_stock',
-    );
+    protected $_inventoryOtherFields = array();
+
+    protected $_toNumber = array();
 
     /**
      * Load product collection Id(s)
@@ -114,7 +99,7 @@ class Mage_Catalog_Model_Convert_Adapter_Product
             $qtyAttr['cond']        = "{{table}}.qty between '{$qtyFrom}' AND '{$qtyTo}'";
             $qtyAttr['joinType']    = 'inner';
 
-            $this->setJoinFeild($qtyAttr);
+            $this->setJoinField($qtyAttr);
         }
 
         parent::setFilter($attrFilterArray, $attrToDb);
@@ -145,9 +130,9 @@ class Mage_Catalog_Model_Convert_Adapter_Product
     {
         if (is_null($this->_productModel)) {
             $productModel = Mage::getModel('catalog/product');
-            $this->_productModel = Varien_Object_Cache::singleton()->save($productModel);
+            $this->_productModel = Mage::objects()->save($productModel);
         }
-        return Varien_Object_Cache::singleton()->load($this->_productModel);
+        return Mage::objects()->load($this->_productModel);
     }
 
     /**
@@ -211,6 +196,22 @@ class Mage_Catalog_Model_Convert_Adapter_Product
     }
 
     /**
+     *  Init stores
+     *
+     *  @param    none
+     *  @return	  void
+     */
+    protected function _initStores ()
+    {
+        if (is_null($this->_stores)) {
+            $this->_stores = Mage::app()->getStores(true, true);
+            foreach ($this->_stores as $code => $store) {
+                $this->_storesIdCode[$store->getId()] = $code;
+            }
+        }
+    }
+
+    /**
      * Retrieve store object by code
      *
      * @param string $store
@@ -218,11 +219,24 @@ class Mage_Catalog_Model_Convert_Adapter_Product
      */
     public function getStoreByCode($store)
     {
-        if (is_null($this->_stores)) {
-            $this->_stores = Mage::app()->getStores(true, true);
-        }
+        $this->_initStores();
         if (isset($this->_stores[$store])) {
             return $this->_stores[$store];
+        }
+        return false;
+    }
+
+    /**
+     * Retrieve store object by code
+     *
+     * @param string $store
+     * @return Mage_Core_Model_Store
+     */
+    public function getStoreById($id)
+    {
+        $this->_initStores();
+        if (isset($this->_storesIdCode[$id])) {
+            return $this->getStoreByCode($this->_storesIdCode[$id]);
         }
         return false;
     }
@@ -252,6 +266,31 @@ class Mage_Catalog_Model_Convert_Adapter_Product
      */
     public function __construct()
     {
+        foreach (Mage::getConfig()->getFieldset('catalog_product_dataflow', 'admin') as $code=>$node) {
+            if ($node->is('inventory')) {
+                $this->_inventorySimpleFields[] = $code;
+                if ($node->is('use_config')) {
+                    $this->_inventorySimpleFields[] = 'use_config_'.$code;
+                    $this->_configs[] = $code;
+                }
+                if ($node->is('inventory_other')) {
+                    $this->_inventoryOtherFields[] = $code;
+                }
+            }
+            if ($node->is('required')) {
+                $this->_requiredFields[] = $code;
+            }
+            if ($node->is('ignore')) {
+                $this->_ignoreFields[] = $code;
+            }
+            if ($node->is('img')) {
+                $this->_imageFields[] = $code;
+            }
+            if ($node->is('to_number')) {
+                $this->_toNumber[] = $code;
+            }
+        }
+
         $this->setVar('entity_type', 'catalog/product');
         if (!Mage::registry('Object_Cache_Product')) {
             $this->setProduct(Mage::getModel('catalog/product'));
@@ -278,19 +317,19 @@ class Mage_Catalog_Model_Convert_Adapter_Product
 
     public function setProduct(Mage_Catalog_Model_Product $object)
     {
-        $id = Varien_Object_Cache::singleton()->save($object);
+        $id = Mage::objects()->save($object);
         //$this->_product = $object;
         Mage::register('Object_Cache_Product', $id);
     }
 
     public function getProduct()
     {
-        return Varien_Object_Cache::singleton()->load(Mage::registry('Object_Cache_Product'));
+        return Mage::objects()->load(Mage::registry('Object_Cache_Product'));
     }
 
     public function setStockItem(Mage_CatalogInventory_Model_Stock_Item $object)
     {
-        $id = Varien_Object_Cache::singleton()->save($object);
+        $id = Mage::objects()->save($object);
         //$this->_product = $object;
         Mage::register('Object_Cache_StockItem', $id);
 
@@ -299,7 +338,7 @@ class Mage_Catalog_Model_Convert_Adapter_Product
 
     public function getStockItem()
     {
-        return Varien_Object_Cache::singleton()->load(Mage::registry('Object_Cache_StockItem'));
+        return Mage::objects()->load(Mage::registry('Object_Cache_StockItem'));
         //return $this->_stockItem;
     }
 
@@ -407,14 +446,21 @@ class Mage_Catalog_Model_Convert_Adapter_Product
     public function saveRow($importData)
     {
         $product = $this->getProductModel();
-        $product->setId(null);
-
-        if (empty($importData['store'])) {
-            $message = Mage::helper('catalog')->__('Skip import row, required field "%s" not defined', 'store');
-            Mage::throwException($message);
+        $product->setData(array());
+        if ($stockItem = $product->getStockItem()) {
+            $stockItem->setData(array());
         }
 
-        $store = $this->getStoreByCode($importData['store']);
+        if (empty($importData['store'])) {
+            if (!is_null($this->getBatchParams('store'))) {
+                $store = $this->getStoreById($this->getBatchParams('store'));
+            } else {
+                $message = Mage::helper('catalog')->__('Skip import row, required field "%s" not defined', 'store');
+                Mage::throwException($message);
+            }
+        } else {
+            $store = $this->getStoreByCode($importData['store']);
+        }
 
         if ($store === false) {
             $message = Mage::helper('catalog')->__('Skip import row, store "%s" field not exists', $importData['store']);
@@ -454,7 +500,8 @@ class Mage_Catalog_Model_Convert_Adapter_Product
             $product->setAttributeSetId($productAttributeSets[$importData['attribute_set']]);
 
             foreach ($this->_requiredFields as $field) {
-                if (!isset($importData[$field])) {
+                $attribute = $this->getAttribute($field);
+                if (!isset($importData[$field]) && $attribute && $attribute->getIsRequired()) {
                     $message = Mage::helper('catalog')->__('Skip import row, required field "%s" for new products not defined', $field);
                     Mage::throwException($message);
                 }
@@ -482,6 +529,25 @@ class Mage_Catalog_Model_Convert_Adapter_Product
             $product->setWebsiteIds($websiteIds);
         }
 
+        if (isset($importData['websites'])) {
+            $websiteIds = $product->getWebsiteIds();
+            if (!is_array($websiteIds)) {
+                $websiteIds = array();
+            }
+            $websiteCodes = split(',', $importData['websites']);
+            foreach ($websiteCodes as $websiteCode) {
+                try {
+                    $website = Mage::app()->getWebsite(trim($websiteCode));
+                    if (!in_array($website->getId(), $websiteIds)) {
+                        $websiteIds[] = $website->getId();
+                    }
+                }
+                catch (Exception $e) {}
+            }
+            $product->setWebsiteIds($websiteIds);
+            unset($websiteIds);
+        }
+
         foreach ($importData as $field => $value) {
             if (in_array($field, $this->_inventorySimpleFields)) {
                 continue;
@@ -502,6 +568,10 @@ class Mage_Catalog_Model_Convert_Adapter_Product
                 $value = split(self::MULTI_DELIMITER, $value);
                 $isArray = true;
                 $setValue = array();
+            }
+
+            if ($value && $attribute->getBackendType() == 'decimal') {
+                $setValue = $this->getNumber($value);
             }
 
             if ($attribute->usesSource()) {
@@ -535,7 +605,12 @@ class Mage_Catalog_Model_Convert_Adapter_Product
         $inventoryFields = $product->getTypeId() == 'simple' ? $this->_inventorySimpleFields : $this->_inventoryOtherFields;
         foreach ($inventoryFields as $field) {
             if (isset($importData[$field])) {
-                $stockData[$field] = $importData[$field];
+                if (in_array($field, $this->_toNumber)) {
+                    $stockData[$field] = $this->getNumber($importData[$field]);
+                }
+                else {
+                    $stockData[$field] = $importData[$field];
+                }
             }
         }
         $product->setStockData($stockData);
@@ -557,6 +632,9 @@ class Mage_Catalog_Model_Convert_Adapter_Product
             catch (Exception $e) {}
         }
 
+        $product->setIsMassupdate(true);
+        $product->setExcludeUrlRewrite(true);
+
         $product->save();
 
         return true;
@@ -575,7 +653,7 @@ class Mage_Catalog_Model_Convert_Adapter_Product
         $product = $this->getProduct();
         $stockItem = $this->getStockItem();
 
-        set_time_limit(240);
+        @set_time_limit(240);
 
 //        $row = unserialize($args['row']['value']);
         $row = $args;
@@ -643,7 +721,7 @@ class Mage_Catalog_Model_Convert_Adapter_Product
         $product = $this->getProduct();
         $stockItem = $this->getStockItem();
 
-        set_time_limit(240);
+        @set_time_limit(240);
 
 //        $row = unserialize($args['row']['value']);
         $row = $args;

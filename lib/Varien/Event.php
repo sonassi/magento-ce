@@ -14,7 +14,7 @@
  *
  * @category   Varien
  * @package    Varien_Event
- * @copyright  Copyright (c) 2004-2007 Irubin Consulting Inc. DBA Varien (http://www.varien.com)
+ * @copyright  Copyright (c) 2008 Irubin Consulting Inc. DBA Varien (http://www.varien.com)
  * @license    http://opensource.org/licenses/osl-3.0.php  Open Software License (OSL 3.0)
  */
 
@@ -24,6 +24,7 @@
  *
  * @category   Varien
  * @package    Varien_Event
+ * @author      Magento Core Team <core@magentocommerce.com>
  */
 class Varien_Event extends Varien_Object
 {
@@ -106,5 +107,10 @@ class Varien_Event extends Varien_Object
     {
         $this->_data['name'] = $data;
         return $this;
+    }
+
+    public function getBlock()
+    {
+        return $this->_getData('block');
     }
 }

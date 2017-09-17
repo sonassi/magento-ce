@@ -14,7 +14,7 @@
  *
  * @category   Mage
  * @package    Mage_Cms
- * @copyright  Copyright (c) 2004-2007 Irubin Consulting Inc. DBA Varien (http://www.varien.com)
+ * @copyright  Copyright (c) 2008 Irubin Consulting Inc. DBA Varien (http://www.varien.com)
  * @license    http://opensource.org/licenses/osl-3.0.php  Open Software License (OSL 3.0)
  */
 
@@ -23,11 +23,12 @@
  *
  * @category   Mage
  * @package    Mage_Cms
+ * @author      Magento Core Team <core@magentocommerce.com>
  */
 
 class Mage_Cms_Model_Mysql4_Page_Collection extends Mage_Core_Model_Mysql4_Collection_Abstract
 {
-	protected $_previewFlag;
+    protected $_previewFlag;
 
     protected function _construct()
     {
@@ -41,35 +42,56 @@ class Mage_Cms_Model_Mysql4_Page_Collection extends Mage_Core_Model_Mysql4_Colle
 
     public function setFirstStoreFlag($flag = false)
     {
-    	$this->_previewFlag = $flag;$this->_afterLoad();
-    	return $this;
+        $this->_previewFlag = $flag;
+        return $this;
     }
 
     protected function _afterLoad()
     {
-    	if ($this->_previewFlag) {
-	    	$items = $this->getColumnValues('page_id');
-	    	if (count($items)) {
-	    		$select = $this->getConnection()->select()
-		    			->from($this->getTable('cms/page_store'))
-		    			->where($this->getTable('cms/page_store').'.page_id IN (?)', $items);
-				if ($result = $this->getConnection()->fetchPairs($select)) {
-					foreach ($this as $item) {
-					    if (!isset($result[$item->getData('page_id')])) {
-					        continue;
-					    }
-			    		if ($result[$item->getData('page_id')] == 0) {
-			    			$storeCode = key(Mage::app()->getStores(false, true));
-			    		} else {
-			    			$storeCode = Mage::app()->getStore($result[$item->getData('page_id')])->getCode();
-			    		}
-			    		$item->setData('store_code', $storeCode);
-			    	}
-				}
-	    	}
-    	}
+        if ($this->_previewFlag) {
+            $items = $this->getColumnValues('page_id');
+            if (count($items)) {
+                $select = $this->getConnection()->select()
+                        ->from($this->getTable('cms/page_store'))
+                        ->where($this->getTable('cms/page_store').'.page_id IN (?)', $items);
+                if ($result = $this->getConnection()->fetchPairs($select)) {
+                    foreach ($this as $item) {
+                        if (!isset($result[$item->getData('page_id')])) {
+                            continue;
+                        }
+                        if ($result[$item->getData('page_id')] == 0) {
+                            $storeCode = key(Mage::app()->getStores(false, true));
+                        } else {
+                            $storeCode = Mage::app()->getStore($result[$item->getData('page_id')])->getCode();
+                        }
+                        $item->setData('store_code', $storeCode);
+                    }
+                }
+            }
+        }
 
         parent::_afterLoad();
     }
 
+    /**
+     * Add Filter by store
+     *
+     * @param int|Mage_Core_Model_Store $store
+     * @return Mage_Cms_Model_Mysql4_Page_Collection
+     */
+    public function addStoreFilter($store)
+    {
+        if ($store instanceof Mage_Core_Model_Store) {
+            $store = array($store->getId());
+        }
+
+        $this->getSelect()->join(
+            array('store_table' => $this->getTable('cms/page_store')),
+            'main_table.page_id = store_table.page_id',
+            array()
+        )
+        ->where('store_table.store_id in (?)', array(0, $store));
+
+        return $this;
+    }
 }

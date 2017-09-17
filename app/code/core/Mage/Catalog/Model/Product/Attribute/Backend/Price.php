@@ -14,13 +14,14 @@
  *
  * @category   Mage
  * @package    Mage_Catalog
- * @copyright  Copyright (c) 2004-2007 Irubin Consulting Inc. DBA Varien (http://www.varien.com)
+ * @copyright  Copyright (c) 2008 Irubin Consulting Inc. DBA Varien (http://www.varien.com)
  * @license    http://opensource.org/licenses/osl-3.0.php  Open Software License (OSL 3.0)
  */
 
 /**
  * Price attribute backend model
  *
+ * @author      Magento Core Team <core@magentocommerce.com>
  */
 
 class Mage_Catalog_Model_Product_Attribute_Backend_Price extends Mage_Eav_Model_Entity_Attribute_Backend_Abstract
@@ -63,6 +64,9 @@ class Mage_Catalog_Model_Product_Attribute_Backend_Price extends Mage_Eav_Model_
             if (is_array($storeIds)) {
                 foreach ($storeIds as $storeId) {
                     $storeCurrency = Mage::app()->getStore($storeId)->getBaseCurrencyCode();
+                    if ($storeCurrency == $baseCurrency) {
+                        continue;
+                    }
                     $rate = Mage::getModel('directory/currency')->load($baseCurrency)->getRate($storeCurrency);
                     if (!$rate) {
                         $rate=1;
@@ -72,7 +76,7 @@ class Mage_Catalog_Model_Product_Attribute_Backend_Price extends Mage_Eav_Model_
                 }
             }
         }
-//die('123');
+
         return $this;
     }
 }

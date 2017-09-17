@@ -14,7 +14,7 @@
  *
  * @category   Mage
  * @package    Mage_Catalog
- * @copyright  Copyright (c) 2004-2007 Irubin Consulting Inc. DBA Varien (http://www.varien.com)
+ * @copyright  Copyright (c) 2008 Irubin Consulting Inc. DBA Varien (http://www.varien.com)
  * @license    http://opensource.org/licenses/osl-3.0.php  Open Software License (OSL 3.0)
  */
 
@@ -24,6 +24,7 @@
  *
  * @category   Mage
  * @package    Mage_Catalog
+ * @author      Magento Core Team <core@magentocommerce.com>
  */
 class Mage_Catalog_Model_Resource_Eav_Mysql4_Category_Collection extends Mage_Catalog_Model_Resource_Eav_Mysql4_Collection_Abstract
 {
@@ -219,11 +220,12 @@ class Mage_Catalog_Model_Resource_Eav_Mysql4_Category_Collection extends Mage_Ca
      */
     public function joinUrlRewrite()
     {
+        $storeId = Mage::app()->getStore()->getId();
         $this->joinTable(
             'core/url_rewrite',
             'category_id=entity_id',
             array('request_path'),
-            '{{table}}.is_system="1" AND {{table}}.product_id IS NULL AND {{table}}.store_id="'.Mage::app()->getStore()->getId().'"',
+            '{{table}}.is_system=1 AND {{table}}.product_id IS NULL AND {{table}}.store_id="'.$storeId.'" AND id_path LIKE "category/%"',
             'left'
         );
         return $this;

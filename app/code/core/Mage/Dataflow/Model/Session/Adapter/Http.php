@@ -14,7 +14,7 @@
  *
  * @category   Varien
  * @package    Mage_Dataflow_Model_Convert
- * @copyright  Copyright (c) 2004-2007 Irubin Consulting Inc. DBA Varien (http://www.varien.com)
+ * @copyright  Copyright (c) 2008 Irubin Consulting Inc. DBA Varien (http://www.varien.com)
  * @license    http://opensource.org/licenses/osl-3.0.php  Open Software License (OSL 3.0)
  */
 
@@ -24,6 +24,7 @@
  *
  * @category   Varien
  * @package    Mage_Dataflow_Model_Convert
+ * @author      Magento Core Team <core@magentocommerce.com>
  */
  class Mage_Dataflow_Model_Session_Adapter_Http extends Mage_Dataflow_Model_Convert_Adapter_Abstract
  {

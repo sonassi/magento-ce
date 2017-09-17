@@ -14,7 +14,7 @@
  *
  * @category   Varien
  * @package    Varien_Io
- * @copyright  Copyright (c) 2004-2007 Irubin Consulting Inc. DBA Varien (http://www.varien.com)
+ * @copyright  Copyright (c) 2008 Irubin Consulting Inc. DBA Varien (http://www.varien.com)
  * @license    http://opensource.org/licenses/osl-3.0.php  Open Software License (OSL 3.0)
  */
 
@@ -24,6 +24,7 @@
  *
  * @category   Varien
  * @package    Varien_Io
+ * @author      Magento Core Team <core@magentocommerce.com>
  */
 class Varien_Io_File extends Varien_Io_Abstract
 {
@@ -86,6 +87,13 @@ class Varien_Io_File extends Varien_Io_Abstract
     protected $_streamChmod;
 
     /**
+     * Lock file
+     *
+     * @var bool
+     */
+    protected $_streamLocked = false;
+
+    /**
      * Destruct
      */
     public function __destruct()
@@ -121,6 +129,35 @@ class Varien_Io_File extends Varien_Io_Abstract
     }
 
     /**
+     * Lock file
+     *
+     * @return bool
+     */
+    public function streamLock($exclusive = true)
+    {
+        if (!$this->_streamHandler) {
+            return false;
+        }
+        $this->_streamLocked = true;
+        $lock = $exclusive ? LOCK_EX : LOCK_SH;
+        return flock($this->_streamHandler, $lock);
+    }
+
+    /**
+     * Unlock file
+     *
+     * @return bool
+     */
+    public function streamUnlock()
+    {
+        if (!$this->_streamHandler || !$this->_streamLocked) {
+            return false;
+        }
+        $this->_streamLocked = false;
+        return flock($this->_streamHandler, LOCK_UN);
+    }
+
+    /**
      * Binary-safe file read
      *
      * @param int $length
@@ -129,6 +166,9 @@ class Varien_Io_File extends Varien_Io_Abstract
     public function streamRead($length = 1024)
     {
         if (!$this->_streamHandler) {
+            return false;
+        }
+        if (feof($this->_streamHandler)) {
             return false;
         }
         return @fgets($this->_streamHandler, $length);
@@ -143,6 +183,9 @@ class Varien_Io_File extends Varien_Io_Abstract
     {
         if (!$this->_streamHandler) {
             return false;
+        }
+        if (!ini_get('auto_detect_line_endings')) {
+            ini_set('auto_detect_line_endings', 1);
         }
         return @fgetcsv($this->_streamHandler, 0, $delimiter, $enclosure);
     }
@@ -173,6 +216,9 @@ class Varien_Io_File extends Varien_Io_Abstract
             return false;
         }
 
+        if ($this->_streamLocked) {
+            $this->streamUnlock();
+        }
         @fclose($this->_streamHandler);
         @chmod($this->_streamFileName, $this->_streamChmod);
         return true;
@@ -386,12 +432,20 @@ class Varien_Io_File extends Varien_Io_Abstract
         return $result;
     }
 
-    public function fileExists($file)
+    public function fileExists($file, $onlyFile = true)
     {
         @chdir($this->_cwd);
-        $result = file_exists($file) && is_file($file);
+        $result = file_exists($file);
+        if ($result && $onlyFile) {
+            $result = is_file($file);
+        }
         @chdir($this->_iwd);
         return $result;
+    }
+
+    public function isWriteable($path)
+    {
+        return is_writeable($path);
     }
 
     public function getDestinationFolder($filepath)
@@ -417,8 +471,31 @@ class Varien_Io_File extends Varien_Io_Abstract
         return $this->_createDestinationFolder($this->getCleanPath($path));
     }
 
+    /**
+     * Check and create if not exists folder
+     *
+     * @param string $folder
+     * @param int $mode
+     * @return bool
+     */
+    public function checkAndCreateFolder($folder, $mode = 0777)
+    {
+        if (is_dir($folder)) {
+            return true;
+        }
+        if (!is_dir(dirname($folder))) {
+            $this->checkAndCreateFolder(dirname($folder), $mode);
+        }
+        if (!is_dir($folder) && !@mkdir($folder, $mode)) {
+            throw new Exception("Unable to create directory '{$folder}'. Access forbidden.");
+        }
+        return true;
+    }
+
     private function _createDestinationFolder($destinationFolder)
     {
+        return $this->checkAndCreateFolder($destinationFolder);
+
         if( !$destinationFolder ) {
             return $this;
         }
@@ -670,5 +747,10 @@ class Varien_Io_File extends Varien_Io_Abstract
     public function dirsep()
     {
         return DIRECTORY_SEPARATOR;
+    }
+
+    public function dirname($file)
+    {
+        return $this->getCleanPath(dirname($file));
     }
 }

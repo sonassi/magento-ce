@@ -14,7 +14,7 @@
  *
  * @category   Mage
  * @package    Mage_Checkout
- * @copyright  Copyright (c) 2004-2007 Irubin Consulting Inc. DBA Varien (http://www.varien.com)
+ * @copyright  Copyright (c) 2008 Irubin Consulting Inc. DBA Varien (http://www.varien.com)
  * @license    http://opensource.org/licenses/osl-3.0.php  Open Software License (OSL 3.0)
  */
 
@@ -23,9 +23,20 @@
  *
  * @category   Mage
  * @package    Mage_Checkout
+ * @author     Magento Core Team <core@magentocommerce.com>
  */
-class Mage_Checkout_Block_Multishipping_Shipping extends Mage_Checkout_Block_Multishipping_Abstract
+class Mage_Checkout_Block_Multishipping_Shipping extends Mage_Sales_Block_Items_Abstract
 {
+    /**
+     * Get multishipping checkout model
+     *
+     * @return Mage_Checkout_Model_Type_Multishipping
+     */
+    public function getCheckout()
+    {
+        return Mage::getSingleton('checkout/type_multishipping');
+    }
+
     protected function _prepareLayout()
     {
         if ($headBlock = $this->getLayout()->getBlock('head')) {
@@ -51,9 +62,13 @@ class Mage_Checkout_Block_Multishipping_Shipping extends Mage_Checkout_Block_Mul
 
     public function getAddressItems($address)
     {
-        $items = $address->getAllItems();
-        foreach ($items as $item) {
+        $items = array();
+        foreach ($address->getAllItems() as $item) {
+            if ($item->getParentItemId()) {
+                continue;
+            }
             $item->setQuoteItem($this->getCheckout()->getQuote()->getItemById($item->getQuoteItemId()));
+            $items[] = $item;
         }
         $itemsFilter = new Varien_Filter_Object_Grid();
         $itemsFilter->addFilter(new Varien_Filter_Sprintf('%d'), 'qty');
@@ -68,14 +83,6 @@ class Mage_Checkout_Block_Multishipping_Shipping extends Mage_Checkout_Block_Mul
     public function getShippingRates($address)
     {
         $groups = $address->getGroupedAllShippingRates();
-        if (!empty($groups)) {
-            $ratesFilter = new Varien_Filter_Object_Grid();
-            $ratesFilter->addFilter(Mage::app()->getStore()->getPriceFilter(), 'price');
-
-            foreach ($groups as $code => $groupItems) {
-                $groups[$code] = $ratesFilter->filter($groupItems);
-            }
-        }
         return $groups;
     }
 
@@ -105,5 +112,10 @@ class Mage_Checkout_Block_Multishipping_Shipping extends Mage_Checkout_Block_Mul
     public function getBackUrl()
     {
         return $this->getUrl('*/*/backtoaddresses');
+    }
+
+    public function getShippingPrice($address, $price, $flag)
+    {
+        return $address->getQuote()->getStore()->convertPrice($this->helper('tax')->getShippingPrice($price, $flag, $address), true);
     }
 }

@@ -14,7 +14,7 @@
  *
  * @category   Mage
  * @package    Mage_GoogleCheckout
- * @copyright  Copyright (c) 2004-2007 Irubin Consulting Inc. DBA Varien (http://www.varien.com)
+ * @copyright  Copyright (c) 2008 Irubin Consulting Inc. DBA Varien (http://www.varien.com)
  * @license    http://opensource.org/licenses/osl-3.0.php  Open Software License (OSL 3.0)
  */
 
@@ -23,6 +23,7 @@
  *
  * @category   Mage
  * @package    Mage_GoogleCheckout
+ * @author      Magento Core Team <core@magentocommerce.com>
  */
 class Mage_GoogleCheckout_Block_Link extends Mage_Core_Block_Template
 {
@@ -70,7 +71,10 @@ class Mage_GoogleCheckout_Block_Link extends Mage_Core_Block_Template
 
     public function _toHtml()
     {
-        if((bool)Mage::getStoreConfig('google/checkout/active')) {
+        if (!Mage::getSingleton('checkout/session')->getQuote()->validateMinimumAmount()) {
+            return '';
+        }
+        if (Mage::getStoreConfigFlag('google/checkout/active')) {
             return parent::_toHtml();
         }
 

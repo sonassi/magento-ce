@@ -14,7 +14,7 @@
  *
  * @category   Mage
  * @package    Mage_Adminhtml
- * @copyright  Copyright (c) 2004-2007 Irubin Consulting Inc. DBA Varien (http://www.varien.com)
+ * @copyright  Copyright (c) 2008 Irubin Consulting Inc. DBA Varien (http://www.varien.com)
  * @license    http://opensource.org/licenses/osl-3.0.php  Open Software License (OSL 3.0)
  */
 
@@ -45,8 +45,8 @@ class Mage_Adminhtml_Block_Widget_Grid_Column_Renderer_Wrapline extends Mage_Adm
         $line = parent::_getValue($row);
         $wrappedLine = '';
         $lineLength = ($this->getColumn()->getData('lineLength')?$this->getColumn()->getData('lineLength'):$this->_defaultMaxLineLength);
-        for($i=0, $n=floor(strlen($line)/$lineLength); $i<=$n; $i++) {
-            $wrappedLine .= substr($line, ($lineLength*$i), $lineLength)."<br />";
+        for($i=0, $n=floor(Mage::helper('core/string')->strlen($line)/$lineLength); $i<=$n; $i++) {
+            $wrappedLine .= Mage::helper('core/string')->substr($line, ($lineLength*$i), $lineLength)."<br />";
         }
         return $wrappedLine;
     }

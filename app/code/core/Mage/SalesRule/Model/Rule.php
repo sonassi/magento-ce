@@ -14,7 +14,7 @@
  *
  * @category   Mage
  * @package    Mage_SalesRule
- * @copyright  Copyright (c) 2004-2007 Irubin Consulting Inc. DBA Varien (http://www.varien.com)
+ * @copyright  Copyright (c) 2008 Irubin Consulting Inc. DBA Varien (http://www.varien.com)
  * @license    http://opensource.org/licenses/osl-3.0.php  Open Software License (OSL 3.0)
  */
 
@@ -39,6 +39,8 @@ class Mage_SalesRule_Model_Rule extends Mage_Rule_Model_Rule
                 'title' => Mage::helper('salesRule')->__('Coupon with the same code')
             ));
             Mage::app()->cleanCache('salesrule_coupon_'.md5($coupon));
+        } else {
+            $this->getResource()->resetUniqueField();
         }
         return parent::_beforeSave();
     }

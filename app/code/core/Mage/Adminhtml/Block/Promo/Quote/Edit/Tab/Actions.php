@@ -14,7 +14,7 @@
  *
  * @category   Mage
  * @package    Mage_Adminhtml
- * @copyright  Copyright (c) 2004-2007 Irubin Consulting Inc. DBA Varien (http://www.varien.com)
+ * @copyright  Copyright (c) 2008 Irubin Consulting Inc. DBA Varien (http://www.varien.com)
  * @license    http://opensource.org/licenses/osl-3.0.php  Open Software License (OSL 3.0)
  */
 
@@ -24,6 +24,7 @@
  * @category    Mage
  * @category   Mage
  * @package    Mage_Adminhtml
+ * @author      Magento Core Team <core@magentocommerce.com>
  */
 class Mage_Adminhtml_Block_Promo_Quote_Edit_Tab_Actions extends Mage_Adminhtml_Block_Widget_Form
 {
@@ -48,10 +49,10 @@ class Mage_Adminhtml_Block_Promo_Quote_Edit_Tab_Actions extends Mage_Adminhtml_B
                 'buy_x_get_y' => Mage::helper('salesrule')->__('Buy X get Y free (discount amount is Y)'),
             ),
         ));
-
         $fieldset->addField('discount_amount', 'text', array(
             'name' => 'discount_amount',
             'required' => true,
+            'class' => 'validate-not-negative-number',
             'label' => Mage::helper('salesrule')->__('Discount amount'),
         ));
         $model->setDiscountAmount($model->getDiscountAmount()*1);

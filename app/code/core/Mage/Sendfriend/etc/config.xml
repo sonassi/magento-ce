@@ -15,7 +15,7 @@
  *
  * @category   Mage
  * @package    Mage_Sendfriend
- * @copyright  Copyright (c) 2004-2007 Irubin Consulting Inc. DBA Varien (http://www.varien.com)
+ * @copyright  Copyright (c) 2008 Irubin Consulting Inc. DBA Varien (http://www.varien.com)
  * @license    http://opensource.org/licenses/osl-3.0.php  Open Software License (OSL 3.0)
  */
 -->
@@ -23,9 +23,6 @@
    <modules>
       <Mage_Sendfriend>
          <version>0.7.1</version>
-         <depends>
-            <Mage_Catalog />
-         </depends>
       </Mage_Sendfriend>
    </modules>
    <global>
@@ -79,7 +76,19 @@
         </template>
    </global>
 
-   <frontend>
+    <adminhtml>
+      <translate>
+        <modules>
+            <Mage_Sendfriend>
+                <files>
+                    <default>Mage_Sendfriend.csv</default>
+                </files>
+            </Mage_Sendfriend>
+        </modules>
+      </translate>
+    </adminhtml>
+    
+    <frontend>
       <events>
           <catalog_controller_product_view>
               <observers>

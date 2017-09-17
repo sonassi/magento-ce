@@ -14,7 +14,7 @@
  *
  * @category   Mage
  * @package    Mage_Adminhtml
- * @copyright  Copyright (c) 2004-2007 Irubin Consulting Inc. DBA Varien (http://www.varien.com)
+ * @copyright  Copyright (c) 2008 Irubin Consulting Inc. DBA Varien (http://www.varien.com)
  * @license    http://opensource.org/licenses/osl-3.0.php  Open Software License (OSL 3.0)
  */
 
@@ -23,12 +23,17 @@
  *
  * @category   Mage
  * @package    Mage_Adminhtml
+ * @author      Magento Core Team <core@magentocommerce.com>
  */
 
 class Mage_Adminhtml_Catalog_Product_ReviewController extends Mage_Adminhtml_Controller_Action
 {
 	public function indexAction()
     {
+        if ($this->getRequest()->getParam('ajax')) {
+            return $this->_forward('reviewGrid');
+        }
+
         $this->loadLayout();
         $this->_setActiveMenu('catalog/review');
 
@@ -39,6 +44,11 @@ class Mage_Adminhtml_Catalog_Product_ReviewController extends Mage_Adminhtml_Con
 
     public function pendingAction()
     {
+        if ($this->getRequest()->getParam('ajax')) {
+            Mage::register('usePendingFilter', true);
+            return $this->_forward('reviewGrid');
+        }
+
         $this->loadLayout();
         $this->_setActiveMenu('catalog/review');
 

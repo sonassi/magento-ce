@@ -14,13 +14,14 @@
  *
  * @category   Mage
  * @package    Mage_CatalogInventory
- * @copyright  Copyright (c) 2004-2007 Irubin Consulting Inc. DBA Varien (http://www.varien.com)
+ * @copyright  Copyright (c) 2008 Irubin Consulting Inc. DBA Varien (http://www.varien.com)
  * @license    http://opensource.org/licenses/osl-3.0.php  Open Software License (OSL 3.0)
  */
 
 /**
  * Stock model
  *
+ * @author      Magento Core Team <core@magentocommerce.com>
  */
 class Mage_CatalogInventory_Model_Stock extends Mage_Core_Model_Abstract
 {
@@ -58,7 +59,7 @@ class Mage_CatalogInventory_Model_Stock extends Mage_Core_Model_Abstract
             foreach($productCollection as $product){
                 if($product->getId()==$item->getProductId()){
                     if($product instanceof Mage_Catalog_Model_Product) {
-                    	$item->assignProduct($product);
+                        $item->assignProduct($product);
                     }
                 }
             }
@@ -91,8 +92,11 @@ class Mage_CatalogInventory_Model_Stock extends Mage_Core_Model_Abstract
                 $stockItem->setStoreId($item->getStoreId());
             }
             if ($stockItem->checkQty($item->getQtyOrdered())) {
-                $stockItem->subtractQty($item->getQtyOrdered())
-                          ->save();
+                $stockItem->subtractQty($item->getQtyOrdered());
+                if ($this->getBackorders() == self::BACKORDERS_NO && $stockItem->getQty() <= $stockItem->getMinQty()) {
+                    $this->setIsInStock(false);
+                }
+                $stockItem->save();
             }
         }
         else {
@@ -101,22 +105,19 @@ class Mage_CatalogInventory_Model_Stock extends Mage_Core_Model_Abstract
         return $this;
     }
 
-    /**
-     * Back stock item data when we cancel order items
-     *
-     * @param Varien_Object $item
-     */
-    public function cancelItemSale(Varien_Object $item)
+
+    public function backItemQty($productId, $qty)
     {
-        if (($productId = $item->getProductId()) && ($qty = $item->getQtyToShip())) {
-            $stockItem = Mage::getModel('cataloginventory/stock_item')->loadByProduct($productId);
-            if ($stockItem->getId()) {
-                if ($item->getStoreId()) {
-                    $stockItem->setStoreId($item->getStoreId());
-                }
-                $stockItem->addQty($qty)
-                    ->save();
+        $stockItem = Mage::getModel('cataloginventory/stock_item')->loadByProduct($productId);
+        if ($stockItem->getId()) {
+            $stockItem->addQty($qty);
+            /**
+             * get back in stock (when order is canceled or whatever else)
+             */
+            if ($stockItem->getCanBackInStock() && $stockItem->getQty() > $stockItem->getMinQty()) {
+                $stockItem->setIsInStock(true);
             }
+            $stockItem->save();
         }
         return $this;
     }
@@ -141,7 +142,7 @@ class Mage_CatalogInventory_Model_Stock extends Mage_Core_Model_Abstract
      */
     public function addInStockFilterToCollection($collection)
     {
-    	$this->getResource()->setInStockFilterToCollection($collection);
-    	return $this;
+        $this->getResource()->setInStockFilterToCollection($collection);
+        return $this;
     }
 }

@@ -14,7 +14,7 @@
  *
  * @category   Mage
  * @package    Mage_Catalog
- * @copyright  Copyright (c) 2004-2007 Irubin Consulting Inc. DBA Varien (http://www.varien.com)
+ * @copyright  Copyright (c) 2008 Irubin Consulting Inc. DBA Varien (http://www.varien.com)
  * @license    http://opensource.org/licenses/osl-3.0.php  Open Software License (OSL 3.0)
  */
 
@@ -23,7 +23,8 @@ $installer = $this;
 
 $installer->startSetup();
 $installer->run("
-    ALTER TABLE `{$installer->getTable('catalog_product_entity')}`, CHANGE `type_id` `type_id` VARCHAR(32) DEFAULT 'simple' NOT NULL;
+    ALTER TABLE `{$installer->getTable('catalog_product_entity')}`
+        CHANGE `type_id` `type_id` VARCHAR(32) DEFAULT 'simple' NOT NULL;
     UPDATE `{$installer->getTable('catalog_product_entity')}`
         SET `type_id` = CASE `type_id`
             WHEN '1' THEN 'simple'

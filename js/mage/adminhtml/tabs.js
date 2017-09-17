@@ -11,13 +11,13 @@
  * obtain it through the world-wide-web, please send an email
  * to license@magentocommerce.com so we can send you a copy immediately.
  *
- * @copyright  Copyright (c) 2004-2007 Irubin Consulting Inc. DBA Varien (http://www.varien.com)
+ * @copyright  Copyright (c) 2008 Irubin Consulting Inc. DBA Varien (http://www.varien.com)
  * @license    http://opensource.org/licenses/osl-3.0.php  Open Software License (OSL 3.0)
  */
 var varienTabs = new Class.create();
 
 varienTabs.prototype = {
-    initialize : function(containerId, destElementId,  activeTabId){
+    initialize : function(containerId, destElementId,  activeTabId, shadowTabs){
         this.containerId    = containerId;
         this.destElementId  = destElementId;
         this.activeTab = null;
@@ -46,6 +46,17 @@ varienTabs.prototype = {
                         varienGlobalEvents.fireEvent('moveTab', {tab:this.tabs[tab]});
                     }
                 }
+            }
+/*
+            // this code is pretty slow in IE, so lets do it in tabs*.phtml
+            // mark ajax tabs as not loaded
+            if (Element.hasClassName($(this.tabs[tab].id), 'ajax')) {
+                Element.addClassName($(this.tabs[tab].id), 'notloaded');
+            }
+*/
+            // bind shadow tabs
+            if (this.tabs[tab].id && shadowTabs && shadowTabs[this.tabs[tab].id]) {
+                this.tabs[tab].shadowTabs = shadowTabs[this.tabs[tab].id];
             }
         }
 
@@ -85,20 +96,18 @@ varienTabs.prototype = {
         return false;
     },
 
-    tabMouseClick : function(event){
+    tabMouseClick : function(event) {
         var tab = Event.findElement(event, 'a');
-        if(tab.href.indexOf('#') != tab.href.length-1){
-            if(Element.hasClassName(tab, 'ajax')){
 
-            }
-            else{
-                location.href = tab.href;
-            }
+        // go directly to specified url or switch tab
+        if ((tab.href.indexOf('#') != tab.href.length-1)
+            && !(Element.hasClassName(tab, 'ajax'))
+        ) {
+            location.href = tab.href;
         }
         else {
             this.showTabContent(tab);
         }
-
         Event.stop(event);
     },
 
@@ -108,17 +117,58 @@ varienTabs.prototype = {
         }
     },
 
-    showTabContent : function(tab){
+    // show tab, ready or not
+    showTabContentImmediately : function(tab) {
         this.hideAllTabsContent();
         var tabContentElement = $(this.getTabContentElementId(tab));
-        if(tabContentElement){
+        if (tabContentElement) {
             Element.show(tabContentElement);
-            //new Effect.Appear(tabContentElement, {duration :0.3});
             Element.addClassName(tab, 'active');
+            // load shadow tabs, if any
+            if (tab.shadowTabs && tab.shadowTabs.length) {
+                for (var k in tab.shadowTabs) {
+                    this.loadShadowTab($(tab.shadowTabs[k]));
+                }
+            }
+            Element.removeClassName(tab, 'notloaded');
             this.activeTab = tab;
         }
-        if(varienGlobalEvents){
+        if (varienGlobalEvents) {
             varienGlobalEvents.fireEvent('showTab', {tab:tab});
+        }
+    },
+
+    // the lazy show tab method
+    showTabContent : function(tab) {
+        var tabContentElement = $(this.getTabContentElementId(tab));
+        if (tabContentElement) {
+            // wait for ajax request, if defined
+            if ((tabContentElement.innerHTML == '')
+                && (tab.href.indexOf('#') != tab.href.length-1)
+                && (Element.hasClassName(tab, 'ajax'))
+            ) {
+                new Ajax.Updater(tabContentElement.id, tab.href, {
+                     onComplete : function () {
+                         this.showTabContentImmediately(tab)
+                     }.bind(this),
+                     evalScripts : true
+                });
+            }
+            else {
+                this.showTabContentImmediately(tab);
+            }
+        }
+    },
+
+    loadShadowTab : function(tab) {
+        var tabContentElement = $(this.getTabContentElementId(tab));
+        if (tabContentElement && Element.hasClassName(tab, 'ajax') && Element.hasClassName(tab, 'notloaded')) {
+            new Ajax.Updater(tabContentElement.id, tab.href, {
+                onComplete : function () {
+                    Element.removeClassName(tab, 'notloaded');
+                }.bind(this),
+                evalScripts : true
+            });
         }
     },
 

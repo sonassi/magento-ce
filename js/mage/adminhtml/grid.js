@@ -11,7 +11,7 @@
  * obtain it through the world-wide-web, please send an email
  * to license@magentocommerce.com so we can send you a copy immediately.
  *
- * @copyright  Copyright (c) 2004-2007 Irubin Consulting Inc. DBA Varien (http://www.varien.com)
+ * @copyright  Copyright (c) 2008 Irubin Consulting Inc. DBA Varien (http://www.varien.com)
  * @license    http://opensource.org/licenses/osl-3.0.php  Open Software License (OSL 3.0)
  */
 var varienGrid = new Class.create();
@@ -31,6 +31,7 @@ varienGrid.prototype = {
         this.preInitCallback = false;
         this.initCallback = false;
         this.initRowCallback = false;
+        this.doFilterCallback = false;
 
         this.reloadParams = false;
 
@@ -52,9 +53,6 @@ varienGrid.prototype = {
             for (var row=0; row<this.rows.length; row++) {
                 if(row%2==0){
                     Element.addClassName(this.rows[row], 'even');
-                }
-                if(this.rows[row].tagName) {
-                    Element.addClassName(this.rows[row], 'pointer');
                 }
 
                 Event.observe(this.rows[row],'mouseover',this.trOnMouseOver);
@@ -99,6 +97,11 @@ varienGrid.prototype = {
     rowMouseOver : function(event){
         var element = Event.findElement(event, 'tr');
         Element.addClassName(element, 'on-mouse');
+
+        if (!Element.hasClassName('pointer')
+            && (this.rowClickCallback !== openGridRow || element.id)) {
+            Element.addClassName(element, 'pointer');
+        }
     },
     rowMouseOut : function(event){
         var element = Event.findElement(event, 'tr');
@@ -160,6 +163,22 @@ varienGrid.prototype = {
             location.href = url;
         }
     },
+    /*_processComplete : function(transport){
+        console.log(transport);
+        if (transport && transport.responseText){
+            try{
+                response = eval('(' + transport.responseText + ')');
+            }
+            catch (e) {
+                response = {};
+            }
+        }
+        if (response.ajaxExpired && response.ajaxRedirect) {
+            location.href = response.ajaxRedirect;
+            return false;
+        }
+        this.initGrid();
+    },*/
     _processFailure : function(transport){
         location.href = BASE_URL;
     },
@@ -205,7 +224,9 @@ varienGrid.prototype = {
         for(var i in filters){
             if(filters[i].value && filters[i].value.length) elements.push(filters[i]);
         }
-        this.reload(this.addVarToUrl(this.filterVar, encode_base64(Form.serializeElements(elements))));
+        if (!this.doFilterCallback || (this.doFilterCallback && this.doFilterCallback())) {
+            this.reload(this.addVarToUrl(this.filterVar, encode_base64(Form.serializeElements(elements))));
+        }
     },
     resetFilter : function(){
         this.reload(this.addVarToUrl(this.filterVar, ''));
@@ -402,7 +423,7 @@ varienGridMassaction.prototype = {
         }.bind(this));
     },
     selectAll: function() {
-        this.setCheckedValues(this.getGridIds());
+        this.addCheckedValues(this.getGridIds());
         this.checkCheckboxes();
         this.updateCount();
         return false;

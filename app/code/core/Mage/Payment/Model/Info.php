@@ -14,7 +14,7 @@
  *
  * @category   Mage
  * @package    Mage_Payment
- * @copyright  Copyright (c) 2004-2007 Irubin Consulting Inc. DBA Varien (http://www.varien.com)
+ * @copyright  Copyright (c) 2008 Irubin Consulting Inc. DBA Varien (http://www.varien.com)
  * @license    http://opensource.org/licenses/osl-3.0.php  Open Software License (OSL 3.0)
  */
 
@@ -23,6 +23,7 @@
  *
  * @category   Mage
  * @package    Mage_Payment
+ * @author      Magento Core Team <core@magentocommerce.com>
  */
 class Mage_Payment_Model_Info extends Mage_Core_Model_Abstract
 {
@@ -55,11 +56,16 @@ class Mage_Payment_Model_Info extends Mage_Core_Model_Abstract
      */
     public function getMethodInstance()
     {
-        if ($method = $this->getMethod()) {
-            if ($instance = Mage::helper('payment')->getMethodInstance($this->getMethod())) {
-                $instance->setInfoInstance($this);
-                return $instance;
+        if (!$this->hasMethodInstance()) {
+            if ($method = $this->getMethod()) {
+                if ($instance = Mage::helper('payment')->getMethodInstance($this->getMethod())) {
+                    $instance->setInfoInstance($this);
+                    $this->setMethodInstance($instance);
+                    return $instance;
+                }
             }
+        } else {
+            return $this->_getData('method_instance');
         }
         Mage::throwException(Mage::helper('payment')->__('Can not retrieve payment method instance'));
     }

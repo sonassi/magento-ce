@@ -14,7 +14,7 @@
  *
  * @category   Mage
  * @package    Mage_Tax
- * @copyright  Copyright (c) 2004-2007 Irubin Consulting Inc. DBA Varien (http://www.varien.com)
+ * @copyright  Copyright (c) 2008 Irubin Consulting Inc. DBA Varien (http://www.varien.com)
  * @license    http://opensource.org/licenses/osl-3.0.php  Open Software License (OSL 3.0)
  */
 
@@ -57,7 +57,12 @@ class Mage_Tax_Model_Rate_Data extends Mage_Core_Model_Abstract
             .'|'.$this->getPostcode();
 
         if (!isset($this->_cache[$cacheKey])) {
-            $this->_cache[$cacheKey] = $this->_getResource()->fetchRate($this);
+            $this->unsRateValue();
+            Mage::dispatchEvent('tax_rate_data_fetch', array('request'=>$this));
+            if (!$this->hasRateValue()) {
+                $this->setRateValue($this->_getResource()->fetchRate($this));
+            }
+            $this->_cache[$cacheKey] = $this->getRateValue();
         }
 
         return $this->_cache[$cacheKey];

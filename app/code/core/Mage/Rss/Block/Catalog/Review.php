@@ -14,7 +14,7 @@
  *
  * @category   Mage
  * @package    Mage_Rss
- * @copyright  Copyright (c) 2004-2007 Irubin Consulting Inc. DBA Varien (http://www.varien.com)
+ * @copyright  Copyright (c) 2008 Irubin Consulting Inc. DBA Varien (http://www.varien.com)
  * @license    http://opensource.org/licenses/osl-3.0.php  Open Software License (OSL 3.0)
  */
 
@@ -23,6 +23,7 @@
  *
  * @category   Mage
  * @package    Mage_Rss
+ * @author      Magento Core Team <core@magentocommerce.com>
  */
 class Mage_Rss_Block_Catalog_Review extends Mage_Rss_Block_Abstract
 {
@@ -38,7 +39,7 @@ class Mage_Rss_Block_Catalog_Review extends Mage_Rss_Block_Abstract
     protected function _toHtml()
     {
         $newurl = Mage::getUrl('rss/catalog/review');
-        $title = Mage::helper('rss')->__('Pendng product review(s)');
+        $title = Mage::helper('rss')->__('Pending product review(s)');
 
         $rssObj = Mage::getModel('rss/rss');
         $data = array('title' => $title,

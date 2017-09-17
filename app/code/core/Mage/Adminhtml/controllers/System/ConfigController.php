@@ -14,7 +14,7 @@
  *
  * @category   Mage
  * @package    Mage_Adminhtml
- * @copyright  Copyright (c) 2004-2007 Irubin Consulting Inc. DBA Varien (http://www.varien.com)
+ * @copyright  Copyright (c) 2008 Irubin Consulting Inc. DBA Varien (http://www.varien.com)
  * @license    http://opensource.org/licenses/osl-3.0.php  Open Software License (OSL 3.0)
  */
 
@@ -24,6 +24,7 @@
  *
  * @category   Mage
  * @package    Mage_Adminhtml
+ * @author      Magento Core Team <core@magentocommerce.com>
  */
 class Mage_Adminhtml_System_ConfigController extends Mage_Adminhtml_Controller_Action
 {
@@ -56,8 +57,10 @@ class Mage_Adminhtml_System_ConfigController extends Mage_Adminhtml_Controller_A
         $current = $this->getRequest()->getParam('section');
         $website = $this->getRequest()->getParam('website');
         $store   = $this->getRequest()->getParam('store');
-
+		
         $configFields = Mage::getSingleton('adminhtml/config');
+ 
+        
         $sections     = $configFields->getSections($current);
         $section      = $sections->$current;
         $hasChildren  = $configFields->hasChildren($section, $website, $store);
@@ -70,16 +73,20 @@ class Mage_Adminhtml_System_ConfigController extends Mage_Adminhtml_Controller_A
 
         $this->_setActiveMenu('system/config');
 
-        $this->_addBreadcrumb(Mage::helper('adminhtml')->__('System'), Mage::helper('adminhtml')->__('System'), $this->getUrl('*/system'));
+       $this->_addBreadcrumb(Mage::helper('adminhtml')->__('System'), Mage::helper('adminhtml')->__('System'), $this->getUrl('*/system'));
 
         $this->getLayout()->getBlock('left')
             ->append($this->getLayout()->createBlock('adminhtml/system_config_tabs')->initTabs());
-
-        $this->_addContent($this->getLayout()->createBlock('adminhtml/system_config_edit')->initForm());
-        $this->_addJs($this->getLayout()->createBlock('adminhtml/template')->setTemplate('system/shipping/ups.phtml'));
-        $this->_addJs($this->getLayout()->createBlock('adminhtml/template')->setTemplate('system/config/js.phtml'));
-        $this->_addJs($this->getLayout()->createBlock('adminhtml/template')->setTemplate('system/shipping/applicable_country.phtml'));
-        $this->renderLayout();
+       
+        if ($this->_isSectionAllowed($this->getRequest()->getParam('section'))) {
+            $this->_addContent($this->getLayout()->createBlock('adminhtml/system_config_edit')->initForm());
+           
+            $this->_addJs($this->getLayout()->createBlock('adminhtml/template')->setTemplate('system/shipping/ups.phtml'));
+            $this->_addJs($this->getLayout()->createBlock('adminhtml/template')->setTemplate('system/config/js.phtml'));
+            $this->_addJs($this->getLayout()->createBlock('adminhtml/template')->setTemplate('system/shipping/applicable_country.phtml'));
+            
+            $this->renderLayout();
+        }
     }
 
     /**
@@ -92,7 +99,8 @@ class Mage_Adminhtml_System_ConfigController extends Mage_Adminhtml_Controller_A
         /* @var $session Mage_Adminhtml_Model_Session */
 
         $groups = $this->getRequest()->getPost('groups');
-
+       
+   	
         if (isset($_FILES['groups']['name']) && is_array($_FILES['groups']['name'])) {
             /**
              * Carefully merge $_FILES and $_POST information
@@ -111,6 +119,9 @@ class Mage_Adminhtml_System_ConfigController extends Mage_Adminhtml_Controller_A
 
         try {
             Mage::app()->cleanCache(array('config'));
+            if (!$this->_isSectionAllowed($this->getRequest()->getParam('section'))) {
+                throw new Exception(Mage::helper('adminhtml')->__('This section is not allowed.'));
+            }
             Mage::getModel('adminhtml/config_data')
                 ->setSection($this->getRequest()->getParam('section'))
                 ->setWebsite($this->getRequest()->getParam('website'))
@@ -148,7 +159,7 @@ class Mage_Adminhtml_System_ConfigController extends Mage_Adminhtml_Controller_A
                 $this->getRequest()->getParam('container') => $this->getRequest()->getParam('value')
             );
             $this->_saveState($configState);
-
+            $this->getResponse()->setBody('success');
         }
     }
 
@@ -222,6 +233,31 @@ class Mage_Adminhtml_System_ConfigController extends Mage_Adminhtml_Controller_A
     }
 
     /**
+     * Check if specified section allowed in ACL
+     *
+     * Will forward to deniedAction(), if not allowed.
+     *
+     * @param string $section
+     * @return bool
+     */
+    protected function _isSectionAllowed($section)
+    {
+        try {
+            $session = Mage::getSingleton('admin/session');
+            $resourceLookup = "admin/system/config/{$section}";
+            $resourceId = $session->getData('acl')->get($resourceLookup)->getResourceId();
+            if (!$session->isAllowed($resourceId)) {
+                throw new Exception('');
+            }
+            return true;
+        }
+        catch (Exception $e) {
+            $this->_forward('denied');
+            return false;
+        }
+    }
+
+    /**
      * saving state of config field sets
      *
      * @param array $configState
@@ -241,10 +277,12 @@ class Mage_Adminhtml_System_ConfigController extends Mage_Adminhtml_Controller_A
             foreach ($configState as $fieldset => $state) {
                 $extra['configState'][$fieldset] = $state;
             }
-            $adminUser->setExtra($extra);
+            $id = $adminUser->getId();
+            $adminUser->setData(array('extra'=>$extra))
+                ->setId($id);
+            $adminUser->save();
         }
-        $adminUser->unsPassword();
-        $adminUser->save();
+
         return true;
     }
 }

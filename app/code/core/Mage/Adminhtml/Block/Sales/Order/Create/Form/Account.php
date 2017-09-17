@@ -14,13 +14,14 @@
  *
  * @category   Mage
  * @package    Mage_Adminhtml
- * @copyright  Copyright (c) 2004-2007 Irubin Consulting Inc. DBA Varien (http://www.varien.com)
+ * @copyright  Copyright (c) 2008 Irubin Consulting Inc. DBA Varien (http://www.varien.com)
  * @license    http://opensource.org/licenses/osl-3.0.php  Open Software License (OSL 3.0)
  */
 
 /**
  * Create order account form
  *
+ * @author      Magento Core Team <core@magentocommerce.com>
  */
 class Mage_Adminhtml_Block_Sales_Order_Create_Form_Account extends Mage_Adminhtml_Block_Sales_Order_Create_Abstract
 {
@@ -65,10 +66,10 @@ class Mage_Adminhtml_Block_Sales_Order_Create_Form_Account extends Mage_Adminhtm
     {
         if (!$this->_form) {
             if ($this->getQuote()->getCustomerIsGuest()) {
-                $display = array('email');
+                $display = array('email' => 1);
             }
             else {
-                $display = array('email', 'group_id');
+                $display = array('group_id' => 1, 'email' =>2);
             }
 
             $this->_form = new Varien_Data_Form();
@@ -76,7 +77,7 @@ class Mage_Adminhtml_Block_Sales_Order_Create_Form_Account extends Mage_Adminhtm
             $customerModel = Mage::getModel('customer/customer');
 
             foreach ($customerModel->getAttributes() as $attribute) {
-                if (!in_array($attribute->getAttributeCode(), $display)) {
+                if (!array_key_exists($attribute->getAttributeCode(), $display)) {
                     continue;
                 }
                 if ($inputType = $attribute->getFrontend()->getInputType()) {
@@ -86,19 +87,35 @@ class Mage_Adminhtml_Block_Sales_Order_Create_Form_Account extends Mage_Adminhtm
                             'label' => $attribute->getFrontend()->getLabel(),
                         )
                     )
-                    ->setEntityAttribute($attribute);
+                    ->setEntityAttribute($attribute)
+                    ;
 
                     if ($inputType == 'select' || $inputType == 'multiselect') {
                         $element->setValues($attribute->getFrontend()->getSelectOptions());
                     }
+                    $element->setSortOrder($display[$attribute->getAttributeCode()]);
                 }
             }
 
-            $this->_form->addFieldNameSuffix('order[account]');
+            /*
+            * want to sort element only when there are more than one element
+            */
+            if ($fieldset->getElements()->count()>1) {
+                $fieldset->getElements()->usort(array($this, '_sortMethods'));
+            }
 
+            $this->_form->addFieldNameSuffix('order[account]');
             $this->_form->setValues($this->getCustomerData());
         }
         return $this;
+    }
+
+    public function _sortMethods($a, $b)
+    {
+        if (is_object($a)) {
+            return (int)$a->sort_order < (int)$b->sort_order ? -1 : ((int)$a->sort_order > (int)$b->sort_order ? 1 : 0);
+        }
+        return 0;
     }
 
     public function getCustomerData()
@@ -110,6 +127,7 @@ class Mage_Adminhtml_Block_Sales_Order_Create_Form_Account extends Mage_Adminhtm
         	}
         }
         $data['group_id'] = $this->getCreateOrderModel()->getCustomerGroupId();
+        $data['email'] = ($this->getQuote()->getCustomerEmail() ? $this->getQuote()->getCustomerEmail() :$this->getCustomer()->getData('email'));
         return $data;
     }
 }

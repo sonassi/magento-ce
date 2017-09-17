@@ -14,13 +14,14 @@
  *
  * @category   Mage
  * @package    Mage_Adminhtml
- * @copyright  Copyright (c) 2004-2007 Irubin Consulting Inc. DBA Varien (http://www.varien.com)
+ * @copyright  Copyright (c) 2008 Irubin Consulting Inc. DBA Varien (http://www.varien.com)
  * @license    http://opensource.org/licenses/osl-3.0.php  Open Software License (OSL 3.0)
  */
 
 /**
  * Adminhtml sales orders grid
  *
+ * @author      Magento Core Team <core@magentocommerce.com>
  */
 class Mage_Adminhtml_Block_Sales_Shipment_Grid extends Mage_Adminhtml_Block_Widget_Grid
 {
@@ -35,6 +36,7 @@ class Mage_Adminhtml_Block_Sales_Shipment_Grid extends Mage_Adminhtml_Block_Widg
 
     protected function _prepareCollection()
     {
+        //TODO: add full name logic
         $collection = Mage::getResourceModel('sales/order_shipment_collection')
             ->addAttributeToSelect('increment_id')
             ->addAttributeToSelect('created_at')
@@ -53,6 +55,7 @@ class Mage_Adminhtml_Block_Sales_Shipment_Grid extends Mage_Adminhtml_Block_Widg
         $this->addColumn('increment_id', array(
             'header'    => Mage::helper('sales')->__('Shipment #'),
             'index'     => 'increment_id',
+            'type'      => 'number',
         ));
 
         $this->addColumn('created_at', array(
@@ -64,6 +67,7 @@ class Mage_Adminhtml_Block_Sales_Shipment_Grid extends Mage_Adminhtml_Block_Widg
         $this->addColumn('order_increment_id', array(
             'header'    => Mage::helper('sales')->__('Order #'),
             'index'     => 'order_increment_id',
+            'type'      => 'number',
         ));
 
         $this->addColumn('order_created_at', array(
@@ -111,10 +115,9 @@ class Mage_Adminhtml_Block_Sales_Shipment_Grid extends Mage_Adminhtml_Block_Widg
 
     public function getRowUrl($row)
     {
-        return $this->getUrl('*/sales_order_shipment/view',
+        return $this->getUrl('*/*/view',
             array(
                 'shipment_id'=> $row->getId(),
-                'order_id'  => $row->getOrderId()
             )
         );
     }

@@ -14,23 +14,14 @@
  *
  * @category   Mage
  * @package    Mage_PaypalUk
- * @copyright  Copyright (c) 2004-2007 Irubin Consulting Inc. DBA Varien (http://www.varien.com)
+ * @copyright  Copyright (c) 2008 Irubin Consulting Inc. DBA Varien (http://www.varien.com)
  * @license    http://opensource.org/licenses/osl-3.0.php  Open Software License (OSL 3.0)
  */
 
-class Mage_PaypalUk_Model_Source_Cctype
+class Mage_PaypalUk_Model_Source_Cctype extends Mage_Payment_Model_Source_Cctype
 {
-    public function toOptionArray()
+    public function getAllowedTypes()
     {
-        $options =  array();       ;
-        foreach (Mage::getSingleton('paypaluk/direct')->getApi()->getCcTypes() as $code => $name) {
-            $options[] = array(
-            	   'value' => $code,
-            	   'label' => $name
-            );
-        }
-
-        return $options;
+        return array('VI', 'MC', 'AE', 'DI', 'SS', 'OT');
     }
-
 }

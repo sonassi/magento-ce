@@ -14,7 +14,7 @@
  *
  * @category   Mage
  * @package    Mage_Page
- * @copyright  Copyright (c) 2004-2007 Irubin Consulting Inc. DBA Varien (http://www.varien.com)
+ * @copyright  Copyright (c) 2008 Irubin Consulting Inc. DBA Varien (http://www.varien.com)
  * @license    http://opensource.org/licenses/osl-3.0.php  Open Software License (OSL 3.0)
  */
 
@@ -23,6 +23,7 @@
  *
  * @category   Mage
  * @package    Mage_Page
+ * @author      Magento Core Team <core@magentocommerce.com>
  */
 class Mage_Page_Block_Html_Breadcrumbs extends Mage_Core_Block_Template
 {
@@ -51,8 +52,10 @@ class Mage_Page_Block_Html_Breadcrumbs extends Mage_Core_Block_Template
 
     function addCrumb($crumbName, $crumbInfo, $after = false)
     {
-        $this->_prepareArray($crumbInfo, array('label', 'title', 'link', 'first', 'last'));
-    	$this->_crumbs[$crumbName] = $crumbInfo;
+        $this->_prepareArray($crumbInfo, array('label', 'title', 'link', 'first', 'last', 'readonly'));
+        if ((!isset($this->_crumbs[$crumbName])) || (!$this->_crumbs[$crumbName]['readonly'])) {
+    	   $this->_crumbs[$crumbName] = $crumbInfo;
+        }
     	return $this;
     }
 

@@ -14,7 +14,7 @@
  *
  * @category   Mage
  * @package    Mage_Usa
- * @copyright  Copyright (c) 2004-2007 Irubin Consulting Inc. DBA Varien (http://www.varien.com)
+ * @copyright  Copyright (c) 2008 Irubin Consulting Inc. DBA Varien (http://www.varien.com)
  * @license    http://opensource.org/licenses/osl-3.0.php  Open Software License (OSL 3.0)
  */
 
@@ -24,6 +24,7 @@
  *
  * @category   Mage
  * @package    Mage_Usa
+ * @author      Magento Core Team <core@magentocommerce.com>
  */
 class Mage_Usa_Model_Shipping_Carrier_Dhl
     extends Mage_Usa_Model_Shipping_Carrier_Abstract
@@ -150,7 +151,8 @@ class Mage_Usa_Model_Shipping_Carrier_Dhl
         $shippingWeight = round(max(1, $weight),0);
 
         $r->setValue(round($request->getPackageValue(),2));
-        $r->setDestStreet(substr($request->getDestStreet(), 0, 35));
+        $r->setValueWithDiscount($request->getPackageValueWithDiscount());
+        $r->setDestStreet(Mage::helper('core/string')->substr($request->getDestStreet(), 0, 35));
         $r->setDestCity($request->getDestCity());
 
         if ($request->getDestCountryId()) {
@@ -1004,5 +1006,10 @@ class Mage_Usa_Model_Shipping_Carrier_Dhl
             $arr[$k] = $this->getCode('service', $k);
         }
         return $arr;
+    }
+
+    public function isStateProvinceRequired()
+    {
+        return true;
     }
 }

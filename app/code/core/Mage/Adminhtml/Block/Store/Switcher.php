@@ -14,7 +14,7 @@
  *
  * @category   Mage
  * @package    Mage_Adminhtml
- * @copyright  Copyright (c) 2004-2007 Irubin Consulting Inc. DBA Varien (http://www.varien.com)
+ * @copyright  Copyright (c) 2008 Irubin Consulting Inc. DBA Varien (http://www.varien.com)
  * @license    http://opensource.org/licenses/osl-3.0.php  Open Software License (OSL 3.0)
  */
 
@@ -23,6 +23,7 @@
  *
  * @category   Mage
  * @package    Mage_Adminhtml
+ * @author      Magento Core Team <core@magentocommerce.com>
  */
 class Mage_Adminhtml_Block_Store_Switcher extends Mage_Adminhtml_Block_Template
 {
@@ -90,5 +91,13 @@ class Mage_Adminhtml_Block_Store_Switcher extends Mage_Adminhtml_Block_Template
     public function isShow()
     {
         return !Mage::app()->isSingleStoreMode();
+    }
+
+    protected function _toHtml()
+    {
+        if (!Mage::app()->isSingleStoreMode()) {
+            return parent::_toHtml();
+        }
+        return '';
     }
 }

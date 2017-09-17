@@ -14,7 +14,7 @@
  *
  * @category   Mage
  * @package    Mage_Adminhtml
- * @copyright  Copyright (c) 2004-2007 Irubin Consulting Inc. DBA Varien (http://www.varien.com)
+ * @copyright  Copyright (c) 2008 Irubin Consulting Inc. DBA Varien (http://www.varien.com)
  * @license    http://opensource.org/licenses/osl-3.0.php  Open Software License (OSL 3.0)
  */
 
@@ -24,6 +24,7 @@
  * @category    Mage
  * @category   Mage
  * @package    Mage_Adminhtml
+ * @author      Magento Core Team <core@magentocommerce.com>
  */
 
 class Mage_Adminhtml_Block_Catalog_Search extends Mage_Adminhtml_Block_Widget_Grid_Container
@@ -31,7 +32,7 @@ class Mage_Adminhtml_Block_Catalog_Search extends Mage_Adminhtml_Block_Widget_Gr
     public function __construct()
     {
         $this->_controller = 'catalog_search';
-        $this->_headerText = Mage::helper('catalog')->__('Catalog Searches');
+        $this->_headerText = Mage::helper('catalog')->__('Search');
         $this->_addButtonLabel = Mage::helper('catalog')->__('Add New Search Term');
         parent::__construct();
 

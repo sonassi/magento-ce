@@ -14,7 +14,7 @@
  *
  * @category   Mage
  * @package    Mage_Adminhtml
- * @copyright  Copyright (c) 2004-2007 Irubin Consulting Inc. DBA Varien (http://www.varien.com)
+ * @copyright  Copyright (c) 2008 Irubin Consulting Inc. DBA Varien (http://www.varien.com)
  * @license    http://opensource.org/licenses/osl-3.0.php  Open Software License (OSL 3.0)
  */
 
@@ -43,7 +43,7 @@ class Mage_Adminhtml_Model_Search_Catalog extends Varien_Object
                 'id'            => 'product/1/'.$product->getId(),
                 'type'          => 'Product',
                 'name'          => $product->getName(),
-                'description'   => substr($product->getDescription(), 0, 50),
+                'description'   => Mage::helper('core/string')->substr($product->getDescription(), 0, 50),
                 'url'           => Mage::helper('adminhtml')->getUrl('*/catalog_product/edit', array('id'=>$product->getId())),
             );
         }

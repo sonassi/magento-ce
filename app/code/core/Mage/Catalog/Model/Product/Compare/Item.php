@@ -14,7 +14,7 @@
  *
  * @category   Mage
  * @package    Mage_Catalog
- * @copyright  Copyright (c) 2004-2007 Irubin Consulting Inc. DBA Varien (http://www.varien.com)
+ * @copyright  Copyright (c) 2008 Irubin Consulting Inc. DBA Varien (http://www.varien.com)
  * @license    http://opensource.org/licenses/osl-3.0.php  Open Software License (OSL 3.0)
  */
 
@@ -24,6 +24,7 @@
  *
  * @category   Mage
  * @package    Mage_Catalog
+ * @author      Magento Core Team <core@magentocommerce.com>
  */
 class Mage_Catalog_Model_Product_Compare_Item extends Mage_Core_Model_Abstract
 {
@@ -76,31 +77,28 @@ class Mage_Catalog_Model_Product_Compare_Item extends Mage_Core_Model_Abstract
 
     public function bindCustomerLogin()
     {
-        $collectionVisitor = Mage::getResourceModel('catalog/product_compare_item_collection');
-        $collectionVisitor
+        $customer = Mage::getSingleton('customer/session')->getCustomer();
+        $visitorItemCollection = Mage::getResourceModel('catalog/product_compare_item_collection')
+            ->setObject('catalog/product_compare_item')
+            ->useProductItem(true)
             ->setVisitorId(Mage::getSingleton('log/visitor')->getId())
             ->load();
 
-        $session = Mage::getSingleton('customer/session');
+        $customerItemCollection = $this->getResourceCollection()
+            ->setCustomerId($customer->getId())
+            ->useProductItem(true)
+            ->load();
 
-        $collectionCustomer = $this->getResourceCollection()
-            ->setCustomerId($session->getCustomerId())
-            ->load();;
+        $customerProductIds = $customerItemCollection->getProductIds();
 
-
-
-        $collectionVisitor->walk('addCustomerData', array($session->getCustomer()));
-        $collectionCustomerIds = $collectionCustomer->getProductIds();
-        foreach($collectionVisitor as $item) {
-            try {
-                if(in_array($item->getProductId(), $collectionCustomerIds)) {
-                    $item->delete();
-                } else {
-                    $item->save();
-                }
+        foreach ($visitorItemCollection as $item) {
+            if (in_array($item->getProductId(), $customerProductIds)) {
+                $item->delete();
             }
-            catch (Exception $e) {
-                //
+            else {
+                $item->setCustomerId($customer->getId())
+                    ->setVisitorId(0)
+                    ->save();
             }
         }
         return $this;

@@ -14,7 +14,7 @@
  *
  * @category   Mage
  * @package    Mage_Adminhtml
- * @copyright  Copyright (c) 2004-2007 Irubin Consulting Inc. DBA Varien (http://www.varien.com)
+ * @copyright  Copyright (c) 2008 Irubin Consulting Inc. DBA Varien (http://www.varien.com)
  * @license    http://opensource.org/licenses/osl-3.0.php  Open Software License (OSL 3.0)
  */
 
@@ -23,6 +23,7 @@
  *
  * @category   Mage
  * @package    Mage_Adminhtml
+ * @author      Magento Core Team <core@magentocommerce.com>
  */
 class Mage_Adminhtml_Block_Backup_Grid extends Mage_Adminhtml_Block_Widget_Grid
 {
@@ -49,12 +50,22 @@ class Mage_Adminhtml_Block_Backup_Grid extends Mage_Adminhtml_Block_Widget_Grid
      */
     protected function _prepareColumns()
     {
+        $url7zip = Mage::helper('adminhtml')->__('The archive can be uncompressed with <a href="%s">%s</a> on Windows systems', 'http://www.7-zip.org/', '7-Zip');
+
         $gridUrl = $this->getUrl('*/*/');
 
         $this->addColumn('time', array(
             'header'    => Mage::helper('backup')->__('Time'),
             'index'     => 'time_formated',
             'type'      => 'datetime'
+        ));
+
+        $this->addColumn('size', array(
+            'header'    => Mage::helper('backup')->__('Size, byte'),
+            'index'     => 'size',
+            'type'      => 'number',
+            'sortable'  => false,
+            'filter'    => false
         ));
 
         $this->addColumn('type', array(
@@ -66,7 +77,7 @@ class Mage_Adminhtml_Block_Backup_Grid extends Mage_Adminhtml_Block_Widget_Grid
 
         $this->addColumn('download', array(
             'header'    => Mage::helper('backup')->__('Download'),
-            'format'    => '<a href="' . $gridUrl .'download/time/$time/type/$type/file/sql/">sql</a><span class="separator">&nbsp;|&nbsp;</span><a href="' . $gridUrl .'download/time/$time/type/$type/file/gz/">gz</a>',
+            'format'    => '<a href="' . $gridUrl .'download/time/$time/type/$type/">gz</a> &nbsp; <small>('.$url7zip.')</small>',
             'index'     => 'type',
             'sortable'  => false,
             'filter'    => false

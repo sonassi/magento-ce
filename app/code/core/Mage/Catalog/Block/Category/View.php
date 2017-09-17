@@ -14,7 +14,7 @@
  *
  * @category   Mage
  * @package    Mage_Catalog
- * @copyright  Copyright (c) 2004-2007 Irubin Consulting Inc. DBA Varien (http://www.varien.com)
+ * @copyright  Copyright (c) 2008 Irubin Consulting Inc. DBA Varien (http://www.varien.com)
  * @license    http://opensource.org/licenses/osl-3.0.php  Open Software License (OSL 3.0)
  */
 
@@ -23,6 +23,7 @@
  *
  * @category   Mage
  * @package    Mage_Catalog
+ * @author      Magento Core Team <core@magentocommerce.com>
  */
 class Mage_Catalog_Block_Category_View extends Mage_Core_Block_Template
 {
@@ -86,7 +87,10 @@ class Mage_Catalog_Block_Category_View extends Mage_Core_Block_Template
      */
     public function getCurrentCategory()
     {
-        return Mage::registry('current_category');
+        if (!$this->hasData('current_category')) {
+            $this->setData('current_category', Mage::registry('current_category'));
+        }
+        return $this->getData('current_category');
     }
 
     public function getCmsBlockHtml()

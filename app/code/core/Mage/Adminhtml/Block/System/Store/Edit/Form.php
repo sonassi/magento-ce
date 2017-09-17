@@ -14,7 +14,7 @@
  *
  * @category   Mage
  * @package    Mage_Adminhtml
- * @copyright  Copyright (c) 2004-2007 Irubin Consulting Inc. DBA Varien (http://www.varien.com)
+ * @copyright  Copyright (c) 2008 Irubin Consulting Inc. DBA Varien (http://www.varien.com)
  * @license    http://opensource.org/licenses/osl-3.0.php  Open Software License (OSL 3.0)
  */
 
@@ -23,6 +23,7 @@
  *
  * @category   Mage
  * @package    Mage_Adminhtml
+ * @author      Magento Core Team <core@magentocommerce.com>
  */
 
 class Mage_Adminhtml_Block_System_Store_Edit_Form extends Mage_Adminhtml_Block_Widget_Form
@@ -68,6 +69,10 @@ class Mage_Adminhtml_Block_System_Store_Edit_Form extends Mage_Adminhtml_Block_W
             $showWebsiteFieldset = $showGroupFieldset = false;
             $showStoreFieldset = true;
         }
+
+        /* @var $websiteModel Mage_Core_Model_Website */
+        /* @var $groupModel Mage_Core_Model_Store_Group */
+        /* @var $storeModel Mage_Core_Model_Store */
 
         $form = new Varien_Data_Form(array(
             'id'        => 'edit_form',
@@ -117,6 +122,20 @@ class Mage_Adminhtml_Block_System_Store_Edit_Form extends Mage_Adminhtml_Block_W
                 ));
             }
 
+            if (!$websiteModel->getIsDefault() && $websiteModel->getStoresCount()) {
+                $fieldset->addField('is_default', 'checkbox', array(
+                    'name'      => 'website[is_default]',
+                    'label'     => Mage::helper('core')->__('Set as default'),
+                    'value'     => 1
+                ));
+            }
+            else {
+                $fieldset->addField('is_default', 'hidden', array(
+                    'name'      => 'website[is_default]',
+                    'value'     => $websiteModel->getIsDefault()
+                ));
+            }
+
             $fieldset->addField('website_website_id', 'hidden', array(
                 'name'  => 'website[website_id]',
                 'value' => $websiteModel->getId()
@@ -141,8 +160,9 @@ class Mage_Adminhtml_Block_System_Store_Edit_Form extends Mage_Adminhtml_Block_W
                     'values'    => $websites,
                     'required'  => true
                 ));
+
                 if ($groupModel->getId() && $groupModel->getWebsite()->getDefaultGroupId() == $groupModel->getId()) {
-                    if ($groupModel->getWebsite() && $groupModel->getWebsite()->getGroupsCount() > 1) {
+                    if ($groupModel->getWebsite()->getIsDefault() || $groupModel->getWebsite()->getGroupsCount() == 1) {
                         $form->getElement('group_website_id')->setDisabled(true);
 
                         $fieldset->addField('group_hidden_website_id', 'hidden', array(

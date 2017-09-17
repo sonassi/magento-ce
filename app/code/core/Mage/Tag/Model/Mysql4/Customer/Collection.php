@@ -14,7 +14,7 @@
  *
  * @category   Mage
  * @package    Mage_Tag
- * @copyright  Copyright (c) 2004-2007 Irubin Consulting Inc. DBA Varien (http://www.varien.com)
+ * @copyright  Copyright (c) 2008 Irubin Consulting Inc. DBA Varien (http://www.varien.com)
  * @license    http://opensource.org/licenses/osl-3.0.php  Open Software License (OSL 3.0)
  */
 
@@ -23,6 +23,7 @@
  *
  * @category   Mage
  * @package    Mage_Tag
+ * @author      Magento Core Team <core@magentocommerce.com>
  */
 
 class Mage_Tag_Model_Mysql4_Customer_Collection extends Mage_Customer_Model_Entity_Customer_Collection
@@ -125,6 +126,7 @@ class Mage_Tag_Model_Mysql4_Customer_Collection extends Mage_Customer_Model_Enti
         $tagRelationTable = $this->getTable('tag/relation');
         $tagTable = $this->getTable('tag/tag');
 
+        //TODO: add full name logic
         $this->addAttributeToSelect('firstname')
             ->addAttributeToSelect('lastname')
             ->addAttributeToSelect('email');

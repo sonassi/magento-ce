@@ -14,7 +14,7 @@
  *
  * @category   Mage
  * @package    Mage_Eav
- * @copyright  Copyright (c) 2004-2007 Irubin Consulting Inc. DBA Varien (http://www.varien.com)
+ * @copyright  Copyright (c) 2008 Irubin Consulting Inc. DBA Varien (http://www.varien.com)
  * @license    http://opensource.org/licenses/osl-3.0.php  Open Software License (OSL 3.0)
  */
 
@@ -24,6 +24,7 @@
  *
  * @category   Mage
  * @package    Mage_Eav
+ * @author      Magento Core Team <core@magentocommerce.com>
  */
 class Mage_Eav_Model_Entity_Type extends Mage_Core_Model_Abstract
 {
@@ -67,6 +68,7 @@ class Mage_Eav_Model_Entity_Type extends Mage_Core_Model_Abstract
     public function loadByCode($code)
     {
         $this->_getResource()->loadByCode($this, $code);
+        $this->_afterLoad();
         return $this;
     }
 
@@ -209,7 +211,7 @@ class Mage_Eav_Model_Entity_Type extends Mage_Core_Model_Abstract
     }
 
     /**
-     * Enter description here...
+     * Get default attribute set identifier for etity type
      *
      * @return string
      */
@@ -238,9 +240,19 @@ class Mage_Eav_Model_Entity_Type extends Mage_Core_Model_Abstract
         return isset($this->_data['attribute_codes']) ? $this->_data['attribute_codes'] : null;
     }
 
+    /**
+     * Get attribute model code for entity type
+     *
+     * @return string
+     */
     public function getAttributeModel()
     {
-        return isset($this->_data['attribute_model']) ? $this->_data['attribute_model'] : null;
+        if (empty($this->_data['attribute_model'])) {
+            return Mage_Eav_Model_Entity::DEFAULT_ATTRIBUTE_MODEL;
+        }
+        else {
+            return $this->_data['attribute_model'];
+        }
     }
 
     public function getEntity()

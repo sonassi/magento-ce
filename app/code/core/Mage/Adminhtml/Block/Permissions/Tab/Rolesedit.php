@@ -14,7 +14,7 @@
  *
  * @category   Mage
  * @package    Mage_Adminhtml
- * @copyright  Copyright (c) 2004-2007 Irubin Consulting Inc. DBA Varien (http://www.varien.com)
+ * @copyright  Copyright (c) 2008 Irubin Consulting Inc. DBA Varien (http://www.varien.com)
  * @license    http://opensource.org/licenses/osl-3.0.php  Open Software License (OSL 3.0)
  */
 
@@ -95,6 +95,9 @@ class Mage_Adminhtml_Block_Permissions_Tab_Rolesedit extends Mage_Adminhtml_Bloc
             //$item['cls'] = 'fiche-node';
             foreach ($children as $child) {
                 if ($child->getName()!='title' && $child->getName()!='sort_order') {
+                    if (!(string)$child->title) {
+                        continue;
+                    }
                     if ($level != 0) {
                         $item['children'][] = $this->_getNodeJson($child, $level+1);
                     } else {

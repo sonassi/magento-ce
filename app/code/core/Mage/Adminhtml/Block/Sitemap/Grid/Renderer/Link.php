@@ -14,7 +14,7 @@
  *
  * @category   Mage
  * @package    Mage_Sitemap
- * @copyright  Copyright (c) 2004-2007 Irubin Consulting Inc. DBA Varien (http://www.varien.com)
+ * @copyright  Copyright (c) 2008 Irubin Consulting Inc. DBA Varien (http://www.varien.com)
  * @license    http://opensource.org/licenses/osl-3.0.php  Open Software License (OSL 3.0)
  */
 
@@ -35,9 +35,7 @@ class Mage_Adminhtml_Block_Sitemap_Grid_Renderer_Link extends Mage_Adminhtml_Blo
      */
     public function render(Varien_Object $row)
     {
-        $link = Mage::getBaseUrl('web') . $row->getSitemapPath() . $row->getSitemapFilename();
-        $link = str_replace('//', '/', $link);
-        return $link;
+        return str_replace('//', '/', Mage::getBaseUrl('web') . $row->getSitemapPath() . $row->getSitemapFilename());
     }
 
 }

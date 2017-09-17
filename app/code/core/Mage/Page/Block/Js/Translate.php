@@ -14,13 +14,14 @@
  *
  * @category   Mage
  * @package    Mage_Page
- * @copyright  Copyright (c) 2004-2007 Irubin Consulting Inc. DBA Varien (http://www.varien.com)
+ * @copyright  Copyright (c) 2008 Irubin Consulting Inc. DBA Varien (http://www.varien.com)
  * @license    http://opensource.org/licenses/osl-3.0.php  Open Software License (OSL 3.0)
  */
  
 /**
  * Js translation block
  *
+ * @author      Magento Core Team <core@magentocommerce.com>
  */
 class Mage_Page_Block_Js_Translate extends Mage_Core_Block_Template
 {

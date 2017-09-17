@@ -14,7 +14,7 @@
  *
  * @category   Mage
  * @package    Mage_Adminhtml
- * @copyright  Copyright (c) 2004-2007 Irubin Consulting Inc. DBA Varien (http://www.varien.com)
+ * @copyright  Copyright (c) 2008 Irubin Consulting Inc. DBA Varien (http://www.varien.com)
  * @license    http://opensource.org/licenses/osl-3.0.php  Open Software License (OSL 3.0)
  */
 
@@ -23,9 +23,16 @@
  *
  * @category   Mage
  * @package    Mage_Adminhtml
+ * @author      Magento Core Team <core@magentocommerce.com>
  */
 class Mage_Adminhtml_Block_Sales_Order_Create_Items_Grid extends Mage_Adminhtml_Block_Sales_Order_Create_Abstract
 {
+    /**
+     * Flag to check can items be move to customer storage
+     *
+     * @var bool
+     */
+    protected $_moveToCustomerStorage = true;
 
     public function __construct()
     {
@@ -57,9 +64,22 @@ class Mage_Adminhtml_Block_Sales_Order_Create_Items_Grid extends Mage_Adminhtml_
         return $item->getCalculationPrice()*1;
     }
 
+    public function getOriginalEditablePrice($item)
+    {
+        if ($item->hasOriginalCustomPrice()) {
+            return $item->getOriginalCustomPrice()*1;
+        } else {
+            $result = $item->getCalculationPrice()*1;
+            if (Mage::helper('tax')->priceIncludesTax($this->getStore()) && $item->getTaxPercent()) {
+                $result = $result + ($result*($item->getTaxPercent()/100));
+            }
+            return $result;
+        }
+    }
+
     public function getItemOrigPrice($item)
     {
-        //return $this->convertPrice($item->getProduct()->getPrice());
+//        return $this->convertPrice($item->getProduct()->getPrice());
         return $this->convertPrice($item->getPrice());
     }
 
@@ -102,7 +122,7 @@ class Mage_Adminhtml_Block_Sales_Order_Create_Items_Grid extends Mage_Adminhtml_
 
     public function usedCustomPriceForItem($item)
     {
-        return $item->getCustomPrice();
+        return $item->hasCustomPrice();
     }
 
     public function getQtyTitle($item)
@@ -133,5 +153,91 @@ class Mage_Adminhtml_Block_Sales_Order_Create_Items_Grid extends Mage_Adminhtml_
             $html = implode('<br/>', $info);
         }
         return $html;
+    }
+
+    /**
+     * Get Custom Options of item
+     *
+     * @param Mage_Sales_Model_Quote_Item $item
+     * @return array
+     */
+    public function getCustomOptions(Mage_Sales_Model_Quote_Item $item)
+    {
+        $optionStr = '';
+        $this->_moveToCustomerStorage = true;
+        if ($optionIds = $item->getOptionByCode('option_ids')) {
+            foreach (explode(',', $optionIds->getValue()) as $optionId) {
+                if ($option = $item->getProduct()->getOptionById($optionId)) {
+                    $optionValue = $item->getOptionByCode('option_' . $option->getId())->getValue();
+                    $optionStr .= $option->getTitle() . ':';
+                    if ($option->getType() == Mage_Catalog_Model_Product_Option::OPTION_TYPE_CHECKBOX
+                        || $option->getType() == Mage_Catalog_Model_Product_Option::OPTION_TYPE_MULTIPLE) {
+                        foreach (explode(',', $optionValue) as $_value) {
+                            $optionStr .= $option->getValueById($_value)->getTitle() . ', ';
+                        }
+                        $optionStr = Mage::helper('core/string')->substr($optionStr, 0, -2);
+                    } elseif ($option->getGroupByType() == Mage_Catalog_Model_Product_Option::OPTION_GROUP_SELECT) {
+                        $optionStr .= $option->getValueById($optionValue)->getTitle();
+                    } else {
+                        $optionStr .= $optionValue;
+                    }
+                    $optionStr .= "\n";
+                }
+            }
+        }
+        foreach ($item->getProduct()->getOptions() as $option) {
+            if ($option->getIsRequire() && !$item->getOptionByCode('option_'.$option->getId())) {
+                $optionStr .= $option->getTitle() . ':' . "\n";
+            }
+        }
+        if ($additionalOptions = $item->getOptionByCode('additional_options')) {
+            $this->_moveToCustomerStorage = false;
+            foreach (unserialize($additionalOptions->getValue()) as $additionalOption) {
+                $optionStr .= $additionalOption['label'] . ':' . $additionalOption['value'] . "\n";
+            }
+        }
+        $optionStr = $this->helper('core/string')->substr($optionStr, 0, -1);
+
+        return $optionStr;
+    }
+
+    /**
+     * Get flag for rights to move items to customer storage
+     *
+     * @return bool
+     */
+    public function getMoveToCustomerStorage()
+    {
+        return $this->_moveToCustomerStorage;
+    }
+
+    public function displaySubtotalInclTax($item)
+    {
+        $tax = ($item->getTaxBeforeDiscount() ? $item->getTaxBeforeDiscount() : ($item->getTaxAmount() ? $item->getTaxAmount() : 0));
+        return $this->formatPrice($item->getRowTotal()+$tax);
+    }
+
+    public function displayOriginalPriceInclTax($item)
+    {
+        $tax = 0;
+        if ($item->getTaxPercent()) {
+            $tax = $item->getPrice()*($item->getTaxPercent()/100);
+        }
+        return $this->convertPrice($item->getPrice()+($tax/$item->getQty()));
+    }
+
+    public function displayRowTotalWithDiscountInclTax($item)
+    {
+        $tax = ($item->getTaxAmount() ? $item->getTaxAmount() : 0);
+        return $this->formatPrice($item->getRowTotalWithDiscount()+$tax);
+    }
+
+    public function getInclExclTaxMessage()
+    {
+        if (Mage::helper('tax')->priceIncludesTax($this->getStore())) {
+            return Mage::helper('sales')->__('* - Enter custom price including tax');
+        } else {
+            return Mage::helper('sales')->__('* - Enter custom price excluding tax');
+        }
     }
 }

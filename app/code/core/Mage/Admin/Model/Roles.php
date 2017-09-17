@@ -14,7 +14,7 @@
  *
  * @category   Mage
  * @package    Mage_Permissions
- * @copyright  Copyright (c) 2004-2007 Irubin Consulting Inc. DBA Varien (http://www.varien.com)
+ * @copyright  Copyright (c) 2008 Irubin Consulting Inc. DBA Varien (http://www.varien.com)
  * @license    http://opensource.org/licenses/osl-3.0.php  Open Software License (OSL 3.0)
  */
 
@@ -69,6 +69,9 @@ class Mage_Admin_Model_Roles extends Mage_Core_Model_Abstract
                 $resourceName = (is_null($parentName) ? '' : $parentName.'/').$resource->getName();
                 if ($rawNodes) {
                     $resource->addAttribute("aclpath", $resourceName);
+                }
+                if (!(string)$resource->title) {
+                    return array();
                 }
 
                 if ( is_null($represent2Darray) ) {

@@ -14,7 +14,7 @@
  *
  * @category   Mage
  * @package    Mage_Sendfriend
- * @copyright  Copyright (c) 2004-2007 Irubin Consulting Inc. DBA Varien (http://www.varien.com)
+ * @copyright  Copyright (c) 2008 Irubin Consulting Inc. DBA Varien (http://www.varien.com)
  * @license    http://opensource.org/licenses/osl-3.0.php  Open Software License (OSL 3.0)
  */
 
@@ -57,6 +57,11 @@ class Mage_Sendfriend_Block_Send extends Mage_Core_Block_Template
     public function getProductId()
     {
         return $this->getRequest()->getParam('id');
+    }
+
+    public function getCategoryId()
+    {
+        return $this->getRequest()->getParam('cat_id', null);
     }
 
 	public function getMaxRecipients()

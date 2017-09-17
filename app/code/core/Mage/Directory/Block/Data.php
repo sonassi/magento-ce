@@ -14,7 +14,7 @@
  *
  * @category   Mage
  * @package    Mage_Directory
- * @copyright  Copyright (c) 2004-2007 Irubin Consulting Inc. DBA Varien (http://www.varien.com)
+ * @copyright  Copyright (c) 2008 Irubin Consulting Inc. DBA Varien (http://www.varien.com)
  * @license    http://opensource.org/licenses/osl-3.0.php  Open Software License (OSL 3.0)
  */
 
@@ -23,6 +23,7 @@
  *
  * @category   Mage
  * @package    Mage_Directory
+ * @author      Magento Core Team <core@magentocommerce.com>
  */
 class Mage_Directory_Block_Data extends Mage_Core_Block_Template
 {
@@ -49,7 +50,7 @@ class Mage_Directory_Block_Data extends Mage_Core_Block_Template
 		if (is_null($defValue)) {
 			$defValue = $this->getCountryId();
 		}
-		$cacheKey = 'DIRECTORY_COUNTRY_SELECT_STORE'.Mage::app()->getStore()->getId();
+		$cacheKey = 'DIRECTORY_COUNTRY_SELECT_STORE_'.Mage::app()->getStore()->getCode();
 		if (Mage::app()->useCache('config') && $cache = Mage::app()->loadCache($cacheKey)) {
 		    $options = unserialize($cache);
 		} else {

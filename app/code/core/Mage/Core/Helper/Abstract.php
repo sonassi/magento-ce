@@ -14,13 +14,14 @@
  *
  * @category   Mage
  * @package    Mage_Core
- * @copyright  Copyright (c) 2004-2007 Irubin Consulting Inc. DBA Varien (http://www.varien.com)
+ * @copyright  Copyright (c) 2008 Irubin Consulting Inc. DBA Varien (http://www.varien.com)
  * @license    http://opensource.org/licenses/osl-3.0.php  Open Software License (OSL 3.0)
  */
 
 /**
  * Abstract helper
  *
+ * @author      Magento Core Team <core@magentocommerce.com>
  */
 abstract class Mage_Core_Helper_Abstract
 {
@@ -151,6 +152,23 @@ abstract class Mage_Core_Helper_Abstract
     }
 
     /**
+     * Escape quotes in java script
+     *
+     * @param moxed $data
+     * @param string $quote
+     * @return mixed
+     */
+    public function jsQuoteEscape($data, $quote='\'')
+    {
+        if (is_array($data)) {
+            foreach ($data as $item) {
+                return $this->jsEscape($item, $quote);
+            }
+        }
+        return str_replace($quote, '\\'.$quote, $data);
+    }
+
+    /**
      * Retrieve url
      *
      * @param   string $route
@@ -184,13 +202,44 @@ abstract class Mage_Core_Helper_Abstract
         return $this->_layout;
     }
 
+    /**
+     *  base64_encode() for URLs encoding
+     *
+     *  @param    string $url
+     *  @return	  string
+     */
     public function urlEncode($url)
     {
-        return str_replace('/', '_', base64_encode($url));
+        return strtr(base64_encode($url), '+/=', '-_,');
     }
 
+    /**
+     *  base64_dencode() for URLs dencoding
+     *
+     *  @param    string $url
+     *  @return	  string
+     */
     public function urlDecode($url)
     {
-        return base64_decode(str_replace('_', '/', $url));
+        return base64_decode(strtr($url, '-_,', '+/='));
+    }
+
+    /**
+     *   Translate array
+     *
+     *  @param    array $arr
+     *  @return	  array
+     */
+    public function translateArray($arr = array())
+    {
+        foreach ($arr as $k => $v) {
+            if (is_array($v)) {
+                $v = self::translateArray($v);
+            } elseif ($k === 'label') {
+                $v = self::__($v);
+            }
+            $arr[$k] = $v;
+        }
+        return $arr;
     }
 }

@@ -14,7 +14,7 @@
  *
  * @category   Mage
  * @package    Mage_Catalog
- * @copyright  Copyright (c) 2004-2007 Irubin Consulting Inc. DBA Varien (http://www.varien.com)
+ * @copyright  Copyright (c) 2008 Irubin Consulting Inc. DBA Varien (http://www.varien.com)
  * @license    http://opensource.org/licenses/osl-3.0.php  Open Software License (OSL 3.0)
  */
 
@@ -24,27 +24,33 @@
  *
  * @category   Mage
  * @package    Mage_Catalog
+ * @author      Magento Core Team <core@magentocommerce.com>
  */
 class Mage_Catalog_Block_Product_List_Related extends Mage_Catalog_Block_Product_Abstract
 {
     protected $_itemCollection;
+
     protected function _prepareData()
     {
-        $collection = Mage::registry('product')->getRelatedProductCollection()
-            ->addAttributeToSelect('name')
-            ->addAttributeToSelect('price')
-            ->addAttributeToSelect('image')
-            ->addAttributeToSelect('small_image')
-            ->addAttributeToSelect('thumbnail')
-            ->addAttributeToSelect('tax_class_id')
+        $product = Mage::registry('product');
+        /* @var $product Mage_Catalog_Model_Product */
+
+        $this->_itemCollection = $product->getRelatedProductCollection()
+            ->addAttributeToSelect(Mage::getSingleton('catalog/config')->getProductAttributes())
+            ->addAttributeToSelect('required_options')
             ->addAttributeToSort('position', 'asc')
             ->addStoreFilter()
             ->addExcludeProductFilter(Mage::getSingleton('checkout/cart')->getProductIds());
 
-        Mage::getSingleton('catalog/product_status')->addSaleableFilterToCollection($collection);
-        Mage::getSingleton('catalog/product_visibility')->addVisibleInCatalogFilterToCollection($collection);
-        $collection->load();
-        $this->_itemCollection = $collection;
+//        Mage::getSingleton('catalog/product_status')->addSaleableFilterToCollection($this->_itemCollection);
+        Mage::getSingleton('catalog/product_visibility')->addVisibleInCatalogFilterToCollection($this->_itemCollection);
+
+        $this->_itemCollection->load();
+
+        foreach ($this->_itemCollection as $product) {
+            $product->setDoNotUseCategoryId(true);
+        }
+
         return $this;
     }
 
@@ -54,8 +60,8 @@ class Mage_Catalog_Block_Product_List_Related extends Mage_Catalog_Block_Product
         return parent::_beforeToHtml();
     }
 
-    public function getItems() {
+    public function getItems()
+    {
         return $this->_itemCollection;
     }
-
 }

@@ -14,7 +14,7 @@
  *
  * @category   design_default
  * @package    Mage
- * @copyright  Copyright (c) 2004-2007 Irubin Consulting Inc. DBA Varien (http://www.varien.com)
+ * @copyright  Copyright (c) 2008 Irubin Consulting Inc. DBA Varien (http://www.varien.com)
  * @license    http://opensource.org/licenses/osl-3.0.php  Open Software License (OSL 3.0)
  */
 ?>
@@ -25,8 +25,10 @@
     <meta http-equiv="Content-Type" content="text/html; charset=utf-8" ></meta>
     <link type="text/css" rel="stylesheet" href="<?php echo $this->getSkinUrl('reset.css') ?>" media="all"/>
     <link type="text/css" rel="stylesheet" href="<?php echo $this->getSkinUrl('boxes.css') ?>" media="all"/>
+    <link rel="icon" href="<?php echo $this->getSkinUrl('favicon.ico') ?>" type="image/x-icon"/>
+    <link rel="shortcut icon" href="<?php echo $this->getSkinUrl('favicon.ico') ?>" type="image/x-icon"/>
 
-    <script type="text/javascript" src="<?php echo $this->getJsUrl() ?>proxy.php/x.js?f=prototype/prototype.js,prototype/validation.js,mage/adminhtml/form.js"></script>
+    <script type="text/javascript" src="<?php echo $this->getJsUrl() ?>index.php/x.js?f=prototype/prototype.js,prototype/validation.js,mage/adminhtml/form.js"></script>
 
     <!--[if IE]> <link rel="stylesheet" href="<?php echo $this->getSkinUrl('iestyles.css') ?>" type="text/css" media="all" /> <![endif]-->
     <!--[if lt IE 7]> <link rel="stylesheet" href="<?php echo $this->getSkinUrl('below_ie7.css') ?>" type="text/css" media="all" /> <![endif]-->
@@ -42,10 +44,10 @@
                     <div id="messages">
                         <?php echo $this->getMessagesBlock()->getGroupedHtml() ?>
                     </div>
-                    <div class="input-box input-left"><label for="#"><?php echo Mage::helper('adminhtml')->__('User Name:') ?></label><br/>
+                    <div class="input-box input-left"><label for="username"><?php echo Mage::helper('adminhtml')->__('User Name:') ?></label><br/>
                         <input type="text" id="username" name="login[username]" value="<?php echo $username ?>" class="required-entry input-text"/></div>
-                    <div class="input-box input-right"><label for="#"><?php echo Mage::helper('adminhtml')->__('Password:') ?></label><br/>
-                        <input type="password" name="login[password]" class="required-entry input-text" value="" /></div>
+                    <div class="input-box input-right"><label for="login"><?php echo Mage::helper('adminhtml')->__('Password:') ?></label><br/>
+                        <input type="password" id="login" name="login[password]" class="required-entry input-text" value="" /></div>
                     <div class="clear"></div>
                     <div class="form-buttons" style="margin-right:8px;">
                         <a class="left" href="<?php echo Mage::helper('adminhtml')->getUrl('adminhtml/index/forgotpassword') ?>"><?php echo Mage::helper('adminhtml')->__('Forgot your password?') ?></a>

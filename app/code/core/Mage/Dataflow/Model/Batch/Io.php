@@ -14,7 +14,7 @@
  *
  * @category   Mage
  * @package    Mage_Dataflow
- * @copyright  Copyright (c) 2004-2007 Irubin Consulting Inc. DBA Varien (http://www.varien.com)
+ * @copyright  Copyright (c) 2008 Irubin Consulting Inc. DBA Varien (http://www.varien.com)
  * @license    http://opensource.org/licenses/osl-3.0.php  Open Software License (OSL 3.0)
  */
 
@@ -24,6 +24,7 @@
  *
  * @category   Mage
  * @package    Mage_Dataflow
+ * @author      Magento Core Team <core@magentocommerce.com>
  */
 class Mage_Dataflow_Model_Batch_Io
 {
@@ -85,7 +86,8 @@ class Mage_Dataflow_Model_Batch_Io
     public function getPath()
     {
         if (is_null($this->_path)) {
-            $this->_path = $this->getIoAdapter()->getCleanPath(Mage::getBaseDir('base') . self::TMP_DIR);
+            $this->_path = $this->getIoAdapter()->getCleanPath(Mage::getBaseDir('tmp'));
+            $this->getIoAdapter()->checkAndCreateFolder($this->_path);
         }
         return $this->_path;
     }

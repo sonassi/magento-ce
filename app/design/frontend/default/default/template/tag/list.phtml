@@ -14,7 +14,7 @@
  *
  * @category   design_default
  * @package    Mage
- * @copyright  Copyright (c) 2004-2007 Irubin Consulting Inc. DBA Varien (http://www.varien.com)
+ * @copyright  Copyright (c) 2008 Irubin Consulting Inc. DBA Varien (http://www.varien.com)
  * @license    http://opensource.org/licenses/osl-3.0.php  Open Software License (OSL 3.0)
  */
 ?>
@@ -26,7 +26,7 @@
         <ul class="tags-list">
             <?php $_iterator = 0; ?>
             <?php foreach( $this->getTags() as $_tag ): ?>
-                <li <?php if( 1 == ++$_iterator && $this->getCount() != 1 ): ?>class="first"<?php elseif($_iterator == $this->getCount()): ?>class="last"<?php endif; ?>><a href="<?php echo $_tag->getTaggedProductsUrl() ?>"><?php echo $this->htmlEscape($_tag->getName()) ?></a> (<?php echo $_tag->getPopularity() ?>)</li>
+                <li<?php if( 1 == ++$_iterator && $this->getCount() != 1 ): ?> class="first"<?php elseif($_iterator == $this->getCount()): ?> class="last"<?php endif; ?>><a href="<?php echo $_tag->getTaggedProductsUrl() ?>"><?php echo $this->htmlEscape($_tag->getName()) ?></a> (<?php echo $_tag->getPopularity() ?>)</li>
             <?php endforeach; ?>
         </ul>
     <?php endif; ?>

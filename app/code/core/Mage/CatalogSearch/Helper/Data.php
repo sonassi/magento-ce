@@ -14,13 +14,14 @@
  *
  * @category   Mage
  * @package    Mage_CatalogSearch
- * @copyright  Copyright (c) 2004-2007 Irubin Consulting Inc. DBA Varien (http://www.varien.com)
+ * @copyright  Copyright (c) 2008 Irubin Consulting Inc. DBA Varien (http://www.varien.com)
  * @license    http://opensource.org/licenses/osl-3.0.php  Open Software License (OSL 3.0)
  */
 
 /**
  * Catalog search helper
  *
+ * @author      Magento Core Team <core@magentocommerce.com>
  */
 class Mage_CatalogSearch_Helper_Data extends Mage_Core_Helper_Abstract
 {
@@ -64,13 +65,10 @@ class Mage_CatalogSearch_Helper_Data extends Mage_Core_Helper_Abstract
     {
         if (is_null($this->_queryText)) {
             $this->_queryText = $this->_getRequest()->getParam($this->getQueryParamName());
-            $this->_queryText = iconv_substr(trim($this->_queryText), 0, self::MAX_QUERY_LEN);
-
-            /**
-             * Fix problem with
-             * SQLSTATE[HY093]: Invalid parameter number: no parameters were bound
-             */
-            //$this->_queryText = str_replace('?', '', $this->_queryText);
+            $this->_queryText = trim($this->_queryText);
+            if (Mage::helper('core/string')->strlen($this->_queryText) > self::MAX_QUERY_LEN) {
+                $this->_queryText = Mage::helper('core/string')->substr($this->_queryText, 0, self::MAX_QUERY_LEN);
+            }
         }
         return $this->_queryText;
     }

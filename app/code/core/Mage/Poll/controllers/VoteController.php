@@ -14,7 +14,7 @@
  *
  * @category   Mage
  * @package    Mage_Poll
- * @copyright  Copyright (c) 2004-2007 Irubin Consulting Inc. DBA Varien (http://www.varien.com)
+ * @copyright  Copyright (c) 2008 Irubin Consulting Inc. DBA Varien (http://www.varien.com)
  * @license    http://opensource.org/licenses/osl-3.0.php  Open Software License (OSL 3.0)
  */
 
@@ -22,34 +22,30 @@
  * Poll vote controller
  *
  * @file        Vote.php
+ * @author      Magento Core Team <core@magentocommerce.com>
  */
 
 class Mage_Poll_VoteController extends Mage_Core_Controller_Front_Action
 {
-    /**
-     * Add vote action
-     *
-     * @access public
-     * @return void
-     */
     public function addAction()
     {
-        $pollId     = intval( $this->getRequest()->getParam('poll_id') );
-        $answerId   = intval( $this->getRequest()->getParam('vote') );
+        $pollId     = intval($this->getRequest()->getParam('poll_id'));
+        $answerId   = intval($this->getRequest()->getParam('vote'));
 
-        if( $pollId && $answerId && !Mage::getSingleton('poll/poll')->isVoted($pollId) ) {
-            Mage::getSingleton('poll/poll_vote')
-                ->setPollId($pollId)
-                ->setIpAddress(ip2long($this->getRequest()->getServer('REMOTE_ADDR')))
-                ->setCustomerId(Mage::getSingleton('customer/session')->getCustomerId())
-                ->setVoteTime(now())
+        $poll = Mage::getModel('poll/poll')->load($pollId);
+
+        /**
+         * Check poll data
+         */
+        if ($poll->getId() && !$poll->getClosed() && !$poll->isVoted()) {
+            $vote = Mage::getModel('poll/poll_vote')
                 ->setPollAnswerId($answerId)
-                ->addVote();
+                ->setIpAddress(ip2long($this->getRequest()->getServer('REMOTE_ADDR')))
+                ->setCustomerId(Mage::getSingleton('customer/session')->getCustomerId());
 
+            $poll->addVote($vote);
             Mage::getSingleton('core/session')->setJustVotedPoll($pollId);
-            Mage::getSingleton('poll/poll')->setVoted($pollId);
         }
-
         $this->_redirectReferer();
     }
 }

@@ -14,7 +14,7 @@
  *
  * @category   Mage
  * @package    Mage_Shipping
- * @copyright  Copyright (c) 2004-2007 Irubin Consulting Inc. DBA Varien (http://www.varien.com)
+ * @copyright  Copyright (c) 2008 Irubin Consulting Inc. DBA Varien (http://www.varien.com)
  * @license    http://opensource.org/licenses/osl-3.0.php  Open Software License (OSL 3.0)
  */
 
@@ -160,7 +160,7 @@ abstract class Mage_Shipping_Model_Carrier_Abstract extends Varien_Object
     {
         if ($method == $this->getConfigData('free_method') &&
             $this->getConfigData('free_shipping_enable') &&
-            $this->getConfigData('free_shipping_subtotal') <= $this->_rawRequest->getValue())
+            $this->getConfigData('free_shipping_subtotal') <= $this->_rawRequest->getValueWithDiscount())
         {
             $price = '0.00';
         } else {
@@ -206,6 +206,17 @@ abstract class Mage_Shipping_Model_Carrier_Abstract extends Varien_Object
     }
 
     /**
+     *  Return weight in pounds
+     *
+     *  @param    integer Weight in someone measure
+     *  @return	  float Weight in pounds
+     */
+    public function convertWeightToLbs($weight)
+    {
+        return $weight;
+    }
+
+    /**
      * set the number of boxes for shipping
      *
      * @return weight
@@ -216,11 +227,27 @@ abstract class Mage_Shipping_Model_Carrier_Abstract extends Varien_Object
         reset num box first before retrieve again
         */
         $this->_numBoxes = 1;
+        $weight = $this->convertWeightToLbs($weight);
         $maxPackageWeight = $this->getConfigData('max_package_weight');
         if($weight > $maxPackageWeight) {
             $this->_numBoxes = ceil($weight/$maxPackageWeight);
             $weight = $weight/$this->_numBoxes;
         }
         return $weight;
+    }
+
+    public function isStateProvinceRequired()
+    {
+        return false;
+    }
+
+    public function isCityRequired()
+    {
+        return false;
+    }
+
+    public function isZipCodeRequired()
+    {
+        return false;
     }
 }

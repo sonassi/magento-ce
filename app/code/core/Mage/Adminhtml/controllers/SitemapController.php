@@ -14,7 +14,7 @@
  *
  * @category   Mage
  * @package    Mage_Sitemap
- * @copyright  Copyright (c) 2004-2007 Irubin Consulting Inc. DBA Varien (http://www.varien.com)
+ * @copyright  Copyright (c) 2008 Irubin Consulting Inc. DBA Varien (http://www.varien.com)
  * @license    http://opensource.org/licenses/osl-3.0.php  Open Software License (OSL 3.0)
  */
 
@@ -38,7 +38,7 @@ class Mage_Adminhtml_SitemapController extends  Mage_Adminhtml_Controller_Action
         $this->loadLayout()
             ->_setActiveMenu('catalog/system_sitemap')
             ->_addBreadcrumb(Mage::helper('catalog')->__('Catalog'), Mage::helper('catalog')->__('Catalog'))
-            ->_addBreadcrumb(Mage::helper('sitemap')->__('Google Sitemaps'), Mage::helper('sitemap')->__('Google Sitemaps'))
+            ->_addBreadcrumb(Mage::helper('sitemap')->__('Google Sitemap'), Mage::helper('sitemap')->__('Google Sitemap'))
         ;
         return $this;
     }

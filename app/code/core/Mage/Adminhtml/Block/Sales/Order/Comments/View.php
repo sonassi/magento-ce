@@ -14,7 +14,7 @@
  *
  * @category   Mage
  * @package    Mage_Adminhtml
- * @copyright  Copyright (c) 2004-2007 Irubin Consulting Inc. DBA Varien (http://www.varien.com)
+ * @copyright  Copyright (c) 2008 Irubin Consulting Inc. DBA Varien (http://www.varien.com)
  * @license    http://opensource.org/licenses/osl-3.0.php  Open Software License (OSL 3.0)
  */
 
@@ -23,14 +23,20 @@
  *
  * @category   Mage
  * @package    Mage_Adminhtml
+ * @author      Magento Core Team <core@magentocommerce.com>
  */
 class Mage_Adminhtml_Block_Sales_Order_Comments_View extends Mage_Adminhtml_Block_Template
 {
-
-    protected function _construct()
+    /**
+     * Retrieve required options from parent
+     */
+    protected function _beforeToHtml()
     {
-        parent::_construct();
-        $this->setTemplate('sales/order/comments/view.phtml');
+        if (!$this->getParentBlock()) {
+            Mage::throwException(Mage::helper('adminhtml')->__('Invalid parrent block for this block'));
+        }
+        $this->setEntity($this->getParentBlock()->getSource());
+        parent::_beforeToHtml();
     }
 
     /**
@@ -41,8 +47,8 @@ class Mage_Adminhtml_Block_Sales_Order_Comments_View extends Mage_Adminhtml_Bloc
     protected function _prepareLayout()
     {
         $button = $this->getLayout()->createBlock('adminhtml/widget_button')
-            ->addData(array(
-                'id'      => 'submit_comment_buttom',
+            ->setData(array(
+								'id'      => 'submit_comment_button',
                 'label'   => Mage::helper('sales')->__('Submit Comment'),
                 'class'   => 'save'
             ));
