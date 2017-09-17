@@ -86,6 +86,7 @@ return array(
     'Magento\\Sales\\' => array($vendorDir . '/magento/module-sales'),
     'Magento\\SalesSequence\\' => array($vendorDir . '/magento/module-sales-sequence'),
     'Magento\\SalesRule\\' => array($vendorDir . '/magento/module-sales-rule'),
+    'Magento\\SalesInventory\\' => array($vendorDir . '/magento/module-sales-inventory'),
     'Magento\\Rule\\' => array($vendorDir . '/magento/module-rule'),
     'Magento\\Rss\\' => array($vendorDir . '/magento/module-rss'),
     'Magento\\Review\\' => array($vendorDir . '/magento/module-review'),

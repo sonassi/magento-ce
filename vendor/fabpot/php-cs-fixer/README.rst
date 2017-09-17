@@ -30,13 +30,13 @@ your system:
 
 .. code-block:: bash
 
-    $ wget https://github.com/FriendsOfPHP/PHP-CS-Fixer/releases/download/v1.12.2/php-cs-fixer.phar -O php-cs-fixer
+    $ wget https://github.com/FriendsOfPHP/PHP-CS-Fixer/releases/download/v1.13.1/php-cs-fixer.phar -O php-cs-fixer
 
 or with curl:
 
 .. code-block:: bash
 
-    $ curl -L https://github.com/FriendsOfPHP/PHP-CS-Fixer/releases/download/v1.12.2/php-cs-fixer.phar -o php-cs-fixer
+    $ curl -L https://github.com/FriendsOfPHP/PHP-CS-Fixer/releases/download/v1.13.1/php-cs-fixer.phar -o php-cs-fixer
 
 then:
 
@@ -349,6 +349,9 @@ Choose from the list of available fixers:
 * **operators_spaces** [symfony]
    Binary operators should be surrounded by at least one space.
 
+* **php_unit_fqcn_annotation** [symfony]
+   PHPUnit annotations should be a FQCNs including a root namespace.
+
 * **phpdoc_annotation_without_dot** [symfony]
    Phpdocs annotation descriptions should not end with a full stop.
 
@@ -496,6 +499,7 @@ Choose from the list of available fixers:
 
 * **empty_return** [contrib]
    A return statement wishing to return nothing should be simply "return".
+   Warning! This could change code behavior.
 
 * **ereg_to_preg** [contrib]
    Replace deprecated ereg regular expression functions with preg. Warning!
@@ -558,6 +562,9 @@ Choose from the list of available fixers:
 
 * **phpdoc_var_to_type** [contrib]
    @var should always be written as @type.
+
+* **protected_to_private** [contrib]
+   Converts protected variables and methods to private where possible.
 
 * **short_array_syntax** [contrib]
    PHP arrays should use the PHP 5.4 short-syntax.
@@ -699,10 +706,12 @@ speed up further runs.
 
 Exit codes
 ----------
-*  0 OK
-*  1 No changes made
-* 16 Configuration error of the application
-* 32 Configuration error of a Fixer
+*  0 OK.
+*  1 Changes made (or dry-run was used and files need changes) or PHP/HHVM minimal requirement to run the Fixer not match.
+* 16 Configuration error of the application.
+* 32 Configuration error of a Fixer.
+
+(applies to exit codes of the `fix` command only)
 
 Helpers
 -------
@@ -735,7 +744,7 @@ scanned by the tool when run in the directory of your project. It is useful for
 projects that follow a well-known directory structures (like for Symfony
 projects for instance).
 
-.. _php-cs-fixer.phar: https://github.com/FriendsOfPHP/PHP-CS-Fixer/releases/download/v1.12.2/php-cs-fixer.phar
+.. _php-cs-fixer.phar: https://github.com/FriendsOfPHP/PHP-CS-Fixer/releases/download/v1.13.1/php-cs-fixer.phar
 .. _Atom:              https://github.com/Glavin001/atom-beautify
 .. _NetBeans:          http://plugins.netbeans.org/plugin/49042/php-cs-fixer
 .. _PhpStorm:          http://tzfrs.de/2015/01/automatically-format-code-to-match-psr-standards-with-phpstorm

@@ -700,6 +700,7 @@ Image,Image
 "Allowed file types: jpeg, gif, png.","Allowed file types: jpeg, gif, png."
 "Image Opacity","Image Opacity"
 "Example format: 200x300.","Example format: 200x300."
+"This value does not follow the specified format (for example, 200x300).","This value does not follow the specified format (for example, 200x300)."
 "Image Position","Image Position"
 Small,Small
 "Attribute Label","Attribute Label"
@@ -714,3 +715,4 @@ Disable,Disable
 none,none
 Overview,Overview
 Details,Details
+"The value of Admin must be unique.", "The value of Admin must be unique."
