@@ -1,9 +1,10 @@
 <?php
 
 /*
- * This file is part of the PHP CS utility.
+ * This file is part of PHP CS Fixer.
  *
  * (c) Fabien Potencier <fabien@symfony.com>
+ *     Dariusz Rumiński <dariusz.ruminski@gmail.com>
  *
  * This source file is subject to the MIT license that is bundled
  * with this source code in the file LICENSE.
@@ -17,27 +18,32 @@ use Symfony\CS\Tokenizer\Tokens;
 /**
  * @author Sullivan Senechal <soullivaneuh@gmail.com>
  * @author Dariusz Rumiński <dariusz.ruminski@gmail.com>
+ * @author Gregor Harlan <gharlan@web.de>
  */
 final class UnneededControlParenthesesFixer extends AbstractFixer
 {
     /**
      * To be removed when PHP support will be 5.5+.
      *
-     * @var string[] List of statements to fix.
+     * @var string[] List of statements to fix
      */
     private static $controlStatements = array(
-        'switch_case',
+        'break',
+        'continue',
+        'clone',
         'echo_print',
         'return',
-        'clone',
+        'switch_case',
         'yield',
     );
 
     private static $loops = array(
-        'switch_case' => array('lookupTokens' => T_CASE, 'neededSuccessors' => array(';', ':')),
+        'break' => array('lookupTokens' => T_BREAK, 'neededSuccessors' => array(';')),
+        'continue' => array('lookupTokens' => T_CONTINUE, 'neededSuccessors' => array(';')),
+        'clone' => array('lookupTokens' => T_CLONE, 'neededSuccessors' => array(';', ':', ',', ')'), 'forbiddenContents' => array('?', ':')),
         'echo_print' => array('lookupTokens' => array(T_ECHO, T_PRINT), 'neededSuccessors' => array(';', array(T_CLOSE_TAG))),
         'return' => array('lookupTokens' => T_RETURN, 'neededSuccessors' => array(';')),
-        'clone' => array('lookupTokens' => T_CLONE, 'neededSuccessors' => array(';', ':', ',', ')'), 'forbiddenContents' => array('?', ':')),
+        'switch_case' => array('lookupTokens' => T_CASE, 'neededSuccessors' => array(';', ':')),
     );
 
     /**
@@ -99,13 +105,13 @@ final class UnneededControlParenthesesFixer extends AbstractFixer
                 }
 
                 if ($tokens[$blockStartIndex - 1]->isWhitespace() || $tokens[$blockStartIndex - 1]->isComment()) {
-                    $this->clearParenthesis($tokens, $blockStartIndex);
+                    $tokens->clearTokenAndMergeSurroundingWhitespace($blockStartIndex);
                 } else {
                     // Adds a space to prevent broken code like `return2`.
                     $tokens->overrideAt($blockStartIndex, array(T_WHITESPACE, ' '));
                 }
 
-                $this->clearParenthesis($tokens, $blockEndIndex);
+                $tokens->clearTokenAndMergeSurroundingWhitespace($blockEndIndex);
             }
         }
 
@@ -128,24 +134,5 @@ final class UnneededControlParenthesesFixer extends AbstractFixer
     public function getPriority()
     {
         return 30;
-    }
-
-    /**
-     * @param Tokens $tokens
-     * @param int    $index
-     */
-    private function clearParenthesis(Tokens $tokens, $index)
-    {
-        $tokens[$index]->clear();
-
-        if (
-            isset($tokens[$index - 1]) &&
-            isset($tokens[$index + 1]) &&
-            $tokens[$index - 1]->isWhitespace() &&
-            $tokens[$index + 1]->isWhitespace()
-        ) {
-            $tokens[$index - 1]->setContent($tokens[$index - 1]->getContent().$tokens[$index + 1]->getContent());
-            $tokens[$index + 1]->clear();
-        }
     }
 }

@@ -1,9 +1,10 @@
 <?php
 
 /*
- * This file is part of the PHP CS utility.
+ * This file is part of PHP CS Fixer.
  *
  * (c) Fabien Potencier <fabien@symfony.com>
+ *     Dariusz Rumiński <dariusz.ruminski@gmail.com>
  *
  * This source file is subject to the MIT license that is bundled
  * with this source code in the file LICENSE.
@@ -13,8 +14,8 @@ namespace Symfony\CS;
 
 use SebastianBergmann\Diff\Differ;
 use Symfony\Component\EventDispatcher\EventDispatcher;
-use Symfony\Component\Finder\Finder;
-use Symfony\Component\Finder\SplFileInfo as FinderSplFileInfo;
+use Symfony\Component\Finder\Finder as SymfonyFinder;
+use Symfony\Component\Finder\SplFileInfo as SymfonySplFileInfo;
 use Symfony\Component\Stopwatch\Stopwatch;
 use Symfony\CS\Tokenizer\Tokens;
 
@@ -24,7 +25,7 @@ use Symfony\CS\Tokenizer\Tokens;
  */
 class Fixer
 {
-    const VERSION = '1.11.4';
+    const VERSION = '1.12.0';
 
     protected $fixers = array();
     protected $configs = array();
@@ -71,7 +72,7 @@ class Fixer
 
     public function registerBuiltInFixers()
     {
-        foreach (Finder::create()->files()->in(__DIR__.'/Fixer') as $file) {
+        foreach (SymfonyFinder::create()->files()->in(__DIR__.'/Fixer') as $file) {
             $relativeNamespace = $file->getRelativePath();
             $class = 'Symfony\\CS\\Fixer\\'.($relativeNamespace ? $relativeNamespace.'\\' : '').$file->getBasename('.php');
             $this->addFixer(new $class());
@@ -105,7 +106,7 @@ class Fixer
 
     public function registerBuiltInConfigs()
     {
-        foreach (Finder::create()->files()->in(__DIR__.'/Config') as $file) {
+        foreach (SymfonyFinder::create()->files()->in(__DIR__.'/Config') as $file) {
             $relativeNamespace = $file->getRelativePath();
             $class = 'Symfony\\CS\\Config\\'.($relativeNamespace ? $relativeNamespace.'\\' : '').$file->getBasename('.php');
             $this->addConfig(new $class());
@@ -169,7 +170,7 @@ class Fixer
 
     public function fixFile(\SplFileInfo $file, array $fixers, $dryRun, $diff, FileCacheManager $fileCacheManager)
     {
-        $new = $old = file_get_contents($file->getRealpath());
+        $new = $old = file_get_contents($file->getRealPath());
 
         if (
             '' === $old
@@ -187,7 +188,7 @@ class Fixer
             return;
         }
 
-        if ($this->lintManager && !$this->lintManager->createProcessForFile($file->getRealpath())->isSuccessful()) {
+        if ($this->lintManager && !$this->lintManager->createProcessForFile($file->getRealPath())->isSuccessful()) {
             if ($this->eventDispatcher) {
                 $this->eventDispatcher->dispatch(
                     FixerFileProcessedEvent::NAME,
@@ -215,6 +216,32 @@ class Fixer
                 }
                 $new = $newest;
             }
+        } catch (\ParseError $e) {
+            if ($this->eventDispatcher) {
+                $this->eventDispatcher->dispatch(
+                    FixerFileProcessedEvent::NAME,
+                    FixerFileProcessedEvent::create()->setStatus(FixerFileProcessedEvent::STATUS_LINT)
+                );
+            }
+
+            if ($this->errorsManager) {
+                $this->errorsManager->report(ErrorsManager::ERROR_TYPE_LINT, $this->getFileRelativePathname($file), sprintf('Linting error at line %d: "%s".', $e->getLine(), $e->getMessage()));
+            }
+
+            return;
+        } catch (\Error $e) {
+            if ($this->eventDispatcher) {
+                $this->eventDispatcher->dispatch(
+                    FixerFileProcessedEvent::NAME,
+                    FixerFileProcessedEvent::create()->setStatus(FixerFileProcessedEvent::STATUS_EXCEPTION)
+                );
+            }
+
+            if ($this->errorsManager) {
+                $this->errorsManager->report(ErrorsManager::ERROR_TYPE_EXCEPTION, $this->getFileRelativePathname($file), $e->__toString());
+            }
+
+            return;
         } catch (\Exception $e) {
             if ($this->eventDispatcher) {
                 $this->eventDispatcher->dispatch(
@@ -253,7 +280,7 @@ class Fixer
             }
 
             if (!$dryRun) {
-                file_put_contents($file->getRealpath(), $new);
+                file_put_contents($file->getRealPath(), $new);
             }
 
             $fixInfo = array('appliedFixers' => $appliedFixers);
@@ -273,15 +300,6 @@ class Fixer
         }
 
         return $fixInfo;
-    }
-
-    private function getFileRelativePathname(\SplFileInfo $file)
-    {
-        if ($file instanceof FinderSplFileInfo) {
-            return $file->getRelativePathname();
-        }
-
-        return $file->getPathname();
     }
 
     public static function getLevelAsString(FixerInterface $fixer)
@@ -309,63 +327,6 @@ class Fixer
         }
 
         return 'symfony';
-    }
-
-    protected function stringDiff($old, $new)
-    {
-        $diff = $this->diff->diff($old, $new);
-
-        $diff = implode(
-            PHP_EOL,
-            array_map(
-                function ($string) {
-                    $string = preg_replace('/^(\+){3}/', '<info>+++</info>', $string);
-                    $string = preg_replace('/^(\+){1}/', '<info>+</info>', $string);
-
-                    $string = preg_replace('/^(\-){3}/', '<error>---</error>', $string);
-                    $string = preg_replace('/^(\-){1}/', '<error>-</error>', $string);
-
-                    $string = str_repeat(' ', 6).$string;
-
-                    return $string;
-                },
-                explode(PHP_EOL, $diff)
-            )
-        );
-
-        return $diff;
-    }
-
-    /**
-     * @param FixerInterface[] $fixers
-     *
-     * @return FixerInterface[]
-     */
-    private function sortFixers(array $fixers)
-    {
-        usort($fixers, function (FixerInterface $a, FixerInterface $b) {
-            return Utils::cmpInt($b->getPriority(), $a->getPriority());
-        });
-
-        return $fixers;
-    }
-
-    /**
-     * @param ConfigInterface $config
-     *
-     * @return FixerInterface[]
-     */
-    private function prepareFixers(ConfigInterface $config)
-    {
-        $fixers = $config->getFixers();
-
-        foreach ($fixers as $fixer) {
-            if ($fixer instanceof ConfigAwareInterface) {
-                $fixer->setConfig($config);
-            }
-        }
-
-        return $fixers;
     }
 
     /**
@@ -406,5 +367,59 @@ class Fixer
     public function setStopwatch(Stopwatch $stopwatch = null)
     {
         $this->stopwatch = $stopwatch;
+    }
+
+    /**
+     * @deprecated Will be removed in the 2.0
+     *
+     * @param string $old
+     * @param string $new
+     *
+     * @return string
+     */
+    protected function stringDiff($old, $new)
+    {
+        return $this->diff->diff($old, $new);
+    }
+
+    private function getFileRelativePathname(\SplFileInfo $file)
+    {
+        if ($file instanceof SymfonySplFileInfo) {
+            return $file->getRelativePathname();
+        }
+
+        return $file->getPathname();
+    }
+
+    /**
+     * @param FixerInterface[] $fixers
+     *
+     * @return FixerInterface[]
+     */
+    private function sortFixers(array $fixers)
+    {
+        usort($fixers, function (FixerInterface $a, FixerInterface $b) {
+            return Utils::cmpInt($b->getPriority(), $a->getPriority());
+        });
+
+        return $fixers;
+    }
+
+    /**
+     * @param ConfigInterface $config
+     *
+     * @return FixerInterface[]
+     */
+    private function prepareFixers(ConfigInterface $config)
+    {
+        $fixers = $config->getFixers();
+
+        foreach ($fixers as $fixer) {
+            if ($fixer instanceof ConfigAwareInterface) {
+                $fixer->setConfig($config);
+            }
+        }
+
+        return $fixers;
     }
 }

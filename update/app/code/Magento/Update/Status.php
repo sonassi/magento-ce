@@ -73,7 +73,7 @@ class Status
         $this->updateErrorFlagFilePath = $updateErrorFlagFilePath
             ? $updateErrorFlagFilePath
             : MAGENTO_BP . '/var/.update_error.flag';
-        $updateLoggerFactory = new UpdateLoggerFactory();
+        $updateLoggerFactory = new UpdateLoggerFactory($this->logFilePath);
         $this->logger = $updateLoggerFactory->create();
     }
 

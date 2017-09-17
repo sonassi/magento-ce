@@ -1,9 +1,10 @@
 <?php
 
 /*
- * This file is part of the PHP CS utility.
+ * This file is part of PHP CS Fixer.
  *
  * (c) Fabien Potencier <fabien@symfony.com>
+ *     Dariusz Rumiński <dariusz.ruminski@gmail.com>
  *
  * This source file is subject to the MIT license that is bundled
  * with this source code in the file LICENSE.
@@ -32,6 +33,23 @@ class ShortBoolCastFixer extends AbstractFixer
         return $tokens->generateCode();
     }
 
+    /**
+     * {@inheritdoc}
+     */
+    public function getDescription()
+    {
+        return 'Short cast bool using double exclamation mark should not be used.';
+    }
+
+    /**
+     * {@inheritdoc}
+     */
+    public function getPriority()
+    {
+        // should be run before the SpacesCastFixer
+        return -9;
+    }
+
     private function fixShortCast(Tokens $tokens, $index)
     {
         for ($i = $index - 1; $i > 1; --$i) {
@@ -57,22 +75,5 @@ class ShortBoolCastFixer extends AbstractFixer
         }
 
         $tokens->insertAt($start, new Token(array(T_BOOL_CAST, '(bool)')));
-    }
-
-    /**
-     * {@inheritdoc}
-     */
-    public function getDescription()
-    {
-        return 'Short cast bool using double exclamation mark should not be used.';
-    }
-
-    /**
-     * {@inheritdoc}
-     */
-    public function getPriority()
-    {
-        // should be run before the SpacesCastFixer
-        return -9;
     }
 }

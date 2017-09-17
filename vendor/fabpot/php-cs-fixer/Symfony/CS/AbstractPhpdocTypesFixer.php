@@ -1,9 +1,10 @@
 <?php
 
 /*
- * This file is part of the PHP CS utility.
+ * This file is part of PHP CS Fixer.
  *
  * (c) Fabien Potencier <fabien@symfony.com>
+ *     Dariusz Rumiński <dariusz.ruminski@gmail.com>
  *
  * This source file is subject to the MIT license that is bundled
  * with this source code in the file LICENSE.
@@ -18,7 +19,7 @@ use Symfony\CS\Tokenizer\Tokens;
 /**
  * This abstract fixer provides a base for fixers to fix types in phpdoc.
  *
- * @author Graham Campbell <graham@mineuk.com>
+ * @author Graham Campbell <graham@alt-three.com>
  */
 abstract class AbstractPhpdocTypesFixer extends AbstractFixer
 {
@@ -67,6 +68,15 @@ abstract class AbstractPhpdocTypesFixer extends AbstractFixer
 
         return $tokens->generateCode();
     }
+
+    /**
+     * Actually normalize the given type.
+     *
+     * @param string $type
+     *
+     * @return string
+     */
+    abstract protected function normalize($type);
 
     /**
      * Fix the types at the given line.
@@ -119,13 +129,4 @@ abstract class AbstractPhpdocTypesFixer extends AbstractFixer
 
         return $this->normalize($type);
     }
-
-    /**
-     * Actually normalize the given type.
-     *
-     * @param string $type
-     *
-     * @return string
-     */
-    abstract protected function normalize($type);
 }

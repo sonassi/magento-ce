@@ -21,6 +21,9 @@
         "monolog/monolog": "1.16.0",
         "psr/log": "~1.0"
     },
+    "require-dev": {
+        "phpunit/phpunit": "4.1.0"
+    },
     "autoload": {
         "psr-4": {
             "Magento\\": "app/code/Magento/"

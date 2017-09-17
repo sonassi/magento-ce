@@ -44,7 +44,14 @@ class JobRollbackTest extends \PHPUnit_Framework_TestCase
             new \Magento\Update\Status(),
             $maintenanceMode
         );
-        $this->setExpectedException('RuntimeException', sprintf('"%s" backup file does not exist.', $backupFileName));
+        $this->setExpectedException(
+            'RuntimeException',
+            sprintf(
+                'Cannot create phar \'%s\', file extension (or combination) not recognised'.
+                ' or the directory does not exist',
+                $backupFileName
+            )
+        );
         $jobRollback->execute();
     }
 }

@@ -26,14 +26,11 @@ class MaintenanceModeTest extends \PHPUnit_Framework_TestCase
      */
     protected $maintenanceMode;
 
-    public function __construct()
+    protected function setUp()
     {
         $this->flagFile = TESTS_TEMP_DIR . '/.maintenance.flag';
         $this->ipFile = TESTS_TEMP_DIR . '/.maintenance.ip';
-    }
 
-    protected function setUp()
-    {
         $this->maintenanceMode = new \Magento\Update\MaintenanceMode($this->flagFile, $this->ipFile);
         if (file_exists($this->flagFile)) {
             unlink($this->flagFile);
@@ -50,6 +47,9 @@ class MaintenanceModeTest extends \PHPUnit_Framework_TestCase
         }
         if (file_exists($this->ipFile)) {
             unlink($this->ipFile);
+        }
+        if (file_exists(MAGENTO_BP . '/var/.update_status.txt')) {
+            unlink(MAGENTO_BP . '/var/.update_status.txt');
         }
     }
 

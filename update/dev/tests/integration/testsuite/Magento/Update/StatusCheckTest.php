@@ -96,13 +96,13 @@ class StatusCheckTest extends \PHPUnit_Framework_TestCase
     protected function getResponse($requestType = null)
     {
         if ($requestType === self::REQUEST_TYPE_AJAX) {
-            $_SERVER['HTTP_X_REQUESTED_WITH'] = 'xmlhttprequest';
+            $_SERVER['PATH_INFO'] = '/status';
         }
         ob_start();
         include $this->indexScript;
         $response = ob_get_contents();
         ob_end_clean();
-        unset($_SERVER['HTTP_X_REQUESTED_WITH']);
+        unset($_SERVER['PATH_INFO']);
         return $response;
     }
 }

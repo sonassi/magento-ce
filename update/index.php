@@ -6,14 +6,16 @@
 
 require_once __DIR__ . '/app/bootstrap.php';
 
-header('X-Frame-Options: SAMEORIGIN');
-header('X-Content-Type-Options: nosniff');
-if (strpos($_SERVER['HTTP_USER_AGENT'], 'MSIE 8') === false) {
-    $xssHeaderValue = '1; mode=block';
-} else {
-    $xssHeaderValue = '0';
+if (PHP_SAPI != 'cli') {
+    header('X-Frame-Options: SAMEORIGIN');
+    header('X-Content-Type-Options: nosniff');
+    if (strpos($_SERVER['HTTP_USER_AGENT'], 'MSIE 8') === false) {
+        $xssHeaderValue = '1; mode=block';
+    } else {
+        $xssHeaderValue = '0';
+    }
+    header('X-XSS-Protection: ' . $xssHeaderValue);
 }
-header('X-XSS-Protection: ' . $xssHeaderValue);
 
 $status = new \Magento\Update\Status();
 
