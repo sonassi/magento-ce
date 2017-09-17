@@ -100,12 +100,12 @@ class HelperTest extends \PHPUnit_Framework_TestCase
     protected $customOptionMock;
 
     /**
-     * @var \PHPUnit_Framework_MockObject_MockObject
+     * @var \Magento\Catalog\Model\Product\Link\Resolver|\PHPUnit_Framework_MockObject_MockObject
      */
     protected $linkResolverMock;
 
     /**
-     * @var ProductLinks
+     * @var ProductLinks|\PHPUnit_Framework_MockObject_MockObject
      */
     protected $productLinksMock;
 
@@ -165,7 +165,6 @@ class HelperTest extends \PHPUnit_Framework_TestCase
         $this->productLinksMock = $this->getMockBuilder(ProductLinks::class)
             ->disableOriginalConstructor()
             ->getMock();
-
         $this->productLinksMock->expects($this->any())
             ->method('initializeLinks')
             ->willReturn($this->productMock);
