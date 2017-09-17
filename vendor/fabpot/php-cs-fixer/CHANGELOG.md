@@ -3,34 +3,6 @@ CHANGELOG for PHP CS Fixer
 
 This file contains changelogs for stable releases only.
 
-Changelog for v1.11.6
----------------------
-
-* bug #2086 Braces - fix bug with comment in method prototype (keradus)
-* bug #2077 SingleLineAfterImportsFixer - Do not remove lines between use cases (SpacePossum)
-* bug #2079 TernarySpacesFixer - Remove multiple spaces (SpacePossum)
-* bug #2087 Fixer - handle PHP7 Errors as well (keradus)
-* bug #2072 LowercaseKeywordsFixer - handle CT_CLASS_CONSTANT (tgabi333)
-* bug #2066 LineAfterNamespaceFixer - Handle close tag (SpacePossum)
-* bug #2057 LineAfterNamespaceFixer - adding too much extra lines where namespace is last statement (keradus)
-* bug #2059 OperatorsSpacesFixer - handle declare statement (keradus)
-* bug #2060 UnusedUseFixer - fix handling whitespaces around removed import (keradus)
-* minor #2071 ShortEchoTagFixer - allow to run tests on PHP 5.3 (keradus)
-
-Changelog for v1.11.5
----------------------
-
-* bug #2012 Properly build phar file for lowest supported PHP version (keradus)
-* bug #2037 BracesFixer - add support for anonymous classes (keradus)
-* bug #1989 Add support for PHP 7 namespaces (SpacePossum)
-* bug #2019 Fixing newlines added after curly brace string index access (jaydiablo)
-* bug #1840 [Bug] BracesFixer - Do add a line before close tag (SpacePossum)
-* bug #1994 EchoToPrintFixer - Fix T_OPEN_TAG_WITH_ECHO on hhvm (keradus)
-* bug #1970 Tokens - handle semi-reserved PHP 7 keywords (keradus)
-* minor #2017 PHP7 integration tests (keradus)
-* minor #1465 Bump supported HHVM version, improve ShortEchoTagFixer on HHVM (keradus)
-* minor #1995 Rely on own phpunit, not one from CI service (keradus)
-
 Changelog for v1.11.4
 ---------------------
 

@@ -10,7 +10,6 @@ use \Magento\CatalogRule\Pricing\Price\CatalogRulePrice;
 
 /**
  * Class CatalogRulePriceTest
- * @SuppressWarnings(PHPMD.CouplingBetweenObjects)
  */
 class CatalogRulePriceTest extends \PHPUnit_Framework_TestCase
 {
@@ -77,11 +76,11 @@ class CatalogRulePriceTest extends \PHPUnit_Framework_TestCase
     /**
      * Set up
      */
-    public function setUp()
+    protected function setUp()
     {
         $this->saleableItemMock = $this->getMock(
             'Magento\Catalog\Model\Product',
-            ['getId', '__wakeup', 'getPriceInfo', 'hasData', 'getData'],
+            ['getId', '__wakeup', 'getPriceInfo'],
             [],
             '',
             false
@@ -155,10 +154,6 @@ class CatalogRulePriceTest extends \PHPUnit_Framework_TestCase
             $this->customerSessionMock,
             $this->catalogRuleResourceFactoryMock
         );
-
-        $property = new \ReflectionProperty($this->object, 'ruleResource');
-        $property->setAccessible(true);
-        $property->setValue($this->object, $this->catalogRuleResourceMock);
     }
 
     /**
@@ -200,16 +195,6 @@ class CatalogRulePriceTest extends \PHPUnit_Framework_TestCase
             ->will($this->returnValue($convertedPrice));
 
         $this->assertEquals($convertedPrice, $this->object->getValue());
-    }
-
-    public function testGetValueFromData()
-    {
-        $this->saleableItemMock->expects($this->once())->method('hasData')
-            ->with('catalog_rule_price')->willReturn(true);
-        $this->saleableItemMock->expects($this->once())->method('getData')
-            ->with('catalog_rule_price')->willReturn('7.1');
-
-        $this->assertEquals(7.1, $this->object->getValue());
     }
 
     public function testGetAmountNoBaseAmount()

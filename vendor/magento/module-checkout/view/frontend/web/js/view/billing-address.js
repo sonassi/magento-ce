@@ -46,8 +46,9 @@ define(
             },
             countryData = customerData.get('directory-data'),
             addressOptions = addressList().filter(function (address) {
-            return address.getType() == 'customer-address';
-        });
+                return address.getType() == 'customer-address';
+            });
+
         addressOptions.push(newAddressOption);
 
         return Component.extend({
@@ -78,7 +79,7 @@ define(
                         isAddressDetailsVisible: quote.billingAddress() != null,
                         isAddressFormVisible: !customer.isLoggedIn() || addressOptions.length == 1,
                         isAddressSameAsShipping: false,
-                        saveInAddressBook: true
+                        saveInAddressBook: 1
                     });
 
                 quote.billingAddress.subscribe(function (newAddress) {
@@ -93,6 +94,8 @@ define(
 
                     if (newAddress != null && newAddress.saveInAddressBook !== undefined) {
                         this.saveInAddressBook(newAddress.saveInAddressBook);
+                    } else {
+                        this.saveInAddressBook(1);
                     }
                     this.isAddressDetailsVisible(true);
                 }, this);
@@ -154,9 +157,9 @@ define(
                             newBillingAddress;
 
                         if (customer.isLoggedIn() && !this.customerHasAddresses) {
-                            this.saveInAddressBook(true);
+                            this.saveInAddressBook(1);
                         }
-                        addressData.save_in_address_book = this.saveInAddressBook();
+                        addressData.save_in_address_book = this.saveInAddressBook() ? 1 : 0;
                         newBillingAddress = createBillingAddress(addressData);
 
                         // New address must be selected as a billing address

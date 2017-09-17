@@ -9,6 +9,13 @@ namespace Magento\Catalog\Controller\Adminhtml\Product;
 class SuggestAttributeSets extends \Magento\Backend\App\Action
 {
     /**
+     * Authorization level of a basic admin session
+     *
+     * @see _isAllowed()
+     */
+    const ADMIN_RESOURCE = 'Magento_Catalog::sets';
+    
+    /**
      * @var \Magento\Framework\Controller\Result\JsonFactory
      */
     protected $resultJsonFactory;
@@ -45,13 +52,5 @@ class SuggestAttributeSets extends \Magento\Backend\App\Action
             $this->suggestedSet->getSuggestedSets($this->getRequest()->getParam('label_part'))
         );
         return $resultJson;
-    }
-
-    /**
-     * @return bool
-     */
-    protected function _isAllowed()
-    {
-        return $this->_authorization->isAllowed('Magento_Catalog::products');
     }
 }

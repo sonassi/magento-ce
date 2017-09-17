@@ -11,7 +11,6 @@
 
 namespace Symfony\Component\Yaml\Tests;
 
-use Symfony\Bridge\PhpUnit\ErrorAssert;
 use Symfony\Component\Yaml\Yaml;
 use Symfony\Component\Yaml\Parser;
 
@@ -657,25 +656,6 @@ EOT;
         $this->assertSame($expected, $this->parser->parse($yaml));
     }
 
-    public function testSequenceFollowedByCommentEmbeddedInMapping()
-    {
-        $yaml = <<<EOT
-a:
-    b:
-        - c
-# comment
-    d: e
-EOT;
-        $expected = array(
-            'a' => array(
-                'b' => array('c'),
-                'd' => 'e',
-            ),
-        );
-
-        $this->assertSame($expected, $this->parser->parse($yaml));
-    }
-
     /**
      * @expectedException \Symfony\Component\Yaml\Exception\ParseException
      */
@@ -928,18 +908,30 @@ EOF;
     /**
      * @group legacy
      * throw ParseException in Symfony 3.0
-     * @requires function Symfony\Bridge\PhpUnit\ErrorAssert::assertDeprecationsAreTriggered
      */
     public function testColonInMappingValueException()
     {
-        $parser = $this->parser;
-
-        ErrorAssert::assertDeprecationsAreTriggered('Using a colon in the unquoted mapping value "bar: baz" in line 1 is deprecated since Symfony 2.8 and will throw a ParseException in 3.0.', function () use ($parser) {
-            $yaml = <<<EOF
+        $yaml = <<<EOF
 foo: bar: baz
 EOF;
-            $parser->parse($yaml);
+
+        $deprecations = array();
+        set_error_handler(function ($type, $msg) use (&$deprecations) {
+            if (E_USER_DEPRECATED !== $type) {
+                restore_error_handler();
+
+                return call_user_func_array('PHPUnit_Util_ErrorHandler::handleError', func_get_args());
+            }
+
+            $deprecations[] = $msg;
         });
+
+        $this->parser->parse($yaml);
+
+        restore_error_handler();
+
+        $this->assertCount(1, $deprecations);
+        $this->assertContains('Using a colon in the unquoted mapping value "bar: baz" in line 1 is deprecated since Symfony 2.8 and will throw a ParseException in 3.0.', $deprecations[0]);
     }
 
     public function testColonInMappingValueExceptionNotTriggeredByColonInComment()
@@ -1134,74 +1126,6 @@ EOT
                 ,
             ),
             $this->parser->parse($yaml)
-        );
-    }
-
-    /**
-     * @param $lineNumber
-     * @param $yaml
-     * @dataProvider parserThrowsExceptionWithCorrectLineNumberProvider
-     */
-    public function testParserThrowsExceptionWithCorrectLineNumber($lineNumber, $yaml)
-    {
-        $this->setExpectedException(
-            '\Symfony\Component\Yaml\Exception\ParseException',
-            sprintf('Unexpected characters near "," at line %d (near "bar: "123",").', $lineNumber)
-        );
-
-        $this->parser->parse($yaml);
-    }
-
-    public function parserThrowsExceptionWithCorrectLineNumberProvider()
-    {
-        return array(
-            array(
-                4,
-                <<<YAML
-foo:
-    -
-        # bar
-        bar: "123",
-YAML
-            ),
-            array(
-                5,
-                <<<YAML
-foo:
-    -
-        # bar
-        # bar
-        bar: "123",
-YAML
-            ),
-            array(
-                8,
-                <<<YAML
-foo:
-    -
-        # foobar
-        baz: 123
-bar:
-    -
-        # bar
-        bar: "123",
-YAML
-            ),
-            array(
-                10,
-                <<<YAML
-foo:
-    -
-        # foobar
-        # foobar
-        baz: 123
-bar:
-    -
-        # bar
-        # bar
-        bar: "123",
-YAML
-            ),
         );
     }
 }

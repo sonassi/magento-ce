@@ -81,20 +81,7 @@ class FinalPriceBoxTest extends \PHPUnit_Framework_TestCase
             ->method('getBlock')
             ->will($this->returnValue($this->priceBox));
 
-        $storeManager = $this->getMockBuilder('\Magento\Store\Model\StoreManagerInterface')
-            ->setMethods(['getStore', 'getCode'])
-            ->getMockForAbstractClass();
-        $storeManager->expects($this->any())->method('getStore')->willReturnSelf();
-
-        $appState = $this->getMockBuilder('\Magento\Framework\App\State')
-            ->disableOriginalConstructor()
-            ->getMock();
-
-        $resolver = $this->getMockBuilder('\Magento\Framework\View\Element\Template\File\Resolver')
-            ->disableOriginalConstructor()
-            ->getMock();
-
-        $urlBuilder = $this->getMockBuilder('\Magento\Framework\UrlInterface')
+        $cacheState = $this->getMockBuilder(\Magento\Framework\App\Cache\StateInterface::class)
             ->getMockForAbstractClass();
 
         $scopeConfigMock = $this->getMockForAbstractClass('Magento\Framework\App\Config\ScopeConfigInterface');
@@ -115,16 +102,8 @@ class FinalPriceBoxTest extends \PHPUnit_Framework_TestCase
             ->method('getScopeConfig')
             ->will($this->returnValue($scopeConfigMock));
         $context->expects($this->any())
-            ->method('getStoreManager')
-            ->will($this->returnValue($storeManager));
-        $context->expects($this->any())
-            ->method('getAppState')
-            ->will($this->returnValue($appState));
-        $context->expects($this->any())
-            ->method('getResolver')
-            ->will($this->returnValue($resolver));
-        $context->expects($this->any())
-            ->method('getUrlBuilder')->will($this->returnValue($urlBuilder));
+            ->method('getCacheState')
+            ->will($this->returnValue($cacheState));
 
         $this->rendererPool = $this->getMockBuilder('Magento\Framework\Pricing\Render\RendererPool')
             ->disableOriginalConstructor()
@@ -358,10 +337,5 @@ class FinalPriceBoxTest extends \PHPUnit_Framework_TestCase
             ->will($this->returnValue(false));
 
         $this->assertEmpty($this->object->toHtml());
-    }
-
-    public function testGetCacheKeyInfo()
-    {
-        $this->assertArrayHasKey('display_minimal_price', $this->object->getCacheKeyInfo());
     }
 }

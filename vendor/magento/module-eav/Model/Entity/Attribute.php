@@ -40,7 +40,7 @@ class Attribute extends \Magento\Eav\Model\Entity\Attribute\AbstractAttribute im
     /**
      * @var AttributeCache
      */
-    protected $attributeCache;
+    private $attributeCache;
 
     /**
      * Parameter name in event

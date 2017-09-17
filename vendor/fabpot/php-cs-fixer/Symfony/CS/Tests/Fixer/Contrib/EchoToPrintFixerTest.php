@@ -123,9 +123,6 @@ final class EchoToPrintFixerTest extends AbstractFixerTestBase
                 "<div><?php print 'foo' ?></div>",
                 "<div><?php echo 'foo' ?></div>",
             ),
-            array(
-                '<?=$foo?>',
-            ),
         );
     }
 }

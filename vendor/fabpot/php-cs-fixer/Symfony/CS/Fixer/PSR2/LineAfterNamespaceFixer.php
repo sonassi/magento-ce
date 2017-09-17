@@ -28,28 +28,24 @@ class LineAfterNamespaceFixer extends AbstractFixer
     public function fix(\SplFileInfo $file, $content)
     {
         $tokens = Tokens::fromCode($content);
-        $lastIndex = $tokens->count() - 1;
 
-        for ($index = $lastIndex; $index >= 0; --$index) {
+        for ($index = $tokens->count() - 1; $index >= 0; --$index) {
             $token = $tokens[$index];
 
             if ($token->isGivenKind(T_NAMESPACE)) {
-                $semicolonIndex = $tokens->getNextTokenOfKind($index, array(';', '{', array(T_CLOSE_TAG)));
+                $semicolonIndex = $tokens->getNextTokenOfKind($index, array(';', '{'));
                 $semicolonToken = $tokens[$semicolonIndex];
 
                 if (!isset($tokens[$semicolonIndex + 1]) || !$semicolonToken->equals(';')) {
                     continue;
                 }
 
-                $nextIndex = $semicolonIndex + 1;
-                $nextToken = $tokens[$nextIndex];
+                $nextToken = $tokens[$semicolonIndex + 1];
 
                 if (!$nextToken->isWhitespace()) {
                     $tokens->insertAt($semicolonIndex + 1, new Token(array(T_WHITESPACE, "\n\n")));
                 } else {
-                    $nextToken->setContent(
-                        ($nextIndex === $lastIndex ? "\n" : "\n\n").ltrim($nextToken->getContent())
-                    );
+                    $nextToken->setContent("\n\n".ltrim($nextToken->getContent()));
                 }
             }
         }

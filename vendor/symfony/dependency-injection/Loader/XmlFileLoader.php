@@ -187,7 +187,7 @@ class XmlFileLoader extends FileLoader
         }
 
         if ($deprecated = $this->getChildren($service, 'deprecated')) {
-            $definition->setDeprecated(true, $deprecated[0]->nodeValue ?: null);
+            $definition->setDeprecated(true, $deprecated[0]->nodeValue);
         }
 
         $definition->setArguments($this->getArgumentsAsPhp($service, 'argument'));
@@ -337,6 +337,7 @@ class XmlFileLoader extends FileLoader
         krsort($definitions);
         foreach ($definitions as $id => $def) {
             list($domElement, $file, $wild) = $def;
+
 
             if (null !== $definition = $this->parseDefinition($domElement, $file)) {
                 $this->container->setDefinition($id, $definition);
@@ -507,9 +508,7 @@ $imports
 EOF
         ;
 
-        $disableEntities = libxml_disable_entity_loader(false);
         $valid = @$dom->schemaValidateSource($source);
-        libxml_disable_entity_loader($disableEntities);
 
         foreach ($tmpfiles as $tmpfile) {
             @unlink($tmpfile);
@@ -587,7 +586,7 @@ EOF
      *
      * @return array A PHP array
      */
-    public static function convertDomElementToArray(\DOMElement $element)
+    public static function convertDomElementToArray(\DomElement $element)
     {
         return XmlUtils::convertDomElementToArray($element);
     }

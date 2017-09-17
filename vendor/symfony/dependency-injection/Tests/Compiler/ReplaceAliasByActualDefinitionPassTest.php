@@ -51,7 +51,7 @@ class ReplaceAliasByActualDefinitionPassTest extends \PHPUnit_Framework_TestCase
         $this->assertSame('b_alias', $aDefinition->getFactoryService(false));
         $this->assertTrue($container->has('container'));
 
-        $resolvedFactory = $aDefinition->getFactory();
+        $resolvedFactory = $aDefinition->getFactory(false);
         $this->assertSame('b_alias', (string) $resolvedFactory[0]);
     }
 

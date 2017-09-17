@@ -153,9 +153,9 @@ class PassConfig
     }
 
     /**
-     * Gets the Merge pass.
+     * Gets all passes for the Merge pass.
      *
-     * @return CompilerPassInterface The merge pass
+     * @return array An array of passes
      */
     public function getMergePass()
     {

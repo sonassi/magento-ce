@@ -15,7 +15,8 @@ define([
     return Component.extend({
         defaults: {
             modules: {
-                variationsComponent: '${ $.variationsComponent }'
+                variationsComponent: '${ $.variationsComponent }',
+                modalComponent: '${ $.modalComponent }'
             },
             notificationMessage: {
                 text: null,
@@ -41,7 +42,7 @@ define([
         variations: [],
         generateGrid: function (variations, getSectionValue) {
             var productSku = this.variationsComponent().getProductValue('sku'),
-                productPrice = this.variationsComponent().getProductValue('price'),
+                productPrice = this.variationsComponent().getProductPrice(),
                 productWeight = this.variationsComponent().getProductValue('weight'),
                 variationsKeys = [],
                 gridExisting = [],
@@ -80,6 +81,7 @@ define([
                     options: options,
                     images: images,
                     sku: sku,
+                    name: sku,
                     quantity: quantity,
                     price: price,
                     productId: productId,
@@ -90,6 +92,7 @@ define([
                 if (productId) {
                     variation.sku = product.sku;
                     variation.weight = product.weight;
+                    variation.name = product.name;
                     gridExisting.push(this.prepareRowForGrid(variation));
                 } else {
                     gridNew.push(this.prepareRowForGrid(variation));
@@ -159,7 +162,7 @@ define([
         },
         force: function () {
             this.variationsComponent().render(this.variations, this.attributes());
-            $('[data-role=step-wizard-dialog]').trigger('closeModal');
+            this.modalComponent().closeModal();
         },
         back: function () {
         }

@@ -14,9 +14,6 @@ use Magento\Framework\Model\AbstractModel;
 use Magento\UrlRewrite\Model\UrlPersistInterface;
 use Magento\UrlRewrite\Service\V1\Data\UrlRewrite;
 
-/**
- * @SuppressWarnings(PHPMD.CouplingBetweenObjects)
- */
 class View
 {
     /** @var UrlPersistInterface */

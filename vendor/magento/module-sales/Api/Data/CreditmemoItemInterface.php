@@ -169,14 +169,14 @@ interface CreditmemoItemInterface extends \Magento\Framework\Api\ExtensibleDataI
     /**
      * Gets the base discount amount for a credit memo item.
      *
-     * @return float|null
+     * @return float
      */
     public function getBaseDiscountAmount();
 
     /**
      * Gets the base discount tax compensation amount for a credit memo item.
      *
-     * @return float|null
+     * @return float
      */
     public function getBaseDiscountTaxCompensationAmount();
 
@@ -275,7 +275,7 @@ interface CreditmemoItemInterface extends \Magento\Framework\Api\ExtensibleDataI
     /**
      * Gets the discount tax compensation amount for a credit memo item.
      *
-     * @return float|null Discount tax compensation amount.
+     * @return float Discount tax compensation amount.
      */
     public function getDiscountTaxCompensationAmount();
 

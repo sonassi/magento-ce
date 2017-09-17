@@ -214,7 +214,6 @@ class SalesSetup extends \Magento\Eav\Setup\EavSetup
     {
         $entities = [
             'order' => [
-                'entity_type_id' => 5,
                 'entity_model' => 'Magento\Sales\Model\ResourceModel\Order',
                 'table' => 'sales_order',
                 'increment_model' => 'Magento\Eav\Model\Entity\Increment\NumericValue',
@@ -222,7 +221,6 @@ class SalesSetup extends \Magento\Eav\Setup\EavSetup
                 'attributes' => [],
             ],
             'invoice' => [
-                'entity_type_id' => 6,
                 'entity_model' => 'Magento\Sales\Model\ResourceModel\Order\Invoice',
                 'table' => 'sales_invoice',
                 'increment_model' => 'Magento\Eav\Model\Entity\Increment\NumericValue',
@@ -230,7 +228,6 @@ class SalesSetup extends \Magento\Eav\Setup\EavSetup
                 'attributes' => [],
             ],
             'creditmemo' => [
-                'entity_type_id' => 7,
                 'entity_model' => 'Magento\Sales\Model\ResourceModel\Order\Creditmemo',
                 'table' => 'sales_creditmemo',
                 'increment_model' => 'Magento\Eav\Model\Entity\Increment\NumericValue',
@@ -238,7 +235,6 @@ class SalesSetup extends \Magento\Eav\Setup\EavSetup
                 'attributes' => [],
             ],
             'shipment' => [
-                'entity_type_id' => 8,
                 'entity_model' => 'Magento\Sales\Model\ResourceModel\Order\Shipment',
                 'table' => 'sales_shipment',
                 'increment_model' => 'Magento\Eav\Model\Entity\Increment\NumericValue',

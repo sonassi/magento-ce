@@ -124,7 +124,7 @@ class Configurable extends \Magento\Catalog\Block\Product\View\AbstractView
     /**
      * Get Allowed Products
      *
-     * @return \Magento\Catalog\Model\Product[]
+     * @return array
      */
     public function getAllowProducts()
     {

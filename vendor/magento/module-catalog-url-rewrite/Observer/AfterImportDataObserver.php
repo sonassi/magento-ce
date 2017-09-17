@@ -20,7 +20,6 @@ use Magento\UrlRewrite\Model\OptionProvider;
 use Magento\UrlRewrite\Model\UrlFinderInterface;
 use Magento\Framework\Event\ObserverInterface;
 use Magento\Catalog\Model\Product\Visibility;
-
 /**
  * Class AfterImportDataObserver
  *
@@ -226,7 +225,6 @@ class AfterImportDataObserver implements ObserverInterface
         if ($product->getVisibility() == (string)Visibility::getOptionArray()[Visibility::VISIBILITY_NOT_VISIBLE]) {
             return $this;
         }
-
         if (!isset($this->products[$product->getId()])) {
             $this->products[$product->getId()] = [];
         }

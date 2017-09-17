@@ -36,7 +36,6 @@ class Files
      */
     const AS_DATA_SET = 1024;
 
-
     /**
      * Component registrar
      *
@@ -107,7 +106,7 @@ class Files
     {
         $result = [];
         foreach ($files as $file) {
-            $result[substr($file, strlen(BP))] = [$file];
+            $result[$file] = [$file];
         }
         return $result;
     }
@@ -340,7 +339,7 @@ class Files
      */
     public function getMainConfigFiles($asDataSet = true)
     {
-        $cacheKey = __METHOD__ . '|' . BP . '|' . serialize(func_get_args());
+        $cacheKey = __METHOD__ . '|' . serialize(func_get_args());
         if (!isset(self::$_cache[$cacheKey])) {
             $configXmlPaths = [];
             foreach ($this->componentRegistrar->getPaths(ComponentRegistrar::MODULE) as $moduleDir) {
@@ -376,7 +375,7 @@ class Files
         $excludedFileNames = ['wsdl.xml', 'wsdl2.xml', 'wsi.xml'],
         $asDataSet = true
     ) {
-        $cacheKey = __METHOD__ . '|' . BP . '|' . serialize(func_get_args());
+        $cacheKey = __METHOD__ . '|' . serialize(func_get_args());
         if (!isset(self::$_cache[$cacheKey])) {
             $files = $this->dirSearch->collectFiles(ComponentRegistrar::MODULE, "/etc/{$fileNamePattern}");
             $files = array_filter(
@@ -407,7 +406,7 @@ class Files
         $excludedFileNames = [],
         $asDataSet = true
     ) {
-        $cacheKey = __METHOD__ . '|' . BP . '|' . serialize(func_get_args());
+        $cacheKey = __METHOD__ . '|' . serialize(func_get_args());
         if (!isset(self::$_cache[$cacheKey])) {
             $files = $this->getFilesSubset(
                 $this->componentRegistrar->getPaths(ComponentRegistrar::MODULE),
@@ -458,7 +457,7 @@ class Files
      */
     public function getLayoutConfigFiles($fileNamePattern = '*.xml', $asDataSet = true)
     {
-        $cacheKey = __METHOD__ . '|' . BP . '|' . serialize(func_get_args());
+        $cacheKey = __METHOD__ . '|' . serialize(func_get_args());
         if (!isset(self::$_cache[$cacheKey])) {
             self::$_cache[$cacheKey] = $this->dirSearch->collectFiles(
                 ComponentRegistrar::THEME,
@@ -539,7 +538,7 @@ class Files
                 $params[$key] = $incomingParams[$key];
             }
         }
-        $cacheKey = md5(BP . '|' . $location . '|' . implode('|', $params));
+        $cacheKey = md5($location . '|' . implode('|', $params));
 
         if (!isset(self::$_cache[__METHOD__][$cacheKey])) {
             $files = [];
@@ -690,7 +689,7 @@ class Files
                 $params[$key] = $incomingParams[$key];
             }
         }
-        $cacheKey = md5(BP . '|' . implode('|', $params));
+        $cacheKey = md5(implode('|', $params));
 
         if (!isset(self::$_cache[__METHOD__][$cacheKey])) {
             self::$_cache[__METHOD__][$cacheKey] = self::getFiles(
@@ -796,7 +795,7 @@ class Files
      */
     public function getStaticHtmlFiles($area = '*', $themePath = '*/*', $namespace = '*', $module = '*')
     {
-        $key = $area . $themePath . $namespace . $module . __METHOD__ . BP;
+        $key = $area . $themePath . $namespace . $module . __METHOD__;
         if (isset(self::$_cache[$key])) {
             return self::$_cache[$key];
         }
@@ -806,6 +805,7 @@ class Files
             if ($keyInfo[0] == $namespace || $namespace == '*') {
                 if ($keyInfo[1] == $module || $module == '*') {
                     $moduleTemplatePaths[] = $moduleDir . "/view/{$area}/web/template";
+                    $moduleTemplatePaths[] = $moduleDir . "/view/{$area}/web/templates";
                 }
             }
         }
@@ -830,7 +830,7 @@ class Files
      */
     public function getStaticPreProcessingFiles($filePattern = '*')
     {
-        $key = __METHOD__ . BP . '|' . $filePattern;
+        $key = __METHOD__ . '|' . $filePattern;
         if (isset(self::$_cache[$key])) {
             return self::$_cache[$key];
         }
@@ -1033,7 +1033,7 @@ class Files
      */
     public function getPhtmlFiles($withMetaInfo = false, $asDataSet = true)
     {
-        $key = __METHOD__ . BP . '|' . (int)$withMetaInfo;
+        $key = __METHOD__ . (int)$withMetaInfo;
         if (!isset(self::$_cache[$key])) {
             $result = [];
             $this->accumulateModuleTemplateFiles($withMetaInfo, $result);
@@ -1130,7 +1130,7 @@ class Files
      */
     public function getEmailTemplates()
     {
-        $key = __METHOD__ . BP;
+        $key = __METHOD__;
         if (isset(self::$_cache[$key])) {
             return self::$_cache[$key];
         }
@@ -1347,7 +1347,7 @@ class Files
      */
     public function getNamespaces()
     {
-        $key = __METHOD__ . BP;
+        $key = __METHOD__;
         if (isset(self::$_cache[$key])) {
             return self::$_cache[$key];
         }
@@ -1409,7 +1409,7 @@ class Files
      */
     public function getComposerFiles($componentType, $asDataSet = true)
     {
-        $key = __METHOD__ . '|' . BP . '|' . serialize(func_get_args());
+        $key = __METHOD__ . '|' . serialize(func_get_args());
         if (!isset(self::$_cache[$key])) {
             $excludes = $componentType == ComponentRegistrar::MODULE ? $this->getModuleTestDirsRegex() : [];
             $files = $this->getFilesSubset(
@@ -1460,7 +1460,7 @@ class Files
                  * Note that glob() for directories will be returned as is,
                  * but passing directory is supported by the tools (phpcpd, phpmd, phpcs)
                  */
-                $files = Glob::glob($this->getPathToSource() . '/' . $pattern, Glob::GLOB_BRACE);
+                $files = Glob::glob(BP . '/' . $pattern, Glob::GLOB_BRACE);
             } else {
                 throw new \UnexpectedValueException(
                     "Incorrect pattern record '$pattern'. Supported formats: "

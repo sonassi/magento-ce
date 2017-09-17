@@ -48,10 +48,5 @@ class InvoiceGetTest extends WebapiAbstract
             $this->assertArrayHasKey($field, $result);
             $this->assertEquals($value, $result[$field]);
         }
-
-        //check that nullable fields were marked as optional and were not sent
-        foreach ($result as $value) {
-            $this->assertNotNull($value);
-        }
     }
 }

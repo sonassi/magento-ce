@@ -139,6 +139,7 @@ class ReplaceAliasByActualDefinitionPass implements CompilerPassInterface
             $factory[0] = new Reference($replacements[$referenceId], $factory[0]->getInvalidBehavior());
         }
 
+
         return $factory;
     }
 }

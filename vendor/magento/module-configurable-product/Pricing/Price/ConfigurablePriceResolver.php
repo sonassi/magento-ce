@@ -8,7 +8,6 @@ namespace Magento\ConfigurableProduct\Pricing\Price;
 
 use Magento\Catalog\Model\Product;
 use Magento\ConfigurableProduct\Model\Product\Type\Configurable;
-use Magento\Framework\App\ObjectManager;
 use Magento\Framework\Pricing\PriceCurrencyInterface;
 
 class ConfigurablePriceResolver implements PriceResolverInterface
@@ -16,22 +15,11 @@ class ConfigurablePriceResolver implements PriceResolverInterface
     /** @var PriceResolverInterface */
     protected $priceResolver;
 
-    /**
-     * @var PriceCurrencyInterface
-     * @deprecated
-     */
+    /** @var PriceCurrencyInterface */
     protected $priceCurrency;
 
-    /**
-     * @var Configurable
-     * @deprecated
-     */
+    /** @var Configurable */
     protected $configurable;
-
-    /**
-     * @var ConfigurableOptionsProviderInterface
-     */
-    private $configurableOptionsProvider;
 
     /**
      * @param PriceResolverInterface $priceResolver
@@ -56,30 +44,15 @@ class ConfigurablePriceResolver implements PriceResolverInterface
     public function resolvePrice(\Magento\Framework\Pricing\SaleableInterface $product)
     {
         $price = null;
-
-        foreach ($this->getConfigurableOptionsProvider()->getProducts($product) as $subProduct) {
+        foreach ($this->configurable->getUsedProducts($product) as $subProduct) {
             $productPrice = $this->priceResolver->resolvePrice($subProduct);
             $price = $price ? min($price, $productPrice) : $productPrice;
         }
-        if (!$price) {
+        if ($price === null) {
             throw new \Magento\Framework\Exception\LocalizedException(
-                __('Configurable product "%1" do not have sub-products', $product->getName())
+                __('Configurable product "%1" does not have sub-products', $product->getSku())
             );
         }
-
         return (float)$price;
-    }
-
-    /**
-     * @return \Magento\ConfigurableProduct\Pricing\Price\ConfigurableOptionsProviderInterface
-     * @deprecated
-     */
-    private function getConfigurableOptionsProvider()
-    {
-        if (null === $this->configurableOptionsProvider) {
-            $this->configurableOptionsProvider = ObjectManager::getInstance()
-                ->get(ConfigurableOptionsProviderInterface::class);
-        }
-        return $this->configurableOptionsProvider;
     }
 }

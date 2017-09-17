@@ -31,20 +31,6 @@ class BracesFixerTest extends AbstractFixerTestBase
         return array(
             array(
                 '<?php
-class Foo
-{
-    public function A()
-    {
-        ?>
-        Test<?php echo $foobar; ?>Test
-        <?php
-        $a = 1;
-    }
-}
-',
-            ),
-            array(
-                '<?php
     if (true) {
         $a = 1;
     } else {
@@ -806,24 +792,6 @@ class Foo
         return \Foo::{$foo}($bar);
     }',
             ),
-            array(
-                '<?php
-    class C
-    {
-        public function __construct(
-        )
-        //comment
-        {
-        }
-    }',
-                '<?php
-    class C {
-        public function __construct(
-        )
-        //comment
-        {}
-    }',
-            ),
         );
     }
 
@@ -1333,133 +1301,6 @@ while (true) {
     }
 
     /**
-     * @dataProvider provide70Cases
-     * @requires PHP 7.0
-     */
-    public function test70($expected, $input = null)
-    {
-        $this->makeTest($expected, $input);
-    }
-
-    public function provide70Cases()
-    {
-        return array(
-            array(
-                '<?php
-$message = (new class() implements FooInterface
-{
-});',
-                '<?php
-$message = (new class() implements FooInterface{});',
-            ),
-            array(
-                '<?php $message = (new class()
-{
-});',
-                '<?php $message = (new class() {});',
-            ),
-            array(
-                '<?php
-if (1) {
-    $message = (new class() extends Foo
-    {
-        public function bar()
-        {
-            echo 1;
-        }
-    });
-}',
-                '<?php
-if (1) {
-  $message = (new class() extends Foo
-  {
-    public function bar() { echo 1; }
-  });
-}',
-            ),
-            array(
-                '<?php
-    class Foo
-    {
-        public function use()
-        {
-        }
-
-        public function use1(): string
-        {
-        }
-    }
-                ',
-                '<?php
-    class Foo
-    {
-        public function use() {
-        }
-
-        public function use1(): string {
-        }
-    }
-                ',
-            ),
-            array(
-                '<?php
-    $a = function (int $foo): string {
-        echo $foo;
-    };
-
-    $b = function (int $foo) use ($bar): string {
-        echo $foo . $bar;
-    };
-
-    function a()
-    {
-    }
-                ',
-                '<?php
-    $a = function (int $foo): string
-    {
-        echo $foo;
-    };
-
-    $b = function (int $foo) use($bar): string
-    {
-        echo $foo . $bar;
-    };
-
-    function a() {
-    }
-                ',
-            ),
-            array(
-                '<?php
-    class Something
-    {
-        public function sth(): string
-        {
-            return function (int $foo) use ($bar): string { return $bar; };
-        }
-    }
-                ',
-            ),
-            array(
-'<?php
-use function some\a\{
-     test1,
-    test2
- };
-test();',
-            ),
-            array(
-                '<?php
-use some\a\{ClassA, ClassB, ClassC as C};
-use function some\a\{fn_a, fn_b, fn_c};
-use const some\a\{ConstA, ConstB, ConstC};
-',
-            ),
-        );
-    }
-
-    /**
      * @dataProvider providePreserveLineAfterControlBrace
      */
     public function testPreserveLineAfterControlBrace($expected, $input = null)
@@ -1484,36 +1325,6 @@ if (true) {
             ),
             array(
                 "<?php if (true) {\r\n\r\n// CRLF newline\r\n}",
-            ),
-        );
-    }
-
-    /**
-     * TODO: remove on 2.x line.
-     *
-     * @dataProvider provideDontAddNewLineAfterCurlyBraceOfStringCharacterAccess
-     */
-    public function testDontAddNewLineAfterCurlyBraceOfStringCharacterAccess($expected, $input = null)
-    {
-        $this->makeTest($expected, $input);
-    }
-
-    public function provideDontAddNewLineAfterCurlyBraceOfStringCharacterAccess()
-    {
-        return array(
-            array(
-                '<?php
-if (true) {
-    $property{0} = strtolower($property{0});
-}',
-            ),
-            array(
-                '<?php
-if (1) {
-    echo $items{0}->foo;
-    echo $collection->items{1}->property;
-}
-',
             ),
         );
     }

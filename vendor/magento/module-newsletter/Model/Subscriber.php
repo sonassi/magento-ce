@@ -399,11 +399,6 @@ class Subscriber extends \Magento\Framework\Model\AbstractModel
             $this->setSubscriberConfirmCode($this->randomSequence());
         }
 
-        $sendConfirmationEmail = true;
-        if ($this->getStatus() == self::STATUS_SUBSCRIBED && !$this->getCustomerId()) {
-            $sendConfirmationEmail = false;
-        }
-
         $isConfirmNeed = $this->_scopeConfig->getValue(
             self::XML_PATH_CONFIRMATION_FLAG,
             \Magento\Store\Model\ScopeInterface::SCOPE_STORE
@@ -447,16 +442,14 @@ class Subscriber extends \Magento\Framework\Model\AbstractModel
         $this->setStatusChanged(true);
 
         try {
-            if ($sendConfirmationEmail === true) {
-                if ($isConfirmNeed === true
-                    && $isOwnSubscribes === false
-                ) {
-                    $this->sendConfirmationRequestEmail();
-                } else {
-                    $this->sendConfirmationSuccessEmail();
-                }
-            }
             $this->save();
+            if ($isConfirmNeed === true
+                && $isOwnSubscribes === false
+            ) {
+                $this->sendConfirmationRequestEmail();
+            } else {
+                $this->sendConfirmationSuccessEmail();
+            }
             return $this->getStatus();
         } catch (\Exception $e) {
             throw new \Exception($e->getMessage());
@@ -654,7 +647,6 @@ class Subscriber extends \Magento\Framework\Model\AbstractModel
 
         $this->inlineTranslation->suspend();
 
-        $storeId = $this->_storeManager->getStore()->getId();
         $this->_transportBuilder->setTemplateIdentifier(
             $this->_scopeConfig->getValue(
                 self::XML_PATH_CONFIRM_EMAIL_TEMPLATE,
@@ -663,12 +655,10 @@ class Subscriber extends \Magento\Framework\Model\AbstractModel
         )->setTemplateOptions(
             [
                 'area' => \Magento\Framework\App\Area::AREA_FRONTEND,
-                'store' => $storeId,
+                'store' => $this->_storeManager->getStore()->getId(),
             ]
         )->setTemplateVars(
             ['subscriber' => $this, 'store' => $this->_storeManager->getStore()]
-        )->setScopeId(
-            $storeId
         )->setFrom(
             $this->_scopeConfig->getValue(
                 self::XML_PATH_CONFIRM_EMAIL_IDENTITY,
@@ -710,7 +700,6 @@ class Subscriber extends \Magento\Framework\Model\AbstractModel
 
         $this->inlineTranslation->suspend();
 
-        $storeId = $this->_storeManager->getStore()->getId();
         $this->_transportBuilder->setTemplateIdentifier(
             $this->_scopeConfig->getValue(
                 self::XML_PATH_SUCCESS_EMAIL_TEMPLATE,
@@ -719,12 +708,10 @@ class Subscriber extends \Magento\Framework\Model\AbstractModel
         )->setTemplateOptions(
             [
                 'area' => \Magento\Framework\App\Area::AREA_FRONTEND,
-                'store' => $storeId,
+                'store' => $this->_storeManager->getStore()->getId(),
             ]
         )->setTemplateVars(
             ['subscriber' => $this]
-        )->setScopeId(
-            $storeId
         )->setFrom(
             $this->_scopeConfig->getValue(
                 self::XML_PATH_SUCCESS_EMAIL_IDENTITY,
@@ -765,7 +752,6 @@ class Subscriber extends \Magento\Framework\Model\AbstractModel
 
         $this->inlineTranslation->suspend();
 
-        $storeId = $this->_storeManager->getStore()->getId();
         $this->_transportBuilder->setTemplateIdentifier(
             $this->_scopeConfig->getValue(
                 self::XML_PATH_UNSUBSCRIBE_EMAIL_TEMPLATE,
@@ -774,12 +760,10 @@ class Subscriber extends \Magento\Framework\Model\AbstractModel
         )->setTemplateOptions(
             [
                 'area' => \Magento\Framework\App\Area::AREA_FRONTEND,
-                'store' => $storeId,
+                'store' => $this->_storeManager->getStore()->getId(),
             ]
         )->setTemplateVars(
             ['subscriber' => $this]
-        )->setScopeId(
-            $storeId
         )->setFrom(
             $this->_scopeConfig->getValue(
                 self::XML_PATH_UNSUBSCRIBE_EMAIL_IDENTITY,

@@ -34,11 +34,7 @@ class FunctionTypehintSpaceFixer extends AbstractFixer
                 continue;
             }
 
-            $startParenthesisIndex = $tokens->getNextTokenOfKind($index, array('(', ';', array(T_CLOSE_TAG)));
-            if (!$tokens[$startParenthesisIndex]->equals('(')) {
-                continue;
-            }
-
+            $startParenthesisIndex = $tokens->getNextTokenOfKind($index, array('('));
             $endParenthesisIndex = $tokens->findBlockEnd(Tokens::BLOCK_TYPE_PARENTHESIS_BRACE, $startParenthesisIndex);
 
             for ($iter = $endParenthesisIndex - 1; $iter > $startParenthesisIndex; --$iter) {

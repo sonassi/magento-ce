@@ -67,19 +67,9 @@ EOF
         $this->makeTest($expected, $input);
     }
 
-    /**
-     * @dataProvider provideWithoutChanges
-     */
-    public function testWithoutChanges($expected)
+    public function testWithoutUses()
     {
-        $this->makeTest($expected);
-    }
-
-    public function provideWithoutChanges()
-    {
-        return array(
-            array(
- <<<'EOF'
+        $expected = <<<'EOF'
 <?php
 
 $c = 1;
@@ -87,45 +77,8 @@ $c = 1;
 $a = new Baz();
 $a = new Qux();
 EOF
-            ),
-            array(
-                '<?php use A\B;',
-            ),
-            array(
-                '<?php use A\B?>',
-            ),
-            array(
-                '<?php use A\B;?>',
-            ),
-        );
-    }
+        ;
 
-    /**
-     * @dataProvider provide70Cases
-     * @requires PHP 7.0
-     */
-    public function test70($expected, $input = null)
-    {
-        $this->makeTest($expected, $input);
-    }
-
-    public function provide70Cases()
-    {
-        return array(
-            array(
-'<?php
-use some\a\{ClassA, ClassB, ClassC as C};
-use function some\a\{fn_a, fn_b, fn_c};
-use const some\a\{ConstA, ConstB, ConstC};
-',
-'<?php
-use some\a\{ClassA, ClassB, ClassC as C};
-
-use function some\a\{fn_a, fn_b, fn_c};
-
-use const some\a\{ConstA, ConstB, ConstC};
-',
-            ),
-        );
+        $this->makeTest($expected);
     }
 }

@@ -8,7 +8,6 @@ namespace Magento\ConfigurableProduct\Pricing\Price;
 
 use Magento\Catalog\Model\Product;
 use Magento\ConfigurableProduct\Model\Product\Type\Configurable;
-use Magento\Framework\App\ObjectManager;
 use Magento\Framework\Pricing\Price\AbstractPrice;
 
 /**
@@ -38,11 +37,6 @@ class ConfigurableRegularPrice extends AbstractPrice implements ConfigurableRegu
 
     /** @var PriceResolverInterface */
     protected $priceResolver;
-
-    /**
-     * @var ConfigurableOptionsProviderInterface
-     */
-    private $configurableOptionsProvider;
 
     /**
      * @param \Magento\Framework\Pricing\SaleableInterface $saleableItem
@@ -118,7 +112,7 @@ class ConfigurableRegularPrice extends AbstractPrice implements ConfigurableRegu
     public function getMinRegularAmount()
     {
         if (null === $this->minRegularAmount) {
-            $this->minRegularAmount = $this->doGetMinRegularAmount() ?: false;
+            $this->minRegularAmount = $this->doGetMinRegularAmount() ?: parent::getAmount();
         }
         return $this->minRegularAmount;
     }
@@ -147,19 +141,6 @@ class ConfigurableRegularPrice extends AbstractPrice implements ConfigurableRegu
      */
     protected function getUsedProducts()
     {
-        return $this->getConfigurableOptionsProvider()->getProducts($this->product);
-    }
-
-    /**
-     * @return \Magento\ConfigurableProduct\Pricing\Price\ConfigurableOptionsProviderInterface
-     * @deprecated
-     */
-    private function getConfigurableOptionsProvider()
-    {
-        if (null === $this->configurableOptionsProvider) {
-            $this->configurableOptionsProvider = ObjectManager::getInstance()
-                ->get(ConfigurableOptionsProviderInterface::class);
-        }
-        return $this->configurableOptionsProvider;
+        return $this->product->getTypeInstance()->getUsedProducts($this->product);
     }
 }

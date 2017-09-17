@@ -25,13 +25,10 @@ class UnusedUseFixer extends AbstractFixer
     public function fix(\SplFileInfo $file, $content)
     {
         $tokens = Tokens::fromCode($content);
-        $useDeclarationsIndexes = $tokens->getImportUseIndexes();
-        if (0 === count($useDeclarationsIndexes)) {
-            return $tokens->generateCode();
-        }
 
-        $useDeclarations = $this->getNamespaceUseDeclarations($tokens, $useDeclarationsIndexes);
         $namespaceDeclarations = $this->getNamespaceDeclarations($tokens);
+        $useDeclarationsIndexes = $tokens->getImportUseIndexes();
+        $useDeclarations = $this->getNamespaceUseDeclarations($tokens, $useDeclarationsIndexes);
         $contentWithoutUseDeclarations = $this->generateCodeWithoutPartials($tokens, array_merge($namespaceDeclarations, $useDeclarations));
         $useUsages = $this->detectUseUsages($contentWithoutUseDeclarations, $useDeclarations);
 
@@ -39,14 +36,6 @@ class UnusedUseFixer extends AbstractFixer
         $this->removeUsesInSameNamespace($tokens, $useDeclarations, $namespaceDeclarations);
 
         return $tokens->generateCode();
-    }
-
-    /**
-     * {@inheritdoc}
-     */
-    public function getDescription()
-    {
-        return 'Unused use statements must be removed.';
     }
 
     /**
@@ -72,11 +61,13 @@ class UnusedUseFixer extends AbstractFixer
     }
 
     /**
-     * @param string $content
-     * @param array  $useDeclarations
-     *
-     * @return array
+     * {@inheritdoc}
      */
+    public function getDescription()
+    {
+        return 'Unused use statements must be removed.';
+    }
+
     private function detectUseUsages($content, array $useDeclarations)
     {
         $usages = array();
@@ -88,12 +79,6 @@ class UnusedUseFixer extends AbstractFixer
         return $usages;
     }
 
-    /**
-     * @param Tokens $tokens
-     * @param array  $partials
-     *
-     * @return string
-     */
     private function generateCodeWithoutPartials(Tokens $tokens, array $partials)
     {
         $content = '';
@@ -128,9 +113,9 @@ class UnusedUseFixer extends AbstractFixer
             $declarationEndIndex = $tokens->getNextTokenOfKind($index, array(';', '{'));
 
             $namespaces[] = array(
+                'end' => $declarationEndIndex,
                 'name' => trim($tokens->generatePartialCode($index + 1, $declarationEndIndex - 1)),
                 'start' => $index,
-                'end' => $declarationEndIndex,
             );
         }
 
@@ -142,12 +127,12 @@ class UnusedUseFixer extends AbstractFixer
         $uses = array();
 
         foreach ($useIndexes as $index) {
-            $declarationEndIndex = $tokens->getNextTokenOfKind($index, array(';', array(T_CLOSE_TAG)));
+            $declarationEndIndex = $tokens->getNextTokenOfKind($index, array(';'));
             $declarationContent = $tokens->generatePartialCode($index + 1, $declarationEndIndex - 1);
-            if (
-                false !== strpos($declarationContent, ',')    // ignore multiple use statements that should be split into few separate statements (for example: `use BarB, BarC as C;`)
-                || false !== strpos($declarationContent, '{') // do not touch group use declarations until the logic of this is added (for example: `use some\a\{ClassD};`)
-            ) {
+
+            // ignore multiple use statements like: `use BarB, BarC as C, BarD;`
+            // that should be split into few separate statements
+            if (false !== strpos($declarationContent, ',')) {
                 continue;
             }
 
@@ -159,7 +144,8 @@ class UnusedUseFixer extends AbstractFixer
                 $shortName = end($declarationParts);
                 $aliased = false;
             } else {
-                list($fullName, $shortName) = $declarationParts;
+                $fullName = $declarationParts[0];
+                $shortName = $declarationParts[1];
                 $declarationParts = explode('\\', $fullName);
                 $aliased = $shortName !== end($declarationParts);
             }
@@ -167,11 +153,11 @@ class UnusedUseFixer extends AbstractFixer
             $shortName = trim($shortName);
 
             $uses[$shortName] = array(
+                'aliased' => $aliased,
+                'end' => $declarationEndIndex,
                 'fullName' => trim($fullName),
                 'shortName' => $shortName,
-                'aliased' => $aliased,
                 'start' => $index,
-                'end' => $declarationEndIndex,
             );
         }
 
@@ -189,12 +175,8 @@ class UnusedUseFixer extends AbstractFixer
 
     private function removeUseDeclaration(Tokens $tokens, array $useDeclaration)
     {
-        for ($index = $useDeclaration['end'] - 1; $index >= $useDeclaration['start']; --$index) {
-            $tokens->clearTokenAndMergeSurroundingWhitespace($index);
-        }
-
-        if ($tokens[$useDeclaration['end']]->equals(';')) {
-            $tokens[$useDeclaration['end']]->clear();
+        for ($index = $useDeclaration['start']; $index <= $useDeclaration['end']; ++$index) {
+            $tokens[$index]->clear();
         }
 
         $prevToken = $tokens[$useDeclaration['start'] - 1];
@@ -227,8 +209,12 @@ class UnusedUseFixer extends AbstractFixer
 
     private function removeUsesInSameNamespace(Tokens $tokens, array $useDeclarations, array $namespaceDeclarations)
     {
+        if (empty($namespaceDeclarations)) {
+            return;
+        }
+
         // safeguard for files with multiple namespaces to avoid breaking them until we support this case
-        if (1 !== count($namespaceDeclarations)) {
+        if (count($namespaceDeclarations) > 1) {
             return;
         }
 

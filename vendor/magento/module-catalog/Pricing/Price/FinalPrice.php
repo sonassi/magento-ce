@@ -71,13 +71,7 @@ class FinalPrice extends AbstractPrice implements FinalPriceInterface
     public function getMaximalPrice()
     {
         if (!$this->maximalPrice) {
-            $maximalPrice = $this->product->getMaximalPrice();
-            if ($maximalPrice === null) {
-                $maximalPrice = $this->getValue();
-            } else {
-                $maximalPrice = $this->priceCurrency->convertAndRound($maximalPrice);
-            }
-            $this->maximalPrice = $this->calculator->getAmount($maximalPrice, $this->product);
+            $this->maximalPrice = $this->calculator->getAmount($this->getValue(), $this->product);
         }
         return $this->maximalPrice;
     }

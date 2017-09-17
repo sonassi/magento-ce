@@ -18,7 +18,6 @@ use Symfony\CS\Tokenizer\Tokens;
  * @author Dariusz Rumiński <dariusz.ruminski@gmail.com>
  * @author Max Voloshin <voloshin.dp@gmail.com>
  * @author Gregor Harlan <gharlan@web.de>
- * @author SpacePossum
  */
 class TokensTest extends \PHPUnit_Framework_TestCase
 {
@@ -879,9 +878,9 @@ PHP;
      * @dataProvider provideShortOpenTagMonolithicPhpDetection
      *
      * @param string $source
-     * @param bool   $monolithic
+     * @param bool   $monolitic
      */
-    public function testShortOpenTagMonolithicPhpDetection($source, $monolithic)
+    public function testShortOpenTagMonolithicPhpDetection($source, $monolitic)
     {
         /*
          * short_open_tag setting is ignored by HHVM
@@ -889,11 +888,11 @@ PHP;
          */
         if (!ini_get('short_open_tag') && !defined('HHVM_VERSION')) {
             // Short open tag is parsed as T_INLINE_HTML
-            $monolithic = false;
+            $monolitic = false;
         }
 
         $tokens = Tokens::fromCode($source);
-        $this->assertSame($monolithic, $tokens->isMonolithicPhp());
+        $this->assertSame($monolitic, $tokens->isMonolithicPhp());
     }
 
     public function provideShortOpenTagMonolithicPhpDetection()
@@ -915,9 +914,9 @@ PHP;
      * @dataProvider provideShortOpenTagEchoMonolithicPhpDetection
      *
      * @param string $source
-     * @param bool   $monolithic
+     * @param bool   $monolitic
      */
-    public function testShortOpenTagEchoMonolithicPhpDetection($source, $monolithic)
+    public function testShortOpenTagEchoMonolithicPhpDetection($source, $monolitic)
     {
         /*
          * short_open_tag setting is ignored by HHVM
@@ -925,11 +924,11 @@ PHP;
          */
         if (!ini_get('short_open_tag') && 50400 > PHP_VERSION_ID && !defined('HHVM_VERSION')) {
             // Short open tag echo is parsed as T_INLINE_HTML
-            $monolithic = false;
+            $monolitic = false;
         }
 
         $tokens = Tokens::fromCode($source);
-        $this->assertSame($monolithic, $tokens->isMonolithicPhp());
+        $this->assertSame($monolitic, $tokens->isMonolithicPhp());
     }
 
     public function provideShortOpenTagEchoMonolithicPhpDetection()
@@ -1061,109 +1060,5 @@ PHP;
         );
 
         return $cases;
-    }
-
-    /**
-     * @dataProvider getImportUseIndexesCases
-     */
-    public function testGetImportUseIndexes(array $expected, $input, $perNamespace = false)
-    {
-        $tokens = Tokens::fromCode($input);
-        $this->assertSame($expected, $tokens->getImportUseIndexes($perNamespace));
-    }
-
-    public function getImportUseIndexesCases()
-    {
-        return array(
-            array(
-                array(1, 8),
-                '<?php use E\F?><?php use A\B;',
-            ),
-            array(
-                array(array(1), array(14), array(29)),
-'<?php
-use T\A;
-namespace A { use D\C; }
-namespace b { use D\C; }
-',
-                true,
-            ),
-            array(
-                array(array(1, 8)),
-                '<?php use D\B; use A\C?>',
-                true,
-            ),
-            array(
-                array(1, 8),
-                '<?php use D\B; use A\C?>',
-            ),
-            array(
-                array(7, 22),
-'<?php
-namespace A { use D\C; }
-namespace b { use D\C; }
-',
-            ),
-            array(
-                array(3, 10, 34, 45, 54, 59, 77, 95),
- <<<'EOF'
-use Zoo\Bar;
-use Foo\Bar;
-use Foo\Zar\Baz;
-
-<?php
-
-use Foo\Bar;
-use Foo\Bar\Foo as Fooo, Foo\Bar\FooBar as FooBaz;
- use Foo\Bir as FBB;
-use Foo\Zar\Baz;
-use SomeClass;
-   use Symfony\Annotation\Template, Symfony\Doctrine\Entities\Entity;
-use Zoo\Bar;
-
-$a = new someclass();
-
-use Zoo\Tar;
-
-class AnnotatedClass
-{
-}
-EOF
-                ,
-            ),
-        );
-    }
-
-    /**
-     * @dataProvider getImportUseIndexesCasesPHP70
-     * @requires PHP 7.0
-     */
-    public function testGetImportUseIndexesPHP70(array $expected, $input, $perNamespace = false)
-    {
-        $tokens = Tokens::fromCode($input);
-        $this->assertSame($expected, $tokens->getImportUseIndexes($perNamespace));
-    }
-
-    public function getImportUseIndexesCasesPHP70()
-    {
-        return array(
-            array(
-                array(1, 22, 41),
-                '<?php
-use some\a\{ClassA, ClassB, ClassC as C};
-use function some\a\{fn_a, fn_b, fn_c};
-use const some\a\{ConstA, ConstB, ConstC};
-                ',
-            ),
-            array(
-                array(array(1, 22, 41)),
-                '<?php
-use some\a\{ClassA, ClassB, ClassC as C};
-use function some\a\{fn_a, fn_b, fn_c};
-use const some\a\{ConstA, ConstB, ConstC};
-                ',
-                true,
-            ),
-        );
     }
 }

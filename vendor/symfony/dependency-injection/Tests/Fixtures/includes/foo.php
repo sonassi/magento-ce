@@ -4,14 +4,9 @@ namespace Bar;
 
 class FooClass
 {
-    public $foo;
-    public $moo;
+    public $foo, $moo;
 
-    public $bar = null;
-    public $initialized = false;
-    public $configured = false;
-    public $called = false;
-    public $arguments = array();
+    public $bar = null, $initialized = false, $configured = false, $called = false, $arguments = array();
 
     public function __construct($arguments = array())
     {

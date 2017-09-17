@@ -118,16 +118,4 @@ class FinalPriceBox extends BasePriceBox
         && $minimalPriceAValue
         && $minimalPriceAValue < $finalPriceValue;
     }
-
-    /**
-     * {@inheritdoc}
-     *
-     * @return array
-     */
-    public function getCacheKeyInfo()
-    {
-        $cacheKeys = parent::getCacheKeyInfo();
-        $cacheKeys['display_minimal_price'] = $this->getDisplayMinimalPrice();
-        return $cacheKeys;
-    }
 }

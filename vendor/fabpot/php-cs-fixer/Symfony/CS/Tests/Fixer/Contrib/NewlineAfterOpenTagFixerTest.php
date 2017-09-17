@@ -40,15 +40,6 @@ class NewlineAfterOpenTagFixerTest extends AbstractFixerTestBase
     {
         return array(
             array(
-                '<?php
-$a = function(){
-                    echo 1;
-                };',
-                '<?php $a = function(){
-                    echo 1;
-                };',
-            ),
-            array(
                 '<?php $foo = true; ?>',
             ),
             array(
