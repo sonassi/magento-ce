@@ -46,14 +46,16 @@ class Backup
     {
         $backupFilePath = $this->backupInfo->getBackupPath() . $this->backupInfo->generateBackupFilename();
         $command = $this->buildShellCommand($backupFilePath);
-        $this->status->add(sprintf('Creating backup archive "%s" ...', $backupFilePath));
+        $this->status->add(sprintf('Creating backup archive "%s" ...', $backupFilePath), \Psr\Log\LogLevel::INFO);
         exec($command, $output, $return);
         if ($return) {
             throw new \RuntimeException(
-                sprintf('Cannot create backup with command "%s": %s', $command, implode("\n", $output))
+                sprintf('Cannot create backup with command "%s": %s', $command, implode("\n", $output),
+                    \Psr\Log\LogLevel::ERROR
+                )
             );
         }
-        $this->status->add(sprintf('Backup archive "%s" has been created.', $backupFilePath));
+        $this->status->add(sprintf('Backup archive "%s" has been created.', $backupFilePath), \Psr\Log\LogLevel::INFO);
         return $this;
     }
 

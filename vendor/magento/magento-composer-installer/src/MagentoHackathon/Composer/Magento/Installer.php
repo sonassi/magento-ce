@@ -61,7 +61,6 @@ class Installer extends LibraryInstaller implements InstallerInterface
      */
     protected $_deployStrategy = "copy";
 
-
     const MAGENTO_REMOVE_DEV_FLAG = 'magento-remove-dev';
     const MAGENTO_MAINTANANCE_FLAG = 'maintenance.flag';
     const MAGENTO_CACHE_PATH = 'var/cache';
@@ -176,7 +175,7 @@ class Installer extends LibraryInstaller implements InstallerInterface
             $this->isForced = (bool)$extra['magento-force'];
         }
 
-        if (false !== getenv('PLATFORM_PROJECT')) {
+        if (false !== getenv('MAGENTO_CLOUD_PROJECT')) {
             $this->setDeployStrategy('none');
         }
 
@@ -191,7 +190,6 @@ class Installer extends LibraryInstaller implements InstallerInterface
         if (!empty($extra['path-mapping-translations'])) {
             $this->_pathMappingTranslations = (array)$extra['path-mapping-translations'];
         }
-
     }
 
 
@@ -425,7 +423,6 @@ class Installer extends LibraryInstaller implements InstallerInterface
         if ($this->appendGitIgnore) {
             $this->appendGitIgnore($package, $this->getGitIgnoreFileLocation());
         }
-
     }
 
     /**

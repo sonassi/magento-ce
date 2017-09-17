@@ -83,7 +83,7 @@ class JobUpdate extends AbstractJob
     public function execute()
     {
         try {
-            $this->status->add('Starting composer update...');
+            $this->status->add('Starting composer update...', \Psr\Log\LogLevel::INFO);
             if (isset($this->params['components'])) {
                 $packages = [];
                 foreach ($this->params['components'] as $compObj) {
@@ -103,13 +103,17 @@ class JobUpdate extends AbstractJob
                 $this->status->add(
                     $this->composerApp->runComposerCommand(
                         ['command' => 'require', 'packages' => $packages, '--no-update' => true]
-                    )
+                    ),
+                    \Psr\Log\LogLevel::INFO
                 );
             } else {
                 throw new \RuntimeException('Cannot find component to update');
             }
-            $this->status->add($this->composerApp->runComposerCommand(['command' => 'update']));
-            $this->status->add('Composer update completed successfully');
+            $this->status->add(
+                $this->composerApp->runComposerCommand(['command' => 'update']),
+                \Psr\Log\LogLevel::INFO
+            );
+            $this->status->add('Composer update completed successfully', \Psr\Log\LogLevel::INFO);
             $this->createSetupUpgradeTasks();
         } catch (\Exception $e) {
             $this->status->setUpdateError(true);

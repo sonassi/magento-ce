@@ -15,6 +15,8 @@ class CronReadinessCheck
      */
     const CRON_JOB_STATUS_FILE = '.update_cronjob_status';
 
+    const UPDATE_CRON_LOG_FILE = 'var/log/update.log';
+
     /**#@+
      * Keys used in status file
      */
@@ -78,6 +80,14 @@ class CronReadinessCheck
         $resultJson = json_encode($resultJsonRawData, JSON_PRETTY_PRINT | JSON_UNESCAPED_SLASHES);
         file_put_contents(MAGENTO_BP . '/var/' . self::CRON_JOB_STATUS_FILE, $resultJson);
 
+        // If non-accessible paths are found, log an 'error' entry for the same in update.log
+        if ( !$success ) {
+            $outputString = 'Cron readiness check failure! Found following non-writable paths' . PHP_EOL;
+            $outputString .=  "\t" . implode(PHP_EOL . "\t", $nonWritablePaths);
+            $updateLoggerFactory = new UpdateLoggerFactory();
+            $logger = $updateLoggerFactory->create();
+            $logger->log(\Psr\Log\LogLevel::ERROR, $outputString);
+        }
         return $success;
     }
 

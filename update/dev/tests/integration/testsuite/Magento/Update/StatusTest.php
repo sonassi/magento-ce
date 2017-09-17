@@ -42,7 +42,7 @@ class StatusTest extends \PHPUnit_Framework_TestCase
         parent::setUp();
         $this->statusFilePath = __DIR__ . '/_files/update_status.txt';
         $this->tmpStatusFilePath = TESTS_TEMP_DIR . '/update_status.txt';
-        $this->tmpStatusLogFilePath = TESTS_TEMP_DIR . '/update_status.log';
+        $this->tmpStatusLogFilePath = TESTS_TEMP_DIR . '/update.log';
         $this->updateInProgressFlagFilePath = TESTS_TEMP_DIR . '/update_in_progress.flag';
         $this->updateErrorFlagFilePath = TESTS_TEMP_DIR . '/update_error.flag';
 

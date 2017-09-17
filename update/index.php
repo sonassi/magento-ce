@@ -33,9 +33,9 @@ if (isset($_SERVER['PATH_INFO']) && !empty($_SERVER['PATH_INFO'])) {
             $backupPaths = $backupInfo->getBackupFilePaths();
             if (isset($backupPaths['error'])) {
                 $status->add('WARNING: There is a problem with backup files! Performing rollback from these'
-                    . ' files may cause the Magento application to be unstable');
+                    . ' files may cause the Magento application to be unstable', \Psr\Log\LogLevel::WARNING);
                 foreach ($backupPaths['error'] as $error) {
-                    $status->add($error);
+                    $status->add($error, \Psr\Log\LogLevel::WARNING);
                 }
                 unset($backupPaths['error']);
             }
@@ -54,7 +54,7 @@ if (isset($_SERVER['PATH_INFO']) && !empty($_SERVER['PATH_INFO'])) {
             $status->setUpdateError(false);
         } catch (\Exception $e) {
             $status->setUpdateError(true);
-            $status->add('Error in Rollback:' . $e->getMessage());
+            $status->add('Error in Rollback:' . $e->getMessage(), \Psr\Log\LogLevel::ERROR);
         }
     } elseif ($_SERVER['PATH_INFO'] === '/status') {
         $complete = !$status->isUpdateInProgress() && $queue->isEmpty() && !$status->isUpdateError();

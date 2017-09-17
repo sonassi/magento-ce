@@ -45,6 +45,13 @@ class Status
     protected $updateErrorFlagFilePath;
 
     /**
+     * PSR-3 compliant logger
+     *
+     * @var \Psr\Log\LoggerInterface
+     */
+    private $logger;
+
+    /**
      * Initialize.
      *
      * @param string|null $statusFilePath
@@ -59,13 +66,15 @@ class Status
         $updateErrorFlagFilePath = null
     ) {
         $this->statusFilePath = $statusFilePath ? $statusFilePath : MAGENTO_BP . '/var/.update_status.txt';
-        $this->logFilePath = $logFilePath ? $logFilePath : MAGENTO_BP . '/var/update_status.log';
+        $this->logFilePath = $logFilePath ? $logFilePath : MAGENTO_BP . '/var/log/update.log';
         $this->updateInProgressFlagFilePath = $updateInProgressFlagFilePath
             ? $updateInProgressFlagFilePath
             : MAGENTO_BP . '/var/.update_in_progress.flag';
         $this->updateErrorFlagFilePath = $updateErrorFlagFilePath
             ? $updateErrorFlagFilePath
             : MAGENTO_BP . '/var/.update_error.flag';
+        $updateLoggerFactory = new UpdateLoggerFactory();
+        $this->logger = $updateLoggerFactory->create();
     }
 
     /**
@@ -90,12 +99,13 @@ class Status
      * @return $this
      * @throws \RuntimeException
      */
-    public function add($text)
+    public function add($text, $severity = \Psr\Log\LogLevel::INFO)
     {
+        $this->logger->log($severity, $text);
         $currentUtcTime = '[' . date('Y-m-d H:i:s T', time()) . '] ';
         $text = $currentUtcTime . $text;
-        $this->writeMessageToFile($text, $this->logFilePath);
         $this->writeMessageToFile($text, $this->statusFilePath);
+
         return $this;
     }
 

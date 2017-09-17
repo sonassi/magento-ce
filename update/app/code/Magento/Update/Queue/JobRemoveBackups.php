@@ -27,7 +27,7 @@ class JobRemoveBackups extends AbstractJob
         }
         foreach ($filesToDelete as $archivePath) {
             if (file_exists($archivePath) && unlink($archivePath)) {
-                $this->status->add(sprintf('"%s" was deleted successfully.', $archivePath));
+                $this->status->add(sprintf('"%s" was deleted successfully.', $archivePath), \Psr\Log\LogLevel::INFO);
             } else {
                 throw new \RuntimeException(sprintf('Could not delete backup archive "%s"', $archivePath));
             }

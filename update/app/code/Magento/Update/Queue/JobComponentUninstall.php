@@ -60,7 +60,7 @@ class JobComponentUninstall extends AbstractJob
     public function execute()
     {
         try {
-            $this->status->add('Starting composer remove...');
+            $this->status->add('Starting composer remove...', \Psr\Log\LogLevel::INFO);
             if (isset($this->params['components'])) {
                 $packages = [];
                 foreach ($this->params['components'] as $compObj) {
@@ -69,13 +69,17 @@ class JobComponentUninstall extends AbstractJob
                 $this->status->add(
                     $this->composerApp->runComposerCommand(
                         ['command' => 'remove', 'packages' => $packages, '--no-update' => true]
-                    )
+                    ),
+                    \Psr\Log\LogLevel::INFO
                 );
             } else {
                 throw new \RuntimeException('Cannot find component to uninstall');
             }
-            $this->status->add($this->composerApp->runComposerCommand(['command' => 'update']));
-            $this->status->add('Composer remove completed successfully');
+            $this->status->add(
+                $this->composerApp->runComposerCommand(['command' => 'update']),
+                \Psr\Log\LogLevel::INFO
+            );
+            $this->status->add('Composer remove completed successfully', \Psr\Log\LogLevel::INFO);
             $this->queue->addJobs(
                 [['name' => \Magento\Update\Queue\JobFactory::NAME_MAINTENANCE_MODE, 'params' => ['enable' => false]]]
             );

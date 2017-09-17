@@ -2,7 +2,7 @@
     "name": "magento/magento2-base",
     "description": "Magento 2 Base (Community Edition)",
     "type": "magento2-component",
-    "version": "2.0.6",
+    "version": "2.0.7",
     "require": {
         "magento/magento-composer-installer": "*",
         "php": "~5.5.0|~5.6.0|~7.0.0",
