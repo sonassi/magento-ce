@@ -11,11 +11,10 @@
 
 namespace Symfony\Component\DependencyInjection\Tests\Compiler;
 
-use PHPUnit\Framework\TestCase;
 use Symfony\Component\DependencyInjection\Compiler\AutoAliasServicePass;
 use Symfony\Component\DependencyInjection\ContainerBuilder;
 
-class AutoAliasServicePassTest extends TestCase
+class AutoAliasServicePassTest extends \PHPUnit_Framework_TestCase
 {
     /**
      * @expectedException \Symfony\Component\DependencyInjection\Exception\ParameterNotFoundException

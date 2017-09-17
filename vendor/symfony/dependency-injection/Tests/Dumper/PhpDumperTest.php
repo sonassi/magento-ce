@@ -12,7 +12,6 @@
 namespace Symfony\Component\DependencyInjection\Tests\Dumper;
 
 use DummyProxyDumper;
-use PHPUnit\Framework\TestCase;
 use Symfony\Component\DependencyInjection\ContainerBuilder;
 use Symfony\Component\DependencyInjection\Dumper\PhpDumper;
 use Symfony\Component\DependencyInjection\ParameterBag\ParameterBag;
@@ -23,7 +22,7 @@ use Symfony\Component\ExpressionLanguage\Expression;
 
 require_once __DIR__.'/../Fixtures/includes/classes.php';
 
-class PhpDumperTest extends TestCase
+class PhpDumperTest extends \PHPUnit_Framework_TestCase
 {
     protected static $fixturesPath;
 
@@ -34,10 +33,13 @@ class PhpDumperTest extends TestCase
 
     public function testDump()
     {
-        $dumper = new PhpDumper(new ContainerBuilder());
+        $dumper = new PhpDumper($container = new ContainerBuilder());
 
         $this->assertStringEqualsFile(self::$fixturesPath.'/php/services1.php', $dumper->dump(), '->dump() dumps an empty container as an empty PHP class');
         $this->assertStringEqualsFile(self::$fixturesPath.'/php/services1-1.php', $dumper->dump(array('class' => 'Container', 'base_class' => 'AbstractContainer', 'namespace' => 'Symfony\Component\DependencyInjection\Dump')), '->dump() takes a class and a base_class options');
+
+        $container = new ContainerBuilder();
+        new PhpDumper($container);
     }
 
     public function testDumpOptimizationString()
@@ -138,16 +140,6 @@ class PhpDumperTest extends TestCase
         }
     }
 
-    /**
-     * @group legacy
-     */
-    public function testLegacySynchronizedServices()
-    {
-        $container = include self::$fixturesPath.'/containers/container20.php';
-        $dumper = new PhpDumper($container);
-        $this->assertEquals(str_replace('%path%', str_replace('\\', '\\\\', self::$fixturesPath.DIRECTORY_SEPARATOR.'includes'.DIRECTORY_SEPARATOR), file_get_contents(self::$fixturesPath.'/php/services20.php')), $dumper->dump(), '->dump() dumps services');
-    }
-
     public function testServicesWithAnonymousFactories()
     {
         $container = include self::$fixturesPath.'/containers/container19.php';
@@ -156,16 +148,46 @@ class PhpDumperTest extends TestCase
         $this->assertStringEqualsFile(self::$fixturesPath.'/php/services19.php', $dumper->dump(), '->dump() dumps services with anonymous factories');
     }
 
-    /**
-     * @expectedException \InvalidArgumentException
-     * @expectedExceptionMessage Service id "bar$" cannot be converted to a valid PHP method name.
-     */
-    public function testAddServiceInvalidServiceId()
+    public function testAddServiceIdWithUnsupportedCharacters()
     {
+        $class = 'Symfony_DI_PhpDumper_Test_Unsupported_Characters';
         $container = new ContainerBuilder();
         $container->register('bar$', 'FooClass');
+        $container->register('bar$!', 'FooClass');
         $dumper = new PhpDumper($container);
-        $dumper->dump();
+        eval('?>'.$dumper->dump(array('class' => $class)));
+
+        $this->assertTrue(method_exists($class, 'getBarService'));
+        $this->assertTrue(method_exists($class, 'getBar2Service'));
+    }
+
+    public function testConflictingServiceIds()
+    {
+        $class = 'Symfony_DI_PhpDumper_Test_Conflicting_Service_Ids';
+        $container = new ContainerBuilder();
+        $container->register('foo_bar', 'FooClass');
+        $container->register('foobar', 'FooClass');
+        $dumper = new PhpDumper($container);
+        eval('?>'.$dumper->dump(array('class' => $class)));
+
+        $this->assertTrue(method_exists($class, 'getFooBarService'));
+        $this->assertTrue(method_exists($class, 'getFoobar2Service'));
+    }
+
+    public function testConflictingMethodsWithParent()
+    {
+        $class = 'Symfony_DI_PhpDumper_Test_Conflicting_Method_With_Parent';
+        $container = new ContainerBuilder();
+        $container->register('bar', 'FooClass');
+        $container->register('foo_bar', 'FooClass');
+        $dumper = new PhpDumper($container);
+        eval('?>'.$dumper->dump(array(
+            'class' => $class,
+            'base_class' => 'Symfony\Component\DependencyInjection\Tests\Fixtures\containers\CustomContainer',
+        )));
+
+        $this->assertTrue(method_exists($class, 'getBar2Service'));
+        $this->assertTrue(method_exists($class, 'getFoobar2Service'));
     }
 
     /**
