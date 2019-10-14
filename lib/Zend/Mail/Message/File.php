@@ -4,36 +4,36 @@
  *
  * LICENSE
  *
- * This source file is subject to version 1.0 of the Zend Framework
- * license, that is bundled with this package in the file LICENSE.txt, and
- * is available through the world-wide-web at the following URL:
- * http://framework.zend.com/license/new-bsd. If you did not receive
- * a copy of the Zend Framework license and are unable to obtain it
- * through the world-wide-web, please send a note to license@zend.com
- * so we can mail you a copy immediately.
+ * This source file is subject to the new BSD license that is bundled
+ * with this package in the file LICENSE.txt.
+ * It is also available through the world-wide-web at this URL:
+ * http://framework.zend.com/license/new-bsd
+ * If you did not receive a copy of the license and are unable to
+ * obtain it through the world-wide-web, please send an email
+ * to license@zend.com so we can send you a copy immediately.
  *
  * @category   Zend
  * @package    Zend_Mail
- * @copyright  Copyright (c) 2005-2008 Zend Technologies USA Inc. (http://www.zend.com)
+ * @copyright  Copyright (c) 2005-2015 Zend Technologies USA Inc. (http://www.zend.com)
  * @license    http://framework.zend.com/license/new-bsd     New BSD License
- * @version    $Id: Message.php 8064 2008-02-16 10:58:39Z thomas $
+ * @version    $Id$
  */
 
 
 /**
  * Zend_Mail_Part
  */
-require_once 'Zend/Mail/Part/File.php';
+#require_once 'Zend/Mail/Part/File.php';
 
 /**
  * Zend_Mail_Message_Interface
  */
-require_once 'Zend/Mail/Message/Interface.php';
+#require_once 'Zend/Mail/Message/Interface.php';
 
 /**
  * @category   Zend
  * @package    Zend_Mail
- * @copyright  Copyright (c) 2005-2008 Zend Technologies USA Inc. (http://www.zend.com)
+ * @copyright  Copyright (c) 2005-2015 Zend Technologies USA Inc. (http://www.zend.com)
  * @license    http://framework.zend.com/license/new-bsd     New BSD License
  */
 class Zend_Mail_Message_File extends Zend_Mail_Part_File implements Zend_Mail_Message_Interface
@@ -59,7 +59,7 @@ class Zend_Mail_Message_File extends Zend_Mail_Part_File implements Zend_Mail_Me
             // set key and value to the same value for easy lookup
             $this->_flags = array_combine($params['flags'], $params['flags']);
         }
-        
+
         parent::__construct($params);
     }
 

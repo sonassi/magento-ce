@@ -16,9 +16,9 @@
  * @category   Zend
  * @package    Zend_Service
  * @subpackage Amazon
- * @copyright  Copyright (c) 2005-2008 Zend Technologies USA Inc. (http://www.zend.com)
+ * @copyright  Copyright (c) 2005-2015 Zend Technologies USA Inc. (http://www.zend.com)
  * @license    http://framework.zend.com/license/new-bsd     New BSD License
- * @version    $Id: OfferSet.php 8064 2008-02-16 10:58:39Z thomas $
+ * @version    $Id$
  */
 
 
@@ -26,11 +26,56 @@
  * @category   Zend
  * @package    Zend_Service
  * @subpackage Amazon
- * @copyright  Copyright (c) 2005-2008 Zend Technologies USA Inc. (http://www.zend.com)
+ * @copyright  Copyright (c) 2005-2015 Zend Technologies USA Inc. (http://www.zend.com)
  * @license    http://framework.zend.com/license/new-bsd     New BSD License
  */
 class Zend_Service_Amazon_OfferSet
 {
+    /**
+     * @var string
+     */
+    public $LowestNewPrice;
+
+    /**
+     * @var string
+     */
+    public $LowestNewPriceCurrency;
+
+    /**
+     * @var string
+     */
+    public $LowestUsedPrice;
+
+    /**
+     * @var string
+     */
+    public $LowestUsedPriceCurrency;
+
+    /**
+     * @var int
+     */
+    public $TotalNew;
+
+    /**
+     * @var int
+     */
+    public $TotalUsed;
+
+    /**
+     * @var int
+     */
+    public $TotalCollectible;
+
+    /**
+     * @var int
+     */
+    public $TotalRefurbished;
+
+    /**
+     * @var Zend_Service_Amazon_Offer[]
+     */
+    public $Offers;
+
     /**
      * Parse the given Offer Set Element
      *
@@ -40,16 +85,16 @@ class Zend_Service_Amazon_OfferSet
     public function __construct(DOMElement $dom)
     {
         $xpath = new DOMXPath($dom->ownerDocument);
-        $xpath->registerNamespace('az', 'http://webservices.amazon.com/AWSECommerceService/2005-10-05');
+        $xpath->registerNamespace('az', 'http://webservices.amazon.com/AWSECommerceService/2011-08-01');
 
         $offer = $xpath->query('./az:OfferSummary', $dom);
         if ($offer->length == 1) {
-            $lowestNewPrice = $xpath->query('./az:OfferSummary/az:LowestNewPrice', $dom);
+            $lowestNewPrice = $xpath->query('./az:OfferSummary/az:LowestNewPrice/az:Amount', $dom);
             if ($lowestNewPrice->length == 1) {
                 $this->LowestNewPrice = (int) $xpath->query('./az:OfferSummary/az:LowestNewPrice/az:Amount/text()', $dom)->item(0)->data;
                 $this->LowestNewPriceCurrency = (string) $xpath->query('./az:OfferSummary/az:LowestNewPrice/az:CurrencyCode/text()', $dom)->item(0)->data;
             }
-            $lowestUsedPrice = $xpath->query('./az:OfferSummary/az:LowestUsedPrice', $dom);
+            $lowestUsedPrice = $xpath->query('./az:OfferSummary/az:LowestUsedPrice/az:Amount', $dom);
             if ($lowestUsedPrice->length == 1) {
                 $this->LowestUsedPrice = (int) $xpath->query('./az:OfferSummary/az:LowestUsedPrice/az:Amount/text()', $dom)->item(0)->data;
                 $this->LowestUsedPriceCurrency = (string) $xpath->query('./az:OfferSummary/az:LowestUsedPrice/az:CurrencyCode/text()', $dom)->item(0)->data;
@@ -64,7 +109,7 @@ class Zend_Service_Amazon_OfferSet
             /**
              * @see Zend_Service_Amazon_Offer
              */
-            require_once 'Zend/Service/Amazon/Offer.php';
+            #require_once 'Zend/Service/Amazon/Offer.php';
             foreach ($offers as $offer) {
                 $this->Offers[] = new Zend_Service_Amazon_Offer($offer);
             }

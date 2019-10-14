@@ -14,21 +14,22 @@
  *
  * @category   Zend
  * @package    Zend_Rest
- * @copyright  Copyright (c) 2005-2008 Zend Technologies USA Inc. (http://www.zend.com)
+ * @copyright  Copyright (c) 2005-2015 Zend Technologies USA Inc. (http://www.zend.com)
  * @license    http://framework.zend.com/license/new-bsd     New BSD License
+ * @version    $Id$
  */
 
 
 /**
  * Zend_Exception
  */
-require_once 'Zend/Exception.php';
+#require_once 'Zend/Exception.php';
 
 
 /**
  * @category   Zend
  * @package    Zend_Rest
- * @copyright  Copyright (c) 2005-2008 Zend Technologies USA Inc. (http://www.zend.com)
+ * @copyright  Copyright (c) 2005-2015 Zend Technologies USA Inc. (http://www.zend.com)
  * @license    http://framework.zend.com/license/new-bsd     New BSD License
  */
 class Zend_Rest_Exception extends Zend_Exception

@@ -10,15 +10,22 @@
  * http://opensource.org/licenses/osl-3.0.php
  * If you did not receive a copy of the license and are unable to
  * obtain it through the world-wide-web, please send an email
- * to license@magentocommerce.com so we can send you a copy immediately.
+ * to license@magento.com so we can send you a copy immediately.
  *
- * @category   Mage
- * @package    Mage_Adminhtml
- * @copyright  Copyright (c) 2004-2007 Irubin Consulting Inc. DBA Varien (http://www.varien.com)
+ * DISCLAIMER
+ *
+ * Do not edit or add to this file if you wish to upgrade Magento to newer
+ * versions in the future. If you wish to customize Magento for your
+ * needs please refer to http://www.magento.com for more information.
+ *
+ * @category    Mage
+ * @package     Mage_Adminhtml
+ * @copyright  Copyright (c) 2006-2017 X.commerce, Inc. and affiliates (http://www.magento.com)
  * @license    http://opensource.org/licenses/osl-3.0.php  Open Software License (OSL 3.0)
  */
 
-class Mage_Adminhtml_Block_Permissions_Editroles extends Mage_Adminhtml_Block_Widget_Tabs {
+class Mage_Adminhtml_Block_Permissions_Editroles extends Mage_Adminhtml_Block_Widget_Tabs
+{
     public function __construct()
     {
         parent::__construct();
@@ -27,32 +34,21 @@ class Mage_Adminhtml_Block_Permissions_Editroles extends Mage_Adminhtml_Block_Wi
         $this->setTitle(Mage::helper('adminhtml')->__('Role Information'));
     }
 
-    protected function _beforeToHtml()
+    protected function _prepareLayout()
     {
-        $roleId = $this->getRequest()->getParam('rid', false);
-        $role = Mage::getModel("admin/roles")
-           ->load($roleId);
+        $role = Mage::registry('current_role');
 
-        $this->addTab('info', array(
-            'label'     => Mage::helper('adminhtml')->__('Role Info'),
-            'title'     => Mage::helper('adminhtml')->__('Role Info'),
-            'content'   => $this->getLayout()->createBlock('adminhtml/permissions_tab_roleinfo')->setRole($role)->toHtml(),
-            'active'    => true
-        ));
+        $this->addTab('info', $this->getLayout()->createBlock('adminhtml/permissions_tab_roleinfo')->setRole($role)->setActive(true));
+        $this->addTab('account', $this->getLayout()->createBlock('adminhtml/permissions_tab_rolesedit', 'adminhtml.permissions.tab.rolesedit'));
 
-        $this->addTab('account', array(
-            'label'     => Mage::helper('adminhtml')->__('Role Resources'),
-            'title'     => Mage::helper('adminhtml')->__('Role Resources'),
-            'content'   => $this->getLayout()->createBlock('adminhtml/permissions_tab_rolesedit')->toHtml(),
-        ));
-
-        if( intval($roleId) > 0 ) {
+        if ($role->getId()) {
             $this->addTab('roles', array(
                 'label'     => Mage::helper('adminhtml')->__('Role Users'),
                 'title'     => Mage::helper('adminhtml')->__('Role Users'),
                 'content'   => $this->getLayout()->createBlock('adminhtml/permissions_tab_rolesusers', 'role.users.grid')->toHtml(),
             ));
         }
-        return parent::_beforeToHtml();
+
+        return parent::_prepareLayout();
     }
 }

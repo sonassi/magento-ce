@@ -10,62 +10,28 @@
  * http://opensource.org/licenses/osl-3.0.php
  * If you did not receive a copy of the license and are unable to
  * obtain it through the world-wide-web, please send an email
- * to license@magentocommerce.com so we can send you a copy immediately.
+ * to license@magento.com so we can send you a copy immediately.
  *
- * @category   Mage
- * @package    Mage_Rating
- * @copyright  Copyright (c) 2004-2007 Irubin Consulting Inc. DBA Varien (http://www.varien.com)
+ * DISCLAIMER
+ *
+ * Do not edit or add to this file if you wish to upgrade Magento to newer
+ * versions in the future. If you wish to customize Magento for your
+ * needs please refer to http://www.magento.com for more information.
+ *
+ * @category    Mage
+ * @package     Mage_Rating
+ * @copyright  Copyright (c) 2006-2017 X.commerce, Inc. and affiliates (http://www.magento.com)
  * @license    http://opensource.org/licenses/osl-3.0.php  Open Software License (OSL 3.0)
  */
+
 
 /**
  * Rating option collection
  *
- * @category   Mage
- * @package    Mage_Rating
+ * @category    Mage
+ * @package     Mage_Rating
+ * @author      Magento Core Team <core@magentocommerce.com>
  */
-class Mage_Rating_Model_Mysql4_Rating_Option_Collection extends Varien_Data_Collection_Db
+class Mage_Rating_Model_Mysql4_Rating_Option_Collection extends Mage_Rating_Model_Resource_Rating_Option_Collection
 {
-    protected $_ratingOptionTable;
-    protected $_ratingVoteTable;
-
-    public function __construct()
-    {
-        parent::__construct(Mage::getSingleton('core/resource')->getConnection('rating_read'));
-        $this->_ratingOptionTable   = Mage::getSingleton('core/resource')->getTableName('rating/rating_option');
-        $this->_ratingVoteTable     = Mage::getSingleton('core/resource')->getTableName('rating/rating_vote');
-
-        $this->_select->from($this->_ratingOptionTable);
-
-        $this->setItemObjectClass(Mage::getConfig()->getModelClassName('rating/rating_option'));
-    }
-
-    /**
-     * add rating filter
-     *
-     * @param   int|array $rating
-     * @return  Varien_Data_Collection_Db
-     */
-    public function addRatingFilter($rating)
-    {
-        if (is_numeric($rating)) {
-            $this->addFilter('rating_id', $rating);
-        }
-        elseif (is_array($rating)) {
-            $this->addFilter('rating_id', $this->_getConditionSql('rating_id', array('in'=>$rating)), 'string');
-        }
-        return $this;
-    }
-
-    /**
-     * set order by position field
-     *
-     * @param   string $dir
-     * @return  Varien_Data_Collection_Db
-     */
-    public function setPositionOrder($dir='ASC')
-    {
-        $this->setOrder($this->_ratingOptionTable.'.position', $dir);
-        return $this;
-    }
 }

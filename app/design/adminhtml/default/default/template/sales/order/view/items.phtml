@@ -4,66 +4,63 @@
  *
  * NOTICE OF LICENSE
  *
- * This source file is subject to the Open Software License (OSL 3.0)
- * that is bundled with this package in the file LICENSE.txt.
+ * This source file is subject to the Academic Free License (AFL 3.0)
+ * that is bundled with this package in the file LICENSE_AFL.txt.
  * It is also available through the world-wide-web at this URL:
- * http://opensource.org/licenses/osl-3.0.php
+ * http://opensource.org/licenses/afl-3.0.php
  * If you did not receive a copy of the license and are unable to
  * obtain it through the world-wide-web, please send an email
- * to license@magentocommerce.com so we can send you a copy immediately.
+ * to license@magento.com so we can send you a copy immediately.
  *
- * @category   design_default
- * @package    Mage
- * @copyright  Copyright (c) 2004-2007 Irubin Consulting Inc. DBA Varien (http://www.varien.com)
- * @license    http://opensource.org/licenses/osl-3.0.php  Open Software License (OSL 3.0)
+ * DISCLAIMER
+ *
+ * Do not edit or add to this file if you wish to upgrade Magento to newer
+ * versions in the future. If you wish to customize Magento for your
+ * needs please refer to http://www.magento.com for more information.
+ *
+ * @category    design
+ * @package     default_default
+ * @copyright   Copyright (c) 2006-2017 X.commerce, Inc. and affiliates (http://www.magento.com)
+ * @license     http://opensource.org/licenses/afl-3.0.php  Academic Free License (AFL 3.0)
  */
 ?>
-<?php $_order=$this->getOrder() ?>
-<div class="grid">
-    <table cellspacing="0" class="data">
-        <col/>
-        <col width="70"/>
-        <col width="80"/>
-        <col width="80"/>
-        <col width="100"/>
-        <col width="90"/>
-        <col width="90"/>
-        <col width="100"/>
-        <col width="100"/>
+<?php $_order = $this->getOrder() ?>
+<div class="grid np">
+  <div class="hor-scroll">
+    <table cellspacing="0" class="data order-tables">
+        <col />
+        <col width="1" />
+        <col width="1" />
+        <col width="1" />
+        <col width="1" />
+        <col width="1" />
+        <col width="1" />
+        <col width="1" />
+        <col width="1" />
+        <col width="1" />
         <thead>
             <tr class="headings">
                 <th><?php echo $this->helper('sales')->__('Product') ?></th>
-                <th><?php echo $this->helper('sales')->__('Item Status') ?></th>
-                <th><?php echo $this->helper('sales')->__('Original Price') ?></th>
+                <th><span class="nobr"><?php echo $this->helper('sales')->__('Item Status') ?></span></th>
+                <th><span class="nobr"><?php echo $this->helper('sales')->__('Original Price') ?></span></th>
                 <th><?php echo $this->helper('sales')->__('Price') ?></th>
-                <th><?php echo $this->helper('sales')->__('Qty') ?></th>
+                <th class="a-center"><?php echo $this->helper('sales')->__('Qty') ?></th>
                 <th><?php echo $this->helper('sales')->__('Subtotal') ?></th>
-                <th><?php echo $this->helper('sales')->__('Tax Amount') ?></th>
-                <th><?php echo $this->helper('sales')->__('Discount Amount') ?></th>
-                <th class="last"><?php echo $this->helper('sales')->__('Row Total') ?></th>
+                <th><span class="nobr"><?php echo $this->helper('sales')->__('Tax Amount') ?></span></th>
+                <th><span class="nobr"><?php echo $this->helper('sales')->__('Tax Percent') ?></span></th>
+                <th><span class="nobr"><?php echo $this->helper('sales')->__('Discount Amount') ?></span></th>
+                <th class="last"><span class="nobr"><?php echo $this->helper('sales')->__('Row Total') ?></span></th>
             </tr>
         </thead>
-        <tbody>
-            <?php $_items = $this->getItemsCollection() ?>
-            <?php $i=0;foreach ($_items as $_item):$i++ ?>
-                <?php $this->setPriceDataObject($_item) ?>
-                <tr class="<?php echo ($i%2==0)?'even':'odd' ?>">
-                    <td class="giftmessage-single-item"><?php echo $this->renderInfoColumn($_item) ?></td>
-                    <td><?php echo $_item->getStatus() ?></td>
-                    <td class="price"><?php echo $this->displayPriceAttribute('original_price') ?></td>
-                    <td class="price"><?php echo $this->displayPriceAttribute('price') ?></td>
-                    <td><?php echo $this->getQtyHtml($_item) ?></td>
-                    <td class="price"><?php echo $this->displayPriceAttribute('row_total') ?></td>
-                    <td class="price"><?php echo $this->displayPriceAttribute('tax_amount') ?></td>
-                    <td class="price"><?php echo $this->displayPriceAttribute('discount_amount') ?></td>
-                    <td class="last price">
-                        <?php echo $this->displayPrices(
-                            $_item->getBaseRowTotal()-$_item->getBaseDiscountAmount()+$_item->getBaseTaxAmount(),
-                            $_item->getRowTotal()-$_item->getDiscountAmount()+$_item->getTaxAmount()
-                        ) ?>
-                    </td>
-                </tr>
-            <?php endforeach; ?>
-        </tbody>
+        <?php $_items = $this->getItemsCollection() ?>
+        <?php $i=0;foreach ($_items as $_item):?>
+            <?php if ($_item->getParentItem()) continue; else $i++;?>
+            <tbody class="<?php echo $i%2?'even':'odd' ?>">
+                <?php echo $this->getItemHtml($_item) ?>
+                <?php echo $this->getItemExtraInfoHtml($_item) ?>
+            </tbody>
+        <?php endforeach; ?>
     </table>
+  </div>
 </div>
+<br />

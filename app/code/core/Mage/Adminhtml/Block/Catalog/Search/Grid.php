@@ -10,11 +10,17 @@
  * http://opensource.org/licenses/osl-3.0.php
  * If you did not receive a copy of the license and are unable to
  * obtain it through the world-wide-web, please send an email
- * to license@magentocommerce.com so we can send you a copy immediately.
+ * to license@magento.com so we can send you a copy immediately.
  *
- * @category   Mage
- * @package    Mage_Adminhtml
- * @copyright  Copyright (c) 2004-2007 Irubin Consulting Inc. DBA Varien (http://www.varien.com)
+ * DISCLAIMER
+ *
+ * Do not edit or add to this file if you wish to upgrade Magento to newer
+ * versions in the future. If you wish to customize Magento for your
+ * needs please refer to http://www.magento.com for more information.
+ *
+ * @category    Mage
+ * @package     Mage_Adminhtml
+ * @copyright  Copyright (c) 2006-2017 X.commerce, Inc. and affiliates (http://www.magento.com)
  * @license    http://opensource.org/licenses/osl-3.0.php  Open Software License (OSL 3.0)
  */
 
@@ -24,10 +30,14 @@
  * @category    Mage
  * @category   Mage
  * @package    Mage_Adminhtml
+ * @author      Magento Core Team <core@magentocommerce.com>
  */
 class Mage_Adminhtml_Block_Catalog_Search_Grid extends Mage_Adminhtml_Block_Widget_Grid
 {
-
+    /**
+     * Init Grid default properties
+     *
+     */
     public function __construct()
     {
         parent::__construct();
@@ -37,6 +47,11 @@ class Mage_Adminhtml_Block_Catalog_Search_Grid extends Mage_Adminhtml_Block_Widg
         $this->setSaveParametersInSession(true);
     }
 
+    /**
+     * Prepare collection for Grid
+     *
+     * @return Mage_Adminhtml_Block_Catalog_Search_Grid
+     */
     protected function _prepareCollection()
     {
         $collection = Mage::getModel('catalogsearch/query')
@@ -45,6 +60,11 @@ class Mage_Adminhtml_Block_Catalog_Search_Grid extends Mage_Adminhtml_Block_Widg
         return parent::_prepareCollection();
     }
 
+    /**
+     * Prepare Grid columns
+     *
+     * @return Mage_Adminhtml_Block_Catalog_Search_Grid
+     */
     protected function _prepareColumns()
     {
         /*$this->addColumn('query_id', array(
@@ -58,6 +78,16 @@ class Mage_Adminhtml_Block_Catalog_Search_Grid extends Mage_Adminhtml_Block_Widg
             'index'     => 'query_text',
         ));
 
+        if (!Mage::app()->isSingleStoreMode()) {
+            $this->addColumn('store_id', array(
+                'header'        => Mage::helper('catalog')->__('Store'),
+                'index'         => 'store_id',
+                'type'          => 'store',
+                'store_view'    => true,
+                'sortable'      => false
+            ));
+        }
+
         $this->addColumn('num_results', array(
             'header'    => Mage::helper('catalog')->__('Results'),
             'index'     => 'num_results',
@@ -70,10 +100,10 @@ class Mage_Adminhtml_Block_Catalog_Search_Grid extends Mage_Adminhtml_Block_Widg
             'type'      => 'number'
         ));
 
-        $this->addColumn('synonim_for', array(
-            'header'    => Mage::helper('catalog')->__('Synonym for'),
+        $this->addColumn('synonym_for', array(
+            'header'    => Mage::helper('catalog')->__('Synonym For'),
             'align'     => 'left',
-            'index'     => 'synonim_for',
+            'index'     => 'synonym_for',
             'width'     => '160px'
         ));
 
@@ -101,17 +131,14 @@ class Mage_Adminhtml_Block_Catalog_Search_Grid extends Mage_Adminhtml_Block_Widg
                 'header'    => Mage::helper('catalog')->__('Action'),
                 'width'     => '100px',
                 'type'      => 'action',
-                'getter'     => 'getId',
-                'actions'   => array(
-                    array(
-                        'caption' => Mage::helper('catalog')->__('Edit'),
-                        'url'     => array(
-                            'base'=>'*/*/edit',
-                            //'params'=>array('catalog'=>$this->getRequest()->getParam('store'))
-                        ),
-                        'field'   => 'id'
-                    )
-                ),
+                'getter'    => 'getId',
+                'actions'   => array(array(
+                    'caption'   => Mage::helper('catalog')->__('Edit'),
+                    'url'       => array(
+                        'base'=>'*/*/edit'
+                    ),
+                    'field'   => 'id'
+                )),
                 'filter'    => false,
                 'sortable'  => false,
                 'index'     => 'catalog',
@@ -119,18 +146,30 @@ class Mage_Adminhtml_Block_Catalog_Search_Grid extends Mage_Adminhtml_Block_Widg
         return parent::_prepareColumns();
     }
 
+    /**
+     * Prepare grid massaction actions
+     *
+     * @return Mage_Adminhtml_Block_Catalog_Search_Grid
+     */
     protected function _prepareMassaction()
     {
         $this->setMassactionIdField('query_id');
         $this->getMassactionBlock()->setFormFieldName('search');
 
         $this->getMassactionBlock()->addItem('delete', array(
-             'label'=> Mage::helper('catalog')->__('Delete'),
-             'url'  => $this->getUrl('*/*/massDelete'),
-             'confirm' => Mage::helper('catalog')->__('Are you sure?')
+             'label'    => Mage::helper('catalog')->__('Delete'),
+             'url'      => $this->getUrl('*/*/massDelete'),
+             'confirm'  => Mage::helper('catalog')->__('Are you sure?')
         ));
+
+        return parent::_prepareMassaction();
     }
 
+    /**
+     * Retrieve Row Click callback URL
+     *
+     * @return string
+     */
     public function getRowUrl($row)
     {
         return $this->getUrl('*/*/edit', array('id' => $row->getId()));

@@ -11,20 +11,20 @@
  * If you did not receive a copy of the license and are unable to
  * obtain it through the world-wide-web, please send an email
  * to license@zend.com so we can send you a copy immediately.
- * 
+ *
  * @category   Zend
  * @package    Zend_Mail
  * @subpackage Transport
- * @copyright  Copyright (c) 2005-2008 Zend Technologies USA Inc. (http://www.zend.com)
+ * @copyright  Copyright (c) 2005-2015 Zend Technologies USA Inc. (http://www.zend.com)
  * @license    http://framework.zend.com/license/new-bsd     New BSD License
- * @version    $Id: Sendmail.php 8064 2008-02-16 10:58:39Z thomas $
+ * @version    $Id$
  */
 
 
 /**
  * @see Zend_Mail_Transport_Abstract
  */
-require_once 'Zend/Mail/Transport/Abstract.php';
+#require_once 'Zend/Mail/Transport/Abstract.php';
 
 
 /**
@@ -33,7 +33,7 @@ require_once 'Zend/Mail/Transport/Abstract.php';
  * @category   Zend
  * @package    Zend_Mail
  * @subpackage Transport
- * @copyright  Copyright (c) 2005-2008 Zend Technologies USA Inc. (http://www.zend.com)
+ * @copyright  Copyright (c) 2005-2015 Zend Technologies USA Inc. (http://www.zend.com)
  * @license    http://framework.zend.com/license/new-bsd     New BSD License
  */
 class Zend_Mail_Transport_Sendmail extends Zend_Mail_Transport_Abstract
@@ -53,7 +53,6 @@ class Zend_Mail_Transport_Sendmail extends Zend_Mail_Transport_Abstract
      */
     public $parameters;
 
-
     /**
      * EOL character string
      * @var string
@@ -61,15 +60,28 @@ class Zend_Mail_Transport_Sendmail extends Zend_Mail_Transport_Abstract
      */
     public $EOL = PHP_EOL;
 
+    /**
+     * error information
+     * @var string
+     */
+    protected $_errstr;
 
     /**
      * Constructor.
      *
-     * @param  string $parameters OPTIONAL (Default: null)
+     * @param  string|array|Zend_Config $parameters OPTIONAL (Default: null)
      * @return void
      */
     public function __construct($parameters = null)
     {
+        if ($parameters instanceof Zend_Config) {
+            $parameters = $parameters->toArray();
+        }
+
+        if (is_array($parameters)) {
+            $parameters = implode(' ', $parameters);
+        }
+
         $this->parameters = $parameters;
     }
 
@@ -79,30 +91,55 @@ class Zend_Mail_Transport_Sendmail extends Zend_Mail_Transport_Abstract
      *
      * @access public
      * @return void
+     * @throws Zend_Mail_Transport_Exception if parameters is set
+     *         but not a string
      * @throws Zend_Mail_Transport_Exception on mail() failure
      */
     public function _sendMail()
     {
         if ($this->parameters === null) {
+            set_error_handler(array($this, '_handleMailErrors'));
             $result = mail(
                 $this->recipients,
                 $this->_mail->getSubject(),
                 $this->body,
                 $this->header);
+            restore_error_handler();
         } else {
-            $result = mail(
-                $this->recipients,
-                $this->_mail->getSubject(),
-                $this->body,
-                $this->header,
-                $this->parameters);
+            if(!is_string($this->parameters)) {
+                /**
+                 * @see Zend_Mail_Transport_Exception
+                 *
+                 * Exception is thrown here because
+                 * $parameters is a public property
+                 */
+                #require_once 'Zend/Mail/Transport/Exception.php';
+                throw new Zend_Mail_Transport_Exception(
+                    'Parameters were set but are not a string'
+                );
+            }
+
+            // Sanitize the From header
+            if (!Zend_Validate::is(str_replace(' ', '', $this->parameters), 'EmailAddress')) {
+                throw new Zend_Mail_Transport_Exception('Potential code injection in From header');
+            } else {
+                set_error_handler(array($this, '_handleMailErrors'));
+                $result = mail(
+                    $this->recipients,
+                    $this->_mail->getSubject(),
+                    $this->body,
+                    $this->header,
+                    $this->parameters);
+                restore_error_handler();
+            }
         }
-        if (!$result) {
+
+        if ($this->_errstr !== null || !$result) {
             /**
              * @see Zend_Mail_Transport_Exception
              */
-            require_once 'Zend/Mail/Transport/Exception.php';
-            throw new Zend_Mail_Transport_Exception('Unable to send mail');
+            #require_once 'Zend/Mail/Transport/Exception.php';
+            throw new Zend_Mail_Transport_Exception('Unable to send mail. ' . $this->_errstr);
         }
     }
 
@@ -125,7 +162,7 @@ class Zend_Mail_Transport_Sendmail extends Zend_Mail_Transport_Abstract
             /**
              * @see Zend_Mail_Transport_Exception
              */
-            require_once 'Zend/Mail/Transport/Exception.php';
+            #require_once 'Zend/Mail/Transport/Exception.php';
             throw new Zend_Mail_Transport_Exception('_prepareHeaders requires a registered Zend_Mail object');
         }
 
@@ -137,7 +174,7 @@ class Zend_Mail_Transport_Sendmail extends Zend_Mail_Transport_Abstract
                 /**
                  * @see Zend_Mail_Transport_Exception
                  */
-                require_once 'Zend/Mail/Transport/Exception.php';
+                #require_once 'Zend/Mail/Transport/Exception.php';
                 throw new Zend_Mail_Transport_Exception('Missing To addresses');
             }
         } else {
@@ -146,7 +183,7 @@ class Zend_Mail_Transport_Sendmail extends Zend_Mail_Transport_Abstract
                 /**
                  * @see Zend_Mail_Transport_Exception
                  */
-                require_once 'Zend/Mail/Transport/Exception.php';
+                #require_once 'Zend/Mail/Transport/Exception.php';
                 throw new Zend_Mail_Transport_Exception('Missing To header');
             }
 
@@ -164,7 +201,25 @@ class Zend_Mail_Transport_Sendmail extends Zend_Mail_Transport_Abstract
 
         // Prepare headers
         parent::_prepareHeaders($headers);
+
+        // Fix issue with empty blank line ontop when using Sendmail Trnasport
+        $this->header = rtrim($this->header);
+    }
+
+    /**
+     * Temporary error handler for PHP native mail().
+     *
+     * @param int    $errno
+     * @param string $errstr
+     * @param string $errfile
+     * @param string $errline
+     * @param array  $errcontext
+     * @return true
+     */
+    public function _handleMailErrors($errno, $errstr, $errfile = null, $errline = null, array $errcontext = null)
+    {
+        $this->_errstr = $errstr;
+        return true;
     }
 
 }
-

@@ -10,11 +10,17 @@
  * http://opensource.org/licenses/osl-3.0.php
  * If you did not receive a copy of the license and are unable to
  * obtain it through the world-wide-web, please send an email
- * to license@magentocommerce.com so we can send you a copy immediately.
+ * to license@magento.com so we can send you a copy immediately.
  *
- * @category   Mage
- * @package    Mage_Adminhtml
- * @copyright  Copyright (c) 2004-2007 Irubin Consulting Inc. DBA Varien (http://www.varien.com)
+ * DISCLAIMER
+ *
+ * Do not edit or add to this file if you wish to upgrade Magento to newer
+ * versions in the future. If you wish to customize Magento for your
+ * needs please refer to http://www.magento.com for more information.
+ *
+ * @category    Mage
+ * @package     Mage_Adminhtml
+ * @copyright  Copyright (c) 2006-2017 X.commerce, Inc. and affiliates (http://www.magento.com)
  * @license    http://opensource.org/licenses/osl-3.0.php  Open Software License (OSL 3.0)
  */
 
@@ -23,6 +29,7 @@
  *
  * @category   Mage
  * @package    Mage_Adminhtml
+ * @author      Magento Core Team <core@magentocommerce.com>
  */
 
 class Mage_Adminhtml_Block_Sales_Order_Invoice_Create extends Mage_Adminhtml_Block_Widget_Form_Container
@@ -37,13 +44,6 @@ class Mage_Adminhtml_Block_Sales_Order_Invoice_Create extends Mage_Adminhtml_Blo
 
         $this->_removeButton('save');
         $this->_removeButton('delete');
-
-        /*$this->_addButton('submit_invoice', array(
-            'label'     => Mage::helper('sales')->__('Submit Invoice'),
-            'class'     => 'save submit-button',
-            'onclick'   => '$(\'edit_form\').submit()',
-            )
-        );*/
     }
 
     /**
@@ -56,19 +56,23 @@ class Mage_Adminhtml_Block_Sales_Order_Invoice_Create extends Mage_Adminhtml_Blo
         return Mage::registry('current_invoice');
     }
 
+    /**
+     * Retrieve text for header
+     *
+     * @return string
+     */
     public function getHeaderText()
     {
-        $header = Mage::helper('sales')->__('New Invoice for Order #%s',
-            $this->getInvoice()->getOrder()->getRealOrderId()
-        );
-        /*$header = Mage::helper('sales')->__('New Invoice for Order #%s | Order Date: %s | Customer Name: %s',
-            $this->getInvoice()->getOrder()->getRealOrderId(),
-            $this->formatDate($this->getInvoice()->getOrder()->getCreatedAt(), 'medium', true),
-            $this->getInvoice()->getOrder()->getCustomerName()
-        );*/
-        return $header;
+        return ($this->getInvoice()->getOrder()->getForcedDoShipmentWithInvoice())
+            ? Mage::helper('sales')->__('New Invoice and Shipment for Order #%s', $this->getInvoice()->getOrder()->getRealOrderId())
+            : Mage::helper('sales')->__('New Invoice for Order #%s', $this->getInvoice()->getOrder()->getRealOrderId());
     }
 
+    /**
+     * Retrieve back url
+     *
+     * @return string
+     */
     public function getBackUrl()
     {
         return $this->getUrl('*/sales_order/view', array('order_id'=>$this->getInvoice()->getOrderId()));

@@ -10,11 +10,17 @@
  * http://opensource.org/licenses/osl-3.0.php
  * If you did not receive a copy of the license and are unable to
  * obtain it through the world-wide-web, please send an email
- * to license@magentocommerce.com so we can send you a copy immediately.
+ * to license@magento.com so we can send you a copy immediately.
  *
- * @category   Mage
- * @package    Mage_GiftMessage
- * @copyright  Copyright (c) 2004-2007 Irubin Consulting Inc. DBA Varien (http://www.varien.com)
+ * DISCLAIMER
+ *
+ * Do not edit or add to this file if you wish to upgrade Magento to newer
+ * versions in the future. If you wish to customize Magento for your
+ * needs please refer to http://www.magento.com for more information.
+ *
+ * @category    Mage
+ * @package     Mage_GiftMessage
+ * @copyright  Copyright (c) 2006-2017 X.commerce, Inc. and affiliates (http://www.magento.com)
  * @license    http://opensource.org/licenses/osl-3.0.php  Open Software License (OSL 3.0)
  */
 
@@ -24,6 +30,7 @@
  *
  * @category   Mage
  * @package    Mage_GiftMessage
+ * @author      Magento Core Team <core@magentocommerce.com>
  */
 class Mage_GiftMessage_Helper_Message extends Mage_Core_Helper_Data
 {
@@ -31,8 +38,8 @@ class Mage_GiftMessage_Helper_Message extends Mage_Core_Helper_Data
      * Giftmessages allow section in configuration
      *
      */
-    const XPATH_CONFIG_GIFT_MESSAGE_ALLOW_ITEMS = 'sales/gift_messages/allow_items';
-    const XPATH_CONFIG_GIFT_MESSAGE_ALLOW_ORDER = 'sales/gift_messages/allow_order';
+    const XPATH_CONFIG_GIFT_MESSAGE_ALLOW_ITEMS = 'sales/gift_options/allow_items';
+    const XPATH_CONFIG_GIFT_MESSAGE_ALLOW_ORDER = 'sales/gift_options/allow_order';
 
     /**
      * Next id for edit gift message block
@@ -78,11 +85,9 @@ class Mage_GiftMessage_Helper_Message extends Mage_Core_Helper_Data
      */
     public function getInline($type, Varien_Object $entity, $dontDisplayContainer=false)
     {
-        if (in_array($type, array('onepage_checkout','multishipping_adress'))) {
-            if (!$this->isMessagesAvailable('items', $entity)) {
-                return '';
-            }
-        } elseif (!$this->isMessagesAvailable($type, $entity)) {
+        if (!in_array($type, array('onepage_checkout','multishipping_adress'))
+            && !$this->isMessagesAvailable($type, $entity)
+        ) {
             return '';
         }
 
@@ -101,37 +106,41 @@ class Mage_GiftMessage_Helper_Message extends Mage_Core_Helper_Data
      * @param Mage_Core_Model_Store|integer $store
      * @return boolean
      */
-    public function isMessagesAvailable($type, Varien_Object $entity, $store=null)
+    public function isMessagesAvailable($type, Varien_Object $entity, $store = null)
     {
-        $resultItems = Mage::getStoreConfig(self::XPATH_CONFIG_GIFT_MESSAGE_ALLOW_ITEMS, $store);
-        $resultOrder = Mage::getStoreConfig(self::XPATH_CONFIG_GIFT_MESSAGE_ALLOW_ORDER, $store);
-
         if ($type == 'items') {
-            return $resultItems || $resultOrder;
-        }
-
-        if (is_object($store)) {
-            $storeId = $store->getId();
-        } elseif (is_numeric($store)) {
-            $storeId = $store;
-        } else {
-            $storeId = Mage::app()->getStore()->getId();
-        }
-
-        if ($type=='item') {
-            return $resultItems && $this->_getDependenceFromStoreConfig(
-                        $entity->getProduct()->getGiftMessageAvailable(),
-                        $store
-                   );
-        } elseif ($type=='order_item') {
-            return $resultItems && $this->_getDependenceFromStoreConfig(
-                        (is_null($entity->getGiftMessageAvailable()) ? 0 : $entity->getGiftMessageAvailable()),
-                        $store
-                    );
-        } elseif ($type=='address_item') {
-            if (!$resultItems) {
-                return false;
+            $items = $entity->getAllItems();
+            if(!is_array($items) || empty($items)) {
+                return Mage::getStoreConfig(self::XPATH_CONFIG_GIFT_MESSAGE_ALLOW_ITEMS, $store);
             }
+            if($entity instanceof Mage_Sales_Model_Quote) {
+                $_type = $entity->getIsMultiShipping() ? 'address_item' : 'item';
+            }
+            else {
+                $_type = 'order_item';
+            }
+
+            foreach ($items as $item) {
+                if ($item->getParentItem()) {
+                    continue;
+                }
+                if ($this->isMessagesAvailable($_type, $item, $store)) {
+                    return true;
+                }
+            }
+        } elseif ($type == 'item') {
+            return $this->_getDependenceFromStoreConfig(
+                $entity->getProduct()->getGiftMessageAvailable(),
+                $store
+            );
+        } elseif ($type == 'order_item') {
+            return $this->_getDependenceFromStoreConfig(
+                $entity->getGiftMessageAvailable(),
+                $store
+            );
+        } elseif ($type == 'address_item') {
+            $storeId = is_numeric($store) ? $store : Mage::app()->getStore($store)->getId();
+
             if (!$this->isCached('address_item_' . $entity->getProductId())) {
                 $this->setCached(
                     'address_item_' . $entity->getProductId(),
@@ -142,11 +151,11 @@ class Mage_GiftMessage_Helper_Message extends Mage_Core_Helper_Data
                 );
             }
             return $this->_getDependenceFromStoreConfig(
-                        $this->getCached('address_item_' . $entity->getProductId()),
-                        $store
-                   );
+                $this->getCached('address_item_' . $entity->getProductId()),
+                $store
+            );
         } else {
-            return $resultOrder;
+            return Mage::getStoreConfig(self::XPATH_CONFIG_GIFT_MESSAGE_ALLOW_ORDER, $store);
         }
 
         return false;
@@ -162,11 +171,10 @@ class Mage_GiftMessage_Helper_Message extends Mage_Core_Helper_Data
     protected function _getDependenceFromStoreConfig($productGiftMessageAllow, $store=null)
     {
         $result = Mage::getStoreConfig(self::XPATH_CONFIG_GIFT_MESSAGE_ALLOW_ITEMS, $store);
-
-        if ($productGiftMessageAllow==2 || is_null($productGiftMessageAllow)) {
+        if ($productGiftMessageAllow === '' || is_null($productGiftMessageAllow)) {
             return $result;
         } else {
-            return $productGiftMessageAllow == 1;
+            return $productGiftMessageAllow;
         }
     }
 
@@ -193,7 +201,7 @@ class Mage_GiftMessage_Helper_Message extends Mage_Core_Helper_Data
     {
         $message = $this->getGiftMessageForEntity($entity);
         if ($message) {
-            return nl2br($this->htmlEscape($message->getMessage()));
+            return nl2br($this->escapeHtml($message->getMessage()));
         }
         return null;
     }

@@ -10,11 +10,17 @@
  * http://opensource.org/licenses/osl-3.0.php
  * If you did not receive a copy of the license and are unable to
  * obtain it through the world-wide-web, please send an email
- * to license@magentocommerce.com so we can send you a copy immediately.
+ * to license@magento.com so we can send you a copy immediately.
  *
- * @category   Mage
- * @package    Mage_Directory
- * @copyright  Copyright (c) 2004-2007 Irubin Consulting Inc. DBA Varien (http://www.varien.com)
+ * DISCLAIMER
+ *
+ * Do not edit or add to this file if you wish to upgrade Magento to newer
+ * versions in the future. If you wish to customize Magento for your
+ * needs please refer to http://www.magento.com for more information.
+ *
+ * @category    Mage
+ * @package     Mage_Directory
+ * @copyright  Copyright (c) 2006-2017 X.commerce, Inc. and affiliates (http://www.magento.com)
  * @license    http://opensource.org/licenses/osl-3.0.php  Open Software License (OSL 3.0)
  */
 
@@ -23,11 +29,13 @@
  *
  * @category   Mage
  * @package    Mage_Directory
+ * @author      Magento Core Team <core@magentocommerce.com>
  */
 class Mage_Directory_Block_Currency extends Mage_Core_Block_Template
 {
     /**
      * Retrieve count of currencies
+     * Return 0 if only one currency
      *
      * @return int
      */
@@ -36,13 +44,20 @@ class Mage_Directory_Block_Currency extends Mage_Core_Block_Template
         return count($this->getCurrencies());
     }
 
+    /**
+     * Retrieve currencies array
+     * Return array: code => currency name
+     * Return empty array if only one currency
+     *
+     * @return array
+     */
     public function getCurrencies()
     {
         $currencies = $this->getData('currencies');
         if (is_null($currencies)) {
             $currencies = array();
-            $codes = Mage::app()->getStore()->getAvailableCurrencyCodes();
-            if (is_array($codes) && count($codes)) {
+            $codes = Mage::app()->getStore()->getAvailableCurrencyCodes(true);
+            if (is_array($codes) && count($codes) > 1) {
                 $rates = Mage::getModel('directory/currency')->getCurrencyRates(
                     Mage::app()->getStore()->getBaseCurrency(),
                     $codes
@@ -50,7 +65,7 @@ class Mage_Directory_Block_Currency extends Mage_Core_Block_Template
 
                 foreach ($codes as $code) {
                     if (isset($rates[$code])) {
-                        $currencies[$code] = Mage::app()->getLocale()->getLocale()
+                        $currencies[$code] = Mage::app()->getLocale()
                             ->getTranslation($code, 'nametocurrency');
                     }
                 }
@@ -61,18 +76,40 @@ class Mage_Directory_Block_Currency extends Mage_Core_Block_Template
         return $currencies;
     }
 
+    /**
+     * Retrieve Currency Swith URL
+     *
+     * @return string
+     */
     public function getSwitchUrl()
     {
         return $this->getUrl('directory/currency/switch');
     }
 
+    /**
+     * Return URL for specified currency to switch
+     *
+     * @param string $code Currency code
+     * @return string
+     */
+    public function getSwitchCurrencyUrl($code)
+    {
+        return Mage::helper('directory/url')->getSwitchCurrencyUrl(array('currency' => $code));
+    }
+
+    /**
+     * Retrieve Current Currency code
+     *
+     * @return string
+     */
     public function getCurrentCurrencyCode()
     {
-        $code = $this->getData('current_currency_code');
-        if (is_null($code)) {
-            $code = Mage::app()->getStore()->getCurrentCurrencyCode();
-            $this->setData('current_currency_code', $code);
+        if (is_null($this->_getData('current_currency_code'))) {
+            // do not use Mage::app()->getStore()->getCurrentCurrencyCode() because of probability
+            // to get an invalid (without base rate) currency from code saved in session
+            $this->setData('current_currency_code', Mage::app()->getStore()->getCurrentCurrency()->getCode());
         }
-        return $code;
+
+        return $this->_getData('current_currency_code');
     }
 }

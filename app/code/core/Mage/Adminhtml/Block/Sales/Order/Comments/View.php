@@ -10,11 +10,17 @@
  * http://opensource.org/licenses/osl-3.0.php
  * If you did not receive a copy of the license and are unable to
  * obtain it through the world-wide-web, please send an email
- * to license@magentocommerce.com so we can send you a copy immediately.
+ * to license@magento.com so we can send you a copy immediately.
  *
- * @category   Mage
- * @package    Mage_Adminhtml
- * @copyright  Copyright (c) 2004-2007 Irubin Consulting Inc. DBA Varien (http://www.varien.com)
+ * DISCLAIMER
+ *
+ * Do not edit or add to this file if you wish to upgrade Magento to newer
+ * versions in the future. If you wish to customize Magento for your
+ * needs please refer to http://www.magento.com for more information.
+ *
+ * @category    Mage
+ * @package     Mage_Adminhtml
+ * @copyright  Copyright (c) 2006-2017 X.commerce, Inc. and affiliates (http://www.magento.com)
  * @license    http://opensource.org/licenses/osl-3.0.php  Open Software License (OSL 3.0)
  */
 
@@ -23,14 +29,20 @@
  *
  * @category   Mage
  * @package    Mage_Adminhtml
+ * @author      Magento Core Team <core@magentocommerce.com>
  */
 class Mage_Adminhtml_Block_Sales_Order_Comments_View extends Mage_Adminhtml_Block_Template
 {
-
-    protected function _construct()
+    /**
+     * Retrieve required options from parent
+     */
+    protected function _beforeToHtml()
     {
-        parent::_construct();
-        $this->setTemplate('sales/order/comments/view.phtml');
+        if (!$this->getParentBlock()) {
+            Mage::throwException(Mage::helper('adminhtml')->__('Invalid parent block for this block.'));
+        }
+        $this->setEntity($this->getParentBlock()->getSource());
+        parent::_beforeToHtml();
     }
 
     /**
@@ -41,8 +53,8 @@ class Mage_Adminhtml_Block_Sales_Order_Comments_View extends Mage_Adminhtml_Bloc
     protected function _prepareLayout()
     {
         $button = $this->getLayout()->createBlock('adminhtml/widget_button')
-            ->addData(array(
-                'id'      => 'submit_comment_buttom',
+            ->setData(array(
+                'id'      => 'submit_comment_button',
                 'label'   => Mage::helper('sales')->__('Submit Comment'),
                 'class'   => 'save'
             ));
@@ -56,4 +68,35 @@ class Mage_Adminhtml_Block_Sales_Order_Comments_View extends Mage_Adminhtml_Bloc
         return $this->getUrl('*/*/addComment',array('id'=>$this->getEntity()->getId()));
     }
 
+    public function canSendCommentEmail()
+    {
+        switch ($this->getParentType()) {
+            case 'invoice':
+                return Mage::helper('sales')->canSendInvoiceCommentEmail(
+                    $this->getEntity()->getOrder()->getStore()->getId()
+                );
+            case 'shipment':
+                return Mage::helper('sales')->canSendShipmentCommentEmail(
+                    $this->getEntity()->getOrder()->getStore()->getId()
+                );
+            case 'creditmemo':
+                return Mage::helper('sales')->canSendCreditmemoCommentEmail(
+                    $this->getEntity()->getOrder()->getStore()->getId()
+                );
+        }
+
+        return true;
+    }
+
+    /**
+     * Replace links in string
+     *
+     * @param array|string $data
+     * @param null|array $allowedTags
+     * @return string
+     */
+    public function escapeHtml($data, $allowedTags = null)
+    {
+        return Mage::helper('adminhtml/sales')->escapeHtmlWithLinks($data, $allowedTags);
+    }
 }

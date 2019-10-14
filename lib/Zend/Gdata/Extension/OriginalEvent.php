@@ -15,31 +15,34 @@
  *
  * @category   Zend
  * @package    Zend_Gdata
- * @copyright  Copyright (c) 2005-2008 Zend Technologies USA Inc. (http://www.zend.com)
+ * @subpackage Gdata
+ * @copyright  Copyright (c) 2005-2015 Zend Technologies USA Inc. (http://www.zend.com)
  * @license    http://framework.zend.com/license/new-bsd     New BSD License
+ * @version    $Id$
  */
 
 /**
  * @see Zend_Gdata_Extension
  */
-require_once 'Zend/Gdata/Extension.php';
+#require_once 'Zend/Gdata/Extension.php';
 
 /**
  * @see Zend_Gdata_Feed
  */
-require_once 'Zend/Gdata/Feed.php';
+#require_once 'Zend/Gdata/Feed.php';
 
 /**
  * @see Zend_Gdata_When
  */
-require_once 'Zend/Gdata/Extension/When.php';
+#require_once 'Zend/Gdata/Extension/When.php';
 
 /**
  * Represents the gd:originalEvent element
  *
  * @category   Zend
  * @package    Zend_Gdata
- * @copyright  Copyright (c) 2005-2008 Zend Technologies USA Inc. (http://www.zend.com)
+ * @subpackage Gdata
+ * @copyright  Copyright (c) 2005-2015 Zend Technologies USA Inc. (http://www.zend.com)
  * @license    http://framework.zend.com/license/new-bsd     New BSD License
  */
 class Zend_Gdata_Extension_OriginalEvent extends Zend_Gdata_Extension
@@ -58,16 +61,16 @@ class Zend_Gdata_Extension_OriginalEvent extends Zend_Gdata_Extension
         $this->_when = $when;
     }
 
-    public function getDOM($doc = null)
+    public function getDOM($doc = null, $majorVersion = 1, $minorVersion = null)
     {
-        $element = parent::getDOM($doc);
-        if ($this->_id != null) {
+        $element = parent::getDOM($doc, $majorVersion, $minorVersion);
+        if ($this->_id !== null) {
             $element->setAttribute('id', $this->_id);
         }
-        if ($this->_href != null) {
+        if ($this->_href !== null) {
             $element->setAttribute('href', $this->_href);
         }
-        if ($this->_when != null) {
+        if ($this->_when !== null) {
             $element->appendChild($this->_when->getDOM($element->ownerDocument));
         }
         return $element;

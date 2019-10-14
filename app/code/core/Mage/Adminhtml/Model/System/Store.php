@@ -10,11 +10,17 @@
  * http://opensource.org/licenses/osl-3.0.php
  * If you did not receive a copy of the license and are unable to
  * obtain it through the world-wide-web, please send an email
- * to license@magentocommerce.com so we can send you a copy immediately.
+ * to license@magento.com so we can send you a copy immediately.
  *
- * @category   Mage
- * @package    Mage_Adminhtml
- * @copyright  Copyright (c) 2004-2007 Irubin Consulting Inc. DBA Varien (http://www.varien.com)
+ * DISCLAIMER
+ *
+ * Do not edit or add to this file if you wish to upgrade Magento to newer
+ * versions in the future. If you wish to customize Magento for your
+ * needs please refer to http://www.magento.com for more information.
+ *
+ * @category    Mage
+ * @package     Mage_Adminhtml
+ * @copyright  Copyright (c) 2006-2017 X.commerce, Inc. and affiliates (http://www.magento.com)
  * @license    http://opensource.org/licenses/osl-3.0.php  Open Software License (OSL 3.0)
  */
 
@@ -24,6 +30,7 @@
  *
  * @category   Mage
  * @package    Mage_Adminhtml
+ * @author      Magento Core Team <core@magentocommerce.com>
  */
 class Mage_Adminhtml_Model_System_Store extends Varien_Object
 {
@@ -53,6 +60,11 @@ class Mage_Adminhtml_Model_System_Store extends Varien_Object
     protected $_storeCollection;
 
     /**
+     * @var bool
+     */
+    private $_isAdminScopeAllowed = true;
+
+    /**
      * Init model
      * Load Website, Group and Store collections
      *
@@ -70,10 +82,7 @@ class Mage_Adminhtml_Model_System_Store extends Varien_Object
      */
     protected function _loadWebsiteCollection()
     {
-        $this->_websiteCollection = array();
-        foreach (Mage::getModel('core/website')->getCollection() as $website) {
-            $this->_websiteCollection[$website->getId()] = $website;
-        }
+        $this->_websiteCollection = Mage::app()->getWebsites();
         return $this;
     }
 
@@ -85,8 +94,10 @@ class Mage_Adminhtml_Model_System_Store extends Varien_Object
     protected function _loadGroupCollection()
     {
         $this->_groupCollection = array();
-        foreach (Mage::getModel('core/store_group')->getCollection() as $group) {
-            $this->_groupCollection[$group->getId()] = $group;
+        foreach (Mage::app()->getWebsites() as $website) {
+            foreach ($website->getGroups() as $group) {
+                $this->_groupCollection[$group->getId()] = $group;
+            }
         }
         return $this;
     }
@@ -98,13 +109,17 @@ class Mage_Adminhtml_Model_System_Store extends Varien_Object
      */
     protected function _loadStoreCollection()
     {
-        $this->_storeCollection = array();
-        foreach (Mage::getModel('core/store')->getCollection() as $store) {
-            $this->_storeCollection[$store->getId()] = $store;
-        }
+        $this->_storeCollection = Mage::app()->getStores();
         return $this;
     }
 
+    /**
+     * Retrieve store values for form
+     *
+     * @param bool $empty
+     * @param bool $all
+     * @return array
+     */
     public function getStoreValuesForForm($empty = false, $all = false)
     {
         $options = array();
@@ -114,12 +129,14 @@ class Mage_Adminhtml_Model_System_Store extends Varien_Object
                 'value' => ''
             );
         }
-        if ($all) {
+        if ($all && $this->_isAdminScopeAllowed) {
             $options[] = array(
                 'label' => Mage::helper('adminhtml')->__('All Store Views'),
                 'value' => 0
             );
         }
+
+        $nonEscapableNbspChar = html_entity_decode('&#160;', ENT_NOQUOTES, 'UTF-8');
 
         foreach ($this->_websiteCollection as $website) {
             $websiteShow = false;
@@ -144,13 +161,13 @@ class Mage_Adminhtml_Model_System_Store extends Varien_Object
                         $values    = array();
                     }
                     $values[] = array(
-                        'label' => '&nbsp;&nbsp;&nbsp;&nbsp;' . $store->getName(),
+                        'label' => str_repeat($nonEscapableNbspChar, 4) . $store->getName(),
                         'value' => $store->getId()
                     );
                 }
                 if ($groupShow) {
                     $options[] = array(
-                        'label' => '&nbsp;&nbsp;&nbsp;&nbsp;' . $group->getName(),
+                        'label' => str_repeat($nonEscapableNbspChar, 4) . $group->getName(),
                         'value' => $values
                     );
                 }
@@ -159,16 +176,88 @@ class Mage_Adminhtml_Model_System_Store extends Varien_Object
         return $options;
     }
 
+    /**
+     * Retrieve stores structure
+     *
+     * @param bool $isAll
+     * @param array $storeIds
+     * @param array $groupIds
+     * @param array $websiteIds
+     * @return array
+     */
+    public function getStoresStructure($isAll = false, $storeIds = array(), $groupIds = array(), $websiteIds = array())
+    {
+        $out = array();
+        $websites = $this->getWebsiteCollection();
+
+        if ($isAll) {
+            $out[] = array(
+                'value' => 0,
+                'label' => Mage::helper('adminhtml')->__('All Store Views')
+            );
+        }
+
+        foreach ($websites as $website) {
+
+            $websiteId = $website->getId();
+            if ($websiteIds && !in_array($websiteId, $websiteIds)) {
+                continue;
+            }
+            $out[$websiteId] = array(
+                'value' => $websiteId,
+                'label' => $website->getName()
+            );
+
+            foreach ($website->getGroups() as $group) {
+
+                $groupId = $group->getId();
+                if ($groupIds && !in_array($groupId, $groupIds)) {
+                    continue;
+                }
+                $out[$websiteId]['children'][$groupId] = array(
+                    'value' => $groupId,
+                    'label' => $group->getName()
+                );
+
+                foreach ($group->getStores() as $store) {
+
+                    $storeId = $store->getId();
+                    if ($storeIds && !in_array($storeId, $storeIds)) {
+                        continue;
+                    }
+                    $out[$websiteId]['children'][$groupId]['children'][$storeId] = array(
+                        'value' => $storeId,
+                        'label' => $store->getName()
+                    );
+                }
+                if (empty($out[$websiteId]['children'][$groupId]['children'])) {
+                    unset($out[$websiteId]['children'][$groupId]);
+                }
+            }
+            if (empty($out[$websiteId]['children'])) {
+                unset($out[$websiteId]);
+            }
+        }
+        return $out;
+    }
+
+    /**
+     * Website label/value array getter, compatible with form dropdown options
+     *
+     * @param bool $empty
+     * @param bool $all
+     * @return array
+     */
     public function getWebsiteValuesForForm($empty = false, $all = false)
     {
         $options = array();
         if ($empty) {
             $options[] = array(
-                'label' => '',
+                'label' => Mage::helper('adminhtml')->__('-- Please Select --'),
                 'value' => ''
             );
         }
-        if ($all) {
+        if ($all && $this->_isAdminScopeAllowed) {
             $options[] = array(
                 'label' => Mage::helper('adminhtml')->__('Admin'),
                 'value' => 0
@@ -180,6 +269,52 @@ class Mage_Adminhtml_Model_System_Store extends Varien_Object
                 'label' => $website->getName(),
                 'value' => $website->getId(),
             );
+        }
+        return $options;
+    }
+
+    /**
+     * Get websites as id => name associative array
+     *
+     * @param bool $withDefault
+     * @param string $attribute
+     * @return array
+     */
+    public function getWebsiteOptionHash($withDefault = false, $attribute = 'name')
+    {
+        $options = array();
+        foreach (Mage::app()->getWebsites((bool)$withDefault && $this->_isAdminScopeAllowed) as $website) {
+            $options[$website->getId()] = $website->getDataUsingMethod($attribute);
+        }
+        return $options;
+    }
+
+    /**
+     * Get store views as id => name associative array
+     *
+     * @param bool $withDefault
+     * @param string $attribute
+     * @return array
+     */
+    public function getStoreOptionHash($withDefault = false, $attribute = 'name')
+    {
+        $options = array();
+        foreach (Mage::app()->getStores((bool)$withDefault && $this->_isAdminScopeAllowed) as $store) {
+            $options[$store->getId()] = $store->getDataUsingMethod($attribute);
+        }
+        return $options;
+    }
+
+    /**
+     * Get store groups as id => name associative array
+     *
+     * @param string $attribute
+     * @return array
+     */
+    public function getStoreGroupOptionHash($attribute = 'name')
+    {
+        foreach ($this->_groupCollection as $group) {
+            $options[$group->getId()] = $group->getDataUsingMethod($attribute);
         }
         return $options;
     }
@@ -213,7 +348,7 @@ class Mage_Adminhtml_Model_System_Store extends Varien_Object
                 return $group->getName();
             }
         }
-        return $null;
+        return null;
     }
 
     /**
@@ -256,7 +391,7 @@ class Mage_Adminhtml_Model_System_Store extends Varien_Object
         if (is_array($storeId)) {
             $names = array();
             foreach ($storeId as $id) {
-            	$names[]= $this->getStoreNameWithWebsite($id);
+                $names[]= $this->getStoreNameWithWebsite($id);
             }
             $name = implode(', ', $names);
         }
@@ -345,7 +480,7 @@ class Mage_Adminhtml_Model_System_Store extends Varien_Object
         if (is_array($storeId)) {
             $names = array();
             foreach ($storeId as $id) {
-            	$names[]= $this->getStoreNamePath($id);
+                $names[]= $this->getStoreNamePath($id);
             }
             $name = implode(', ', $names);
         }
@@ -353,9 +488,21 @@ class Mage_Adminhtml_Model_System_Store extends Varien_Object
             if (isset($this->_storeCollection[$storeId])) {
                 $data = $this->_storeCollection[$storeId];
                 $name .= $this->getWebsiteName($data->getWebsiteId());
-                $name .= ($name ? '/' : '').$this->getGroupName($data->getGroupId());
+                $name .= ($name ? '/' : '') . $this->getGroupName($data->getGroupId());
             }
         }
         return $name;
+    }
+
+    /**
+     * Specify whether to show admin-scope options
+     *
+     * @param bool $value
+     * @return Mage_Adminhtml_Model_System_Store
+     */
+    public function setIsAdminScopeAllowed($value)
+    {
+        $this->_isAdminScopeAllowed = (bool)$value;
+        return $this;
     }
 }

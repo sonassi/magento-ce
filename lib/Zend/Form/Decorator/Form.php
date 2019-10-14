@@ -15,17 +15,17 @@
  * @category   Zend
  * @package    Zend_Form
  * @subpackage Decorator
- * @copyright  Copyright (c) 2005-2008 Zend Technologies USA Inc. (http://www.zend.com)
+ * @copyright  Copyright (c) 2005-2015 Zend Technologies USA Inc. (http://www.zend.com)
  * @license    http://framework.zend.com/license/new-bsd     New BSD License
  */
 
 /** Zend_Form_Decorator_Abstract */
-require_once 'Zend/Form/Decorator/Abstract.php';
+#require_once 'Zend/Form/Decorator/Abstract.php';
 
 /**
  * Zend_Form_Decorator_Form
  *
- * Render a Zend_Form object. 
+ * Render a Zend_Form object.
  *
  * Accepts following options:
  * - separator: Separator to use between elements
@@ -33,13 +33,13 @@ require_once 'Zend/Form/Decorator/Abstract.php';
  *   arguments, string content, a name, and an array of attributes.
  *
  * Any other options passed will be used as HTML attributes of the form tag.
- * 
+ *
  * @category   Zend
  * @package    Zend_Form
  * @subpackage Decorator
- * @copyright  Copyright (c) 2005-2008 Zend Technologies USA Inc. (http://www.zend.com)
+ * @copyright  Copyright (c) 2005-2015 Zend Technologies USA Inc. (http://www.zend.com)
  * @license    http://framework.zend.com/license/new-bsd     New BSD License
- * @version    $Id: Form.php 8487 2008-02-29 21:33:49Z matthew $
+ * @version    $Id$
  */
 class Zend_Form_Decorator_Form extends Zend_Form_Decorator_Abstract
 {
@@ -51,8 +51,8 @@ class Zend_Form_Decorator_Form extends Zend_Form_Decorator_Abstract
 
     /**
      * Set view helper for rendering form
-     * 
-     * @param  string $helper 
+     *
+     * @param  string $helper
      * @return Zend_Form_Decorator_Form
      */
     public function setHelper($helper)
@@ -63,7 +63,7 @@ class Zend_Form_Decorator_Form extends Zend_Form_Decorator_Abstract
 
     /**
      * Get view helper for rendering form
-     * 
+     *
      * @return string
      */
     public function getHelper()
@@ -78,9 +78,9 @@ class Zend_Form_Decorator_Form extends Zend_Form_Decorator_Abstract
     /**
      * Retrieve decorator options
      *
-     * Assures that form action and method are set, and sets appropriate 
+     * Assures that form action and method are set, and sets appropriate
      * encoding type if current method is POST.
-     * 
+     *
      * @return array
      */
     public function getOptions()
@@ -113,8 +113,8 @@ class Zend_Form_Decorator_Form extends Zend_Form_Decorator_Abstract
      * Render a form
      *
      * Replaces $content entirely from currently set element.
-     * 
-     * @param  string $content 
+     *
+     * @param  string $content
      * @return string
      */
     public function render($content)
@@ -125,7 +125,10 @@ class Zend_Form_Decorator_Form extends Zend_Form_Decorator_Abstract
             return $content;
         }
 
-        $helper  = $this->getHelper();
-        return $view->$helper($form->getName(), $this->getOptions(), $content); 
+        $helper        = $this->getHelper();
+        $attribs       = $this->getOptions();
+        $name          = $form->getFullyQualifiedName();
+        $attribs['id'] = $form->getId();
+        return $view->$helper($name, $attribs, $content);
     }
 }

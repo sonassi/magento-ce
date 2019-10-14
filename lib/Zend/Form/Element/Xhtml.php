@@ -15,22 +15,22 @@
  * @category   Zend
  * @package    Zend_Form
  * @subpackage Element
- * @copyright  Copyright (c) 2005-2008 Zend Technologies USA Inc. (http://www.zend.com)
+ * @copyright  Copyright (c) 2005-2015 Zend Technologies USA Inc. (http://www.zend.com)
  * @license    http://framework.zend.com/license/new-bsd     New BSD License
  */
 
 /** Zend_Form_Element */
-require_once 'Zend/Form/Element.php';
+#require_once 'Zend/Form/Element.php';
 
 /**
  * Base element for XHTML elements
- * 
+ *
  * @category   Zend
  * @package    Zend_Form
  * @subpackage Element
- * @copyright  Copyright (c) 2005-2008 Zend Technologies USA Inc. (http://www.zend.com)
+ * @copyright  Copyright (c) 2005-2015 Zend Technologies USA Inc. (http://www.zend.com)
  * @license    http://framework.zend.com/license/new-bsd     New BSD License
- * @version    $Id: Xhtml.php 8064 2008-02-16 10:58:39Z thomas $
+ * @version    $Id$
  */
 abstract class Zend_Form_Element_Xhtml extends Zend_Form_Element
 {

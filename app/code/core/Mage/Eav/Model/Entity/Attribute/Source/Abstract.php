@@ -10,11 +10,17 @@
  * http://opensource.org/licenses/osl-3.0.php
  * If you did not receive a copy of the license and are unable to
  * obtain it through the world-wide-web, please send an email
- * to license@magentocommerce.com so we can send you a copy immediately.
+ * to license@magento.com so we can send you a copy immediately.
  *
- * @category   Mage
- * @package    Mage_Eav
- * @copyright  Copyright (c) 2004-2007 Irubin Consulting Inc. DBA Varien (http://www.varien.com)
+ * DISCLAIMER
+ *
+ * Do not edit or add to this file if you wish to upgrade Magento to newer
+ * versions in the future. If you wish to customize Magento for your
+ * needs please refer to http://www.magento.com for more information.
+ *
+ * @category    Mage
+ * @package     Mage_Eav
+ * @copyright  Copyright (c) 2006-2017 X.commerce, Inc. and affiliates (http://www.magento.com)
  * @license    http://opensource.org/licenses/osl-3.0.php  Open Software License (OSL 3.0)
  */
 
@@ -24,8 +30,10 @@
  *
  * @category   Mage
  * @package    Mage_Eav
+ * @author     Magento Core Team <core@magentocommerce.com>
  */
-abstract class Mage_Eav_Model_Entity_Attribute_Source_Abstract implements Mage_Eav_Model_Entity_Attribute_Source_Interface
+abstract class Mage_Eav_Model_Entity_Attribute_Source_Abstract
+    implements Mage_Eav_Model_Entity_Attribute_Source_Interface
 {
     /**
      * Reference to the attribute instance
@@ -39,7 +47,7 @@ abstract class Mage_Eav_Model_Entity_Attribute_Source_Abstract implements Mage_E
      *
      * @var array
      */
-    protected $_options;
+    protected $_options                 = null;
 
     /**
      * Set attribute instance
@@ -66,8 +74,8 @@ abstract class Mage_Eav_Model_Entity_Attribute_Source_Abstract implements Mage_E
     /**
      * Get a text for option value
      *
-     * @param string|integer $value
-     * @return string
+     * @param  string|int $value
+     * @return string|bool
      */
     public function getOptionText($value)
     {
@@ -75,7 +83,7 @@ abstract class Mage_Eav_Model_Entity_Attribute_Source_Abstract implements Mage_E
         // Fixed for tax_class_id and custom_design
         if (sizeof($options) > 0) foreach($options as $option) {
             if (isset($option['value']) && $option['value'] == $value) {
-                return $option;
+                return isset($option['label']) ? $option['label'] : $option['value'];
             }
         } // End
         if (isset($options[$value])) {
@@ -92,5 +100,58 @@ abstract class Mage_Eav_Model_Entity_Attribute_Source_Abstract implements Mage_E
             }
         }
         return null;
+    }
+
+    /**
+     * Add Value Sort To Collection Select
+     *
+     * @param Mage_Eav_Model_Entity_Collection_Abstract $collection
+     * @param string $dir direction
+     * @return Mage_Eav_Model_Entity_Attribute_Source_Abstract
+     */
+    public function addValueSortToCollection($collection, $dir = Varien_Data_Collection::SORT_ORDER_DESC) {
+        return $this;
+    }
+
+    /**
+     * Retrieve flat column definition
+     *
+     * @return array
+     */
+    public function getFlatColums()
+    {
+        return array();
+    }
+
+    /**
+     * Retrieve Indexes(s) for Flat
+     *
+     * @return array
+     */
+    public function getFlatIndexes()
+    {
+        return array();
+    }
+
+    /**
+     * Retrieve Select For Flat Attribute update
+     *
+     * @param int $store
+     * @return Varien_Db_Select|null
+     */
+    public function getFlatUpdateSelect($store)
+    {
+        return null;
+    }
+
+    /**
+     * Get a text for index option value
+     *
+     * @param string|int $value
+     * @return string|bool
+     */
+    public function getIndexOptionText($value)
+    {
+        return $this->getOptionText($value);
     }
 }

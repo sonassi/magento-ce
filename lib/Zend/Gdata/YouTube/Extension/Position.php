@@ -15,21 +15,24 @@
  *
  * @category   Zend
  * @package    Zend_Gdata
- * @copyright  Copyright (c) 2005-2008 Zend Technologies USA Inc. (http://www.zend.com)
+ * @subpackage YouTube
+ * @copyright  Copyright (c) 2005-2015 Zend Technologies USA Inc. (http://www.zend.com)
  * @license    http://framework.zend.com/license/new-bsd     New BSD License
+ * @version    $Id$
  */
 
 /**
  * @see Zend_Gdata_Extension
  */
-require_once 'Zend/Gdata/Extension.php';
+#require_once 'Zend/Gdata/Extension.php';
 
 /**
  * Data model class to represent a playlist item's position in the list (yt:position)
  *
  * @category   Zend
  * @package    Zend_Gdata
- * @copyright  Copyright (c) 2005-2008 Zend Technologies USA Inc. (http://www.zend.com)
+ * @subpackage YouTube
+ * @copyright  Copyright (c) 2005-2015 Zend Technologies USA Inc. (http://www.zend.com)
  * @license    http://framework.zend.com/license/new-bsd     New BSD License
  */
 class Zend_Gdata_YouTube_Extension_Position extends Zend_Gdata_Extension
@@ -40,14 +43,12 @@ class Zend_Gdata_YouTube_Extension_Position extends Zend_Gdata_Extension
 
     /**
      * Constructs a new Zend_Gdata_YouTube_Extension_Position object.
-     * 
+     *
      * @param string $value (optional) The 1-based position in the playlist
      */
-    public function __construct($value = null) 
+    public function __construct($value = null)
     {
-        foreach (Zend_Gdata_YouTube::$namespaces as $nsPrefix => $nsUri) {
-            $this->registerNamespace($nsPrefix, $nsUri);
-        }
+        $this->registerAllNamespaces(Zend_Gdata_YouTube::$namespaces);
         parent::__construct();
         $this->_text = $value;
     }
@@ -84,6 +85,6 @@ class Zend_Gdata_YouTube_Extension_Position extends Zend_Gdata_Extension
     {
         return $this->getValue();
     }
-    
+
 }
 

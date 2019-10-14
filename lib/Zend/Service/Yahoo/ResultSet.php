@@ -16,9 +16,9 @@
  * @category   Zend
  * @package    Zend_Service
  * @subpackage Yahoo
- * @copyright  Copyright (c) 2005-2008 Zend Technologies USA Inc. (http://www.zend.com)
+ * @copyright  Copyright (c) 2005-2015 Zend Technologies USA Inc. (http://www.zend.com)
  * @license    http://framework.zend.com/license/new-bsd     New BSD License
- * @version    $Id: ResultSet.php 8064 2008-02-16 10:58:39Z thomas $
+ * @version    $Id$
  */
 
 
@@ -26,7 +26,7 @@
  * @category   Zend
  * @package    Zend_Service
  * @subpackage Yahoo
- * @copyright  Copyright (c) 2005-2008 Zend Technologies USA Inc. (http://www.zend.com)
+ * @copyright  Copyright (c) 2005-2015 Zend Technologies USA Inc. (http://www.zend.com)
  * @license    http://framework.zend.com/license/new-bsd     New BSD License
  */
 class Zend_Service_Yahoo_ResultSet implements SeekableIterator
@@ -126,7 +126,7 @@ class Zend_Service_Yahoo_ResultSet implements SeekableIterator
         /**
          * @see Zend_Service_Exception
          */
-        require_once 'Zend/Service/Exception.php';
+        #require_once 'Zend/Service/Exception.php';
         throw new Zend_Service_Exception('Zend_Service_Yahoo_ResultSet::current() must be implemented by child '
                                        . 'classes');
     }

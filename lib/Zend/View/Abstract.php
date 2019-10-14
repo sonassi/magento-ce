@@ -14,22 +14,26 @@
  *
  * @category   Zend
  * @package    Zend_View
- * @copyright  Copyright (c) 2005-2008 Zend Technologies USA Inc. (http://www.zend.com)
+ * @copyright  Copyright (c) 2005-2015 Zend Technologies USA Inc. (http://www.zend.com)
  * @license    http://framework.zend.com/license/new-bsd     New BSD License
+ * @version    $Id$
  */
 
-/** Zend_Loader */
-require_once 'Zend/Loader.php';
+/** @see Zend_Loader */
+#require_once 'Zend/Loader.php';
 
-/** Zend_View_Interface */
-require_once 'Zend/View/Interface.php';
+/** @see Zend_Loader_PluginLoader */
+#require_once 'Zend/Loader/PluginLoader.php';
+
+/** @see Zend_View_Interface */
+#require_once 'Zend/View/Interface.php';
 
 /**
  * Abstract class for Zend_View to help enforce private constructs.
  *
  * @category   Zend
  * @package    Zend_View
- * @copyright  Copyright (c) 2005-2008 Zend Technologies USA Inc. (http://www.zend.com)
+ * @copyright  Copyright (c) 2005-2015 Zend Technologies USA Inc. (http://www.zend.com)
  * @license    http://framework.zend.com/license/new-bsd     New BSD License
  */
 abstract class Zend_View_Abstract implements Zend_View_Interface
@@ -105,10 +109,28 @@ abstract class Zend_View_Abstract implements Zend_View_Interface
     private $_escape = 'htmlspecialchars';
 
     /**
-     * Encoding to use in escaping mechanisms; defaults to latin1 (ISO-8859-1)
+     * Encoding to use in escaping mechanisms; defaults to utf-8
      * @var string
      */
-    private $_encoding = 'ISO-8859-1';
+    private $_encoding = 'UTF-8';
+
+    /**
+     * Flag indicating whether or not LFI protection for rendering view scripts is enabled
+     * @var bool
+     */
+    private $_lfiProtectionOn = true;
+
+    /**
+     * Plugin loaders
+     * @var array
+     */
+    private $_loaders = array();
+
+    /**
+     * Plugin types
+     * @var array
+     */
+    private $_loaderTypes = array('filter', 'helper');
 
     /**
      * Strict variables flag; when on, undefined variables accessed in the view
@@ -126,7 +148,8 @@ abstract class Zend_View_Abstract implements Zend_View_Interface
     {
         // set inital paths and properties
         $this->setScriptPath(null);
-        $this->setHelperPath(null);
+
+        // $this->setHelperPath(null);
         $this->setFilterPath(null);
 
         // user-defined escaping callback
@@ -155,20 +178,32 @@ abstract class Zend_View_Abstract implements Zend_View_Interface
 
         // user-defined helper path
         if (array_key_exists('helperPath', $config)) {
-            $prefix = 'Zend_View_Helper';
-            if (array_key_exists('helperPathPrefix', $config)) {
-                $prefix = $config['helperPathPrefix'];
+            if (is_array($config['helperPath'])) {
+                foreach ($config['helperPath'] as $prefix => $path) {
+                    $this->addHelperPath($path, $prefix);
+                }
+            } else {
+                $prefix = 'Zend_View_Helper';
+                if (array_key_exists('helperPathPrefix', $config)) {
+                    $prefix = $config['helperPathPrefix'];
+                }
+                $this->addHelperPath($config['helperPath'], $prefix);
             }
-            $this->addHelperPath($config['helperPath'], $prefix);
         }
 
         // user-defined filter path
         if (array_key_exists('filterPath', $config)) {
-            $prefix = 'Zend_View_Filter';
-            if (array_key_exists('filterPathPrefix', $config)) {
-                $prefix = $config['filterPathPrefix'];
+            if (is_array($config['filterPath'])) {
+                foreach ($config['filterPath'] as $prefix => $path) {
+                    $this->addFilterPath($path, $prefix);
+                }
+            } else {
+                $prefix = 'Zend_View_Filter';
+                if (array_key_exists('filterPathPrefix', $config)) {
+                    $prefix = $config['filterPathPrefix'];
+                }
+                $this->addFilterPath($config['filterPath'], $prefix);
             }
-            $this->addFilterPath($config['filterPath'], $prefix);
         }
 
         // user-defined filters
@@ -179,6 +214,19 @@ abstract class Zend_View_Abstract implements Zend_View_Interface
         // strict vars
         if (array_key_exists('strictVars', $config)) {
             $this->strictVars($config['strictVars']);
+        }
+
+        // LFI protection flag
+        if (array_key_exists('lfiProtectionOn', $config)) {
+            $this->setLfiProtection($config['lfiProtectionOn']);
+        }
+
+        if (array_key_exists('assign', $config)
+            && is_array($config['assign'])
+        ) {
+            foreach ($config['assign'] as $key => $value) {
+                $this->assign($key, $value);
+            }
         }
 
         $this->init();
@@ -261,8 +309,10 @@ abstract class Zend_View_Abstract implements Zend_View_Interface
             return;
         }
 
-        require_once 'Zend/View/Exception.php';
-        throw new Zend_View_Exception('Setting private or protected class members is not allowed', $this);
+        #require_once 'Zend/View/Exception.php';
+        $e = new Zend_View_Exception('Setting private or protected class members is not allowed');
+        $e->setView($this);
+        throw $e;
     }
 
     /**
@@ -413,6 +463,64 @@ abstract class Zend_View_Abstract implements Zend_View_Interface
     }
 
     /**
+     * Set plugin loader for a particular plugin type
+     *
+     * @param  Zend_Loader_PluginLoader $loader
+     * @param  string $type
+     * @return Zend_View_Abstract
+     */
+    public function setPluginLoader(Zend_Loader_PluginLoader $loader, $type)
+    {
+        $type = strtolower($type);
+        if (!in_array($type, $this->_loaderTypes)) {
+            #require_once 'Zend/View/Exception.php';
+            $e = new Zend_View_Exception(sprintf('Invalid plugin loader type "%s"', $type));
+            $e->setView($this);
+            throw $e;
+        }
+
+        $this->_loaders[$type] = $loader;
+        return $this;
+    }
+
+    /**
+     * Retrieve plugin loader for a specific plugin type
+     *
+     * @param  string $type
+     * @return Zend_Loader_PluginLoader
+     */
+    public function getPluginLoader($type)
+    {
+        $type = strtolower($type);
+        if (!in_array($type, $this->_loaderTypes)) {
+            #require_once 'Zend/View/Exception.php';
+            $e = new Zend_View_Exception(sprintf('Invalid plugin loader type "%s"; cannot retrieve', $type));
+            $e->setView($this);
+            throw $e;
+        }
+
+        if (!array_key_exists($type, $this->_loaders)) {
+            $prefix     = 'Zend_View_';
+            $pathPrefix = 'Zend/View/';
+
+            $pType = ucfirst($type);
+            switch ($type) {
+                case 'filter':
+                case 'helper':
+                default:
+                    $prefix     .= $pType;
+                    $pathPrefix .= $pType;
+                    $loader = new Zend_Loader_PluginLoader(array(
+                        $prefix => $pathPrefix
+                    ));
+                    $this->_loaders[$type] = $loader;
+                    break;
+            }
+        }
+        return $this->_loaders[$type];
+    }
+
+    /**
      * Adds to the stack of helper paths in LIFO order.
      *
      * @param string|array The directory (-ies) to add.
@@ -422,12 +530,7 @@ abstract class Zend_View_Abstract implements Zend_View_Interface
      */
     public function addHelperPath($path, $classPrefix = 'Zend_View_Helper_')
     {
-        if (!empty($classPrefix) && ('_' != substr($classPrefix, -1))) {
-            $classPrefix .= '_';
-        }
-
-        $this->_addPath('helper', $path, $classPrefix);
-        return $this;
+        return $this->_addPluginPath('helper', $classPrefix, (array) $path);
     }
 
     /**
@@ -442,16 +545,8 @@ abstract class Zend_View_Abstract implements Zend_View_Interface
      */
     public function setHelperPath($path, $classPrefix = 'Zend_View_Helper_')
     {
-        if ($classPrefix == null) {
-            throw new Zend_View_Exception('The classPrefix cannot be empty.');
-        }
-        
-        if (!empty($classPrefix) && ('_' != substr($classPrefix, -1))) {
-            $classPrefix .= '_';
-        }
-
-        $this->_setPath('helper', $path, $classPrefix);
-        return $this;
+        unset($this->_loaders['helper']);
+        return $this->addHelperPath($path, $classPrefix);
     }
 
     /**
@@ -462,16 +557,7 @@ abstract class Zend_View_Abstract implements Zend_View_Interface
      */
     public function getHelperPath($name)
     {
-        if (isset($this->_helperLoadedDir[$name])) {
-            return $this->_helperLoadedDir[$name];
-        }
-
-        try {
-            $this->_loadClass('helper', $name);
-            return $this->_helperLoadedDir[$name];
-        } catch (Zend_View_Exception $e) {
-            return false;
-        }
+        return $this->_getPluginPath('helper', $name);
     }
 
     /**
@@ -481,7 +567,44 @@ abstract class Zend_View_Abstract implements Zend_View_Interface
      */
     public function getHelperPaths()
     {
-        return $this->_getPaths('helper');
+        return $this->getPluginLoader('helper')->getPaths();
+    }
+
+    /**
+     * Registers a helper object, bypassing plugin loader
+     *
+     * @param  Zend_View_Helper_Abstract|object $helper
+     * @param  string $name
+     * @return Zend_View_Abstract
+     * @throws Zend_View_Exception
+     */
+    public function registerHelper($helper, $name)
+    {
+        if (!is_object($helper)) {
+            #require_once 'Zend/View/Exception.php';
+            $e = new Zend_View_Exception('View helper must be an object');
+            $e->setView($this);
+            throw $e;
+        }
+
+        if (!$helper instanceof Zend_View_Interface) {
+            if (!method_exists($helper, $name)) {
+                #require_once 'Zend/View/Exception.php';
+                $e =  new Zend_View_Exception(
+                    'View helper must implement Zend_View_Interface or have a method matching the name provided'
+                );
+                $e->setView($this);
+                throw $e;
+            }
+        }
+
+        if (method_exists($helper, 'setView')) {
+            $helper->setView($this);
+        }
+
+        $name = ucfirst($name);
+        $this->_helper[$name] = $helper;
+        return $this;
     }
 
     /**
@@ -492,16 +615,7 @@ abstract class Zend_View_Abstract implements Zend_View_Interface
      */
     public function getHelper($name)
     {
-        $name = ucfirst($name);
-        if (!isset($this->_helper[$name])) {
-            $class = $this->_loadClass('helper', $name);
-            $this->_helper[$name] = new $class();
-            if (method_exists($this->_helper[$name], 'setView')) {
-                $this->_helper[$name]->setView($this);
-            }
-        }
-
-        return $this->_helper[$name];
+        return $this->_getPlugin('helper', $name);
     }
 
     /**
@@ -526,12 +640,7 @@ abstract class Zend_View_Abstract implements Zend_View_Interface
      */
     public function addFilterPath($path, $classPrefix = 'Zend_View_Filter_')
     {
-        if (!empty($classPrefix) && ('_' != substr($classPrefix, -1))) {
-            $classPrefix .= '_';
-        }
-
-        $this->_addPath('filter', $path, $classPrefix);
-        return $this;
+        return $this->_addPluginPath('filter', $classPrefix, (array) $path);
     }
 
     /**
@@ -546,12 +655,8 @@ abstract class Zend_View_Abstract implements Zend_View_Interface
      */
     public function setFilterPath($path, $classPrefix = 'Zend_View_Filter_')
     {
-        if (!empty($classPrefix) && ('_' != substr($classPrefix, -1))) {
-            $classPrefix .= '_';
-        }
-
-        $this->_setPath('filter', $path, $classPrefix);
-        return $this;
+        unset($this->_loaders['filter']);
+        return $this->addFilterPath($path, $classPrefix);
     }
 
     /**
@@ -562,16 +667,7 @@ abstract class Zend_View_Abstract implements Zend_View_Interface
      */
     public function getFilterPath($name)
     {
-        if (isset($this->_filterLoadedDir[$name])) {
-            return $this->_filterLoadedDir[$name];
-        }
-
-        try {
-            $this->_loadClass('filter', $name);
-            return $this->_filterLoadedDir[$name];
-        } catch (Zend_View_Exception $e) {
-            return false;
-        }
+        return $this->_getPluginPath('filter', $name);
     }
 
     /**
@@ -582,15 +678,7 @@ abstract class Zend_View_Abstract implements Zend_View_Interface
      */
     public function getFilter($name)
     {
-        if (!isset($this->_filterClass[$name])) {
-            $class = $this->_loadClass('filter', $name);
-            $this->_filterClass[$name] = new $class();
-            if (method_exists($this->_filterClass[$name], 'setView')) {
-                $this->_filterClass[$name]->setView($this);
-            }
-        }
-
-        return $this->_filterClass[$name];
+        return $this->_getPlugin('filter', $name);
     }
 
     /**
@@ -612,7 +700,7 @@ abstract class Zend_View_Abstract implements Zend_View_Interface
      */
     public function getFilterPaths()
     {
-        return $this->_getPaths('filter');
+        return $this->getPluginLoader('filter')->getPaths();
     }
 
     /**
@@ -622,7 +710,10 @@ abstract class Zend_View_Abstract implements Zend_View_Interface
      */
     public function getAllPaths()
     {
-        return $this->_path;
+        $paths = $this->_path;
+        $paths['helper'] = $this->getHelperPaths();
+        $paths['filter'] = $this->getFilterPaths();
+        return $paths;
     }
 
     /**
@@ -667,6 +758,28 @@ abstract class Zend_View_Abstract implements Zend_View_Interface
     }
 
     /**
+     * Set LFI protection flag
+     *
+     * @param  bool $flag
+     * @return Zend_View_Abstract
+     */
+    public function setLfiProtection($flag)
+    {
+        $this->_lfiProtectionOn = (bool) $flag;
+        return $this;
+    }
+
+    /**
+     * Return status of LFI protection flag
+     *
+     * @return bool
+     */
+    public function isLfiProtectionOn()
+    {
+        return $this->_lfiProtectionOn;
+    }
+
+    /**
      * Assigns variables to the view script via differing strategies.
      *
      * Zend_View::assign('name', $value) assigns a variable called 'name'
@@ -689,8 +802,10 @@ abstract class Zend_View_Abstract implements Zend_View_Interface
         if (is_string($spec)) {
             // assign by name and value
             if ('_' == substr($spec, 0, 1)) {
-                require_once 'Zend/View/Exception.php';
-                throw new Zend_View_Exception('Setting private or protected class members is not allowed', $this);
+                #require_once 'Zend/View/Exception.php';
+                $e = new Zend_View_Exception('Setting private or protected class members is not allowed');
+                $e->setView($this);
+                throw $e;
             }
             $this->$spec = $value;
         } elseif (is_array($spec)) {
@@ -704,12 +819,16 @@ abstract class Zend_View_Abstract implements Zend_View_Interface
                 $this->$key = $val;
             }
             if ($error) {
-                require_once 'Zend/View/Exception.php';
-                throw new Zend_View_Exception('Setting private or protected class members is not allowed', $this);
+                #require_once 'Zend/View/Exception.php';
+                $e = new Zend_View_Exception('Setting private or protected class members is not allowed');
+                $e->setView($this);
+                throw $e;
             }
         } else {
-            require_once 'Zend/View/Exception.php';
-            throw new Zend_View_Exception('assign() expects a string or array, received ' . gettype($spec), $this);
+            #require_once 'Zend/View/Exception.php';
+            $e = new Zend_View_Exception('assign() expects a string or array, received ' . gettype($spec));
+            $e->setView($this);
+            throw $e;
         }
 
         return $this;
@@ -756,7 +875,7 @@ abstract class Zend_View_Abstract implements Zend_View_Interface
     /**
      * Processes a view script and returns the output.
      *
-     * @param string $name The script script name to process.
+     * @param string $name The script name to process.
      * @return string The script output.
      */
     public function render($name)
@@ -786,7 +905,11 @@ abstract class Zend_View_Abstract implements Zend_View_Interface
             return call_user_func($this->_escape, $var, ENT_COMPAT, $this->_encoding);
         }
 
-        return call_user_func($this->_escape, $var);
+        if (1 == func_num_args()) {
+            return call_user_func($this->_escape, $var);
+        }
+        $args = func_get_args();
+        return call_user_func_array($this->_escape, $args);
     }
 
     /**
@@ -833,15 +956,23 @@ abstract class Zend_View_Abstract implements Zend_View_Interface
     /**
      * Finds a view script from the available directories.
      *
-     * @param $name string The base name of the script.
+     * @param string $name The base name of the script.
      * @return void
      */
     protected function _script($name)
     {
+        if ($this->isLfiProtectionOn() && preg_match('#\.\.[\\\/]#', $name)) {
+            #require_once 'Zend/View/Exception.php';
+            $e = new Zend_View_Exception('Requested scripts may not include parent directory traversal ("../", "..\\" notation)');
+            $e->setView($this);
+            throw $e;
+        }
+
         if (0 == count($this->_path['script'])) {
-            require_once 'Zend/View/Exception.php';
-            throw new Zend_View_Exception('no view script directory set; unable to determine location for view script',
-                $this);
+            #require_once 'Zend/View/Exception.php';
+            $e = new Zend_View_Exception('no view script directory set; unable to determine location for view script');
+            $e->setView($this);
+            throw $e;
         }
 
         foreach ($this->_path['script'] as $dir) {
@@ -850,11 +981,13 @@ abstract class Zend_View_Abstract implements Zend_View_Interface
             }
         }
 
-        require_once 'Zend/View/Exception.php';
+        #require_once 'Zend/View/Exception.php';
         $message = "script '$name' not found in path ("
                  . implode(PATH_SEPARATOR, $this->_path['script'])
                  . ")";
-        throw new Zend_View_Exception($message, $this);
+        $e = new Zend_View_Exception($message);
+        $e->setView($this);
+        throw $e;
     }
 
     /**
@@ -899,9 +1032,9 @@ abstract class Zend_View_Abstract implements Zend_View_Interface
         foreach ((array) $path as $dir) {
             // attempt to strip any possible separator and
             // append the system directory separator
-            $dir = str_replace(array('/', '\\'), DIRECTORY_SEPARATOR, $dir);
-            $dir = rtrim($dir, DIRECTORY_SEPARATOR . DIRECTORY_SEPARATOR)
-                 . DIRECTORY_SEPARATOR;
+            $dir  = rtrim($dir, '/');
+            $dir  = rtrim($dir, '\\');
+            $dir .= '/';
 
             switch ($type) {
                 case 'script':
@@ -958,53 +1091,6 @@ abstract class Zend_View_Abstract implements Zend_View_Interface
     }
 
     /**
-     * Loads a helper or filter class.
-     *
-     * @param  string $type The class type ('helper' or 'filter').
-     * @param  string $name The base name.
-     * @param  string The full class name.
-     * @return string class name loaded
-     * @throws Zend_View_Exception if unable to load class
-     */
-    private function _loadClass($type, $name)
-    {
-        // check to see if name => class mapping exists for helper/filter
-        $classLoaded = '_' . $type . 'Loaded';
-        $classAccess = '_set' . ucfirst($type) . 'Class';
-        if (isset($this->{$classLoaded}[$name])) {
-            return $this->{$classLoaded}[$name];
-        }
-
-        // only look for "$Name.php"
-        $file = ucfirst($name) . '.php';
-
-        // do LIFO search for helper
-        foreach ($this->_path[$type] as $info) {
-            $dir    = $info['dir'];
-            $prefix = $info['prefix'];
-
-            $class = $prefix . ucfirst($name);
-
-            if (class_exists($class, false)) {
-                $reflection = new ReflectionClass($class);
-                $file = $reflection->getFileName();
-                $this->$classAccess($name, $class, $file);
-                return $class;
-            } elseif (Zend_Loader::isReadable($dir . $file)) {
-                include_once $dir . $file;
-
-                if (class_exists($class, false)) {
-                    $this->$classAccess($name, $class, $dir . $file);
-                    return $class;
-                }
-            }
-        }
-
-        require_once 'Zend/View/Exception.php';
-        throw new Zend_View_Exception("$type '$name' not found in path", $this);
-    }
-
-    /**
      * Register helper class as loaded
      *
      * @param  string $name
@@ -1030,6 +1116,78 @@ abstract class Zend_View_Abstract implements Zend_View_Interface
     {
         $this->_filterLoadedDir[$name] = $file;
         $this->_filterLoaded[$name]    = $class;
+    }
+
+    /**
+     * Add a prefixPath for a plugin type
+     *
+     * @param  string $type
+     * @param  string $classPrefix
+     * @param  array $paths
+     * @return Zend_View_Abstract
+     */
+    private function _addPluginPath($type, $classPrefix, array $paths)
+    {
+        $loader = $this->getPluginLoader($type);
+        foreach ($paths as $path) {
+            $loader->addPrefixPath($classPrefix, $path);
+        }
+        return $this;
+    }
+
+    /**
+     * Get a path to a given plugin class of a given type
+     *
+     * @param  string $type
+     * @param  string $name
+     * @return string|false
+     */
+    private function _getPluginPath($type, $name)
+    {
+        $loader = $this->getPluginLoader($type);
+        if ($loader->isLoaded($name)) {
+            return $loader->getClassPath($name);
+        }
+
+        try {
+            $loader->load($name);
+            return $loader->getClassPath($name);
+        } catch (Zend_Loader_Exception $e) {
+            return false;
+        }
+    }
+
+    /**
+     * Retrieve a plugin object
+     *
+     * @param  string $type
+     * @param  string $name
+     * @return object
+     */
+    private function _getPlugin($type, $name)
+    {
+        $name = ucfirst($name);
+        switch ($type) {
+            case 'filter':
+                $storeVar = '_filterClass';
+                $store    = $this->_filterClass;
+                break;
+            case 'helper':
+                $storeVar = '_helper';
+                $store    = $this->_helper;
+                break;
+        }
+
+        if (!isset($store[$name])) {
+            $class = $this->getPluginLoader($type)->load($name);
+            $store[$name] = new $class();
+            if (method_exists($store[$name], 'setView')) {
+                $store[$name]->setView($this);
+            }
+        }
+
+        $this->$storeVar = $store;
+        return $store[$name];
     }
 
     /**

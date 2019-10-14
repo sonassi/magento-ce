@@ -10,145 +10,291 @@
  * http://opensource.org/licenses/osl-3.0.php
  * If you did not receive a copy of the license and are unable to
  * obtain it through the world-wide-web, please send an email
- * to license@magentocommerce.com so we can send you a copy immediately.
+ * to license@magento.com so we can send you a copy immediately.
  *
- * @category   Mage
- * @package    Mage_GoogleAnalytics
- * @copyright  Copyright (c) 2004-2007 Irubin Consulting Inc. DBA Varien (http://www.varien.com)
+ * DISCLAIMER
+ *
+ * Do not edit or add to this file if you wish to upgrade Magento to newer
+ * versions in the future. If you wish to customize Magento for your
+ * needs please refer to http://www.magento.com for more information.
+ *
+ * @category    Mage
+ * @package     Mage_GoogleAnalytics
+ * @copyright  Copyright (c) 2006-2017 X.commerce, Inc. and affiliates (http://www.magento.com)
  * @license    http://opensource.org/licenses/osl-3.0.php  Open Software License (OSL 3.0)
  */
 
+
 /**
- * Google Analytics block
+ * GoogleAnalitics Page Block
  *
  * @category   Mage
  * @package    Mage_GoogleAnalytics
+ * @author     Magento Core Team <core@magentocommerce.com>
  */
-class Mage_GoogleAnalytics_Block_Ga extends Mage_Core_Block_Text
+class Mage_GoogleAnalytics_Block_Ga extends Mage_Core_Block_Template
 {
-
+    /**
+     * @deprecated after 1.4.1.1
+     * @see self::_getOrdersTrackingCode()
+     * @return string
+     */
     public function getQuoteOrdersHtml()
     {
-        $quote = $this->getQuote();
-        if (!$quote) {
-            return '';
-        }
-
-        if ($quote instanceof Mage_Sales_Model_Quote) {
-            $quoteId = $quote->getId();
-        } else {
-            $quoteId = $quote;
-        }
-
-        if (!$quoteId) {
-            return '';
-        }
-
-        $orders = Mage::getResourceModel('sales/order_collection')
-            ->addAttributeToFilter('quote_id', $quoteId)
-            ->load();
-
-        $html = '';
-        foreach ($orders as $order) {
-            $html .= $this->setOrder($order)->getOrderHtml();
-        }
-
-        return $html;
+        return '';
     }
 
+    /**
+     * @deprecated after 1.4.1.1
+     * self::_getOrdersTrackingCode()
+     * @return string
+     */
     public function getOrderHtml()
     {
-
-        $order = $this->getOrder();
-        if (!$order) {
-            return '';
-        }
-
-        if (!$order instanceof Mage_Sales_Model_Order) {
-            $order = Mage::getModel('sales/order')->load($order);
-        }
-
-        if (!$order) {
-            return '';
-        }
-
-        $address = $order->getBillingAddress();
-
-        $html  = '<script type="text/javascript">' . "\n";
-        $html .= 'pageTracker._addTrans(';
-        $html .= '"' . $order->getIncrementId() . '",';
-        $html .= '"' . $order->getAffiliation() . '",';
-        $html .= '"' . $order->getGrandTotal() . '",';
-        $html .= '"' . $order->getTaxAmount() . '",';
-        $html .= '"' . $order->getShippingAmount() . '",';
-        $html .= '"' . $address->getCity() . '",';
-        $html .= '"' . $address->getRegion() . '",';
-        $html .= '"' . $address->getCountry() . '"';
-        $html .= ');' . "\n";
-
-        foreach ($order->getAllItems() as $item) {
-            $html .= 'pageTracker._addItem(';
-            $html .= '"' . $order->getIncrementId() . '",';
-            $html .= '"' . $item->getSku() . '",';
-            $html .= '"' . $item->getName() . '",';
-            $html .= '"' . $item->getCategory() . '",';
-            $html .= '"' . $item->getPrice() . '",';
-            $html .= '"' . $item->getQtyOrdered() . '"';
-            $html .= ');' . "\n";
-        }
-
-        $html .= 'pageTracker._trackTrans();' . "\n";
-        $html .= '</script>';
-
-        return $html;
+        return '';
     }
 
+    /**
+     * @deprecated after 1.4.1.1
+     * @see _toHtml()
+     * @return string
+     */
     public function getAccount()
     {
-        if (!$this->hasData('account')) {
-            $this->setAccount(Mage::getStoreConfig('google/analytics/account'));
-        }
-        return $this->getData('account');
+        return '';
     }
 
+    /**
+     * Get a specific page name (may be customized via layout)
+     *
+     * @return string|null
+     */
     public function getPageName()
     {
-        if (!$this->hasData('page_name')) {
-            $this->setPageName($this->getRequest()->getPathInfo());
-        }
-        return $this->getData('page_name');
+        return $this->_getData('page_name');
     }
 
-    protected function _toHtml()
+    /**
+     * Render regular page tracking javascript code
+     * The custom "page name" may be set from layout or somewhere else. It must start from slash.
+     *
+     * @param string $accountId
+     * @return string
+     */
+    protected function _getPageTrackingCode($accountId)
     {
-        if (!Mage::getStoreConfigFlag('google/analytics/active')) {
+        if ($this->helper('googleanalytics')->isUseUniversalAnalytics()) {
+            return $this->_getPageTrackingCodeUniversal($accountId);
+        } else {
+            return $this->_getPageTrackingCodeAnalytics($accountId);
+        }
+    }
+
+    /**
+     * Render regular page tracking javascript code
+     * The custom "page name" may be set from layout or somewhere else. It must start from slash.
+     *
+     * @param string $accountId
+     * @return string
+     */
+    protected function _getPageTrackingCodeUniversal($accountId)
+    {
+        return "
+ga('create', '{$this->jsQuoteEscape($accountId)}', 'auto');
+" . $this->_getAnonymizationCode() . "
+ga('send', 'pageview');
+";
+    }
+
+    /**
+     * Render regular page tracking javascript code
+     * The custom "page name" may be set from layout or somewhere else. It must start from slash.
+     *
+     * @link http://code.google.com/apis/analytics/docs/gaJS/gaJSApiBasicConfiguration.html#_gat.GA_Tracker_._trackPageview
+     * @link http://code.google.com/apis/analytics/docs/gaJS/gaJSApi_gaq.html
+     * @param string $accountId
+     * @return string
+     */
+    protected function _getPageTrackingCodeAnalytics($accountId)
+    {
+        $pageName   = trim($this->getPageName());
+        $optPageURL = '';
+        if ($pageName && preg_match('/^\/.*/i', $pageName)) {
+            $optPageURL = ", '{$this->jsQuoteEscape($pageName)}'";
+        }
+        return "
+_gaq.push(['_setAccount', '{$this->jsQuoteEscape($accountId)}']);
+" . $this->_getAnonymizationCode() . "
+_gaq.push(['_trackPageview'{$optPageURL}]);
+";
+    }
+
+    /**
+     * Render information about specified orders and their items
+     *
+     * @return string
+     */
+    protected function _getOrdersTrackingCode()
+    {
+        if ($this->helper('googleanalytics')->isUseUniversalAnalytics()) {
+            return $this->_getOrdersTrackingCodeUniversal();
+        } else {
+            return $this->_getOrdersTrackingCodeAnalytics();
+        }
+    }
+
+    /**
+     * Render information about specified orders and their items
+     *
+     * @return string
+     */
+    protected function _getOrdersTrackingCodeUniversal()
+    {
+        $orderIds = $this->getOrderIds();
+        if (empty($orderIds) || !is_array($orderIds)) {
+            return;
+        }
+        $collection = Mage::getResourceModel('sales/order_collection')
+            ->addFieldToFilter('entity_id', array('in' => $orderIds));
+        $result = array();
+        $result[] = "ga('require', 'ecommerce')";
+        foreach ($collection as $order) {
+            $result[] = sprintf("ga('ecommerce:addTransaction', {
+'id': '%s',
+'affiliation': '%s',
+'revenue': '%s',
+'tax': '%s',
+'shipping': '%s'
+});",
+                $order->getIncrementId(),
+                $this->jsQuoteEscape(Mage::app()->getStore()->getFrontendName()),
+                $order->getBaseGrandTotal(),
+                $order->getBaseTaxAmount(),
+                $order->getBaseShippingAmount()
+            );
+            foreach ($order->getAllVisibleItems() as $item) {
+                $result[] = sprintf("ga('ecommerce:addItem', {
+'id': '%s',
+'sku': '%s',
+'name': '%s',
+'category': '%s',
+'price': '%s',
+'quantity': '%s'
+});",
+                    $order->getIncrementId(),
+                    $this->jsQuoteEscape($item->getSku()),
+                    $this->jsQuoteEscape($item->getName()),
+                    null, // there is no "category" defined for the order item
+                    $item->getBasePrice(),
+                    $item->getQtyOrdered()
+                );
+            }
+            $result[] = "ga('ecommerce:send');";
+        }
+        return implode("\n", $result);
+    }
+
+    /**
+     * Render information about specified orders and their items
+     *
+     * @link http://code.google.com/apis/analytics/docs/gaJS/gaJSApiEcommerce.html#_gat.GA_Tracker_._addTrans
+     * @return string
+     */
+    protected function _getOrdersTrackingCodeAnalytics()
+    {
+        $orderIds = $this->getOrderIds();
+        if (empty($orderIds) || !is_array($orderIds)) {
+            return;
+        }
+        $collection = Mage::getResourceModel('sales/order_collection')
+            ->addFieldToFilter('entity_id', array('in' => $orderIds));
+        $result = array();
+        foreach ($collection as $order) {
+            if ($order->getIsVirtual()) {
+                $address = $order->getBillingAddress();
+            } else {
+                $address = $order->getShippingAddress();
+            }
+            $result[] = sprintf("_gaq.push(['_addTrans', '%s', '%s', '%s', '%s', '%s', '%s', '%s', '%s']);",
+                $order->getIncrementId(),
+                $this->jsQuoteEscape(Mage::app()->getStore()->getFrontendName()),
+                $order->getBaseGrandTotal(),
+                $order->getBaseTaxAmount(),
+                $order->getBaseShippingAmount(),
+                $this->jsQuoteEscape(Mage::helper('core')->escapeHtml($address->getCity())),
+                $this->jsQuoteEscape(Mage::helper('core')->escapeHtml($address->getRegion())),
+                $this->jsQuoteEscape(Mage::helper('core')->escapeHtml($address->getCountry()))
+            );
+            foreach ($order->getAllVisibleItems() as $item) {
+                $result[] = sprintf("_gaq.push(['_addItem', '%s', '%s', '%s', '%s', '%s', '%s']);",
+                    $order->getIncrementId(),
+                    $this->jsQuoteEscape($item->getSku()), $this->jsQuoteEscape($item->getName()),
+                    null, // there is no "category" defined for the order item
+                    $item->getBasePrice(), $item->getQtyOrdered()
+                );
+            }
+            $result[] = "_gaq.push(['_trackTrans']);";
+        }
+        return implode("\n", $result);
+    }
+
+    /**
+     * Render IP anonymization code for page tracking javascript code
+     *
+     * @return string
+     */
+    protected function _getAnonymizationCode()
+    {
+        if (!Mage::helper('googleanalytics')->isIpAnonymizationEnabled()) {
             return '';
         }
-
-        $this->addText('
-<!-- BEGIN GOOGLE ANALYTICS CODE -->
-<script type="text/javascript">
-var gaJsHost = (("https:" == document.location.protocol)
-? "https://ssl." : "http://www.");
-document.write("\<script src=\'" + gaJsHost
-+ "google-analytics.com/ga.js\' type=\'text/javascript\'>\<\/script>" );
-</script>
-<script type="text/javascript">
-var pageTracker = _gat._getTracker("' . $this->getAccount() . '");
-pageTracker._initData();
-pageTracker._trackPageview("' . $this->getPageName() . '");
-</script>
-<!-- END GOOGLE ANALYTICS CODE -->
-        ');
-
-        $this->addText($this->getQuoteOrdersHtml());
-
-        if ($this->getGoogleCheckout()) {
-            $protocol = Mage::app()->getStore()->isCurrentlySecure() ? 'https' : 'http';
-            $this->addText('<script src="'.$protocol.'://checkout.google.com/files/digital/ga_post.js" type="text/javascript"></script>');
+        if ($this->helper('googleanalytics')->isUseUniversalAnalytics()) {
+            return $this->_getAnonymizationCodeUniversal();
+        } else {
+            return $this->_getAnonymizationCodeAnalytics();
         }
-
-        return parent::_toHtml();
     }
 
+    /**
+     * Render IP anonymization code for page tracking javascript universal analytics code
+     *
+     * @return string
+     */
+    protected function _getAnonymizationCodeUniversal()
+    {
+        return "ga('set', 'anonymizeIp', true);";
+    }
+
+    /**
+     * Render IP anonymization code for page tracking javascript google analytics code
+     *
+     * @return string
+     */
+    protected function _getAnonymizationCodeAnalytics()
+    {
+        return "_gaq.push (['_gat._anonymizeIp']);";
+    }
+
+    /**
+     * Is ga available
+     *
+     * @return bool
+     */
+    protected function _isAvailable()
+    {
+        return Mage::helper('googleanalytics')->isGoogleAnalyticsAvailable();
+    }
+
+    /**
+     * Render GA tracking scripts
+     *
+     * @return string
+     */
+    protected function _toHtml()
+    {
+        if (!$this->_isAvailable()) {
+            return '';
+        }
+        return parent::_toHtml();
+    }
 }

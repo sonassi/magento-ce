@@ -5,70 +5,76 @@
  *
  * NOTICE OF LICENSE
  *
- * This source file is subject to the Open Software License (OSL 3.0)
- * that is bundled with this package in the file LICENSE.txt.
+ * This source file is subject to the Academic Free License (AFL 3.0)
+ * that is bundled with this package in the file LICENSE_AFL.txt.
  * It is also available through the world-wide-web at this URL:
- * http://opensource.org/licenses/osl-3.0.php
+ * http://opensource.org/licenses/afl-3.0.php
  * If you did not receive a copy of the license and are unable to
  * obtain it through the world-wide-web, please send an email
- * to license@magentocommerce.com so we can send you a copy immediately.
+ * to license@magento.com so we can send you a copy immediately.
  *
- * @category   Mage
- * @package    Mage_GiftMessage
- * @copyright  Copyright (c) 2004-2007 Irubin Consulting Inc. DBA Varien (http://www.varien.com)
- * @license    http://opensource.org/licenses/osl-3.0.php  Open Software License (OSL 3.0)
+ * DISCLAIMER
+ *
+ * Do not edit or add to this file if you wish to upgrade Magento to newer
+ * versions in the future. If you wish to customize Magento for your
+ * needs please refer to http://www.magento.com for more information.
+ *
+ * @category    Mage
+ * @package     Mage_GiftMessage
+ * @copyright   Copyright (c) 2006-2017 X.commerce, Inc. and affiliates (http://www.magento.com)
+ * @license     http://opensource.org/licenses/afl-3.0.php  Academic Free License (AFL 3.0)
  */
 -->
 <config>
     <modules>
         <Mage_GiftMessage>
-            <version>0.7.1</version>
+            <version>1.6.0.0</version>
         </Mage_GiftMessage>
     </modules>
     <global>
         <blocks>
-            <giftmessage><class>Mage_GiftMessage_Block</class></giftmessage>
+            <giftmessage>
+                <class>Mage_GiftMessage_Block</class>
+            </giftmessage>
         </blocks>
-         <helpers>
-            <giftmessage><class>Mage_GiftMessage_Helper</class></giftmessage>
+        <helpers>
+            <giftmessage>
+                <class>Mage_GiftMessage_Helper</class>
+            </giftmessage>
         </helpers>
         <models>
             <giftmessage>
                 <class>Mage_GiftMessage_Model</class>
-                <resourceModel>giftmessage_mysql4</resourceModel>
+                <resourceModel>giftmessage_resource</resourceModel>
             </giftmessage>
-            <giftmessage_mysql4>
-                <class>Mage_GiftMessage_Model_Mysql4</class>
+            <giftmessage_resource>
+                <class>Mage_GiftMessage_Model_Resource</class>
+                <deprecatedNode>giftmessage_mysql4</deprecatedNode>
                 <entities>
                     <message>
                         <table>gift_message</table>
                     </message>
                 </entities>
-            </giftmessage_mysql4>
+            </giftmessage_resource>
         </models>
         <resources>
             <giftmessage_setup>
                 <setup>
-                   <module>Mage_GiftMessage</module>
-                   <class>Mage_GiftMessage_Model_Mysql4_Setup</class>
+                    <module>Mage_GiftMessage</module>
+                    <class>Mage_GiftMessage_Model_Resource_Setup</class>
                 </setup>
-                <connection>
-                    <use>core_setup</use>
-                </connection>
             </giftmessage_setup>
-            <giftmessage_write>
-                <connection>
-                    <use>core_write</use>
-                </connection>
-            </giftmessage_write>
-            <giftmessage_read>
-                <connection>
-                    <use>core_read</use>
-                </connection>
-            </giftmessage_read>
         </resources>
+        <sales>
+            <quote>
+                <item>
+                    <product_attributes>
+                        <gift_message_available/>
+                    </product_attributes>
+                </item>
+            </quote>
+        </sales>
     </global>
-
     <default>
         <sales>
             <gift_messages>
@@ -77,7 +83,6 @@
             </gift_messages>
         </sales>
     </default>
-
     <adminhtml>
         <translate>
             <modules>
@@ -132,9 +137,25 @@
                         <class>giftmessage/observer</class>
                         <method>salesEventOrderToQuote</method>
                     </giftmessage>
-                 </observers>
+                </observers>
             </sales_convert_order_to_quote>
+            <sales_convert_order_item_to_quote_item>
+                <observers>
+                    <giftmessage>
+                        <type>model</type>
+                        <class>giftmessage/observer</class>
+                        <method>salesEventOrderItemToQuoteItem</method>
+                    </giftmessage>
+                </observers>
+            </sales_convert_order_item_to_quote_item>
         </events>
+        <layout>
+            <updates>
+                <giftmessage>
+                    <file>giftmessage.xml</file>
+                </giftmessage>
+            </updates>
+        </layout>
     </adminhtml>
     <frontend>
         <events>
@@ -183,15 +204,6 @@
                     </giftmessage>
                 </observers>
             </checkout_controller_multishipping_shipping_post>
-            <catalog_product_collection_load_after>
-                <observers>
-                    <giftmessage>
-                        <type>model</type>
-                        <class>giftmessage/observer</class>
-                        <method>catalogEventProductCollectionAfterLoad</method>
-                    </giftmessage>
-                </observers>
-            </catalog_product_collection_load_after>
             <sales_convert_order_to_quote>
                 <observers>
                     <giftmessage>
@@ -221,11 +233,11 @@
             </modules>
         </translate>
         <layout>
-          <updates>
-              <giftmessage>
-                  <file>giftmessage.xml</file>
-              </giftmessage>
-          </updates>
-      </layout>
+            <updates>
+                <giftmessage>
+                    <file>giftmessage.xml</file>
+                </giftmessage>
+            </updates>
+        </layout>
     </frontend>
 </config>

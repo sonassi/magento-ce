@@ -15,15 +15,15 @@
  * @category   Zend
  * @package    Zend_Db
  * @subpackage Statement
- * @copyright  Copyright (c) 2005-2008 Zend Technologies USA Inc. (http://www.zend.com)
+ * @copyright  Copyright (c) 2005-2015 Zend Technologies USA Inc. (http://www.zend.com)
  * @license    http://framework.zend.com/license/new-bsd     New BSD License
- * @version    $Id: Mysqli.php 4874 2007-05-19 01:26:32Z bkarwin $
+ * @version    $Id$
  */
 
 /**
  * @see Zend_Db_Statement
  */
-require_once 'Zend/Db/Statement.php';
+#require_once 'Zend/Db/Statement.php';
 
 /**
  * Proxy class to wrap a PDOStatement object.
@@ -34,18 +34,11 @@ require_once 'Zend/Db/Statement.php';
  * @category   Zend
  * @package    Zend_Db
  * @subpackage Statement
- * @copyright  Copyright (c) 2005-2008 Zend Technologies USA Inc. (http://www.zend.com)
+ * @copyright  Copyright (c) 2005-2015 Zend Technologies USA Inc. (http://www.zend.com)
  * @license    http://framework.zend.com/license/new-bsd     New BSD License
  */
-class Zend_Db_Statement_Pdo extends Zend_Db_Statement
+class Zend_Db_Statement_Pdo extends Zend_Db_Statement implements IteratorAggregate
 {
-
-    /**
-     * The mysqli_stmt object.
-     *
-     * @var PDOStatement
-     */
-    protected $_stmt;
 
     /**
      * @var int
@@ -64,8 +57,8 @@ class Zend_Db_Statement_Pdo extends Zend_Db_Statement
         try {
             $this->_stmt = $this->_adapter->getConnection()->prepare($sql);
         } catch (PDOException $e) {
-            require_once 'Zend/Db/Statement/Exception.php';
-            throw new Zend_Db_Statement_Exception($e->getMessage());
+            #require_once 'Zend/Db/Statement/Exception.php';
+            throw new Zend_Db_Statement_Exception($e->getMessage(), $e->getCode(), $e);
         }
     }
 
@@ -82,14 +75,14 @@ class Zend_Db_Statement_Pdo extends Zend_Db_Statement
     public function bindColumn($column, &$param, $type = null)
     {
         try {
-            if (is_null($type)) {
+            if ($type === null) {
                 return $this->_stmt->bindColumn($column, $param);
             } else {
                 return $this->_stmt->bindColumn($column, $param, $type);
             }
         } catch (PDOException $e) {
-            require_once 'Zend/Db/Statement/Exception.php';
-            throw new Zend_Db_Statement_Exception($e->getMessage());
+            #require_once 'Zend/Db/Statement/Exception.php';
+            throw new Zend_Db_Statement_Exception($e->getMessage(), $e->getCode(), $e);
         }
     }
 
@@ -110,7 +103,7 @@ class Zend_Db_Statement_Pdo extends Zend_Db_Statement
             if ($type === null) {
                 if (is_bool($variable)) {
                     $type = PDO::PARAM_BOOL;
-                } elseif (is_null($variable)) {
+                } elseif ($variable === null) {
                     $type = PDO::PARAM_NULL;
                 } elseif (is_integer($variable)) {
                     $type = PDO::PARAM_INT;
@@ -120,8 +113,8 @@ class Zend_Db_Statement_Pdo extends Zend_Db_Statement
             }
             return $this->_stmt->bindParam($parameter, $variable, $type, $length, $options);
         } catch (PDOException $e) {
-            require_once 'Zend/Db/Statement/Exception.php';
-            throw new Zend_Db_Statement_Exception($e->getMessage());
+            #require_once 'Zend/Db/Statement/Exception.php';
+            throw new Zend_Db_Statement_Exception($e->getMessage(), $e->getCode(), $e);
         }
     }
 
@@ -139,15 +132,18 @@ class Zend_Db_Statement_Pdo extends Zend_Db_Statement
         if (is_string($parameter) && $parameter[0] != ':') {
             $parameter = ":$parameter";
         }
+
+        $this->_bindParam[$parameter] = $value;
+
         try {
-            if (is_null($type)) {
+            if ($type === null) {
                 return $this->_stmt->bindValue($parameter, $value);
             } else {
                 return $this->_stmt->bindValue($parameter, $value, $type);
             }
         } catch (PDOException $e) {
-            require_once 'Zend/Db/Statement/Exception.php';
-            throw new Zend_Db_Statement_Exception($e->getMessage());
+            #require_once 'Zend/Db/Statement/Exception.php';
+            throw new Zend_Db_Statement_Exception($e->getMessage(), $e->getCode(), $e);
         }
     }
 
@@ -162,8 +158,8 @@ class Zend_Db_Statement_Pdo extends Zend_Db_Statement
         try {
             return $this->_stmt->closeCursor();
         } catch (PDOException $e) {
-            require_once 'Zend/Db/Statement/Exception.php';
-            throw new Zend_Db_Statement_Exception($e->getMessage());
+            #require_once 'Zend/Db/Statement/Exception.php';
+            throw new Zend_Db_Statement_Exception($e->getMessage(), $e->getCode(), $e);
         }
     }
 
@@ -179,8 +175,8 @@ class Zend_Db_Statement_Pdo extends Zend_Db_Statement
         try {
             return $this->_stmt->columnCount();
         } catch (PDOException $e) {
-            require_once 'Zend/Db/Statement/Exception.php';
-            throw new Zend_Db_Statement_Exception($e->getMessage());
+            #require_once 'Zend/Db/Statement/Exception.php';
+            throw new Zend_Db_Statement_Exception($e->getMessage(), $e->getCode(), $e);
         }
     }
 
@@ -196,8 +192,8 @@ class Zend_Db_Statement_Pdo extends Zend_Db_Statement
         try {
             return $this->_stmt->errorCode();
         } catch (PDOException $e) {
-            require_once 'Zend/Db/Statement/Exception.php';
-            throw new Zend_Db_Statement_Exception($e->getMessage());
+            #require_once 'Zend/Db/Statement/Exception.php';
+            throw new Zend_Db_Statement_Exception($e->getMessage(), $e->getCode(), $e);
         }
     }
 
@@ -213,8 +209,8 @@ class Zend_Db_Statement_Pdo extends Zend_Db_Statement
         try {
             return $this->_stmt->errorInfo();
         } catch (PDOException $e) {
-            require_once 'Zend/Db/Statement/Exception.php';
-            throw new Zend_Db_Statement_Exception($e->getMessage());
+            #require_once 'Zend/Db/Statement/Exception.php';
+            throw new Zend_Db_Statement_Exception($e->getMessage(), $e->getCode(), $e);
         }
     }
 
@@ -234,8 +230,9 @@ class Zend_Db_Statement_Pdo extends Zend_Db_Statement
                 return $this->_stmt->execute();
             }
         } catch (PDOException $e) {
-            require_once 'Zend/Db/Statement/Exception.php';
-            throw new Zend_Db_Statement_Exception($e->getMessage());
+            #require_once 'Zend/Db/Statement/Exception.php';
+            $message = sprintf('%s, query was: %s', $e->getMessage(), $this->_stmt->queryString);
+            throw new Zend_Db_Statement_Exception($message, (int) $e->getCode(), $e);
         }
     }
 
@@ -256,9 +253,19 @@ class Zend_Db_Statement_Pdo extends Zend_Db_Statement
         try {
             return $this->_stmt->fetch($style, $cursor, $offset);
         } catch (PDOException $e) {
-            require_once 'Zend/Db/Statement/Exception.php';
-            throw new Zend_Db_Statement_Exception($e->getMessage());
+            #require_once 'Zend/Db/Statement/Exception.php';
+            throw new Zend_Db_Statement_Exception($e->getMessage(), $e->getCode(), $e);
         }
+    }
+
+    /**
+     * Required by IteratorAggregate interface
+     *
+     * @return IteratorIterator
+     */
+    public function getIterator()
+    {
+        return new IteratorIterator($this->_stmt);
     }
 
     /**
@@ -284,8 +291,8 @@ class Zend_Db_Statement_Pdo extends Zend_Db_Statement
                 return $this->_stmt->fetchAll($style);
             }
         } catch (PDOException $e) {
-            require_once 'Zend/Db/Statement/Exception.php';
-            throw new Zend_Db_Statement_Exception($e->getMessage());
+            #require_once 'Zend/Db/Statement/Exception.php';
+            throw new Zend_Db_Statement_Exception($e->getMessage(), $e->getCode(), $e);
         }
     }
 
@@ -301,8 +308,8 @@ class Zend_Db_Statement_Pdo extends Zend_Db_Statement
         try {
             return $this->_stmt->fetchColumn($col);
         } catch (PDOException $e) {
-            require_once 'Zend/Db/Statement/Exception.php';
-            throw new Zend_Db_Statement_Exception($e->getMessage());
+            #require_once 'Zend/Db/Statement/Exception.php';
+            throw new Zend_Db_Statement_Exception($e->getMessage(), $e->getCode(), $e);
         }
     }
 
@@ -319,8 +326,8 @@ class Zend_Db_Statement_Pdo extends Zend_Db_Statement
         try {
             return $this->_stmt->fetchObject($class, $config);
         } catch (PDOException $e) {
-            require_once 'Zend/Db/Statement/Exception.php';
-            throw new Zend_Db_Statement_Exception($e->getMessage());
+            #require_once 'Zend/Db/Statement/Exception.php';
+            throw new Zend_Db_Statement_Exception($e->getMessage(), $e->getCode(), $e);
         }
     }
 
@@ -336,8 +343,8 @@ class Zend_Db_Statement_Pdo extends Zend_Db_Statement
         try {
             return $this->_stmt->getAttribute($key);
         } catch (PDOException $e) {
-            require_once 'Zend/Db/Statement/Exception.php';
-            throw new Zend_Db_Statement_Exception($e->getMessage());
+            #require_once 'Zend/Db/Statement/Exception.php';
+            throw new Zend_Db_Statement_Exception($e->getMessage(), $e->getCode(), $e);
         }
     }
 
@@ -353,8 +360,8 @@ class Zend_Db_Statement_Pdo extends Zend_Db_Statement
         try {
             return $this->_stmt->getColumnMeta($column);
         } catch (PDOException $e) {
-            require_once 'Zend/Db/Statement/Exception.php';
-            throw new Zend_Db_Statement_Exception($e->getMessage());
+            #require_once 'Zend/Db/Statement/Exception.php';
+            throw new Zend_Db_Statement_Exception($e->getMessage(), $e->getCode(), $e);
         }
     }
 
@@ -371,8 +378,8 @@ class Zend_Db_Statement_Pdo extends Zend_Db_Statement
         try {
             return $this->_stmt->nextRowset();
         } catch (PDOException $e) {
-            require_once 'Zend/Db/Statement/Exception.php';
-            throw new Zend_Db_Statement_Exception($e->getMessage());
+            #require_once 'Zend/Db/Statement/Exception.php';
+            throw new Zend_Db_Statement_Exception($e->getMessage(), $e->getCode(), $e);
         }
     }
 
@@ -389,8 +396,8 @@ class Zend_Db_Statement_Pdo extends Zend_Db_Statement
         try {
             return $this->_stmt->rowCount();
         } catch (PDOException $e) {
-            require_once 'Zend/Db/Statement/Exception.php';
-            throw new Zend_Db_Statement_Exception($e->getMessage());
+            #require_once 'Zend/Db/Statement/Exception.php';
+            throw new Zend_Db_Statement_Exception($e->getMessage(), $e->getCode(), $e);
         }
     }
 
@@ -407,8 +414,8 @@ class Zend_Db_Statement_Pdo extends Zend_Db_Statement
         try {
             return $this->_stmt->setAttribute($key, $val);
         } catch (PDOException $e) {
-            require_once 'Zend/Db/Statement/Exception.php';
-            throw new Zend_Db_Statement_Exception($e->getMessage());
+            #require_once 'Zend/Db/Statement/Exception.php';
+            throw new Zend_Db_Statement_Exception($e->getMessage(), $e->getCode(), $e);
         }
     }
 
@@ -425,8 +432,8 @@ class Zend_Db_Statement_Pdo extends Zend_Db_Statement
         try {
             return $this->_stmt->setFetchMode($mode);
         } catch (PDOException $e) {
-            require_once 'Zend/Db/Statement/Exception.php';
-            throw new Zend_Db_Statement_Exception($e->getMessage());
+            #require_once 'Zend/Db/Statement/Exception.php';
+            throw new Zend_Db_Statement_Exception($e->getMessage(), $e->getCode(), $e);
         }
     }
 

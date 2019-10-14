@@ -1,178 +1,282 @@
 <?xml version="1.0" encoding="UTF-8" ?>
-<!DOCTYPE ldml SYSTEM "http://www.unicode.org/cldr/dtd/1.5/ldml.dtd">
+<!DOCTYPE ldml SYSTEM "../../common/dtd/ldml.dtd">
+<!-- Copyright © 1991-2013 Unicode, Inc.
+CLDR data files are interpreted according to the LDML specification (http://unicode.org/reports/tr35/)
+For terms of use, see http://www.unicode.org/copyright.html
+-->
 <ldml>
 	<identity>
-		<version number="$Revision: 1.52 $"/>
-		<generation date="$Date: 2007/07/19 22:31:38 $"/>
+		<version number="$Revision: 9791 $"/>
+		<generation date="$Date: 2014-02-25 15:16:49 -0600 (Tue, 25 Feb 2014) $"/>
 		<language type="bn"/>
 		<territory type="IN"/>
 	</identity>
 	<localeDisplayNames>
 		<languages>
-			<language type="aa">aa</language>
-			<language type="ab">ab</language>
-			<language type="ace">ace</language>
-			<language type="ach">ach</language>
-			<language type="ada">ada</language>
-			<language type="ady">ady</language>
-			<language type="ae">ae</language>
-			<language type="af">af</language>
-			<language type="afa">afa</language>
-			<language type="afh">afh</language>
-			<language type="ain">ain</language>
-			<language type="ak">ak</language>
-			<language type="akk">akk</language>
-			<language type="ale">ale</language>
-			<language type="alg">alg</language>
-			<language type="alt">alt</language>
-			<language type="am">am</language>
-			<language type="an">an</language>
-			<language type="ang">ang</language>
-			<language type="apa">apa</language>
-			<language type="ar">ar</language>
-			<language type="arc">arc</language>
-			<language type="arn">arn</language>
-			<language type="arp">arp</language>
-			<language type="art">art</language>
-			<language type="arw">arw</language>
-			<language type="as">as</language>
-			<language type="ast">ast</language>
-			<language type="ath">ath</language>
-			<language type="aus">aus</language>
-			<language type="av">av</language>
-			<language type="awa">awa</language>
-			<language type="ay">ay</language>
-			<language type="az">az</language>
-			<language type="ba">ba</language>
-			<language type="bad">bad</language>
-			<language type="bai">bai</language>
-			<language type="bal">bal</language>
-			<language type="ban">ban</language>
-			<language type="bas">bas</language>
-			<language type="bat">bat</language>
-			<language type="be">be</language>
-			<language type="bej">bej</language>
-			<language type="bem">bem</language>
-			<language type="ber">ber</language>
-			<language type="bg">bg</language>
-			<language type="bh">bh</language>
-			<language type="bho">bho</language>
-			<language type="bi">bi</language>
-			<language type="bik">bik</language>
-			<language type="bin">bin</language>
-			<language type="bla">bla</language>
-			<language type="bm">bm</language>
-			<language type="bnt">bnt</language>
-			<language type="bo">bo</language>
-			<language type="br">br</language>
-			<language type="bra">bra</language>
-			<language type="bs">bs</language>
-			<language type="btk">btk</language>
-			<language type="bua">bua</language>
-			<language type="bug">bug</language>
-			<language type="byn">byn</language>
-			<language type="ca">ca</language>
-			<language type="cad">cad</language>
-			<language type="cai">cai</language>
-			<language type="car">car</language>
-			<language type="cau">cau</language>
-			<language type="ce">ce</language>
-			<language type="ceb">ceb</language>
-			<language type="cel">cel</language>
-			<language type="de">de</language>
-			<language type="en">en</language>
-			<language type="es">es</language>
-			<language type="fr">fr</language>
-			<language type="it">it</language>
-			<language type="ja">ja</language>
-			<language type="pt">pt</language>
-			<language type="ru">ru</language>
-			<language type="zh">zh</language>
+			<language type="ab">আবখাজিয়ান</language>
+			<language type="ace">অ্যাচাইনিজ</language>
+			<language type="ach">আকোলি</language>
+			<language type="anp" draft="contributed">আঙ্গিকা</language>
+			<language type="ch" draft="contributed">চামোরো</language>
+			<language type="chn" draft="contributed">চিনুক জার্গন</language>
+			<language type="cho" draft="contributed">চকটোও</language>
+			<language type="chp" draft="contributed">চিপেওয়াইয়ান</language>
+			<language type="chy" draft="contributed">চেয়েনি</language>
+			<language type="cu" draft="contributed">চার্চ স্লাভিক</language>
+			<language type="de_AT">অস্ট্রিয়ান জারমান</language>
+			<language type="doi">ডোগরি</language>
+			<language type="fr_CA">ক্যানাডিয়ান ফরাসী</language>
+			<language type="or">উড়িয়া</language>
+			<language type="rup" draft="contributed">আরমেনিয়ান</language>
+			<language type="zbl" draft="contributed">ব্লিসসিম্বলস</language>
 		</languages>
 		<scripts>
-			<script type="Arab">Arab</script>
-			<script type="Armn">Armn</script>
-			<script type="Bali">Bali</script>
-			<script type="Batk">Batk</script>
-			<script type="Beng">Beng</script>
-			<script type="Blis">Blis</script>
-			<script type="Bopo">Bopo</script>
-			<script type="Brah">Brah</script>
-			<script type="Brai">Brai</script>
-			<script type="Bugi">Bugi</script>
-			<script type="Buhd">Buhd</script>
-			<script type="Cans">Cans</script>
-			<script type="Cham">Cham</script>
-			<script type="Cher">Cher</script>
-			<script type="Cirt">Cirt</script>
-			<script type="Copt">Copt</script>
-			<script type="Cprt">Cprt</script>
-			<script type="Cyrl">Cyrl</script>
-			<script type="Cyrs">Cyrs</script>
-			<script type="Deva">Deva</script>
-			<script type="Dsrt">Dsrt</script>
-			<script type="Egyd">Egyd</script>
-			<script type="Egyh">Egyh</script>
-			<script type="Egyp">Egyp</script>
-			<script type="Ethi">Ethi</script>
-			<script type="Geok">Geok</script>
-			<script type="Geor">Geor</script>
-			<script type="Glag">Glag</script>
-			<script type="Goth">Goth</script>
-			<script type="Grek">Grek</script>
-			<script type="Gujr">Gujr</script>
-			<script type="Guru">Guru</script>
-			<script type="Hang">Hang</script>
-			<script type="Hani">Hani</script>
-			<script type="Hano">Hano</script>
-			<script type="Hans">Hans</script>
-			<script type="Hant">Hant</script>
-			<script type="Hebr">Hebr</script>
-			<script type="Hira">Hira</script>
-			<script type="Hmng">Hmng</script>
-			<script type="Hrkt">Hrkt</script>
-			<script type="Hung">Hung</script>
-			<script type="Inds">Inds</script>
-			<script type="Ital">Ital</script>
-			<script type="Java">Java</script>
-			<script type="Kali">Kali</script>
-			<script type="Kana">Kana</script>
-			<script type="Khar">Khar</script>
-			<script type="Khmr">Khmr</script>
-			<script type="Knda">Knda</script>
-			<script type="Laoo">Laoo</script>
-			<script type="Latf">Latf</script>
-			<script type="Latg">Latg</script>
-			<script type="Latn">Latn</script>
-			<script type="Lepc">Lepc</script>
-			<script type="Limb">Limb</script>
-			<script type="Lina">Lina</script>
-			<script type="Linb">Linb</script>
-			<script type="Mand">Mand</script>
-			<script type="Maya">Maya</script>
-			<script type="Mero">Mero</script>
-			<script type="Mlym">Mlym</script>
-			<script type="Mong">Mong</script>
-			<script type="Mymr">Mymr</script>
-			<script type="Nkoo">Nkoo</script>
-			<script type="Ogam">Ogam</script>
-			<script type="Orkh">Orkh</script>
-			<script type="Orya">Orya</script>
-			<script type="Osma">Osma</script>
-			<script type="Perm">Perm</script>
-			<script type="Phag">Phag</script>
-			<script type="Phnx">Phnx</script>
-			<script type="Plrd">Plrd</script>
-			<script type="Qaai">Qaai</script>
-			<script type="Roro">Roro</script>
-			<script type="Runr">Runr</script>
-			<script type="Sara">Sara</script>
-			<script type="Shaw">Shaw</script>
-			<script type="Sinh">Sinh</script>
-			<script type="Sylo">Sylo</script>
+			<script type="Hant">ঐতিহ্যবাহী</script>
 		</scripts>
 		<territories>
-			<territory type="CY">CY</territory>
+			<territory type="GD">গ্রেনেডা</territory>
+			<territory type="GT">গোয়াতেমালা</territory>
+			<territory type="JM">জামাইকা</territory>
 		</territories>
+		<keys>
+			<key type="calendar">ক্যালেন্ডার</key>
+		</keys>
 	</localeDisplayNames>
+	<characters>
+		<ellipsis type="final" draft="contributed">{0}…</ellipsis>
+		<ellipsis type="initial" draft="contributed">…{0}</ellipsis>
+		<ellipsis type="medial" draft="contributed">{0}…{1}</ellipsis>
+	</characters>
+	<dates>
+		<calendars>
+			<calendar type="gregorian">
+				<quarters>
+					<quarterContext type="format">
+						<quarterWidth type="abbreviated">
+							<quarter type="1">ত্রৈমাসিক</quarter>
+							<quarter type="2">ষাণ্মাসিক</quarter>
+							<quarter type="4">বার্ষিক</quarter>
+						</quarterWidth>
+						<quarterWidth type="wide">
+							<quarter type="1">ত্রৈমাসিক</quarter>
+							<quarter type="2">ষাণ্মাসিক</quarter>
+							<quarter type="3">তৃতীয় চতুর্থাংশ</quarter>
+							<quarter type="4">বার্ষিক</quarter>
+						</quarterWidth>
+					</quarterContext>
+					<quarterContext type="stand-alone">
+						<quarterWidth type="abbreviated">
+							<quarter type="1">Q1</quarter>
+							<quarter type="2">Q2</quarter>
+							<quarter type="3">Q3</quarter>
+							<quarter type="4">Q4</quarter>
+						</quarterWidth>
+						<quarterWidth type="wide">
+							<quarter type="1">ত্রৈমাসিক</quarter>
+							<quarter type="2">ষাণ্মাসিক</quarter>
+							<quarter type="3">তৃতীয় চতুর্থাংশ</quarter>
+							<quarter type="4">বার্ষিক</quarter>
+						</quarterWidth>
+					</quarterContext>
+				</quarters>
+				<dateTimeFormats>
+					<intervalFormats>
+						<intervalFormatItem id="yMMMM">
+							<greatestDifference id="M">MM – MM -y</greatestDifference>
+						</intervalFormatItem>
+					</intervalFormats>
+				</dateTimeFormats>
+			</calendar>
+		</calendars>
+		<fields>
+			<field type="dayperiod">
+				<displayName>AM/PM</displayName>
+			</field>
+		</fields>
+		<timeZoneNames>
+			<gmtZeroFormat>গ্রীনিচ মানক সময়</gmtZeroFormat>
+			<metazone type="Alaska">
+				<long>
+					<generic>আলাস্কার সময়</generic>
+					<standard>অ্যালাসকা মানক সময়</standard>
+					<daylight>আলাসকা দিবালোক সময়</daylight>
+				</long>
+			</metazone>
+			<metazone type="America_Central">
+				<long>
+					<generic>উত্তর আমিরিকা কেন্দ্রীয় সময়</generic>
+					<standard>উত্তর আমিরিকা কেন্দ্রীয় মানক সময়</standard>
+					<daylight>কেন্দ্রীয় দিবালোক মসয়</daylight>
+				</long>
+			</metazone>
+			<metazone type="Cook">
+				<long>
+					<generic draft="contributed">কুক দ্বীপপুঞ্জ সময়</generic>
+					<standard draft="contributed">কুক দ্বীপপুঞ্জ মানক সময়</standard>
+					<daylight draft="contributed">কুক দ্বীপপুঞ্জ অর্ধেক গ্রীষ্মকাল সময়</daylight>
+				</long>
+			</metazone>
+			<metazone type="Fiji">
+				<long>
+					<generic draft="contributed">ফিজি সময়</generic>
+					<standard draft="contributed">ফিজি মানক সময়</standard>
+					<daylight draft="contributed">ফিজি গ্রীষ্মকাল সময়</daylight>
+				</long>
+			</metazone>
+			<metazone type="French_Southern">
+				<long>
+					<standard draft="contributed">ফরাসি দক্ষিণ এবং আন্টার্কটিক সময়</standard>
+				</long>
+			</metazone>
+			<metazone type="Guyana">
+				<long>
+					<standard draft="contributed">গুয়ানা সময়</standard>
+				</long>
+			</metazone>
+			<metazone type="Indian_Ocean">
+				<long>
+					<standard draft="contributed">ভারত মহাসাগরীয় সময়</standard>
+				</long>
+			</metazone>
+			<metazone type="Kosrae">
+				<long>
+					<standard draft="contributed">কোসরেই সময়</standard>
+				</long>
+			</metazone>
+			<metazone type="New_Zealand">
+				<long>
+					<generic draft="contributed">নিউজিল্যান্ড সময়</generic>
+					<standard draft="contributed">নিউজিল্যান্ড মানক সময়</standard>
+					<daylight draft="contributed">নিউজিল্যান্ড দিবালোকের সময়</daylight>
+				</long>
+			</metazone>
+			<metazone type="Papua_New_Guinea">
+				<long>
+					<standard draft="contributed">পাপুয়া নিউগিনি সময়</standard>
+				</long>
+			</metazone>
+			<metazone type="Pitcairn">
+				<long>
+					<standard draft="contributed">পিটকাইর্ন সময়</standard>
+				</long>
+			</metazone>
+			<metazone type="Ponape">
+				<long>
+					<standard draft="contributed">পোনাপ সময়</standard>
+				</long>
+			</metazone>
+			<metazone type="Syowa">
+				<long>
+					<standard draft="contributed">স্যোয়া সময়</standard>
+				</long>
+			</metazone>
+			<metazone type="Tokelau">
+				<long>
+					<standard draft="contributed">টোকেলু সময়</standard>
+				</long>
+			</metazone>
+			<metazone type="Vostok">
+				<long>
+					<standard draft="contributed">ভসটক সময়</standard>
+				</long>
+			</metazone>
+		</timeZoneNames>
+	</dates>
+	<numbers>
+		<decimalFormats numberSystem="latn">
+			<decimalFormatLength type="long">
+				<decimalFormat>
+					<pattern type="1000" count="one">0 হাজার</pattern>
+					<pattern type="1000" count="other">0 হাজার</pattern>
+					<pattern type="10000" count="one">00 হাজার</pattern>
+					<pattern type="10000" count="other">00 হাজার</pattern>
+					<pattern type="100000" count="one">000 হাজার</pattern>
+					<pattern type="100000" count="other">000 হাজার</pattern>
+					<pattern type="1000000" count="one">0 মিলিয়ন</pattern>
+					<pattern type="1000000" count="other">0 মিলিয়ন</pattern>
+					<pattern type="10000000" count="one">00 মিলিয়ন</pattern>
+					<pattern type="10000000" count="other">00 মিলিয়ন</pattern>
+					<pattern type="100000000" count="one">000 মিলিয়ন</pattern>
+					<pattern type="100000000" count="other">000 মিলিয়ন</pattern>
+					<pattern type="1000000000" count="one">0 বিলিয়ন</pattern>
+					<pattern type="1000000000" count="other">0 বিলিয়ন</pattern>
+					<pattern type="10000000000" count="one">00 বিলিয়ন</pattern>
+					<pattern type="10000000000" count="other">00 বিলিয়ন</pattern>
+					<pattern type="100000000000" count="one">000 বিলিয়ন</pattern>
+					<pattern type="100000000000" count="other">000 বিলিয়ন</pattern>
+					<pattern type="1000000000000" count="one">0 ট্রিলিয়ন</pattern>
+					<pattern type="1000000000000" count="other">0 ট্রিলিয়ন</pattern>
+					<pattern type="10000000000000" count="one">00 ট্রিলিয়ন</pattern>
+					<pattern type="10000000000000" count="other">00 ট্রিলিয়ন</pattern>
+					<pattern type="100000000000000" count="one">000 ট্রিলিয়ন</pattern>
+					<pattern type="100000000000000" count="other">000 ট্রিলিয়ন</pattern>
+				</decimalFormat>
+			</decimalFormatLength>
+			<decimalFormatLength type="short">
+				<decimalFormat>
+					<pattern type="1000" count="one">0K</pattern>
+					<pattern type="1000" count="other">0K</pattern>
+					<pattern type="10000" count="one">00K</pattern>
+					<pattern type="10000" count="other">00K</pattern>
+					<pattern type="100000" count="one">000K</pattern>
+					<pattern type="100000" count="other">000K</pattern>
+					<pattern type="1000000" count="one">0M</pattern>
+					<pattern type="1000000" count="other">0M</pattern>
+					<pattern type="10000000" count="one">00M</pattern>
+					<pattern type="10000000" count="other">00M</pattern>
+					<pattern type="100000000" count="one">000M</pattern>
+					<pattern type="100000000" count="other">000M</pattern>
+					<pattern type="1000000000" count="one">0B</pattern>
+					<pattern type="1000000000" count="other">0B</pattern>
+					<pattern type="10000000000" count="one">00B</pattern>
+					<pattern type="10000000000" count="other">00B</pattern>
+					<pattern type="100000000000" count="one">000B</pattern>
+					<pattern type="100000000000" count="other">000B</pattern>
+					<pattern type="1000000000000" count="one">0T</pattern>
+					<pattern type="1000000000000" count="other">0T</pattern>
+					<pattern type="10000000000000" count="one">00T</pattern>
+					<pattern type="10000000000000" count="other">00T</pattern>
+					<pattern type="100000000000000" count="one">000T</pattern>
+					<pattern type="100000000000000" count="other">000T</pattern>
+				</decimalFormat>
+			</decimalFormatLength>
+		</decimalFormats>
+	</numbers>
+	<units>
+		<unitLength type="narrow">
+			<unit type="angle-arc-second">
+				<unitPattern count="one">{0}″</unitPattern>
+				<unitPattern count="other">{0}″</unitPattern>
+			</unit>
+			<unit type="area-square-kilometer">
+				<unitPattern count="one">{0} km²</unitPattern>
+				<unitPattern count="other">{0} km²</unitPattern>
+			</unit>
+			<unit type="area-square-mile">
+				<unitPattern count="one">{0} mi²</unitPattern>
+				<unitPattern count="other">{0} mi²</unitPattern>
+			</unit>
+			<unit type="speed-kilometer-per-hour">
+				<unitPattern count="one">{0} kph</unitPattern>
+				<unitPattern count="other">{0} kph</unitPattern>
+			</unit>
+			<unit type="speed-meter-per-second">
+				<unitPattern count="one">{0} m/s</unitPattern>
+				<unitPattern count="other">{0} m/s</unitPattern>
+			</unit>
+			<unit type="speed-mile-per-hour">
+				<unitPattern count="one">{0} mph</unitPattern>
+				<unitPattern count="other">{0} mph</unitPattern>
+			</unit>
+			<unit type="volume-cubic-kilometer">
+				<unitPattern count="one">{0} km³</unitPattern>
+				<unitPattern count="other">{0} km³</unitPattern>
+			</unit>
+			<unit type="volume-cubic-mile">
+				<unitPattern count="one">{0}mi³</unitPattern>
+				<unitPattern count="other">{0} mi³</unitPattern>
+			</unit>
+		</unitLength>
+	</units>
 </ldml>
+

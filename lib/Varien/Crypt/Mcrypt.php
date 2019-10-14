@@ -10,11 +10,17 @@
  * http://opensource.org/licenses/osl-3.0.php
  * If you did not receive a copy of the license and are unable to
  * obtain it through the world-wide-web, please send an email
- * to license@magentocommerce.com so we can send you a copy immediately.
+ * to license@magento.com so we can send you a copy immediately.
  *
- * @category   Varien
- * @package    Varien_Crypt
- * @copyright  Copyright (c) 2004-2007 Irubin Consulting Inc. DBA Varien (http://www.varien.com)
+ * DISCLAIMER
+ *
+ * Do not edit or add to this file if you wish to upgrade Magento to newer
+ * versions in the future. If you wish to customize Magento for your
+ * needs please refer to http://www.magento.com for more information.
+ *
+ * @category    Varien
+ * @package     Varien_Crypt
+ * @copyright  Copyright (c) 2006-2017 X.commerce, Inc. and affiliates (http://www.magento.com)
  * @license    http://opensource.org/licenses/osl-3.0.php  Open Software License (OSL 3.0)
  */
 
@@ -24,6 +30,7 @@
  *
  * @category   Varien
  * @package    Varien_Crypt
+ * @author      Magento Core Team <core@magentocommerce.com>
  */
 class Varien_Crypt_Mcrypt extends Varien_Crypt_Abstract
 {
@@ -34,7 +41,18 @@ class Varien_Crypt_Mcrypt extends Varien_Crypt_Abstract
      */
     public function __construct(array $data=array())
     {
+        register_shutdown_function(array($this, 'destruct'));
         parent::__construct($data);
+    }
+
+    /**
+     * Close mcrypt module on shutdown
+     */
+    public function destruct()
+    {
+        if ($this->getHandler()) {
+            $this->_reset();
+        }
     }
 
     /**
@@ -54,16 +72,26 @@ class Varien_Crypt_Mcrypt extends Varien_Crypt_Abstract
         }
 
         $this->setHandler(mcrypt_module_open($this->getCipher(), '', $this->getMode(), ''));
-        $iv = mcrypt_create_iv (mcrypt_enc_get_iv_size($this->getHandler()), MCRYPT_RAND);
+
+        if (!$this->getInitVector()) {
+            if (MCRYPT_MODE_CBC == $this->getMode()) {
+                $this->setInitVector(substr(
+                    md5(mcrypt_create_iv (mcrypt_enc_get_iv_size($this->getHandler()), MCRYPT_RAND)),
+                    - mcrypt_enc_get_iv_size($this->getHandler())
+                ));
+            } else {
+                $this->setInitVector(mcrypt_create_iv (mcrypt_enc_get_iv_size($this->getHandler()), MCRYPT_RAND));
+            }
+        }
 
         $maxKeySize = mcrypt_enc_get_key_size($this->getHandler());
 
-        if (iconv_strlen($key)>$maxKeySize) {
+        if (strlen($key) > $maxKeySize) { // strlen() intentionally, to count bytes, rather than characters
             $this->setHandler(null);
-            throw new Varien_Exception('Maximum key size must should be smaller '.$maxKeySize);
+            throw new Varien_Exception('Maximum key size must be smaller '.$maxKeySize);
         }
 
-        mcrypt_generic_init($this->getHandler(), $key, $iv);
+        mcrypt_generic_init($this->getHandler(), $key, $this->getInitVector());
 
         return $this;
     }
@@ -100,17 +128,6 @@ class Varien_Crypt_Mcrypt extends Varien_Crypt_Abstract
             return $data;
         }
         return mdecrypt_generic($this->getHandler(), $data);
-    }
-
-    /**
-     * Desctruct cipher module
-     *
-     */
-    public function __destruct()
-    {
-        if ($this->getHandler()) {
-            $this->_reset();
-        }
     }
 
     protected function _reset()

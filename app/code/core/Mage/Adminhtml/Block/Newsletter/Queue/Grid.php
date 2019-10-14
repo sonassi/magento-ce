@@ -10,11 +10,17 @@
  * http://opensource.org/licenses/osl-3.0.php
  * If you did not receive a copy of the license and are unable to
  * obtain it through the world-wide-web, please send an email
- * to license@magentocommerce.com so we can send you a copy immediately.
+ * to license@magento.com so we can send you a copy immediately.
  *
- * @category   Mage
- * @package    Mage_Adminhtml
- * @copyright  Copyright (c) 2004-2007 Irubin Consulting Inc. DBA Varien (http://www.varien.com)
+ * DISCLAIMER
+ *
+ * Do not edit or add to this file if you wish to upgrade Magento to newer
+ * versions in the future. If you wish to customize Magento for your
+ * needs please refer to http://www.magento.com for more information.
+ *
+ * @category    Mage
+ * @package     Mage_Adminhtml
+ * @copyright  Copyright (c) 2006-2017 X.commerce, Inc. and affiliates (http://www.magento.com)
  * @license    http://opensource.org/licenses/osl-3.0.php  Open Software License (OSL 3.0)
  */
 
@@ -23,6 +29,7 @@
  *
  * @category   Mage
  * @package    Mage_Adminhtml
+ * @author      Magento Core Team <core@magentocommerce.com>
  */
 class Mage_Adminhtml_Block_Newsletter_Queue_Grid extends Mage_Adminhtml_Block_Widget_Grid
 {
@@ -40,7 +47,6 @@ class Mage_Adminhtml_Block_Newsletter_Queue_Grid extends Mage_Adminhtml_Block_Wi
     protected function _prepareCollection()
     {
         $collection = Mage::getResourceModel('newsletter/queue_collection')
-            ->addTemplateInfo()
             ->addSubscribersInfo();
 
         $this->setCollection($collection);
@@ -50,7 +56,7 @@ class Mage_Adminhtml_Block_Newsletter_Queue_Grid extends Mage_Adminhtml_Block_Wi
 
     protected function _prepareColumns()
     {
-        $this->addColumn('id', array(
+        $this->addColumn('queue_id', array(
             'header'    =>  Mage::helper('newsletter')->__('ID'),
             'index'     =>	'queue_id',
             'width'		=>	10
@@ -72,9 +78,9 @@ class Mage_Adminhtml_Block_Newsletter_Queue_Grid extends Mage_Adminhtml_Block_Wi
             'default'	=> 	' ---- '
         ));
 
-        $this->addColumn('template_subject', array(
+        $this->addColumn('newsletter_subject', array(
             'header'    =>  Mage::helper('newsletter')->__('Subject'),
-            'index'     =>	'template_subject'
+            'index'     =>  'newsletter_subject'
         ));
 
          $this->addColumn('status', array(
@@ -82,18 +88,18 @@ class Mage_Adminhtml_Block_Newsletter_Queue_Grid extends Mage_Adminhtml_Block_Wi
             'index'		=> 'queue_status',
             'type'      => 'options',
             'options'   => array(
-        		Mage_Newsletter_Model_Queue::STATUS_SENT 	=> Mage::helper('newsletter')->__('Sent'),
-        		Mage_Newsletter_Model_Queue::STATUS_CANCEL	=> Mage::helper('newsletter')->__('Cancelled'),
-        		Mage_Newsletter_Model_Queue::STATUS_NEVER 	=> Mage::helper('newsletter')->__('Not Sent'),
-        		Mage_Newsletter_Model_Queue::STATUS_SENDING => Mage::helper('newsletter')->__('Sending'),
-        		Mage_Newsletter_Model_Queue::STATUS_PAUSE 	=> Mage::helper('newsletter')->__('Paused'),
+                Mage_Newsletter_Model_Queue::STATUS_SENT 	=> Mage::helper('newsletter')->__('Sent'),
+                Mage_Newsletter_Model_Queue::STATUS_CANCEL	=> Mage::helper('newsletter')->__('Cancelled'),
+                Mage_Newsletter_Model_Queue::STATUS_NEVER 	=> Mage::helper('newsletter')->__('Not Sent'),
+                Mage_Newsletter_Model_Queue::STATUS_SENDING => Mage::helper('newsletter')->__('Sending'),
+                Mage_Newsletter_Model_Queue::STATUS_PAUSE 	=> Mage::helper('newsletter')->__('Paused'),
             ),
             'width'     => '100px',
         ));
 
         $this->addColumn('subscribers_sent', array(
             'header'    =>  Mage::helper('newsletter')->__('Processed'),
-           	'type'		=> 'number',
+               'type'		=> 'number',
             'index'		=> 'subscribers_sent'
         ));
 

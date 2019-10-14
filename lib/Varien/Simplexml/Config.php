@@ -10,11 +10,17 @@
  * http://opensource.org/licenses/osl-3.0.php
  * If you did not receive a copy of the license and are unable to
  * obtain it through the world-wide-web, please send an email
- * to license@magentocommerce.com so we can send you a copy immediately.
+ * to license@magento.com so we can send you a copy immediately.
  *
- * @category   Varien
- * @package    Varien_Simplexml
- * @copyright  Copyright (c) 2004-2007 Irubin Consulting Inc. DBA Varien (http://www.varien.com)
+ * DISCLAIMER
+ *
+ * Do not edit or add to this file if you wish to upgrade Magento to newer
+ * versions in the future. If you wish to customize Magento for your
+ * needs please refer to http://www.magento.com for more information.
+ *
+ * @category    Varien
+ * @package     Varien_Simplexml
+ * @copyright  Copyright (c) 2006-2017 X.commerce, Inc. and affiliates (http://www.magento.com)
  * @license    http://opensource.org/licenses/osl-3.0.php  Open Software License (OSL 3.0)
  */
 
@@ -24,6 +30,7 @@
  *
  * @category   Varien
  * @package    Varien_Simplexml
+ * @author      Magento Core Team <core@magentocommerce.com>
  */
 class Varien_Simplexml_Config
 {
@@ -140,7 +147,7 @@ class Varien_Simplexml_Config
     {
         if (!$this->_xml instanceof Varien_Simplexml_Element) {
             return false;
-        } elseif (empty($path)) {
+        } elseif ($path === null) {
             return $this->_xml;
         } else {
             return $this->_xml->descend($path);
@@ -406,12 +413,22 @@ class Varien_Simplexml_Config
             $this->_saveCache($this->getCacheChecksum(), $this->getCacheChecksumId(), $tags, $this->getCacheLifetime());
         }
 
-        $xmlString = $this->getNode()->asNiceXml('', false);
+        $xmlString = $this->getXmlString();
         $this->_saveCache($xmlString, $this->getCacheId(), $tags, $this->getCacheLifetime());
 
         $this->setCacheSaved(true);
 
         return $this;
+    }
+
+    /**
+     * Return Xml of node as string
+     *
+     * @return string
+     */
+    public function getXmlString()
+    {
+        return $this->getNode()->asNiceXml('', false);
     }
 
     /**
@@ -467,7 +484,7 @@ class Varien_Simplexml_Config
      * Imports XML file
      *
      * @param string $filePath
-     * @return Varien_Simplexml_Element
+     * @return boolean
      */
     public function loadFile($filePath)
     {
@@ -484,23 +501,21 @@ class Varien_Simplexml_Config
     /**
      * Imports XML string
      *
-     * @param string $string
-     * @return Varien_Simplexml_Element
+     * @param  string $string
+     * @return boolean
      */
     public function loadString($string)
     {
-        if (!empty($string)) {
+        if (is_string($string)) {
             $xml = simplexml_load_string($string, $this->_elementClass);
-        }
-        else {
-            throw new Exception('"$string" parameter for simplexml_load_string is empty');
-        }
 
-        if ($xml instanceof Varien_Simplexml_Element) {
-            $this->_xml = $xml;
-            return true;
+            if ($xml instanceof Varien_Simplexml_Element) {
+                $this->_xml = $xml;
+                return true;
+            }
+        } else {
+            Mage::logException(new Exception('"$string" parameter for simplexml_load_string is not a string'));
         }
-
         return false;
     }
 
@@ -532,42 +547,7 @@ class Varien_Simplexml_Config
      */
     public function setNode($path, $value, $overwrite=true)
     {
-        $arr1 = explode('/', $path);
-        $arr = array();
-        foreach ($arr1 as $v) {
-            if (!empty($v)) $arr[] = $v;
-        }
-        $last = sizeof($arr)-1;
-        $xml = $this->_xml;
-        foreach ($arr as $i=>$nodeName) {
-            if ($last===$i) {
-                /*
-                if (isset($xml->$nodeName)) {
-                    if ($overwrite) {
-                        unset($xml->$nodeName);
-                    } else {
-                        continue;
-                    }
-                }
-                $xml->addChild($nodeName, $xml->xmlentities($value));
-                */
-                if (!isset($xml->$nodeName) || $overwrite) {
-                    // http://bugs.php.net/bug.php?id=36795
-                    if (isset($xml->$nodeName)) {
-                        $xml->$nodeName = $xml->xmlentities($value);
-                    } else {
-                        $xml->$nodeName = $value;
-                    }
-                }
-            } else {
-                if (!isset($xml->$nodeName)) {
-                    $xml = $xml->addChild($nodeName);
-                } else {
-                    $xml = $xml->$nodeName;
-                }
-            }
-
-        }
+        $xml = $this->_xml->setNode($path, $value, $overwrite);
         return $this;
     }
 

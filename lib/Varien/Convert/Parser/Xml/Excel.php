@@ -10,11 +10,17 @@
  * http://opensource.org/licenses/osl-3.0.php
  * If you did not receive a copy of the license and are unable to
  * obtain it through the world-wide-web, please send an email
- * to license@magentocommerce.com so we can send you a copy immediately.
+ * to license@magento.com so we can send you a copy immediately.
  *
- * @category   Varien
- * @package    Varien_Convert
- * @copyright  Copyright (c) 2004-2007 Irubin Consulting Inc. DBA Varien (http://www.varien.com)
+ * DISCLAIMER
+ *
+ * Do not edit or add to this file if you wish to upgrade Magento to newer
+ * versions in the future. If you wish to customize Magento for your
+ * needs please refer to http://www.magento.com for more information.
+ *
+ * @category    Varien
+ * @package     Varien_Convert
+ * @copyright  Copyright (c) 2006-2017 X.commerce, Inc. and affiliates (http://www.magento.com)
  * @license    http://opensource.org/licenses/osl-3.0.php  Open Software License (OSL 3.0)
  */
 
@@ -24,9 +30,17 @@
  *
  * @category   Varien
  * @package    Varien_Convert
+ * @author      Magento Core Team <core@magentocommerce.com>
  */
 class Varien_Convert_Parser_Xml_Excel extends Varien_Convert_Parser_Abstract
 {
+    /**
+     * XML instance for a cell data
+     *
+     * @var SimpleXMLElement
+     */
+    protected $_xmlElement;
+
     public function parse()
     {
         $this->validateDataString();
@@ -119,7 +133,8 @@ class Varien_Convert_Parser_Xml_Excel extends Varien_Convert_Parser_Abstract
                     $xml .= '<ss:Row>';
                     foreach ($fields as $fieldName) {
                         $data = isset($row[$fieldName]) ? $row[$fieldName] : '';
-                        $xml .= '<ss:Cell><Data ss:Type="String">'.$data.'</Data></ss:Cell>';
+                        $fieldType = is_numeric($data) ? 'Number' : 'String';
+                        $xml .= '<ss:Cell><Data ss:Type="' . $fieldType . '">' . $data . '</Data></ss:Cell>';
                     }
                     $xml .= '</ss:Row>';
                 }
@@ -132,5 +147,85 @@ class Varien_Convert_Parser_Xml_Excel extends Varien_Convert_Parser_Abstract
         $this->setData($xml);
 
         return $this;
+    }
+
+    /**
+     * Retrieve Excel 2003 XML Document header XML fragment
+     *
+     * @param string $sheetName the Worksheet name
+     * @return string
+     */
+    public function getHeaderXml($sheetName = '')
+    {
+        if (empty($sheetName)) {
+            $sheetName = 'Sheet 1';
+        }
+        $sheetName = htmlspecialchars($sheetName);
+        $xml = '<'.'?xml version="1.0"?'.'><'.'?mso-application progid="Excel.Sheet"?'
+            . '><Workbook'
+            . ' xmlns="urn:schemas-microsoft-com:office:spreadsheet"'
+            . ' xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"'
+            . ' xmlns:x="urn:schemas-microsoft-com:office:excel"'
+            . ' xmlns:x2="http://schemas.microsoft.com/office/excel/2003/xml"'
+            . ' xmlns:ss="urn:schemas-microsoft-com:office:spreadsheet"'
+            . ' xmlns:o="urn:schemas-microsoft-com:office:office"'
+            . ' xmlns:html="http://www.w3.org/TR/REC-html40"'
+            . ' xmlns:c="urn:schemas-microsoft-com:office:component:spreadsheet">'
+            . '<OfficeDocumentSettings xmlns="urn:schemas-microsoft-com:office:office">'
+            . '</OfficeDocumentSettings>'
+            . '<ExcelWorkbook xmlns="urn:schemas-microsoft-com:office:excel">'
+            . '</ExcelWorkbook>'
+            . '<Worksheet ss:Name="' . $sheetName . '">'
+            . '<Table>';
+        return $xml;
+    }
+
+    /**
+     * Retrieve Excel 2003 XML Document footer XML fragment
+     *
+     * @return string
+     */
+    public function getFooterXml()
+    {
+        return '</Table></Worksheet></Workbook>';
+    }
+
+    /**
+     * Convert an array to Excel 2003 XML Document a Row XML fragment
+     *
+     * @param array $row
+     * @return string
+     */
+    public function getRowXml(array $row)
+    {
+        $xmlHeader = '<'.'?xml version="1.0"?'.'>' . "\n";
+        $xmlRegexp = '/^<cell><row>(.*)?<\/row><\/cell>\s?$/ms';
+
+        if (is_null($this->_xmlElement)) {
+            $xmlString = $xmlHeader . '<cell><row></row></cell>';
+            $this->_xmlElement = new SimpleXMLElement($xmlString, LIBXML_NOBLANKS);
+        }
+
+        $xmlData = array();
+        $xmlData[] = '<Row>';
+        foreach ($row as $value) {
+            $this->_xmlElement->row = htmlspecialchars($value);
+            $value = str_replace($xmlHeader, '', $this->_xmlElement->asXML());
+            $value = preg_replace($xmlRegexp, '\\1', $value);
+            $dataType = "String";
+            if (is_numeric($value)) {
+                $dataType = "Number";
+                // is_numeric(' 96000') returns true, but Excel argues about space
+                $value = trim($value);
+            }
+            $value = str_replace("\r\n", '&#10;', $value);
+            $value = str_replace("\r", '&#10;', $value);
+            $value = str_replace("\n", '&#10;', $value);
+
+            $xmlData[] = '<Cell><Data ss:Type="'.$dataType.'">'.$value.'</Data></Cell>';
+        }
+        $xmlData[] = '</Row>';
+
+        return join('', $xmlData);
     }
 }

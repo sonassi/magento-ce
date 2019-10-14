@@ -10,11 +10,17 @@
  * http://opensource.org/licenses/osl-3.0.php
  * If you did not receive a copy of the license and are unable to
  * obtain it through the world-wide-web, please send an email
- * to license@magentocommerce.com so we can send you a copy immediately.
+ * to license@magento.com so we can send you a copy immediately.
  *
- * @category   Mage
- * @package    Mage_Adminhtml
- * @copyright  Copyright (c) 2004-2007 Irubin Consulting Inc. DBA Varien (http://www.varien.com)
+ * DISCLAIMER
+ *
+ * Do not edit or add to this file if you wish to upgrade Magento to newer
+ * versions in the future. If you wish to customize Magento for your
+ * needs please refer to http://www.magento.com for more information.
+ *
+ * @category    Mage
+ * @package     Mage_Adminhtml
+ * @copyright  Copyright (c) 2006-2017 X.commerce, Inc. and affiliates (http://www.magento.com)
  * @license    http://opensource.org/licenses/osl-3.0.php  Open Software License (OSL 3.0)
  */
 
@@ -24,6 +30,7 @@
  *
  * @category   Mage
  * @package    Mage_Adminhtml
+ * @author      Magento Core Team <core@magentocommerce.com>
  */
 class Mage_Adminhtml_Model_Config extends Varien_Simplexml_Config
 {
@@ -60,7 +67,7 @@ class Mage_Adminhtml_Model_Config extends Varien_Simplexml_Config
     }
 
     /**
-     * Retrive tabs
+     * Retrieve tabs
      *
      * @return Varien_Simplexml_Element
      */
@@ -73,36 +80,20 @@ class Mage_Adminhtml_Model_Config extends Varien_Simplexml_Config
         return $this->_tabs;
     }
 
+    /**
+     * Init modules configuration
+     *
+     * @return void
+     */
     protected function _initSectionsAndTabs()
     {
-        $mergeConfig = Mage::getModel('core/config_base');
+        $config = Mage::getConfig()->loadModulesConfiguration('system.xml')
+            ->applyExtends();
 
-        $config = Mage::getConfig();
-        $modules = $config->getNode('modules')->children();
-
-        // check if local modules are disabled
-        $disableLocalModules = (string)$config->getNode('global/disable_local_modules');
-        $disableLocalModules = !empty($disableLocalModules) && (('true' === $disableLocalModules) || ('1' === $disableLocalModules));
-
-        foreach ($modules as $modName=>$module) {
-            if ($module->is('active')) {
-                if ($disableLocalModules && ('local' === (string)$module->codePool)) {
-                    continue;
-                }
-                $configFile = $config->getModuleDir('etc', $modName).DS.'system.xml';
-
-                if ($mergeConfig->loadFile($configFile)) {
-                    $config->extend($mergeConfig, true);
-                }
-            }
-        }
-        #$config->applyExtends();
-
+        Mage::dispatchEvent('adminhtml_init_system_config', array('config' => $config));
         $this->_sections = $config->getNode('sections');
         $this->_tabs = $config->getNode('tabs');
     }
-
-
 
     /**
      * Enter description here...
@@ -114,7 +105,6 @@ class Mage_Adminhtml_Model_Config extends Varien_Simplexml_Config
      */
     public function getSection($sectionCode=null, $websiteCode=null, $storeCode=null)
     {
-
         if ($sectionCode){
             return  $this->getSections()->$sectionCode;
         } elseif ($websiteCode) {
@@ -142,7 +132,7 @@ class Mage_Adminhtml_Model_Config extends Varien_Simplexml_Config
                     $showTab=true;
                 }
             }
-        }elseif ($websiteCode) {
+        } elseif ($websiteCode) {
             if (isset($node->show_in_website)) {
                 if ((int)$node->show_in_website) {
                     $showTab=true;
@@ -173,11 +163,10 @@ class Mage_Adminhtml_Model_Config extends Varien_Simplexml_Config
             }
         }
         return false;
-
     }
 
     /**
-     * Enter description here...
+     * Get translate module name
      *
      * @param Varien_Simplexml_Element $sectionNode
      * @param Varien_Simplexml_Element $groupNode
@@ -203,4 +192,65 @@ class Mage_Adminhtml_Model_Config extends Varien_Simplexml_Config
         return $moduleName;
     }
 
+    /**
+     * System configuration section, fieldset or field label getter
+     *
+     * @param string $sectionName
+     * @param string $groupName
+     * @param string $fieldName
+     * @return string
+     */
+    public function getSystemConfigNodeLabel($sectionName, $groupName = null, $fieldName = null)
+    {
+        $sectionName = trim($sectionName, '/');
+        $path = '//sections/' . $sectionName;
+        $groupNode = $fieldNode = null;
+        $sectionNode = $this->_sections->xpath($path);
+        if (!empty($groupName)) {
+            $path .= '/groups/' . trim($groupName, '/');
+            $groupNode = $this->_sections->xpath($path);
+        }
+        if (!empty($fieldName)) {
+            if (!empty($groupName)) {
+                $path .= '/fields/' . trim($fieldName, '/');
+                $fieldNode = $this->_sections->xpath($path);
+            }
+            else {
+                Mage::throwException(Mage::helper('adminhtml')->__('The group node name must be specified with field node name.'));
+            }
+        }
+        $moduleName = $this->getAttributeModule($sectionNode, $groupNode, $fieldNode);
+        $systemNode = $this->_sections->xpath($path);
+        foreach ($systemNode as $node) {
+            return Mage::helper($moduleName)->__((string)$node->label);
+        }
+        return '';
+    }
+
+    /**
+     * Look for encrypted node entries in all system.xml files and return them
+     *
+     * @return array $paths
+     */
+    public function getEncryptedNodeEntriesPaths($explodePathToEntities = false)
+    {
+        $paths = array();
+        $configSections = $this->getSections();
+        if ($configSections) {
+            foreach ($configSections->xpath('//sections/*/groups/*/fields/*/backend_model') as $node) {
+                if ('adminhtml/system_config_backend_encrypted' === (string)$node) {
+                    $section = $node->getParent()->getParent()->getParent()->getParent()->getParent()->getName();
+                    $group   = $node->getParent()->getParent()->getParent()->getName();
+                    $field   = $node->getParent()->getName();
+                    if ($explodePathToEntities) {
+                        $paths[] = array('section' => $section, 'group' => $group, 'field' => $field);
+                    }
+                    else {
+                        $paths[] = $section . '/' . $group . '/' . $field;
+                    }
+                }
+            }
+        }
+        return $paths;
+    }
 }

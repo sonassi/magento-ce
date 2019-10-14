@@ -10,11 +10,17 @@
  * http://opensource.org/licenses/osl-3.0.php
  * If you did not receive a copy of the license and are unable to
  * obtain it through the world-wide-web, please send an email
- * to license@magentocommerce.com so we can send you a copy immediately.
+ * to license@magento.com so we can send you a copy immediately.
  *
- * @category   Varien
- * @package    Varien_Image
- * @copyright  Copyright (c) 2004-2007 Irubin Consulting Inc. DBA Varien (http://www.varien.com)
+ * DISCLAIMER
+ *
+ * Do not edit or add to this file if you wish to upgrade Magento to newer
+ * versions in the future. If you wish to customize Magento for your
+ * needs please refer to http://www.magento.com for more information.
+ *
+ * @category    Varien
+ * @package     Varien_Image
+ * @copyright  Copyright (c) 2006-2017 X.commerce, Inc. and affiliates (http://www.magento.com)
  * @license    http://opensource.org/licenses/osl-3.0.php  Open Software License (OSL 3.0)
  */
 
@@ -23,6 +29,7 @@
  *
  * @category   Varien
  * @package    Varien_Image
+ * @author      Magento Core Team <core@magentocommerce.com>
  */
 class Varien_Image
 {
@@ -111,20 +118,56 @@ class Varien_Image
      */
     public function crop($top=0, $left=0, $right=0, $bottom=0)
     {
-        $this->_getAdapter()->crop($left, $top, $right, $bottom);
+        $this->_getAdapter()->crop($top, $left, $right, $bottom);
     }
 
     /**
      * Resize an image
      *
-     * @param int $width. Default value is NULL
-     * @param int $height. Default value is NULL
+     * @param int $width
+     * @param int $height
      * @access public
      * @return void
      */
-    public function resize($width=null, $height=null)
+    public function resize($width, $height = null)
     {
         $this->_getAdapter()->resize($width, $height);
+    }
+
+    public function keepAspectRatio($value)
+    {
+        return $this->_getAdapter()->keepAspectRatio($value);
+    }
+
+    public function keepFrame($value)
+    {
+        return $this->_getAdapter()->keepFrame($value);
+    }
+
+    public function keepTransparency($value)
+    {
+        return $this->_getAdapter()->keepTransparency($value);
+    }
+
+    public function constrainOnly($value)
+    {
+        return $this->_getAdapter()->constrainOnly($value);
+    }
+
+    public function backgroundColor($value)
+    {
+        return $this->_getAdapter()->backgroundColor($value);
+    }
+
+    /**
+     * Get/set quality, values in percentage from 0 to 100
+     *
+     * @param int $value
+     * @return int
+     */
+    public function quality($value)
+    {
+        return $this->_getAdapter()->quality($value);
     }
 
     /**
@@ -191,24 +234,60 @@ class Varien_Image
         $this->_getAdapter()->imageBackgroundColor = intval($color);
     }
 
+    /**
+     * Set watermark position
+     *
+     * @param string $position
+     * @return Varien_Image
+     */
     public function setWatermarkPosition($position)
     {
         $this->_getAdapter()->setWatermarkPosition($position);
         return $this;
     }
 
+    /**
+     * Set watermark image opacity
+     *
+     * @param int $imageOpacity
+     * @return Varien_Image
+     */
+    public function setWatermarkImageOpacity($imageOpacity)
+    {
+        $this->_getAdapter()->setWatermarkImageOpacity($imageOpacity);
+        return $this;
+    }
+
+    /**
+     * Set watermark width
+     *
+     * @param int $width
+     * @return Varien_Image
+     */
     public function setWatermarkWidth($width)
     {
         $this->_getAdapter()->setWatermarkWidth($width);
         return $this;
     }
 
+    /**
+     * Set watermark heigth
+     *
+     * @param int $heigth
+     * @return Varien_Image
+     */
     public function setWatermarkHeigth($heigth)
     {
         $this->_getAdapter()->setWatermarkHeigth($heigth);
         return $this;
     }
 
+    /**
+     * Retrieve image adapter object
+     *
+     * @param string $adapter
+     * @return Varien_Image_Adapter_Abstract
+     */
     protected function _getAdapter($adapter=null)
     {
         if( !isset($this->_adapter) ) {
@@ -217,4 +296,23 @@ class Varien_Image
         return $this->_adapter;
     }
 
+    /**
+     * Retrieve original image width
+     *
+     * @return int|null
+     */
+    public function getOriginalWidth()
+    {
+        return $this->_getAdapter()->getOriginalWidth();
+    }
+
+    /**
+     * Retrieve original image height
+     *
+     * @return int|null
+     */
+    public function getOriginalHeight()
+    {
+        return $this->_getAdapter()->getOriginalHeight();
+    }
 }

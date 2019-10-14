@@ -10,17 +10,30 @@
  * http://opensource.org/licenses/osl-3.0.php
  * If you did not receive a copy of the license and are unable to
  * obtain it through the world-wide-web, please send an email
- * to license@magentocommerce.com so we can send you a copy immediately.
+ * to license@magento.com so we can send you a copy immediately.
  *
- * @category   Mage
- * @package    Mage_Tag
- * @copyright  Copyright (c) 2004-2007 Irubin Consulting Inc. DBA Varien (http://www.varien.com)
+ * DISCLAIMER
+ *
+ * Do not edit or add to this file if you wish to upgrade Magento to newer
+ * versions in the future. If you wish to customize Magento for your
+ * needs please refer to http://www.magento.com for more information.
+ *
+ * @category    Mage
+ * @package     Mage_Tag
+ * @copyright  Copyright (c) 2006-2017 X.commerce, Inc. and affiliates (http://www.magento.com)
  * @license    http://opensource.org/licenses/osl-3.0.php  Open Software License (OSL 3.0)
  */
 
 class Mage_Tag_Block_Product_List extends Mage_Core_Block_Template
 {
-	protected $_collection;
+    protected $_collection;
+
+    /**
+     * Unique Html Id
+     *
+     * @var string
+     */
+    protected $_uniqueHtmlId = null;
 
     public function getCount()
     {
@@ -49,6 +62,7 @@ class Mage_Tag_Block_Product_List extends Mage_Core_Block_Template
                 ->addPopularity()
                 ->addStatusFilter($model->getApprovedStatus())
                 ->addProductFilter($this->getProductId())
+                ->setFlag('relation', true)
                 ->addStoreFilter(Mage::app()->getStore()->getId())
                 ->setActiveFilter()
                 ->load();
@@ -69,7 +83,40 @@ class Mage_Tag_Block_Product_List extends Mage_Core_Block_Template
     {
         return Mage::getUrl('tag/index/save', array(
             'product' => $this->getProductId(),
-            Mage_Core_Controller_Front_Action::PARAM_NAME_URL_ENCODED => Mage::helper('core/url')->getEncodedUrl()
+            Mage_Core_Controller_Front_Action::PARAM_NAME_URL_ENCODED => Mage::helper('core/url')->getEncodedUrl(),
+            '_secure' => $this->_isSecure()
         ));
+    }
+
+    /**
+     * Render tags by specified pattern and implode them by specified 'glue' string
+     *
+     * @param string $pattern
+     * @param string $glue
+     * @return string
+     */
+    public function renderTags($pattern, $glue = ' ')
+    {
+        $out = array();
+        foreach ($this->getTags() as $tag) {
+            $out[] = sprintf($pattern,
+                $tag->getTaggedProductsUrl(), $this->escapeHtml($tag->getName()), $tag->getProducts()
+            );
+        }
+        return implode($out, $glue);
+    }
+
+    /**
+     * Generate unique html id
+     *
+     * @param string $prefix
+     * @return string
+     */
+    public function getUniqueHtmlId($prefix = '')
+    {
+        if (is_null($this->_uniqueHtmlId)) {
+            $this->_uniqueHtmlId = Mage::helper('core/data')->uniqHash($prefix);
+        }
+        return $this->_uniqueHtmlId;
     }
 }

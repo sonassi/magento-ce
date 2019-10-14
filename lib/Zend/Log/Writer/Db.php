@@ -15,42 +15,44 @@
  * @category   Zend
  * @package    Zend_Log
  * @subpackage Writer
- * @copyright  Copyright (c) 2005-2008 Zend Technologies USA Inc. (http://www.zend.com)
+ * @copyright  Copyright (c) 2005-2015 Zend Technologies USA Inc. (http://www.zend.com)
  * @license    http://framework.zend.com/license/new-bsd     New BSD License
- * @version    $Id: Db.php 8064 2008-02-16 10:58:39Z thomas $
+ * @version    $Id$
  */
 
 /** Zend_Log_Writer_Abstract */
-require_once 'Zend/Log/Writer/Abstract.php';
+#require_once 'Zend/Log/Writer/Abstract.php';
 
 /**
  * @category   Zend
  * @package    Zend_Log
  * @subpackage Writer
- * @copyright  Copyright (c) 2005-2008 Zend Technologies USA Inc. (http://www.zend.com)
+ * @copyright  Copyright (c) 2005-2015 Zend Technologies USA Inc. (http://www.zend.com)
  * @license    http://framework.zend.com/license/new-bsd     New BSD License
- * @version    $Id: Db.php 8064 2008-02-16 10:58:39Z thomas $
+ * @version    $Id$
  */
 class Zend_Log_Writer_Db extends Zend_Log_Writer_Abstract
 {
     /**
      * Database adapter instance
+     *
      * @var Zend_Db_Adapter
      */
-    private $_db;
+    protected $_db;
 
     /**
      * Name of the log table in the database
+     *
      * @var string
      */
-    private $_table;
+    protected $_table;
 
     /**
      * Relates database columns names to log data field keys.
      *
      * @var null|array
      */
-    private $_columnMap;
+    protected $_columnMap;
 
     /**
      * Class constructor
@@ -58,6 +60,7 @@ class Zend_Log_Writer_Db extends Zend_Log_Writer_Abstract
      * @param Zend_Db_Adapter $db   Database adapter instance
      * @param string $table         Log table in database
      * @param array $columnMap
+     * @return void
      */
     public function __construct($db, $table, $columnMap = null)
     {
@@ -67,11 +70,41 @@ class Zend_Log_Writer_Db extends Zend_Log_Writer_Abstract
     }
 
     /**
-     * Formatting is not possible on this writer
+     * Create a new instance of Zend_Log_Writer_Db
+     *
+     * @param  array|Zend_Config $config
+     * @return Zend_Log_Writer_Db
      */
-    public function setFormatter($formatter)
+    static public function factory($config)
     {
-        throw new Zend_Log_Exception(get_class() . ' does not support formatting');
+        $config = self::_parseConfig($config);
+        $config = array_merge(array(
+            'db'        => null,
+            'table'     => null,
+            'columnMap' => null,
+        ), $config);
+
+        if (isset($config['columnmap'])) {
+            $config['columnMap'] = $config['columnmap'];
+        }
+
+        return new self(
+            $config['db'],
+            $config['table'],
+            $config['columnMap']
+        );
+    }
+
+    /**
+     * Formatting is not possible on this writer
+     *
+     * @return void
+     * @throws Zend_Log_Exception
+     */
+    public function setFormatter(Zend_Log_Formatter_Interface $formatter)
+    {
+        #require_once 'Zend/Log/Exception.php';
+        throw new Zend_Log_Exception(get_class($this) . ' does not support formatting');
     }
 
     /**
@@ -89,11 +122,13 @@ class Zend_Log_Writer_Db extends Zend_Log_Writer_Abstract
      *
      * @param  array  $event  event data
      * @return void
+     * @throws Zend_Log_Exception
      */
     protected function _write($event)
     {
         if ($this->_db === null) {
-            throw new Zend_Log_Exception('Database adapter instance has been removed by shutdown');
+            #require_once 'Zend/Log/Exception.php';
+            throw new Zend_Log_Exception('Database adapter is null');
         }
 
         if ($this->_columnMap === null) {
@@ -101,11 +136,12 @@ class Zend_Log_Writer_Db extends Zend_Log_Writer_Abstract
         } else {
             $dataToInsert = array();
             foreach ($this->_columnMap as $columnName => $fieldKey) {
-                $dataToInsert[$columnName] = $event[$fieldKey];
+                if (isset($event[$fieldKey])) {
+                    $dataToInsert[$columnName] = $event[$fieldKey];
+                }
             }
         }
 
         $this->_db->insert($this->_table, $dataToInsert);
     }
-
 }

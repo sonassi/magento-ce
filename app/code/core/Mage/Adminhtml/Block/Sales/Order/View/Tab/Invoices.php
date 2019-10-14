@@ -10,11 +10,17 @@
  * http://opensource.org/licenses/osl-3.0.php
  * If you did not receive a copy of the license and are unable to
  * obtain it through the world-wide-web, please send an email
- * to license@magentocommerce.com so we can send you a copy immediately.
+ * to license@magento.com so we can send you a copy immediately.
  *
- * @category   Mage
- * @package    Mage_Adminhtml
- * @copyright  Copyright (c) 2004-2007 Irubin Consulting Inc. DBA Varien (http://www.varien.com)
+ * DISCLAIMER
+ *
+ * Do not edit or add to this file if you wish to upgrade Magento to newer
+ * versions in the future. If you wish to customize Magento for your
+ * needs please refer to http://www.magento.com for more information.
+ *
+ * @category    Mage
+ * @package     Mage_Adminhtml
+ * @copyright  Copyright (c) 2006-2017 X.commerce, Inc. and affiliates (http://www.magento.com)
  * @license    http://opensource.org/licenses/osl-3.0.php  Open Software License (OSL 3.0)
  */
 
@@ -23,32 +29,43 @@
  *
  * @category   Mage
  * @package    Mage_Adminhtml
+ * @author      Magento Core Team <core@magentocommerce.com>
  */
-class Mage_Adminhtml_Block_Sales_Order_View_Tab_Invoices extends Mage_Adminhtml_Block_Widget_Grid
+class Mage_Adminhtml_Block_Sales_Order_View_Tab_Invoices
+    extends Mage_Adminhtml_Block_Widget_Grid
+    implements Mage_Adminhtml_Block_Widget_Tab_Interface
 {
     public function __construct()
     {
         parent::__construct();
-        $this->setId('order_invoices_grid');
+        $this->setId('order_invoices');
         $this->setUseAjax(true);
+    }
+
+    /**
+     * Retrieve collection class
+     *
+     * @return string
+     */
+    protected function _getCollectionClass()
+    {
+        return 'sales/order_invoice_grid_collection';
     }
 
     protected function _prepareCollection()
     {
-        $collection = Mage::getResourceModel('sales/order_invoice_collection')
-            ->addAttributeToSelect('order_id')
-            ->addAttributeToSelect('increment_id')
-            ->addAttributeToSelect('created_at')
-            ->addAttributeToSelect('state')
-            ->addAttributeToSelect('grand_total')
-            ->addAttributeToSelect('base_grand_total')
-            ->addAttributeToSelect('store_currency_code')
-            ->addAttributeToSelect('order_currency_code')
-            ->joinAttribute('billing_firstname', 'order_address/firstname', 'billing_address_id', null, 'left')
-            ->joinAttribute('billing_lastname', 'order_address/lastname', 'billing_address_id', null, 'left')
-            ->addExpressionAttributeToSelect('billing_name',
-                'CONCAT({{billing_firstname}}, " ", {{billing_lastname}})',
-                array('billing_firstname', 'billing_lastname'))
+        $collection = Mage::getResourceModel($this->_getCollectionClass())
+            ->addFieldToSelect('entity_id')
+            ->addFieldToSelect('created_at')
+            ->addFieldToSelect('order_id')
+            ->addFieldToSelect('increment_id')
+            ->addFieldToSelect('state')
+            ->addFieldToSelect('grand_total')
+            ->addFieldToSelect('base_grand_total')
+            ->addFieldToSelect('store_currency_code')
+            ->addFieldToSelect('base_currency_code')
+            ->addFieldToSelect('order_currency_code')
+            ->addFieldToSelect('billing_name')
             ->setOrderFilter($this->getOrder())
         ;
         $this->setCollection($collection);
@@ -64,7 +81,7 @@ class Mage_Adminhtml_Block_Sales_Order_View_Tab_Invoices extends Mage_Adminhtml_
         ));
 
         $this->addColumn('billing_name', array(
-            'header' => Mage::helper('sales')->__('Bill to First name'),
+            'header' => Mage::helper('sales')->__('Bill to Name'),
             'index' => 'billing_name',
         ));
 
@@ -85,7 +102,7 @@ class Mage_Adminhtml_Block_Sales_Order_View_Tab_Invoices extends Mage_Adminhtml_
             'header'    => Mage::helper('customer')->__('Amount'),
             'index'     => 'base_grand_total',
             'type'      => 'currency',
-            'currency'  => 'store_currency_code',
+            'currency'  => 'base_currency_code',
         ));
 
         return parent::_prepareColumns();
@@ -114,5 +131,29 @@ class Mage_Adminhtml_Block_Sales_Order_View_Tab_Invoices extends Mage_Adminhtml_
     public function getGridUrl()
     {
         return $this->getUrl('*/*/invoices', array('_current' => true));
+    }
+
+
+    /**
+     * ######################## TAB settings #################################
+     */
+    public function getTabLabel()
+    {
+        return Mage::helper('sales')->__('Invoices');
+    }
+
+    public function getTabTitle()
+    {
+        return Mage::helper('sales')->__('Order Invoices');
+    }
+
+    public function canShowTab()
+    {
+        return true;
+    }
+
+    public function isHidden()
+    {
+        return false;
     }
 }

@@ -10,65 +10,75 @@
  * http://opensource.org/licenses/osl-3.0.php
  * If you did not receive a copy of the license and are unable to
  * obtain it through the world-wide-web, please send an email
- * to license@magentocommerce.com so we can send you a copy immediately.
+ * to license@magento.com so we can send you a copy immediately.
  *
- * @category   Varien
- * @package    Varien_Object
- * @copyright  Copyright (c) 2004-2007 Irubin Consulting Inc. DBA Varien (http://www.varien.com)
+ * DISCLAIMER
+ *
+ * Do not edit or add to this file if you wish to upgrade Magento to newer
+ * versions in the future. If you wish to customize Magento for your
+ * needs please refer to http://www.magento.com for more information.
+ *
+ * @category    Mage
+ * @package     Mage_Connect
+ * @copyright  Copyright (c) 2006-2017 X.commerce, Inc. and affiliates (http://www.magento.com)
  * @license    http://opensource.org/licenses/osl-3.0.php  Open Software License (OSL 3.0)
  */
 
-class Maged_Model_Config extends Maged_Model
+/**
+* Class config
+*
+* @category   Mage
+* @package    Mage_Connect
+* @copyright  Copyright (c) 2009 Irubin Consulting Inc. DBA Varien (http://www.varien.com)
+* @license    http://opensource.org/licenses/osl-3.0.php  Open Software License (OSL 3.0)
+*/
+class Maged_Model_Config extends Maged_Model_Config_Abstract
 {
+    /**
+     * Get channel config class
+     * @return Maged_Model_Config_Interface
+     */
+    public function getChannelConfig()
+    {
+        $this->load();
+        $channel = trim($this->get('root_channel'));
+        if (!empty($channel)) {
+            try {
+                return $this->controller()->model('config_'.$channel, true);
+            } catch (Exception $e) {
+                throw new Exception('Not valid config.ini file.');
+            }
+        } else {
+            throw new Exception('Not valid config.ini file.');
+        }
+    }
+
+    /**
+    * Save post data to config
+    *
+    * @param array $p
+    * @return Maged_Model_Config
+    */
     public function saveConfigPost($p)
     {
-        $this->set('preferred_state', $p['preferred_state']);
-        //$this->set('mage_dir', $p['mage_dir']);
+        $configParams = array(
+            'protocol',
+            'preferred_state',
+            'use_custom_permissions_mode',
+            'mkdir_mode',
+            'chmod_file_mode',
+            'magento_root',
+            'downloader_path',
+            'root_channel_uri',
+            'root_channel',
+            'ftp',
+        );
+        foreach ($configParams as $paramName){
+            if (isset($p[$paramName])) {
+               $this->set($paramName, $p[$paramName]);
+            }
+        }
         $this->save();
-        return $this;
-    }
-
-    public function getFilename()
-    {
-        return $this->controller()->filepath('config.ini');
-    }
-
-    public function load()
-    {
-        if (!file_exists($this->getFilename())) {
-            return $this;
-        }
-        $rows = file($this->getFilename());
-        if (!$rows) {
-            return $this;
-        }
-        foreach ($rows as $row) {
-            $arr = explode('=', $row, 2);
-            if (count($arr)!==2) {
-                continue;
-            }
-            $key = trim($arr[0]);
-            $value = trim($arr[1], " \t\"'");
-            if (!$key || $key[0]=='#' || $key[0]==';') {
-                continue;
-            }
-            $this->set($key, $value);
-        }
-        return $this;
-    }
-
-    public function save()
-    {
-        if (!is_writable($this->getFilename())) {
-            $this->controller()->session()
-                ->addMessage('error', 'Invalid file permissions, could not save configuration.');
-            return $this;
-        }
-        $fp = fopen($this->getFilename(), 'w');
-        foreach ($this->_data as $k=>$v) {
-            fwrite($fp, $k.'='.$v."\n");
-        }
-        fclose($fp);
         return $this;
     }
 }

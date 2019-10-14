@@ -10,11 +10,17 @@
  * http://opensource.org/licenses/osl-3.0.php
  * If you did not receive a copy of the license and are unable to
  * obtain it through the world-wide-web, please send an email
- * to license@magentocommerce.com so we can send you a copy immediately.
+ * to license@magento.com so we can send you a copy immediately.
  *
- * @category   Mage
- * @package    Mage_Adminhtml
- * @copyright  Copyright (c) 2004-2007 Irubin Consulting Inc. DBA Varien (http://www.varien.com)
+ * DISCLAIMER
+ *
+ * Do not edit or add to this file if you wish to upgrade Magento to newer
+ * versions in the future. If you wish to customize Magento for your
+ * needs please refer to http://www.magento.com for more information.
+ *
+ * @category    Mage
+ * @package     Mage_Adminhtml
+ * @copyright  Copyright (c) 2006-2017 X.commerce, Inc. and affiliates (http://www.magento.com)
  * @license    http://opensource.org/licenses/osl-3.0.php  Open Software License (OSL 3.0)
  */
 
@@ -23,22 +29,35 @@
  *
  * @category   Mage
  * @package    Mage_Adminhtml
+ * @author     Magento Core Team <core@magentocommerce.com>
  */
 class Mage_Adminhtml_Block_Catalog_Product_Edit_Tab_Super_Group extends Mage_Adminhtml_Block_Widget_Grid
+    implements Mage_Adminhtml_Block_Widget_Tab_Interface
 {
     public function __construct()
     {
         parent::__construct();
         $this->setId('super_product_grid');
-        $this->setDefaultSort('id');
+        $this->setDefaultSort('entity_id');
+        $this->setSkipGenerateContent(true);
         $this->setUseAjax(true);
         if ($this->_getProduct()->getId()) {
             $this->setDefaultFilter(array('in_products'=>1));
         }
     }
 
+    public function getTabUrl()
+    {
+        return $this->getUrl('*/*/superGroup', array('_current'=>true));
+    }
+
+    public function getTabClass()
+    {
+        return 'ajax';
+    }
+
     /**
-     * Retirve currently edited product model
+     * Retrieve currently edited product model
      *
      * @return Mage_Catalog_Model_Product
      */
@@ -69,14 +88,30 @@ class Mage_Adminhtml_Block_Catalog_Product_Edit_Tab_Super_Group extends Mage_Adm
         return $this;
     }
 
+    /**
+     * Prepare collection
+     *
+     * @return Mage_Adminhtml_Block_Catalog_Product_Edit_Tab_Super_Group
+     */
     protected function _prepareCollection()
     {
+        $allowProductTypes = array();
+        $allowProductTypeNodes = Mage::getConfig()
+            ->getNode('global/catalog/product/type/grouped/allow_product_types')->children();
+        foreach ($allowProductTypeNodes as $type) {
+            $allowProductTypes[] = $type->getName();
+        }
+
         $collection = Mage::getModel('catalog/product_link')->useGroupedLinks()
             ->getProductCollection()
             ->setProduct($this->_getProduct())
             ->addAttributeToSelect('*')
-            ->addAttributeToFilter('type_id', Mage_Catalog_Model_Product_Type::TYPE_SIMPLE);
+            ->addFilterByRequiredOptions()
+            ->addAttributeToFilter('type_id', $allowProductTypes);
 
+        if ($this->getIsReadonly() === true) {
+            $collection->addFieldToFilter('entity_id', array('in' => $this->_getSelectedProducts()));
+        }
         $this->setCollection($collection);
         return parent::_prepareCollection();
     }
@@ -92,7 +127,7 @@ class Mage_Adminhtml_Block_Catalog_Product_Edit_Tab_Super_Group extends Mage_Adm
             'index'     => 'entity_id'
         ));
 
-        $this->addColumn('id', array(
+        $this->addColumn('entity_id', array(
             'header'    => Mage::helper('catalog')->__('ID'),
             'sortable'  => true,
             'width'     => '60px',
@@ -120,8 +155,9 @@ class Mage_Adminhtml_Block_Catalog_Product_Edit_Tab_Super_Group extends Mage_Adm
             'type'      => 'number',
             'validate_class' => 'validate-number',
             'index'     => 'qty',
-            'width'     => '60px',
-            'editable'  => true
+            'width'     => '1',
+            'editable'  => true,
+            'filter_condition_callback' => array($this, '_addLinkModelFilterCallback')
         ));
 
         $this->addColumn('position', array(
@@ -130,25 +166,73 @@ class Mage_Adminhtml_Block_Catalog_Product_Edit_Tab_Super_Group extends Mage_Adm
             'type'      => 'number',
             'validate_class' => 'validate-number',
             'index'     => 'position',
-            'width'     => '60px',
+            'width'     => '1',
             'editable'  => true,
-            'edit_only' => !$this->_getProduct()->getId()
+            'edit_only' => !$this->_getProduct()->getId(),
+            'filter_condition_callback' => array($this, '_addLinkModelFilterCallback')
         ));
 
         return parent::_prepareColumns();
     }
 
+    /**
+     * Get Grid Url
+     *
+     * @return string
+     */
     public function getGridUrl()
     {
-        return $this->getUrl('*/*/superGroup', array('_current'=>true));
+        return $this->_getData('grid_url')
+            ? $this->_getData('grid_url') : $this->getUrl('*/*/superGroupGridOnly', array('_current'=>true));
     }
 
+    /**
+     * Retrieve selected grouped products
+     *
+     * @return array
+     */
     protected function _getSelectedProducts()
     {
-        $products = $this->getRequest()->getPost('products', null);
+        $products = $this->getProductsGrouped();
         if (!is_array($products)) {
-            $products = $this->_getProduct()->getTypeInstance()->getAssociatedProductIds();
+            $products = array_keys($this->getSelectedGroupedProducts());
         }
         return $products;
+    }
+
+    /**
+     * Retrieve grouped products
+     *
+     * @return array
+     */
+    public function getSelectedGroupedProducts()
+    {
+        $associatedProducts = Mage::registry('current_product')->getTypeInstance(true)
+            ->getAssociatedProducts(Mage::registry('current_product'));
+        $products = array();
+        foreach ($associatedProducts as $product) {
+            $products[$product->getId()] = array(
+                'qty'       => $product->getQty(),
+                'position'  => $product->getPosition()
+            );
+        }
+        return $products;
+    }
+
+    public function getTabLabel()
+    {
+        return Mage::helper('catalog')->__('Associated Products');
+    }
+    public function getTabTitle()
+    {
+        return Mage::helper('catalog')->__('Associated Products');
+    }
+    public function canShowTab()
+    {
+        return true;
+    }
+    public function isHidden()
+    {
+        return false;
     }
 }

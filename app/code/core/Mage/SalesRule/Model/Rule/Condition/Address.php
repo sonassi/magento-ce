@@ -10,11 +10,17 @@
  * http://opensource.org/licenses/osl-3.0.php
  * If you did not receive a copy of the license and are unable to
  * obtain it through the world-wide-web, please send an email
- * to license@magentocommerce.com so we can send you a copy immediately.
+ * to license@magento.com so we can send you a copy immediately.
  *
- * @category   Mage
- * @package    Mage_SalesRule
- * @copyright  Copyright (c) 2004-2007 Irubin Consulting Inc. DBA Varien (http://www.varien.com)
+ * DISCLAIMER
+ *
+ * Do not edit or add to this file if you wish to upgrade Magento to newer
+ * versions in the future. If you wish to customize Magento for your
+ * needs please refer to http://www.magento.com for more information.
+ *
+ * @category    Mage
+ * @package     Mage_SalesRule
+ * @copyright  Copyright (c) 2006-2017 X.commerce, Inc. and affiliates (http://www.magento.com)
  * @license    http://opensource.org/licenses/osl-3.0.php  Open Software License (OSL 3.0)
  */
 
@@ -24,7 +30,7 @@ class Mage_SalesRule_Model_Rule_Condition_Address extends Mage_Rule_Model_Condit
     public function loadAttributeOptions()
     {
         $attributes = array(
-            'subtotal' => Mage::helper('salesrule')->__('Subtotal'),
+            'base_subtotal' => Mage::helper('salesrule')->__('Subtotal'),
             'total_qty' => Mage::helper('salesrule')->__('Total Items Quantity'),
             'weight' => Mage::helper('salesrule')->__('Total Weight'),
             'payment_method' => Mage::helper('salesrule')->__('Payment Method'),
@@ -50,7 +56,7 @@ class Mage_SalesRule_Model_Rule_Condition_Address extends Mage_Rule_Model_Condit
     public function getInputType()
     {
         switch ($this->getAttribute()) {
-            case 'subtotal': case 'weight': case 'total_qty':
+            case 'base_subtotal': case 'weight': case 'total_qty':
                 return 'numeric';
 
             case 'shipping_method': case 'payment_method': case 'country_id': case 'region_id':
@@ -83,12 +89,12 @@ class Mage_SalesRule_Model_Rule_Condition_Address extends Mage_Rule_Model_Condit
                     break;
 
                 case 'shipping_method':
-                    $options = Mage::getModel('adminhtml/system_config_source_shipping_allowedmethods')
+                    $options = Mage::getModel('adminhtml/system_config_source_shipping_allmethods')
                         ->toOptionArray();
                     break;
 
                 case 'payment_method':
-                    $options = Mage::getModel('adminhtml/system_config_source_payment_allowedmethods')
+                    $options = Mage::getModel('adminhtml/system_config_source_payment_allmethods')
                         ->toOptionArray();
                     break;
 
@@ -98,5 +104,30 @@ class Mage_SalesRule_Model_Rule_Condition_Address extends Mage_Rule_Model_Condit
             $this->setData('value_select_options', $options);
         }
         return $this->getData('value_select_options');
+    }
+
+    /**
+     * Validate Address Rule Condition
+     *
+     * @param Varien_Object $object
+     * @return bool
+     */
+    public function validate(Varien_Object $object)
+    {
+        $address = $object;
+        if (!$address instanceof Mage_Sales_Model_Quote_Address) {
+            if ($object->getQuote()->isVirtual()) {
+                $address = $object->getQuote()->getBillingAddress();
+            }
+            else {
+                $address = $object->getQuote()->getShippingAddress();
+            }
+        }
+
+        if ('payment_method' == $this->getAttribute() && ! $address->hasPaymentMethod()) {
+            $address->setPaymentMethod($object->getQuote()->getPayment()->getMethod());
+        }
+
+        return parent::validate($address);
     }
 }

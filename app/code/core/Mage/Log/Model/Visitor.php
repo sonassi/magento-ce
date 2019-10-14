@@ -10,22 +10,94 @@
  * http://opensource.org/licenses/osl-3.0.php
  * If you did not receive a copy of the license and are unable to
  * obtain it through the world-wide-web, please send an email
- * to license@magentocommerce.com so we can send you a copy immediately.
+ * to license@magento.com so we can send you a copy immediately.
  *
- * @category   Mage
- * @package    Mage_Log
- * @copyright  Copyright (c) 2004-2007 Irubin Consulting Inc. DBA Varien (http://www.varien.com)
+ * DISCLAIMER
+ *
+ * Do not edit or add to this file if you wish to upgrade Magento to newer
+ * versions in the future. If you wish to customize Magento for your
+ * needs please refer to http://www.magento.com for more information.
+ *
+ * @category    Mage
+ * @package     Mage_Log
+ * @copyright  Copyright (c) 2006-2017 X.commerce, Inc. and affiliates (http://www.magento.com)
  * @license    http://opensource.org/licenses/osl-3.0.php  Open Software License (OSL 3.0)
  */
 
 
+/**
+ * Enter description here ...
+ *
+ * @method Mage_Log_Model_Resource_Visitor getResource()
+ * @method string getSessionId()
+ * @method Mage_Log_Model_Visitor setSessionId(string $value)
+ * @method Mage_Log_Model_Visitor setFirstVisitAt(string $value)
+ * @method Mage_Log_Model_Visitor setLastVisitAt(string $value)
+ * @method int getLastUrlId()
+ * @method Mage_Log_Model_Visitor setLastUrlId(int $value)
+ * @method int getStoreId()
+ * @method Mage_Log_Model_Visitor setStoreId(int $value)
+ *
+ * @category    Mage
+ * @package     Mage_Log
+ * @author      Magento Core Team <core@magentocommerce.com>
+ */
 class Mage_Log_Model_Visitor extends Mage_Core_Model_Abstract
 {
-    const ONLINE_MINUTES_INTERVAL = 15;
+    const DEFAULT_ONLINE_MINUTES_INTERVAL = 15;
+    const VISITOR_TYPE_CUSTOMER = 'c';
+    const VISITOR_TYPE_VISITOR  = 'v';
 
+    protected $_skipRequestLogging = false;
+
+    /**
+     * @var Mage_Log_Helper_Data
+     */
+    protected $_logCondition;
+
+    /**
+     * @var Mage_Core_Helper_Http
+     */
+    protected $_httpHelper;
+
+    /**
+     * @var Mage_Core_Model_Config
+     */
+    protected $_config;
+
+    /**
+     * @var Mage_Core_Model_Session
+     */
+    protected $_session;
+
+    public function __construct(array $data = array())
+    {
+        $this->_httpHelper = !empty($data['http_helper']) ? $data['http_helper'] : Mage::helper('core/http');
+        $this->_config = !empty($data['config']) ? $data['config'] : Mage::getConfig();
+        $this->_logCondition = !empty($data['log_condition']) ?
+            $data['log_condition'] : Mage::helper('log');
+        $this->_session = !empty($data['session']) ? $data['session'] : Mage::getSingleton('core/session');
+        parent::__construct($data);
+    }
+
+
+    /**
+     * Object initialization
+     */
     protected function _construct()
     {
         $this->_init('log/visitor');
+        $userAgent = $this->_httpHelper->getHttpUserAgent();
+        $ignoreAgents = $this->_config->getNode('global/ignore_user_agents');
+        if ($ignoreAgents) {
+            $ignoreAgents = $ignoreAgents->asArray();
+            if (in_array($userAgent, $ignoreAgents)) {
+                $this->_skipRequestLogging = true;
+            }
+        }
+        if ($this->_logCondition->isLogDisabled()) {
+            $this->_skipRequestLogging = true;
+        }
     }
 
     /**
@@ -35,17 +107,7 @@ class Mage_Log_Model_Visitor extends Mage_Core_Model_Abstract
      */
     protected function _getSession()
     {
-        return Mage::getSingleton('core/session');
-    }
-
-    /**
-     * Retrieve visitor resource model
-     *
-     * @return mixed
-     */
-    public function getResource()
-    {
-        return Mage::getResourceSingleton('log/visitor');
+        return $this->_session;
     }
 
     /**
@@ -55,21 +117,33 @@ class Mage_Log_Model_Visitor extends Mage_Core_Model_Abstract
      */
     public function initServerData()
     {
-        $s = $_SERVER;
         $this->addData(array(
-            'server_addr'       => empty($s['SERVER_ADDR']) ? '' : ip2long($s['SERVER_ADDR']),
-            'remote_addr'       => empty($s['REMOTE_ADDR']) ? '' : ip2long($s['REMOTE_ADDR']),
-            'http_secure'       => Mage::app()->getStore()->isCurrentlySecure(),
-            'http_host'         => empty($s['HTTP_HOST']) ? '' : $s['HTTP_HOST'],
-            'http_user_agent'   => empty($s['HTTP_USER_AGENT']) ? '' : $s['HTTP_USER_AGENT'],
-            'http_accept_language'=> empty($s['HTTP_ACCEPT_LANGUAGE']) ? '' : $s['HTTP_ACCEPT_LANGUAGE'],
-            'http_accept_charset'=> empty($s['HTTP_ACCEPT_CHARSET']) ? '' : $s['HTTP_ACCEPT_CHARSET'],
-            'request_uri'       => empty($s['REQUEST_URI']) ? '' : $s['REQUEST_URI'],
-            'session_id'        => $this->_getSession()->getSessionId(),
-            'http_referer'      => empty($s['HTTP_REFERER']) ? '' : $s['HTTP_REFERER'],
+            'server_addr'           => $this->_httpHelper->getServerAddr(true),
+            'remote_addr'           => $this->_httpHelper->getRemoteAddr(true),
+            'http_secure'           => Mage::app()->getStore()->isCurrentlySecure(),
+            'http_host'             => $this->_httpHelper->getHttpHost(true),
+            'http_user_agent'       => $this->_httpHelper->getHttpUserAgent(true),
+            'http_accept_language'  => $this->_httpHelper->getHttpAcceptLanguage(true),
+            'http_accept_charset'   => $this->_httpHelper->getHttpAcceptCharset(true),
+            'request_uri'           => $this->_httpHelper->getRequestUri(true),
+            'session_id'            => $this->_session->getSessionId(),
+            'http_referer'          => $this->_httpHelper->getHttpReferer(true),
         ));
 
         return $this;
+    }
+
+    /**
+     * Return Online Minutes Interval
+     *
+     * @return int Minutes Interval
+     */
+    public static function getOnlineMinutesInterval()
+    {
+        $configValue = Mage::getStoreConfig('customer/online_customers/online_minutes_interval');
+        return intval($configValue) > 0
+            ? intval($configValue)
+            : self::DEFAULT_ONLINE_MINUTES_INTERVAL;
     }
 
     /**
@@ -100,19 +174,6 @@ class Mage_Log_Model_Visitor extends Mage_Core_Model_Abstract
         return $this->getData('last_visit_at');
     }
 
-    public function isModuleIgnored($observer)
-    {
-        $ignores = Mage::getConfig()->getNode('global/ignoredModules/entities')->asArray();
-
-        if( is_array($ignores) && $observer) {
-            $curModule = $observer->getEvent()->getControllerAction()->getRequest()->getModuleName();
-            if (isset($ignores[$curModule])) {
-                return true;
-            }
-        }
-        return false;
-    }
-
     /**
      * Initialization visitor information by request
      *
@@ -123,19 +184,38 @@ class Mage_Log_Model_Visitor extends Mage_Core_Model_Abstract
      */
     public function initByRequest($observer)
     {
-        if ($this->isModuleIgnored($observer)) {
+        if ($this->_skipRequestLogging || $this->isModuleIgnored($observer)) {
             return $this;
         }
 
-        $this->setData($this->_getSession()->getVisitorData());
-        $this->initServerData();
+        $this->setData($this->_session->getVisitorData());
 
-        if (!$this->getId()) {
+        $visitorId = $this->getId();
+        if (!$visitorId) {
+            $this->initServerData();
             $this->setFirstVisitAt(now());
             $this->setIsNewVisitor(true);
             $this->save();
         }
+        if (!$visitorId || $this->_isVisitorSessionNew()) {
+            Mage::dispatchEvent('visitor_init', array('visitor' => $this));
+        }
         return $this;
+    }
+
+    /**
+     * Check is session new
+     *
+     * @return bool
+     */
+    protected function _isVisitorSessionNew()
+    {
+        $visitorData = $this->_session->getVisitorData();
+        $visitorSessionId = null;
+        if (is_array($visitorData) && isset($visitorData['session_id'])) {
+            $visitorSessionId = $visitorData['session_id'];
+        }
+        return $this->_session->getSessionId() != $visitorSessionId;
     }
 
     /**
@@ -148,14 +228,17 @@ class Mage_Log_Model_Visitor extends Mage_Core_Model_Abstract
      */
     public function saveByRequest($observer)
     {
-        if ($this->isModuleIgnored($observer)) {
+        if ($this->_skipRequestLogging || $this->isModuleIgnored($observer)) {
             return $this;
         }
 
-        $this->setLastVisitAt(now());
-        $this->save();
-
-        $this->_getSession()->setVisitorData($this->getData());
+        try {
+            $this->setLastVisitAt(now());
+            $this->save();
+            $this->_session->setVisitorData($this->getData());
+        } catch (Exception $e) {
+            Mage::logException($e);
+        }
         return $this;
     }
 
@@ -245,5 +328,18 @@ class Mage_Log_Model_Visitor extends Mage_Core_Model_Abstract
         }
         $data->setQuoteData(Mage::getModel('sales/quote')->load($quoteId));
         return $this;
+    }
+
+    public function isModuleIgnored($observer)
+    {
+        $ignores = $this->_config->getNode('global/ignoredModules/entities')->asArray();
+
+        if( is_array($ignores) && $observer) {
+            $curModule = $observer->getEvent()->getControllerAction()->getRequest()->getRouteName();
+            if (isset($ignores[$curModule])) {
+                return true;
+            }
+        }
+        return false;
     }
 }

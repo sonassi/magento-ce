@@ -10,11 +10,17 @@
  * http://opensource.org/licenses/osl-3.0.php
  * If you did not receive a copy of the license and are unable to
  * obtain it through the world-wide-web, please send an email
- * to license@magentocommerce.com so we can send you a copy immediately.
+ * to license@magento.com so we can send you a copy immediately.
  *
- * @category   Mage
- * @package    Mage_Adminhtml
- * @copyright  Copyright (c) 2004-2007 Irubin Consulting Inc. DBA Varien (http://www.varien.com)
+ * DISCLAIMER
+ *
+ * Do not edit or add to this file if you wish to upgrade Magento to newer
+ * versions in the future. If you wish to customize Magento for your
+ * needs please refer to http://www.magento.com for more information.
+ *
+ * @category    Mage
+ * @package     Mage_Adminhtml
+ * @copyright  Copyright (c) 2006-2017 X.commerce, Inc. and affiliates (http://www.magento.com)
  * @license    http://opensource.org/licenses/osl-3.0.php  Open Software License (OSL 3.0)
  */
 
@@ -23,6 +29,7 @@
  *
  * @category   Mage
  * @package    Mage_Adminhtml
+ * @author      Magento Core Team <core@magentocommerce.com>
  */
 class Mage_Adminhtml_ReportController extends Mage_Adminhtml_Controller_Action
 {
@@ -51,7 +58,7 @@ class Mage_Adminhtml_ReportController extends Mage_Adminhtml_Controller_Action
     {
         $fileName   = 'wishlist.csv';
         $content    = $this->getLayout()->createBlock('adminhtml/report_wishlist_grid')
-            ->getCsv();
+            ->getCsvFile();
 
         $this->_prepareDownloadResponse($fileName, $content);
     }
@@ -63,13 +70,17 @@ class Mage_Adminhtml_ReportController extends Mage_Adminhtml_Controller_Action
     {
         $fileName   = 'wishlist.xml';
         $content    = $this->getLayout()->createBlock('adminhtml/report_wishlist_grid')
-            ->getExcel($fileName);
+            ->getExcelFile($fileName);
 
         $this->_prepareDownloadResponse($fileName, $content);
     }
 */
     public function searchAction()
     {
+        $this->_title($this->__('Reports'))->_title($this->__('Search Terms'));
+
+        Mage::dispatchEvent('on_view_report', array('report' => 'search'));
+
         $this->_initAction()
             ->_setActiveMenu('report/search')
             ->_addBreadcrumb(Mage::helper('adminhtml')->__('Search Terms'), Mage::helper('adminhtml')->__('Search Terms'))
@@ -84,7 +95,7 @@ class Mage_Adminhtml_ReportController extends Mage_Adminhtml_Controller_Action
     {
         $fileName   = 'search.csv';
         $content    = $this->getLayout()->createBlock('adminhtml/report_search_grid')
-            ->getCsv();
+            ->getCsvFile();
 
         $this->_prepareDownloadResponse($fileName, $content);
     }
@@ -96,7 +107,7 @@ class Mage_Adminhtml_ReportController extends Mage_Adminhtml_Controller_Action
     {
         $fileName   = 'search.xml';
         $content    = $this->getLayout()->createBlock('adminhtml/report_search_grid')
-            ->getExcel($fileName);
+            ->getExcelFile($fileName);
 
         $this->_prepareDownloadResponse($fileName, $content);
     }
@@ -120,7 +131,8 @@ class Mage_Adminhtml_ReportController extends Mage_Adminhtml_Controller_Action
 
     protected function _isAllowed()
     {
-	    switch ($this->getRequest()->getActionName()) {
+        $action = strtolower($this->getRequest()->getActionName());
+        switch ($action) {
             case 'search':
                 return Mage::getSingleton('admin/session')->isAllowed('report/search');
                 break;

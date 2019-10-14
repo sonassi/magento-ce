@@ -15,22 +15,23 @@
  * @category   Zend
  * @package    Zend_XmlRpc
  * @subpackage Value
- * @copyright  Copyright (c) 2005-2008 Zend Technologies USA Inc. (http://www.zend.com)
+ * @copyright  Copyright (c) 2005-2015 Zend Technologies USA Inc. (http://www.zend.com)
  * @license    http://framework.zend.com/license/new-bsd     New BSD License
+ * @version    $Id$
  */
 
 
 /**
  * Zend_XmlRpc_Value_Scalar
  */
-require_once 'Zend/XmlRpc/Value/Scalar.php';
+#require_once 'Zend/XmlRpc/Value/Scalar.php';
 
 
 /**
  * @category   Zend
  * @package    Zend_XmlRpc
  * @subpackage Value
- * @copyright  Copyright (c) 2005-2008 Zend Technologies USA Inc. (http://www.zend.com)
+ * @copyright  Copyright (c) 2005-2015 Zend Technologies USA Inc. (http://www.zend.com)
  * @license    http://framework.zend.com/license/new-bsd     New BSD License
  */
 class Zend_XmlRpc_Value_Integer extends Zend_XmlRpc_Value_Scalar
@@ -43,6 +44,11 @@ class Zend_XmlRpc_Value_Integer extends Zend_XmlRpc_Value_Scalar
      */
     public function __construct($value)
     {
+        if ($value > PHP_INT_MAX) {
+            #require_once 'Zend/XmlRpc/Value/Exception.php';
+            throw new Zend_XmlRpc_Value_Exception('Overlong integer given');
+        }
+
         $this->_type = self::XMLRPC_TYPE_INTEGER;
         $this->_value = (int)$value;    // Make sure this value is integer
     }
@@ -56,6 +62,4 @@ class Zend_XmlRpc_Value_Integer extends Zend_XmlRpc_Value_Scalar
     {
         return $this->_value;
     }
-
 }
-

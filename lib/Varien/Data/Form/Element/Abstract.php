@@ -10,11 +10,17 @@
  * http://opensource.org/licenses/osl-3.0.php
  * If you did not receive a copy of the license and are unable to
  * obtain it through the world-wide-web, please send an email
- * to license@magentocommerce.com so we can send you a copy immediately.
+ * to license@magento.com so we can send you a copy immediately.
  *
- * @category   Varien
- * @package    Varien_Data
- * @copyright  Copyright (c) 2004-2007 Irubin Consulting Inc. DBA Varien (http://www.varien.com)
+ * DISCLAIMER
+ *
+ * Do not edit or add to this file if you wish to upgrade Magento to newer
+ * versions in the future. If you wish to customize Magento for your
+ * needs please refer to http://www.magento.com for more information.
+ *
+ * @category    Varien
+ * @package     Varien_Data
+ * @copyright  Copyright (c) 2006-2017 X.commerce, Inc. and affiliates (http://www.magento.com)
  * @license    http://opensource.org/licenses/osl-3.0.php  Open Software License (OSL 3.0)
  */
 
@@ -24,6 +30,7 @@
  *
  * @category   Varien
  * @package    Varien_Data
+ * @author     Magento Core Team <core@magentocommerce.com>
  */
 abstract class Varien_Data_Form_Element_Abstract extends Varien_Data_Form_Abstract
 {
@@ -113,13 +120,29 @@ abstract class Varien_Data_Form_Element_Abstract extends Varien_Data_Form_Abstra
 
     public function getHtmlAttributes()
     {
-        return array('type', 'title', 'class', 'style', 'onclick', 'onchange', 'disabled', 'readonly');
+        return array('type', 'title', 'class', 'style', 'onclick', 'onchange', 'disabled', 'readonly', 'tabindex');
     }
 
     public function addClass($class)
     {
         $oldClass = $this->getClass();
         $this->setClass($oldClass.' '.$class);
+        return $this;
+    }
+
+    /**
+     * Remove CSS class
+     *
+     * @param string $class
+     * @return Varien_Data_Form_Element_Abstract
+     */
+    public function removeClass($class)
+    {
+        $classes = array_unique(explode(' ', $this->getClass()));
+        if (false !== ($key = array_search($class, $classes))) {
+            unset($classes[$key]);
+        }
+        $this->setClass(implode(' ', $classes));
         return $this;
     }
 
@@ -144,6 +167,11 @@ abstract class Varien_Data_Form_Element_Abstract extends Varien_Data_Form_Abstra
         return $this;
     }
 
+    public function getRenderer()
+    {
+        return $this->_renderer;
+    }
+
     public function getElementHtml()
     {
         $html = '<input id="'.$this->getHtmlId().'" name="'.$this->getName()
@@ -157,13 +185,18 @@ abstract class Varien_Data_Form_Element_Abstract extends Varien_Data_Form_Abstra
         return $this->getData('after_element_html');
     }
 
-    public function getLabelHtml()
+    /**
+     * Render HTML for element's label
+     *
+     * @param string $idSuffix
+     * @return string
+     */
+    public function getLabelHtml($idSuffix = '')
     {
         if (!is_null($this->getLabel())) {
-            $html = '<label for="'.$this->getHtmlId().'">'.$this->getLabel()
-                . ( $this->getRequired() ? ' <span class="required">*</span>' : '' ).'</label>'."\n";
-        }
-        else {
+            $html = '<label for="'.$this->getHtmlId() . $idSuffix . '">' . $this->_escape($this->getLabel())
+                  . ( $this->getRequired() ? ' <span class="required">*</span>' : '' ) . '</label>' . "\n";
+        } else {
             $html = '';
         }
         return $html;
@@ -183,6 +216,9 @@ abstract class Varien_Data_Form_Element_Abstract extends Varien_Data_Form_Abstra
 
     public function getHtml()
     {
+        if ($this->getRequired()) {
+            $this->addClass('required-entry');
+        }
         if ($this->_renderer) {
             $html = $this->_renderer->render($this);
         }
@@ -195,5 +231,71 @@ abstract class Varien_Data_Form_Element_Abstract extends Varien_Data_Form_Abstra
     public function toHtml()
     {
         return $this->getHtml();
+    }
+
+    public function serialize($attributes = array(), $valueSeparator='=', $fieldSeparator=' ', $quote='"')
+    {
+        if (in_array('disabled', $attributes) && !empty($this->_data['disabled'])) {
+            $this->_data['disabled'] = 'disabled';
+        }
+        else {
+            unset($this->_data['disabled']);
+        }
+        if (in_array('checked', $attributes) && !empty($this->_data['checked'])) {
+            $this->_data['checked'] = 'checked';
+        }
+        else {
+            unset($this->_data['checked']);
+        }
+        return parent::serialize($attributes, $valueSeparator, $fieldSeparator, $quote);
+    }
+
+    public function getReadonly()
+    {
+        if ($this->hasData('readonly_disabled')) {
+            return $this->_getData('readonly_disabled');
+        }
+
+        return $this->_getData('readonly');
+    }
+
+    public function getHtmlContainerId()
+    {
+        if ($this->hasData('container_id')) {
+            return $this->getData('container_id');
+        } elseif ($idPrefix = $this->getForm()->getFieldContainerIdPrefix()) {
+            return $idPrefix . $this->getId();
+        }
+        return '';
+    }
+
+    /**
+     * Add specified values to element values
+     *
+     * @param string|int|array $values
+     * @param bool $overwrite
+     * @return Varien_Data_Form_Element_Abstract
+     */
+    public function addElementValues($values, $overwrite = false)
+    {
+        if (empty($values) || (is_string($values) && trim($values) == '')) {
+            return $this;
+        }
+        if (!is_array($values)) {
+            $values = Mage::helper('core')->escapeHtml(trim($values));
+            $values = array($values => $values);
+        }
+        $elementValues = $this->getValues();
+        if (!empty($elementValues)) {
+            foreach ($values as $key => $value) {
+                if ((isset($elementValues[$key]) && $overwrite) || !isset($elementValues[$key])) {
+                    $elementValues[$key] = Mage::helper('core')->escapeHtml($value);
+                }
+            }
+            $values = $elementValues;
+        }
+        $this->setValues($values);
+
+        return $this;
     }
 }

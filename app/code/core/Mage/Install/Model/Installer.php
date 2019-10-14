@@ -10,11 +10,17 @@
  * http://opensource.org/licenses/osl-3.0.php
  * If you did not receive a copy of the license and are unable to
  * obtain it through the world-wide-web, please send an email
- * to license@magentocommerce.com so we can send you a copy immediately.
+ * to license@magento.com so we can send you a copy immediately.
  *
- * @category   Mage
- * @package    Mage_Install
- * @copyright  Copyright (c) 2004-2007 Irubin Consulting Inc. DBA Varien (http://www.varien.com)
+ * DISCLAIMER
+ *
+ * Do not edit or add to this file if you wish to upgrade Magento to newer
+ * versions in the future. If you wish to customize Magento for your
+ * needs please refer to http://www.magento.com for more information.
+ *
+ * @category    Mage
+ * @package     Mage_Install
+ * @copyright  Copyright (c) 2006-2017 X.commerce, Inc. and affiliates (http://www.magento.com)
  * @license    http://opensource.org/licenses/osl-3.0.php  Open Software License (OSL 3.0)
  */
 
@@ -24,6 +30,7 @@
  *
  * @category   Mage
  * @package    Mage_Install
+ * @author      Magento Core Team <core@magentocommerce.com>
  */
 class Mage_Install_Model_Installer extends Varien_Object
 {
@@ -48,7 +55,7 @@ class Mage_Install_Model_Installer extends Varien_Object
      */
     public function isApplicationInstalled()
     {
-        return Mage::app()->isInstalled();
+        return Mage::isInstalled();
     }
 
     /**
@@ -135,7 +142,9 @@ class Mage_Install_Model_Installer extends Varien_Object
     public function installConfig($data)
     {
         $data['db_active'] = true;
-        Mage::getSingleton('install/installer_db')->checkDatabase($data);
+
+        $data = Mage::getSingleton('install/installer_db')->checkDbConnectionData($data);
+
         Mage::getSingleton('install/installer_config')
             ->setConfigData($data)
             ->install();
@@ -161,6 +170,13 @@ class Mage_Install_Model_Installer extends Varien_Object
             $setupModel->setConfigData(Mage_Core_Model_Store::XML_PATH_USE_REWRITES, 1);
         }
 
+        if (!empty($data['enable_charts'])) {
+            $setupModel->setConfigData(Mage_Adminhtml_Block_Dashboard::XML_PATH_ENABLE_CHARTS, 1);
+        } else {
+            $setupModel->setConfigData(Mage_Adminhtml_Block_Dashboard::XML_PATH_ENABLE_CHARTS, 0);
+        }
+
+
         $unsecureBaseUrl = Mage::getBaseUrl('web');
         if (!empty($data['unsecure_base_url'])) {
             $unsecureBaseUrl = $data['unsecure_base_url'];
@@ -169,17 +185,19 @@ class Mage_Install_Model_Installer extends Varien_Object
 
         if (!empty($data['use_secure'])) {
             $setupModel->setConfigData(Mage_Core_Model_Store::XML_PATH_SECURE_IN_FRONTEND, 1);
-            $setupModel->setConfigData(Mage_Core_Model_Store::XML_PATH_UNSECURE_BASE_URL, $unsecureBaseUrl);
             $setupModel->setConfigData(Mage_Core_Model_Store::XML_PATH_SECURE_BASE_URL, $data['secure_base_url']);
             if (!empty($data['use_secure_admin'])) {
                 $setupModel->setConfigData(Mage_Core_Model_Store::XML_PATH_SECURE_IN_ADMINHTML, 1);
             }
         }
+        elseif (!empty($data['unsecure_base_url'])) {
+            $setupModel->setConfigData(Mage_Core_Model_Store::XML_PATH_SECURE_BASE_URL, $unsecureBaseUrl);
+        }
 
         /**
          * Saving locale information into DB
          */
-        $locale = Mage::getSingleton('install/session')->getLocaleData();
+        $locale = $this->getDataModel()->getLocaleData();
         if (!empty($locale['locale'])) {
             $setupModel->setConfigData(Mage_Core_Model_Locale::XML_PATH_DEFAULT_LOCALE, $locale['locale']);
         }
@@ -196,30 +214,91 @@ class Mage_Install_Model_Installer extends Varien_Object
     }
 
     /**
-     * Create admin user
+     * Prepare admin user data in model and validate it.
+     * Returns TRUE or array of error messages.
      *
      * @param array $data
-     * @return Mage_Install_Model_Installer
+     * @return mixed
+     */
+    public function validateAndPrepareAdministrator($data)
+    {
+        $user = Mage::getModel('admin/user')
+            ->load($data['username'], 'username');
+        $user->addData($data);
+
+        $result = $user->validate();
+        if (is_array($result)) {
+            foreach ($result as $error) {
+                $this->getDataModel()->addError($error);
+            }
+            return $result;
+        }
+        return $user;
+    }
+
+    /**
+     * Create admin user.
+     * Paramater can be prepared user model or array of data.
+     * Returns TRUE or throws exception.
+     *
+     * @param mixed $data
+     * @return bool
      */
     public function createAdministrator($data)
     {
         $user = Mage::getModel('admin/user')
             ->load('admin', 'username');
-        if ($user && $user->getPassword()=='4297f44b13955235245b2497399d7a93') {
+        if ($user && $user->getPassword() == '4297f44b13955235245b2497399d7a93') {
             $user->delete();
         }
-        
-        $user = Mage::getModel('admin/user')
-            ->load($data['username'], 'username');
-        $user->addData($data)->save();
-        $user->setRoleIds(array(1))->saveRelations();
+
+        //to support old logic checking if real data was passed
+        if (is_array($data)) {
+            $data = $this->validateAndPrepareAdministrator($data);
+            if (is_array(data)) {
+                throw new Exception(Mage::helper('install')->__('Please correct the user data and try again.'));
+            }
+        }
+
+        //run time flag to force saving entered password
+        $data->setForceNewPassword(true);
+
+        $data->save();
+        $data->setRoleIds(array(1))->saveRelations();
 
         /*Mage::getModel("permissions/user")->setRoleId(1)
             ->setUserId($user->getId())
             ->setFirstname($user->getFirstname())
             ->add();*/
 
-        return $this;
+        return true;
+    }
+
+    /**
+     * Validating encryption key.
+     * Returns TRUE or array of error messages.
+     *
+     * @param $key
+     * @return unknown_type
+     */
+    public function validateEncryptionKey($key)
+    {
+        $errors = array();
+
+        try {
+            if ($key) {
+                Mage::helper('core')->validateKey($key);
+            }
+        } catch (Exception $e) {
+            $errors[] = $e->getMessage();
+            $this->getDataModel()->addError($e->getMessage());
+        }
+
+        if (!empty($errors)) {
+            return $errors;
+        }
+
+        return true;
     }
 
     /**
@@ -243,11 +322,10 @@ class Mage_Install_Model_Installer extends Varien_Object
         Mage::app()->cleanCache();
 
         $cacheData = array();
-        foreach (Mage::helper('core')->getCacheTypes() as $type=>$label) {
+        foreach (Mage::helper('core')->getCacheTypes() as $type => $label) {
             $cacheData[$type] = 1;
         }
-        Mage::app()->saveCache(serialize($cacheData), 'use_cache', array(), null);
-
+        Mage::app()->saveUseCache($cacheData);
         return $this;
     }
 

@@ -10,11 +10,17 @@
  * http://opensource.org/licenses/osl-3.0.php
  * If you did not receive a copy of the license and are unable to
  * obtain it through the world-wide-web, please send an email
- * to license@magentocommerce.com so we can send you a copy immediately.
+ * to license@magento.com so we can send you a copy immediately.
  *
- * @category   Mage
- * @package    Mage_Eav
- * @copyright  Copyright (c) 2004-2007 Irubin Consulting Inc. DBA Varien (http://www.varien.com)
+ * DISCLAIMER
+ *
+ * Do not edit or add to this file if you wish to upgrade Magento to newer
+ * versions in the future. If you wish to customize Magento for your
+ * needs please refer to http://www.magento.com for more information.
+ *
+ * @category    Mage
+ * @package     Mage_Eav
+ * @copyright  Copyright (c) 2006-2017 X.commerce, Inc. and affiliates (http://www.magento.com)
  * @license    http://opensource.org/licenses/osl-3.0.php  Open Software License (OSL 3.0)
  */
 
@@ -22,36 +28,61 @@
 /**
  * Entity type model
  *
- * @category   Mage
- * @package    Mage_Eav
+ * @method Mage_Eav_Model_Resource_Entity_Type _getResource()
+ * @method Mage_Eav_Model_Resource_Entity_Type getResource()
+ * @method Mage_Eav_Model_Entity_Type setEntityTypeCode(string $value)
+ * @method string getEntityModel()
+ * @method Mage_Eav_Model_Entity_Type setEntityModel(string $value)
+ * @method Mage_Eav_Model_Entity_Type setAttributeModel(string $value)
+ * @method Mage_Eav_Model_Entity_Type setEntityTable(string $value)
+ * @method Mage_Eav_Model_Entity_Type setValueTablePrefix(string $value)
+ * @method Mage_Eav_Model_Entity_Type setEntityIdField(string $value)
+ * @method int getIsDataSharing()
+ * @method Mage_Eav_Model_Entity_Type setIsDataSharing(int $value)
+ * @method string getDataSharingKey()
+ * @method Mage_Eav_Model_Entity_Type setDataSharingKey(string $value)
+ * @method Mage_Eav_Model_Entity_Type setDefaultAttributeSetId(int $value)
+ * @method string getIncrementModel()
+ * @method Mage_Eav_Model_Entity_Type setIncrementModel(string $value)
+ * @method int getIncrementPerStore()
+ * @method Mage_Eav_Model_Entity_Type setIncrementPerStore(int $value)
+ * @method int getIncrementPadLength()
+ * @method Mage_Eav_Model_Entity_Type setIncrementPadLength(int $value)
+ * @method string getIncrementPadChar()
+ * @method Mage_Eav_Model_Entity_Type setIncrementPadChar(string $value)
+ * @method string getAdditionalAttributeTable()
+ * @method Mage_Eav_Model_Entity_Type setAdditionalAttributeTable(string $value)
+ * @method Mage_Eav_Model_Entity_Type setEntityAttributeCollection(string $value)
+ *
+ * @category    Mage
+ * @package     Mage_Eav
+ * @author      Magento Core Team <core@magentocommerce.com>
  */
 class Mage_Eav_Model_Entity_Type extends Mage_Core_Model_Abstract
 {
-
     /**
-     * Enter description here...
+     * Collection of attributes
      *
      * @var Mage_Eav_Model_Mysql4_Entity_Attribute_Collection
      */
     protected $_attributes;
 
     /**
-     * Enter description here...
+     * Array of attributes
      *
      * @var array
      */
-    protected $_attributesBySet = array();
+    protected $_attributesBySet             = array();
 
     /**
-     * Enter description here...
+     * Collection of sets
      *
      * @var Mage_Eav_Model_Mysql4_Entity_Attribute_Set_Collection
      */
     protected $_sets;
 
     /**
-     * Enter description here...
-     *
+     * Resource initialization
      */
     protected function _construct()
     {
@@ -59,7 +90,7 @@ class Mage_Eav_Model_Entity_Type extends Mage_Core_Model_Abstract
     }
 
     /**
-     * Enter description here...
+     * Load type by code
      *
      * @param string $code
      * @return Mage_Eav_Model_Entity_Type
@@ -67,6 +98,7 @@ class Mage_Eav_Model_Entity_Type extends Mage_Core_Model_Abstract
     public function loadByCode($code)
     {
         $this->_getResource()->loadByCode($this, $code);
+        $this->_afterLoad();
         return $this;
     }
 
@@ -78,35 +110,37 @@ class Mage_Eav_Model_Entity_Type extends Mage_Core_Model_Abstract
      */
     public function getAttributeCollection($setId = null)
     {
-        if (is_null($setId)) {
-            if (is_null($this->_attributes)) {
+        if ($setId === null) {
+            if ($this->_attributes === null) {
                 $this->_attributes = $this->_getAttributeCollection()
-                    ->setEntityTypeFilter($this->getId());
+                    ->setEntityTypeFilter($this);
             }
             $collection = $this->_attributes;
-        }
-        else {
+        } else {
             if (!isset($this->_attributesBySet[$setId])) {
                 $this->_attributesBySet[$setId] = $this->_getAttributeCollection()
-                    ->setEntityTypeFilter($this->getId())
+                    ->setEntityTypeFilter($this)
                     ->setAttributeSetFilter($setId);
             }
             $collection = $this->_attributesBySet[$setId];
         }
+
         return $collection;
     }
 
     /**
-     * Enter description here...
+     * Init and retreive attribute collection
      *
      * @return Mage_Eav_Model_Mysql4_Entity_Attribute_Collection
      */
     protected function _getAttributeCollection()
     {
         $collection = Mage::getModel('eav/entity_attribute')->getCollection();
-        if ($objectsModel = $this->getAttributeModel()) {
+        $objectsModel = $this->getAttributeModel();
+        if ($objectsModel) {
             $collection->setModel($objectsModel);
         }
+
         return $collection;
     }
 
@@ -125,60 +159,70 @@ class Mage_Eav_Model_Entity_Type extends Mage_Core_Model_Abstract
     }
 
     /**
-     * Enter description here...
+     * Retreive new incrementId
      *
      * @param int $storeId
      * @return string
+     * @throws Exception
      */
-    public function fetchNewIncrementId($storeId=null)
+    public function fetchNewIncrementId($storeId = null)
     {
         if (!$this->getIncrementModel()) {
             return false;
         }
 
-        if (!$this->getIncrementPerStore()) {
-            $storeId = 0;
-        }
-        elseif (is_null($storeId)) {
+        if (!$this->getIncrementPerStore() || ($storeId === null)) {
             /**
              * store_id null we can have for entity from removed store
              */
             $storeId = 0;
-            //throw Mage::exception('Mage_Eav', Mage::helper('eav')->__('Valid store_id is expected!'));
         }
 
-        $entityStoreConfig = Mage::getModel('eav/entity_store')
-            ->loadByEntityStore($this->getId(), $storeId);
+        // Start transaction to run SELECT ... FOR UPDATE
+        $this->_getResource()->beginTransaction();
 
-        if (!$entityStoreConfig->getId()) {
-            $entityStoreConfig
-                ->setEntityTypeId($this->getId())
-                ->setStoreId($storeId)
-                ->setIncrementPrefix($storeId)
-                ->save();
+        try {
+            $entityStoreConfig = Mage::getModel('eav/entity_store')
+                ->loadByEntityStore($this->getId(), $storeId);
+
+            if (!$entityStoreConfig->getId()) {
+                $entityStoreConfig
+                    ->setEntityTypeId($this->getId())
+                    ->setStoreId($storeId)
+                    ->setIncrementPrefix($storeId)
+                    ->save();
+            }
+
+            $incrementInstance = Mage::getModel($this->getIncrementModel())
+                ->setPrefix($entityStoreConfig->getIncrementPrefix())
+                ->setPadLength($this->getIncrementPadLength())
+                ->setPadChar($this->getIncrementPadChar())
+                ->setLastId($entityStoreConfig->getIncrementLastId())
+                ->setEntityTypeId($entityStoreConfig->getEntityTypeId())
+                ->setStoreId($entityStoreConfig->getStoreId());
+
+            /**
+             * do read lock on eav/entity_store to solve potential timing issues
+             * (most probably already done by beginTransaction of entity save)
+             */
+            $incrementId = $incrementInstance->getNextId();
+            $entityStoreConfig->setIncrementLastId($incrementId);
+            $entityStoreConfig->save();
+
+            // Commit increment_last_id changes
+            $this->_getResource()->commit();
+        } catch (Exception $e) {
+            $this->_getResource()->rollBack();
+            throw $e;
         }
-
-        $incrementInstance = Mage::getModel($this->getIncrementModel())
-            ->setPrefix($entityStoreConfig->getIncrementPrefix())
-            ->setPadLength($entityStoreConfig->getIncrementPadLength())
-            ->setPadChar($entityStoreConfig->getIncrementPadChar())
-            ->setLastId($entityStoreConfig->getIncrementLastId());
-
-        /**
-         * do read lock on eav/entity_store to solve potential timing issues
-         * (most probably already done by beginTransaction of entity save)
-         */
-        $incrementId = $incrementInstance->getNextId();
-        $entityStoreConfig->setIncrementLastId($incrementId);
-        $entityStoreConfig->save();
 
         return $incrementId;
     }
 
     /**
-     * Enter description here...
+     * Retreive entity id field
      *
-     * @return string
+     * @return string|null
      */
     public function getEntityIdField()
     {
@@ -186,9 +230,9 @@ class Mage_Eav_Model_Entity_Type extends Mage_Core_Model_Abstract
     }
 
     /**
-     * Enter description here...
+     * Retreive entity table name
      *
-     * @return string
+     * @return string|null
      */
     public function getEntityTable()
     {
@@ -196,22 +240,40 @@ class Mage_Eav_Model_Entity_Type extends Mage_Core_Model_Abstract
     }
 
     /**
-     * Enter description here...
+     * Retrieve entity table prefix name
      *
      * @return string
      */
     public function getValueTablePrefix()
     {
-        if (empty($this->_data['value_table_prefix'])) {
-            $this->_data['value_table_prefix'] = $this->_getResource()->getTable($this->getEntityTable());
+        $prefix = $this->getEntityTablePrefix();
+        if ($prefix) {
+            return $this->getResource()->getTable($prefix);
         }
-        return $this->_data['value_table_prefix'];
+
+        return null;
     }
 
     /**
-     * Enter description here...
+     * Retrieve entity table prefix
      *
      * @return string
+     */
+    public function getEntityTablePrefix()
+    {
+        $tablePrefix = trim($this->_data['value_table_prefix']);
+
+        if (empty($tablePrefix)) {
+            $tablePrefix = $this->getEntityTable();
+        }
+
+        return $tablePrefix;
+    }
+
+    /**
+     * Get default attribute set identifier for etity type
+     *
+     * @return string|null
      */
     public function getDefaultAttributeSetId()
     {
@@ -219,32 +281,70 @@ class Mage_Eav_Model_Entity_Type extends Mage_Core_Model_Abstract
     }
 
     /**
-     * Enter description here...
+     * Retreive entity type id
      *
-     * @return string
+     * @return string|null
      */
     public function getEntityTypeId()
     {
         return isset($this->_data['entity_type_id']) ? $this->_data['entity_type_id'] : null;
     }
 
+    /**
+     * Retreive entity type code
+     *
+     * @return string|null
+     */
     public function getEntityTypeCode()
     {
         return isset($this->_data['entity_type_code']) ? $this->_data['entity_type_code'] : null;
     }
 
+    /**
+     * Retreive attribute codes
+     *
+     * @return array|null
+     */
     public function getAttributeCodes()
     {
         return isset($this->_data['attribute_codes']) ? $this->_data['attribute_codes'] : null;
     }
 
+    /**
+     * Get attribute model code for entity type
+     *
+     * @return string
+     */
     public function getAttributeModel()
     {
-        return isset($this->_data['attribute_model']) ? $this->_data['attribute_model'] : null;
+        if (empty($this->_data['attribute_model'])) {
+            return Mage_Eav_Model_Entity::DEFAULT_ATTRIBUTE_MODEL;
+        }
+
+        return $this->_data['attribute_model'];
     }
 
+    /**
+     * Retreive resource entity object
+     *
+     * @return Mage_Core_Model_Resource_Abstract
+     */
     public function getEntity()
     {
         return Mage::getResourceSingleton($this->_data['entity_model']);
+    }
+
+    /**
+     * Return attribute collection. If not specify return default
+     *
+     * @return string
+     */
+    public function getEntityAttributeCollection()
+    {
+        $collection = $this->_getData('entity_attribute_collection');
+        if ($collection) {
+            return $collection;
+        }
+        return 'eav/entity_attribute_collection';
     }
 }

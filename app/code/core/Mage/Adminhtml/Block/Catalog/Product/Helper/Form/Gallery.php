@@ -10,11 +10,17 @@
  * http://opensource.org/licenses/osl-3.0.php
  * If you did not receive a copy of the license and are unable to
  * obtain it through the world-wide-web, please send an email
- * to license@magentocommerce.com so we can send you a copy immediately.
+ * to license@magento.com so we can send you a copy immediately.
  *
- * @category   Mage
- * @package    Mage_Adminhtml
- * @copyright  Copyright (c) 2004-2007 Irubin Consulting Inc. DBA Varien (http://www.varien.com)
+ * DISCLAIMER
+ *
+ * Do not edit or add to this file if you wish to upgrade Magento to newer
+ * versions in the future. If you wish to customize Magento for your
+ * needs please refer to http://www.magento.com for more information.
+ *
+ * @category    Mage
+ * @package     Mage_Adminhtml
+ * @copyright  Copyright (c) 2006-2017 X.commerce, Inc. and affiliates (http://www.magento.com)
  * @license    http://opensource.org/licenses/osl-3.0.php  Open Software License (OSL 3.0)
  */
 
@@ -24,6 +30,7 @@
  *
  * @category   Mage
  * @package    Mage_Adminhtml
+ * @author      Magento Core Team <core@magentocommerce.com>
  */
 class Mage_Adminhtml_Block_Catalog_Product_Helper_Form_Gallery extends Varien_Data_Form_Element_Abstract
 {
@@ -80,8 +87,19 @@ class Mage_Adminhtml_Block_Catalog_Product_Helper_Form_Gallery extends Varien_Da
      */
     public function usedDefault($attribute)
     {
-        $devaultValue = $this->getDataObject()->getAttributeDefaultValue($attribute->getAttributeCode());
-        return is_null($devaultValue);
+        $attributeCode = $attribute->getAttributeCode();
+        $defaultValue = $this->getDataObject()->getAttributeDefaultValue($attributeCode);
+
+        if (!$this->getDataObject()->getExistsStoreValueFlag($attributeCode)) {
+            return true;
+        } else if ($this->getValue() == $defaultValue &&
+                   $this->getDataObject()->getStoreId() != $this->_getDefaultStoreId()) {
+            return false;
+        }
+        if ($defaultValue === false && !$attribute->getIsRequired() && $this->getValue()) {
+            return false;
+        }
+        return $defaultValue === false;
     }
 
     /**
@@ -100,13 +118,11 @@ class Mage_Adminhtml_Block_Catalog_Product_Helper_Form_Gallery extends Varien_Da
         }
 
         if ($attribute->isScopeGlobal()) {
-            $html.= '<br/>[GLOBAL]';
-        }
-        elseif ($attribute->isScopeWebsite()) {
-            $html.= '<br/>[WEBSITE]';
-        }
-        elseif ($attribute->isScopeStore()) {
-            $html.= '<br/>[STORE VIEW]';
+            $html .= '<br/>' . Mage::helper('adminhtml')->__('[GLOBAL]');
+        } elseif ($attribute->isScopeWebsite()) {
+            $html .= '<br/>' . Mage::helper('adminhtml')->__('[WEBSITE]');
+        } elseif ($attribute->isScopeStore()) {
+            $html .= '<br/>' . Mage::helper('adminhtml')->__('[STORE VIEW]');
         }
         return $html;
     }
@@ -137,9 +153,37 @@ class Mage_Adminhtml_Block_Catalog_Product_Helper_Form_Gallery extends Varien_Da
         return $name;
     }
 
+    /**
+     * Check readonly attribute
+     *
+     * @param Mage_Eav_Model_Entity_Attribute|string $attribute
+     * @return boolean
+     */
+    public function getAttributeReadonly($attribute)
+    {
+        if (is_object($attribute)) {
+            $attribute = $attribute->getAttributeCode();
+        }
+
+        if ($this->getDataObject()->isLockedAttribute($attribute)) {
+            return true;
+        }
+
+        return false;
+    }
+
     public function toHtml()
     {
         return '<tr><td class="value" colspan="3">' . $this->getElementHtml() . '</td></tr>';
     }
 
+    /**
+     * Default sore ID getter
+     *
+     * @return integer
+     */
+    protected function _getDefaultStoreId()
+    {
+        return Mage_Catalog_Model_Abstract::DEFAULT_STORE_ID;
+    }
 }

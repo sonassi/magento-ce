@@ -10,11 +10,17 @@
  * http://opensource.org/licenses/osl-3.0.php
  * If you did not receive a copy of the license and are unable to
  * obtain it through the world-wide-web, please send an email
- * to license@magentocommerce.com so we can send you a copy immediately.
+ * to license@magento.com so we can send you a copy immediately.
  *
- * @category   Mage
- * @package    Mage_Adminhtml
- * @copyright  Copyright (c) 2004-2007 Irubin Consulting Inc. DBA Varien (http://www.varien.com)
+ * DISCLAIMER
+ *
+ * Do not edit or add to this file if you wish to upgrade Magento to newer
+ * versions in the future. If you wish to customize Magento for your
+ * needs please refer to http://www.magento.com for more information.
+ *
+ * @category    Mage
+ * @package     Mage_Adminhtml
+ * @copyright  Copyright (c) 2006-2017 X.commerce, Inc. and affiliates (http://www.magento.com)
  * @license    http://opensource.org/licenses/osl-3.0.php  Open Software License (OSL 3.0)
  */
 
@@ -23,6 +29,7 @@
  *
  * @category   Mage
  * @package    Mage_Adminhtml
+ * @author      Magento Core Team <core@magentocommerce.com>
  */
 class Mage_Adminhtml_Block_System_Convert_Profile_Grid extends Mage_Adminhtml_Block_Widget_Grid
 {
@@ -31,13 +38,13 @@ class Mage_Adminhtml_Block_System_Convert_Profile_Grid extends Mage_Adminhtml_Bl
     {
         parent::__construct();
         $this->setId('convertProfileGrid');
-        $this->setDefaultSort('id');
+        $this->setDefaultSort('profile_id');
     }
 
     protected function _prepareCollection()
     {
         $collection = Mage::getResourceModel('dataflow/profile_collection')
-            ->addFieldToFilter('entity_type', array('eq'=>''));
+            ->addFieldToFilter('entity_type', array('null'=>''));
 
         $this->setCollection($collection);
 
@@ -46,42 +53,42 @@ class Mage_Adminhtml_Block_System_Convert_Profile_Grid extends Mage_Adminhtml_Bl
 
     protected function _prepareColumns()
     {
-        $this->addColumn('id', array(
-            'header'    =>Mage::helper('adminhtml')->__('ID'),
-            'width'     =>'50px',
-            'index'     =>'profile_id',
+        $this->addColumn('profile_id', array(
+            'header'    => Mage::helper('adminhtml')->__('ID'),
+            'width'     => '50px',
+            'index'     => 'profile_id',
         ));
-        $this->addColumn('name', array(
-            'header'    =>Mage::helper('adminhtml')->__('Profile Name'),
-            'index'     =>'name',
+        $this->addColumn( 'name', array(
+            'header'    => Mage::helper('adminhtml')->__('Profile Name'),
+            'index'     => 'name',
         ));
         $this->addColumn('created_at', array(
-            'header'    =>Mage::helper('adminhtml')->__('Created At'),
+            'header'    => Mage::helper('adminhtml')->__('Created At'),
             'type'      => 'date',
             'align'     => 'center',
-            'index'     =>'created_at',
+            'index'     => 'created_at',
         ));
         $this->addColumn('updated_at', array(
-            'header'    =>Mage::helper('adminhtml')->__('Updated At'),
+            'header'    => Mage::helper('adminhtml')->__('Updated At'),
             'type'      => 'date',
             'align'     => 'center',
-            'index'     =>'updated_at',
+            'index'     => 'updated_at',
         ));
 
-//        $this->addColumn('action', array(
-//            'header'    =>Mage::helper('adminhtml')->__('Action'),
-//            'width'     =>'60px',
-//            'sortable'  =>false,
-//            'filter'    => false,
-//            'type' => 'action',
-//            'actions' => array(
-//                array(
-//                    'url' => $this->getUrl('*/*/run').'id/$profile_id',
-//                    'caption' => Mage::helper('adminhtml')->__('Run in popup'),
-//                    'target' => '_blank',
-//                ),
-//            )
-//        ));
+        $this->addColumn('action', array(
+            'header'    => Mage::helper('adminhtml')->__('Action'),
+            'width'     => '60px',
+            'align'     => 'center',
+            'sortable'  => false,
+            'filter'    => false,
+            'type'      => 'action',
+            'actions'   => array(
+                array(
+                    'url'       => $this->getUrl('*/*/edit') . 'id/$profile_id',
+                    'caption'   => Mage::helper('adminhtml')->__('Edit')
+                )
+            )
+        ));
 
         return parent::_prepareColumns();
     }

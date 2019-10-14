@@ -10,11 +10,17 @@
  * http://opensource.org/licenses/osl-3.0.php
  * If you did not receive a copy of the license and are unable to
  * obtain it through the world-wide-web, please send an email
- * to license@magentocommerce.com so we can send you a copy immediately.
+ * to license@magento.com so we can send you a copy immediately.
  *
- * @category   Mage
- * @package    Mage_Core
- * @copyright  Copyright (c) 2004-2007 Irubin Consulting Inc. DBA Varien (http://www.varien.com)
+ * DISCLAIMER
+ *
+ * Do not edit or add to this file if you wish to upgrade Magento to newer
+ * versions in the future. If you wish to customize Magento for your
+ * needs please refer to http://www.magento.com for more information.
+ *
+ * @category    Mage
+ * @package     Mage_Core
+ * @copyright  Copyright (c) 2006-2017 X.commerce, Inc. and affiliates (http://www.magento.com)
  * @license    http://opensource.org/licenses/osl-3.0.php  Open Software License (OSL 3.0)
  */
 
@@ -22,6 +28,7 @@
 /**
  * Date conversion model
  *
+ * @author      Magento Core Team <core@magentocommerce.com>
  */
 class Mage_Core_Model_Date
 {
@@ -62,7 +69,7 @@ class Mage_Core_Model_Date
     /**
      * Calculates timezone offset
      *
-     * @var string $timezone
+     * @param  string $timezone
      * @return int offset between timezone and gmt
      */
     public function calculateOffset($timezone = null)
@@ -76,7 +83,7 @@ class Mage_Core_Model_Date
         }
 
         if ($result === true) {
-            $offset = gmmktime(0, 0, 0, 1, 2, 1970) - mktime(0, 0, 0, 1, 2, 1970);
+            $offset = (int)date('Z');
         }
 
         if (!is_null($timezone)){
@@ -89,8 +96,8 @@ class Mage_Core_Model_Date
     /**
      * Forms GMT date
      *
-     * @param string $format
-     * @param int || string $input date in current timezone
+     * @param  string $format
+     * @param  int|string $input date in current timezone
      * @return string
      */
     public function gmtDate($format = null, $input = null)
@@ -99,7 +106,13 @@ class Mage_Core_Model_Date
             $format = 'Y-m-d H:i:s';
         }
 
-        $result = date($format, $this->gmtTimestamp($input));
+        $date = $this->gmtTimestamp($input);
+
+        if ($date === false) {
+            return false;
+        }
+
+        $result = date($format, $date);
         return $result;
     }
 
@@ -107,8 +120,9 @@ class Mage_Core_Model_Date
      * Converts input date into date with timezone offset
      * Input date must be in GMT timezone
      *
-     * @param string $format
-     * @param int || string $input date in GMT timezone
+     * @param  string $format
+     * @param  int|string $input date in GMT timezone
+     * @return string
      */
     public function date($format = null, $input = null)
     {
@@ -123,7 +137,8 @@ class Mage_Core_Model_Date
     /**
      * Forms GMT timestamp
      *
-     * @param int || string $input date in current timezone
+     * @param  int|string $input date in current timezone
+     * @return int
      */
     public function gmtTimestamp($input = null)
     {
@@ -133,6 +148,11 @@ class Mage_Core_Model_Date
             $result = $input;
         } else {
             $result = strtotime($input);
+        }
+
+        if ($result === false) {
+            // strtotime() unable to parse string (it's not a date or has incorrect format)
+            return false;
         }
 
         $date      = Mage::app()->getLocale()->date($result);
@@ -147,7 +167,8 @@ class Mage_Core_Model_Date
      * Converts input date into timestamp with timezone offset
      * Input date must be in GMT timezone
      *
-     * @param int || string $input date in GMT timezone
+     * @param  int|string $input date in GMT timezone
+     * @return int
      */
     public function timestamp($input = null)
     {
@@ -169,7 +190,7 @@ class Mage_Core_Model_Date
     /**
      * Get current timezone offset in seconds/minutes/hours
      *
-     * @param string $type
+     * @param  string $type
      * @return int
      */
     public function getGmtOffset($type = 'seconds')
@@ -188,6 +209,80 @@ class Mage_Core_Model_Date
                 $result = $result / 60 / 60;
                 break;
         }
+        return $result;
+    }
+
+    /**
+     * Deprecated since 1.1.7
+     */
+    public function checkDateTime($year, $month, $day, $hour = 0, $minute = 0, $second = 0)
+    {
+        if (!checkdate($month, $day, $year)) {
+            return false;
+        }
+        foreach (array('hour' => 23, 'minute' => 59, 'second' => 59) as $var => $maxValue) {
+            $value = (int)$$var;
+            if (($value < 0) || ($value > $maxValue)) {
+                return false;
+            }
+        }
+        return true;
+    }
+
+    /**
+     * Deprecated since 1.1.7
+     */
+    public function parseDateTime($dateTimeString, $dateTimeFormat)
+    {
+        // look for supported format
+        $isSupportedFormatFound = false;
+
+        $formats = array(
+            // priority is important!
+            '%m/%d/%y %I:%M' => array(
+                '/^([0-9]{1,2})\/([0-9]{1,2})\/([0-9]{1,2}) ([0-9]{1,2}):([0-9]{1,2})/',
+                array('y' => 3, 'm' => 1, 'd' => 2, 'h' => 4, 'i' => 5)
+            ),
+            'm/d/y h:i' => array(
+                '/^([0-9]{1,2})\/([0-9]{1,2})\/([0-9]{1,2}) ([0-9]{1,2}):([0-9]{1,2})/',
+                array('y' => 3, 'm' => 1, 'd' => 2, 'h' => 4, 'i' => 5)
+            ),
+            '%m/%d/%y' => array('/^([0-9]{1,2})\/([0-9]{1,2})\/([0-9]{1,2})/', array('y' => 3, 'm' => 1, 'd' => 2)),
+            'm/d/y' => array('/^([0-9]{1,2})\/([0-9]{1,2})\/([0-9]{1,2})/', array('y' => 3, 'm' => 1, 'd' => 2)),
+        );
+
+        foreach ($formats as $supportedFormat => $regRule) {
+            if (false !== strpos($dateTimeFormat, $supportedFormat, 0)) {
+                $isSupportedFormatFound = true;
+                break;
+            }
+        }
+        if (!$isSupportedFormatFound) {
+            Mage::throwException(Mage::helper('core')->__('Date/time format "%s" is not supported.', $dateTimeFormat));
+        }
+
+        // apply reg rule to found format
+        $regex = array_shift($regRule);
+        $mask  = array_shift($regRule);
+        if (!preg_match($regex, $dateTimeString, $matches)) {
+            Mage::throwException(Mage::helper('core')->__('Specified date/time "%1$s" do not match format "%2$s".', $dateTimeString, $dateTimeFormat));
+        }
+
+        // make result
+        $result = array();
+        foreach (array('y', 'm', 'd', 'h', 'i', 's') as $key) {
+            $value = 0;
+            if (isset($mask[$key]) && isset($matches[$mask[$key]])) {
+                $value = (int)$matches[$mask[$key]];
+            }
+            $result[] = $value;
+        }
+
+        // make sure to return full year
+        if ($result[0] < 100) {
+            $result[0] = 2000 + $result[0];
+        }
+
         return $result;
     }
 }

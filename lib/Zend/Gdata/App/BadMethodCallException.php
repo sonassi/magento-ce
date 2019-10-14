@@ -15,14 +15,16 @@
  *
  * @category   Zend
  * @package    Zend_Gdata
- * @copyright  Copyright (c) 2005-2008 Zend Technologies USA Inc. (http://www.zend.com)
+ * @subpackage App
+ * @copyright  Copyright (c) 2005-2015 Zend Technologies USA Inc. (http://www.zend.com)
  * @license    http://framework.zend.com/license/new-bsd     New BSD License
+ * @version    $Id$
  */
 
 /**
  * Zend_Gdata_App_Exception
  */
-require_once 'Zend/Gdata/App/Exception.php';
+#require_once 'Zend/Gdata/App/Exception.php';
 
 /**
  * Gdata APP exceptions
@@ -31,7 +33,8 @@ require_once 'Zend/Gdata/App/Exception.php';
  *
  * @category   Zend
  * @package    Zend_Gdata
- * @copyright  Copyright (c) 2005-2008 Zend Technologies USA Inc. (http://www.zend.com)
+ * @subpackage App
+ * @copyright  Copyright (c) 2005-2015 Zend Technologies USA Inc. (http://www.zend.com)
  * @license    http://framework.zend.com/license/new-bsd     New BSD License
  */
 class Zend_Gdata_App_BadMethodCallException extends Zend_Gdata_App_Exception

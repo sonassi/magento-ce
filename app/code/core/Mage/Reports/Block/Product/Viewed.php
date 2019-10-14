@@ -10,11 +10,17 @@
  * http://opensource.org/licenses/osl-3.0.php
  * If you did not receive a copy of the license and are unable to
  * obtain it through the world-wide-web, please send an email
- * to license@magentocommerce.com so we can send you a copy immediately.
+ * to license@magento.com so we can send you a copy immediately.
  *
- * @category   Mage
- * @package    Mage_Reports
- * @copyright  Copyright (c) 2004-2007 Irubin Consulting Inc. DBA Varien (http://www.varien.com)
+ * DISCLAIMER
+ *
+ * Do not edit or add to this file if you wish to upgrade Magento to newer
+ * versions in the future. If you wish to customize Magento for your
+ * needs please refer to http://www.magento.com for more information.
+ *
+ * @category    Mage
+ * @package     Mage_Reports
+ * @copyright  Copyright (c) 2006-2017 X.commerce, Inc. and affiliates (http://www.magento.com)
  * @license    http://opensource.org/licenses/osl-3.0.php  Open Software License (OSL 3.0)
  */
 
@@ -23,49 +29,69 @@
  *
  * @category   Mage
  * @package    Mage_Reports
+ * @author     Magento Core Team <core@magentocommerce.com>
  */
-
-class Mage_Reports_Block_Product_Viewed extends Mage_Catalog_Block_Product_Abstract
+class Mage_Reports_Block_Product_Viewed extends Mage_Reports_Block_Product_Abstract
 {
-    public function __construct()
+    const XML_PATH_RECENTLY_VIEWED_COUNT    = 'catalog/recently_products/viewed_count';
+
+    /**
+     * Viewed Product Index model name
+     *
+     * @var string
+     */
+    protected $_indexName       = 'reports/product_index_viewed';
+
+    /**
+     * Retrieve page size (count)
+     *
+     * @return int
+     */
+    public function getPageSize()
     {
-        parent::__construct();
-//        $this->setTemplate('reports/product_viewed.phtml');
+        if ($this->hasData('page_size')) {
+            return $this->getData('page_size');
+        }
+        return Mage::getStoreConfig(self::XML_PATH_RECENTLY_VIEWED_COUNT);
+    }
 
-        $ignore = null;
-        if (($product = Mage::registry('product')) && $product->getId()) {
-            $ignore = $product->getId();
+    /**
+     * Added predefined ids support
+     */
+    public function getCount()
+    {
+        $ids = $this->getProductIds();
+        if (!empty($ids)) {
+            return count($ids);
         }
+        return parent::getCount();
+    }
 
-        $customer = Mage::getSingleton('customer/session')->getCustomer();
-        if ($customer->getId()) {
-            $subjectId = $customer->getId();
-            $subtype = 0;
-        } else {
-            $subjectId = Mage::getSingleton('log/visitor')->getId();
-            $subtype = 1;
+    /**
+     * Prepare to html
+     * check has viewed products
+     *
+     * @return string
+     */
+    protected function _toHtml()
+    {
+        if (!$this->getCount()) {
+            return '';
         }
-        $collection = Mage::getModel('reports/event')
-            ->getCollection()
-            ->addRecentlyFiler(Mage_Reports_Model_Event::EVENT_PRODUCT_VIEW, $subjectId, $subtype, $ignore);
-        $productIds = array();
-        foreach ($collection as $event) {
-            $productIds[] = $event->getObjectId();
-        }
-        unset($collection);
-        $productCollection = null;
-        if ($productIds) {
-            $productCollection = Mage::getModel('catalog/product')
-                ->getCollection()
-                ->addAttributeToSelect('name')
-                ->addAttributeToSelect('price')
-                ->addAttributeToSelect('small_image')
-                ->addIdFilter($productIds)
-                ->addUrlRewrite();
-            Mage::getSingleton('catalog/product_status')->addVisibleFilterToCollection($productCollection);
-            Mage::getSingleton('catalog/product_visibility')->addVisibleInCatalogFilterToCollection($productCollection);
-            $productCollection->setPageSize(5)->setCurPage(1)->load();
-        }
-        $this->setRecentlyViewedProducts($productCollection);
+        $this->setRecentlyViewedProducts($this->getItemsCollection());
+        return parent::_toHtml();
+    }
+
+    /**
+     * Retrieve block cache tags
+     *
+     * @return array
+     */
+    public function getCacheTags()
+    {
+        return array_merge(
+            parent::getCacheTags(),
+            $this->getItemsTags($this->getItemsCollection())
+        );
     }
 }

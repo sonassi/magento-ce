@@ -10,11 +10,17 @@
  * http://opensource.org/licenses/osl-3.0.php
  * If you did not receive a copy of the license and are unable to
  * obtain it through the world-wide-web, please send an email
- * to license@magentocommerce.com so we can send you a copy immediately.
+ * to license@magento.com so we can send you a copy immediately.
  *
- * @category   Mage
- * @package    Mage_Page
- * @copyright  Copyright (c) 2004-2007 Irubin Consulting Inc. DBA Varien (http://www.varien.com)
+ * DISCLAIMER
+ *
+ * Do not edit or add to this file if you wish to upgrade Magento to newer
+ * versions in the future. If you wish to customize Magento for your
+ * needs please refer to http://www.magento.com for more information.
+ *
+ * @category    Mage
+ * @package     Mage_Page
+ * @copyright  Copyright (c) 2006-2017 X.commerce, Inc. and affiliates (http://www.magento.com)
  * @license    http://opensource.org/licenses/osl-3.0.php  Open Software License (OSL 3.0)
  */
 
@@ -23,6 +29,7 @@
  *
  * @category   Mage
  * @package    Mage_Page
+ * @author      Magento Core Team <core@magentocommerce.com>
  */
 class Mage_Page_Block_Html_Breadcrumbs extends Mage_Core_Block_Template
 {
@@ -43,18 +50,45 @@ class Mage_Page_Block_Html_Breadcrumbs extends Mage_Core_Block_Template
      */
     protected $_crumbs = null;
 
-    function __construct()
+    /**
+     * Cache key info
+     *
+     * @var null|array
+     */
+    protected $_cacheKeyInfo = null;
+
+    public function __construct()
     {
-    	parent::__construct();
-    	$this->setTemplate('page/html/breadcrumbs.phtml');
+        parent::__construct();
+        $this->setTemplate('page/html/breadcrumbs.phtml');
     }
 
-    function addCrumb($crumbName, $crumbInfo, $after = false)
+    public function addCrumb($crumbName, $crumbInfo, $after = false)
     {
-        $this->_prepareArray($crumbInfo, array('label', 'title', 'link', 'first', 'last'));
-    	$this->_crumbs[$crumbName] = $crumbInfo;
-    	return $this;
+        $this->_prepareArray($crumbInfo, array('label', 'title', 'link', 'first', 'last', 'readonly'));
+        if ((!isset($this->_crumbs[$crumbName])) || (!$this->_crumbs[$crumbName]['readonly'])) {
+           $this->_crumbs[$crumbName] = $crumbInfo;
+        }
+        return $this;
     }
+
+    /**
+     * Get cache key informative items
+     *
+     * @return array
+     */
+    public function getCacheKeyInfo()
+    {
+        if (null === $this->_cacheKeyInfo) {
+            $this->_cacheKeyInfo = parent::getCacheKeyInfo() + array(
+                'crumbs' => base64_encode(serialize($this->_crumbs)),
+                'name'   => $this->getNameInLayout(),
+            );
+        }
+
+        return $this->_cacheKeyInfo;
+    }
+
 
     protected function _toHtml()
     {
@@ -64,7 +98,7 @@ class Mage_Page_Block_Html_Breadcrumbs extends Mage_Core_Block_Template
             end($this->_crumbs);
             $this->_crumbs[key($this->_crumbs)]['last'] = true;
         }
-    	$this->assign('crumbs', $this->_crumbs);
-    	return parent::_toHtml();
+        $this->assign('crumbs', $this->_crumbs);
+        return parent::_toHtml();
     }
 }

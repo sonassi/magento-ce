@@ -15,16 +15,10 @@
  * @category   Zend
  * @package    Zend_Service
  * @subpackage StrikeIron
- * @copyright  Copyright (c) 2005-2008 Zend Technologies USA Inc. (http://www.zend.com)
+ * @copyright  Copyright (c) 2005-2015 Zend Technologies USA Inc. (http://www.zend.com)
  * @license    http://framework.zend.com/license/new-bsd     New BSD License
- * @version    $Id: StrikeIron.php 8539 2008-03-04 20:29:55Z darby $
+ * @version    $Id$
  */
-
-
-/**
- * @see Zend_Loader
- */
-require_once 'Zend/Loader.php';
 
 
 /**
@@ -35,7 +29,7 @@ require_once 'Zend/Loader.php';
  * @category   Zend
  * @package    Zend_Service
  * @subpackage StrikeIron
- * @copyright  Copyright (c) 2005-2008 Zend Technologies USA Inc. (http://www.zend.com)
+ * @copyright  Copyright (c) 2005-2015 Zend Technologies USA Inc. (http://www.zend.com)
  * @license    http://framework.zend.com/license/new-bsd     New BSD License
  */
 class Zend_Service_StrikeIron
@@ -74,7 +68,10 @@ class Zend_Service_StrikeIron
         }
 
         try {
-            @Zend_Loader::loadClass($class);
+            if (!class_exists($class)) {
+                #require_once 'Zend/Loader.php';
+                @Zend_Loader::loadClass($class);
+            }
             if (!class_exists($class, false)) {
                 throw new Exception('Class file not found');
             }
@@ -83,8 +80,8 @@ class Zend_Service_StrikeIron
             /**
              * @see Zend_Service_StrikeIron_Exception
              */
-            require_once 'Zend/Service/StrikeIron/Exception.php';
-            throw new Zend_Service_StrikeIron_Exception($msg, $e->getCode());
+            #require_once 'Zend/Service/StrikeIron/Exception.php';
+            throw new Zend_Service_StrikeIron_Exception($msg, $e->getCode(), $e);
         }
 
         // instantiate and return the service

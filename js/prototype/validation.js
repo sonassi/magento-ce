@@ -68,6 +68,17 @@ Validator.methods = {
 }
 
 var Validation = Class.create();
+Validation.defaultOptions = {
+    onSubmit : true,
+    stopOnFirst : false,
+    immediate : false,
+    focusOnError : true,
+    useTitles : false,
+    addClassNameToContainer: false,
+    containerClassName: '.input-box',
+    onFormValidate : function(result, form) {},
+    onElementValidate : function(result, elm) {}
+};
 
 Validation.prototype = {
     initialize : function(form, options){
@@ -76,22 +87,35 @@ Validation.prototype = {
             return;
         }
         this.options = Object.extend({
-            onSubmit : true,
-            stopOnFirst : false,
-            immediate : false,
-            focusOnError : true,
-            useTitles : false,
-            onFormValidate : function(result, form) {},
-            onElementValidate : function(result, elm) {}
+            onSubmit : Validation.defaultOptions.onSubmit,
+            stopOnFirst : Validation.defaultOptions.stopOnFirst,
+            immediate : Validation.defaultOptions.immediate,
+            focusOnError : Validation.defaultOptions.focusOnError,
+            useTitles : Validation.defaultOptions.useTitles,
+            onFormValidate : Validation.defaultOptions.onFormValidate,
+            onElementValidate : Validation.defaultOptions.onElementValidate
         }, options || {});
         if(this.options.onSubmit) Event.observe(this.form,'submit',this.onSubmit.bind(this),false);
         if(this.options.immediate) {
-            var useTitles = this.options.useTitles;
-            var callback = this.options.onElementValidate;
             Form.getElements(this.form).each(function(input) { // Thanks Mike!
-                Event.observe(input, 'blur', function(ev) { Validation.validate(Event.element(ev),{useTitle : useTitles, onElementValidate : callback}); });
-            });
+                if (input.tagName.toLowerCase() == 'select') {
+                    Event.observe(input, 'blur', this.onChange.bindAsEventListener(this));
+                }
+                if (input.type.toLowerCase() == 'radio' || input.type.toLowerCase() == 'checkbox') {
+                    Event.observe(input, 'click', this.onChange.bindAsEventListener(this));
+                } else {
+                    Event.observe(input, 'change', this.onChange.bindAsEventListener(this));
+                }
+            }, this);
         }
+    },
+    onChange : function (ev) {
+        Validation.isOnChange = true;
+        Validation.validate(Event.element(ev),{
+                useTitle : this.options.useTitles,
+                onElementValidate : this.options.onElementValidate
+        });
+        Validation.isOnChange = false;
     },
     onSubmit :  function(ev){
         if(!this.validate()) Event.stop(ev);
@@ -102,19 +126,27 @@ Validation.prototype = {
         var callback = this.options.onElementValidate;
         try {
             if(this.options.stopOnFirst) {
-                result = Form.getElements(this.form).all(function(elm) { return Validation.validate(elm,{useTitle : useTitles, onElementValidate : callback}); });
+                result = Form.getElements(this.form).all(function(elm) {
+                    if (elm.hasClassName('local-validation') && !this.isElementInForm(elm, this.form)) {
+                        return true;
+                    }
+                    return Validation.validate(elm,{useTitle : useTitles, onElementValidate : callback});
+                }, this);
             } else {
-                result = Form.getElements(this.form).collect(function(elm) { return Validation.validate(elm,{useTitle : useTitles, onElementValidate : callback}); }).all();
+                result = Form.getElements(this.form).collect(function(elm) {
+                    if (elm.hasClassName('local-validation') && !this.isElementInForm(elm, this.form)) {
+                        return true;
+                    }
+                    return Validation.validate(elm,{useTitle : useTitles, onElementValidate : callback});
+                }, this).all();
             }
         } catch (e) {
-
         }
         if(!result && this.options.focusOnError) {
             try{
                 Form.getElements(this.form).findAll(function(elm){return $(elm).hasClassName('validation-failed')}).first().focus()
             }
             catch(e){
-
             }
         }
         this.options.onFormValidate(result, this.form);
@@ -122,6 +154,13 @@ Validation.prototype = {
     },
     reset : function() {
         Form.getElements(this.form).each(Validation.reset);
+    },
+    isElementInForm : function(elm, form) {
+        var domForm = elm.up('form');
+        if (domForm == form) {
+            return true;
+        }
+        return false;
     }
 }
 
@@ -132,7 +171,8 @@ Object.extend(Validation, {
             onElementValidate : function(result, elm) {}
         }, options || {});
         elm = $(elm);
-        var cn = elm.classNames();
+
+        var cn = $w(elm.className);
         return result = cn.all(function(value) {
             var test = Validation.test(value,elm,options.useTitle);
             options.onElementValidate(test, elm);
@@ -142,9 +182,10 @@ Object.extend(Validation, {
     insertAdvice : function(elm, advice){
         var container = $(elm).up('.field-row');
         if(container){
-            new Insertion.After(container, advice);
-        }
-        else if (elm.advaiceContainer && $(elm.advaiceContainer)) {
+            Element.insert(container, {after: advice});
+        } else if (elm.up('td.value')) {
+            elm.up('td.value').insert({bottom: advice});
+        } else if (elm.advaiceContainer && $(elm.advaiceContainer)) {
             $(elm.advaiceContainer).update(advice);
         }
         else {
@@ -153,13 +194,13 @@ Object.extend(Validation, {
                 case 'radio':
                     var p = elm.parentNode;
                     if(p) {
-                        new Insertion.Bottom(p, advice);
+                        Element.insert(p, {'bottom': advice});
                     } else {
-                        new Insertion.After(elm, advice);
+                        Element.insert(elm, {'after': advice});
                     }
                     break;
                 default:
-                    new Insertion.After(elm, advice);
+                    Element.insert(elm, {'after': advice});
             }
         }
     },
@@ -169,10 +210,13 @@ Object.extend(Validation, {
         }
         else{
             elm.advices.each(function(pair){
-                this.hideAdvice(elm, pair.value);
+                if (!advice || pair.value.id != advice.id) {
+                    // hide non-current advice after delay
+                    this.hideAdvice(elm, pair.value);
+                }
             }.bind(this));
         }
-        elm.advices[adviceName] = advice;
+        elm.advices.set(adviceName, advice);
         if(typeof Effect == 'undefined') {
             advice.style.display = 'block';
         } else {
@@ -192,7 +236,14 @@ Object.extend(Validation, {
         }
     },
     hideAdvice : function(elm, advice){
-        if(advice != null) advice.hide();
+        if (advice != null) {
+            new Effect.Fade(advice, {duration : 1, afterFinishInternal : function() {advice.hide();}});
+        }
+    },
+    updateCallback : function(elm, status) {
+        if (typeof elm.callbackFunction != 'undefined') {
+            eval(elm.callbackFunction+'(\''+elm.id+'\',\''+status+'\')');
+        }
     },
     ajaxError : function(elm, errorMsg) {
         var name = 'validate-ajax';
@@ -201,8 +252,24 @@ Object.extend(Validation, {
             advice = this.createAdvice(name, elm, false, errorMsg);
         }
         this.showAdvice(elm, advice, 'validate-ajax');
+        this.updateCallback(elm, 'failed');
+
         elm.addClassName('validation-failed');
         elm.addClassName('validate-ajax');
+        if (Validation.defaultOptions.addClassNameToContainer && Validation.defaultOptions.containerClassName != '') {
+            var container = elm.up(Validation.defaultOptions.containerClassName);
+            if (container && this.allowContainerClassName(elm)) {
+                container.removeClassName('validation-passed');
+                container.addClassName('validation-error');
+            }
+        }
+    },
+    allowContainerClassName: function (elm) {
+        if (elm.type == 'radio' || elm.type == 'checkbox') {
+            return elm.hasClassName('change-container-classname');
+        }
+
+        return true;
     },
     test : function(name, elm, useTitle) {
         var v = Validation.get(name);
@@ -215,17 +282,40 @@ Object.extend(Validation, {
                     advice = this.createAdvice(name, elm, useTitle);
                 }
                 this.showAdvice(elm, advice, name);
+                this.updateCallback(elm, 'failed');
             //}
             elm[prop] = 1;
-            elm.removeClassName('validation-passed');
-            elm.addClassName('validation-failed');
+            if (!elm.advaiceContainer) {
+                elm.removeClassName('validation-passed');
+                elm.addClassName('validation-failed');
+            }
+
+           if (Validation.defaultOptions.addClassNameToContainer && Validation.defaultOptions.containerClassName != '') {
+                var container = elm.up(Validation.defaultOptions.containerClassName);
+                if (container && this.allowContainerClassName(elm)) {
+                    container.removeClassName('validation-passed');
+                    container.addClassName('validation-error');
+                }
+            }
             return false;
         } else {
             var advice = Validation.getAdvice(name, elm);
             this.hideAdvice(elm, advice);
+            this.updateCallback(elm, 'passed');
             elm[prop] = '';
             elm.removeClassName('validation-failed');
             elm.addClassName('validation-passed');
+            if (Validation.defaultOptions.addClassNameToContainer && Validation.defaultOptions.containerClassName != '') {
+                var container = elm.up(Validation.defaultOptions.containerClassName);
+                if (container && !container.down('.validation-failed') && this.allowContainerClassName(elm)) {
+                    if (!Validation.get('IsEmpty').test(elm.value) || !this.isVisible(elm)) {
+                        container.addClassName('validation-passed');
+                    } else {
+                        container.removeClassName('validation-passed');
+                    }
+                    container.removeClassName('validation-error');
+                }
+            }
             return true;
         }
         } catch(e) {
@@ -276,16 +366,25 @@ Object.extend(Validation, {
     },
     reset : function(elm) {
         elm = $(elm);
-        var cn = elm.classNames();
+        var cn = $w(elm.className);
         cn.each(function(value) {
             var prop = '__advice'+value.camelize();
             if(elm[prop]) {
                 var advice = Validation.getAdvice(value, elm);
-                advice.hide();
+                if (advice) {
+                    advice.hide();
+                }
                 elm[prop] = '';
             }
             elm.removeClassName('validation-failed');
             elm.removeClassName('validation-passed');
+            if (Validation.defaultOptions.addClassNameToContainer && Validation.defaultOptions.containerClassName != '') {
+                var container = elm.up(Validation.defaultOptions.containerClassName);
+                if (container) {
+                    container.removeClassName('validation-passed');
+                    container.removeClassName('validation-error');
+                }
+            }
         });
     },
     add : function(className, error, test, options) {
@@ -309,21 +408,73 @@ Object.extend(Validation, {
 });
 
 Validation.add('IsEmpty', '', function(v) {
-    return  (v == '' || (v == null) || (v.length == 0) || /^\s+$/.test(v)); // || /^\s+$/.test(v));
+    return  (v == '' || (v == null) || (v.length == 0) || /^\s+$/.test(v));
 });
 
 Validation.addAllThese([
-    ['validate-select', 'Please select an option.', function(v) {
+    ['validate-no-html-tags', 'HTML tags are not allowed', function(v) {
+				return !/<(\/)?\w+/.test(v);
+			}],
+	['validate-select', 'Please select an option.', function(v) {
                 return ((v != "none") && (v != null) && (v.length != 0));
             }],
     ['required-entry', 'This is a required field.', function(v) {
                 return !Validation.get('IsEmpty').test(v);
             }],
     ['validate-number', 'Please enter a valid number in this field.', function(v) {
-                return Validation.get('IsEmpty').test(v) || (!isNaN(v) && !/^\s+$/.test(v));
+                return Validation.get('IsEmpty').test(v)
+                    || (!isNaN(parseNumber(v)) && /^\s*-?\d*(\.\d*)?\s*$/.test(v));
             }],
-    ['validate-digits', 'Please use numbers only in this field. please avoid spaces or other characters such as dots or commas.', function(v) {
+    ['validate-number-range', 'The value is not within the specified range.', function(v, elm) {
+                if (Validation.get('IsEmpty').test(v)) {
+                    return true;
+                }
+
+                var numValue = parseNumber(v);
+                if (isNaN(numValue)) {
+                    return false;
+                }
+
+                var reRange = /^number-range-(-?[\d.,]+)?-(-?[\d.,]+)?$/,
+                    result = true;
+
+                $w(elm.className).each(function(name) {
+                    var m = reRange.exec(name);
+                    if (m) {
+                        result = result
+                            && (m[1] == null || m[1] == '' || numValue >= parseNumber(m[1]))
+                            && (m[2] == null || m[2] == '' || numValue <= parseNumber(m[2]));
+                    }
+                });
+
+                return result;
+            }],
+    ['validate-digits', 'Please use numbers only in this field. Please avoid spaces or other characters such as dots or commas.', function(v) {
                 return Validation.get('IsEmpty').test(v) ||  !/[^\d]/.test(v);
+            }],
+    ['validate-digits-range', 'The value is not within the specified range.', function(v, elm) {
+                if (Validation.get('IsEmpty').test(v)) {
+                    return true;
+                }
+
+                var numValue = parseNumber(v);
+                if (isNaN(numValue)) {
+                    return false;
+                }
+
+                var reRange = /^digits-range-(-?\d+)?-(-?\d+)?$/,
+                    result = true;
+
+                $w(elm.className).each(function(name) {
+                    var m = reRange.exec(name);
+                    if (m) {
+                        result = result
+                            && (m[1] == null || m[1] == '' || numValue >= parseNumber(m[1]))
+                            && (m[2] == null || m[2] == '' || numValue <= parseNumber(m[2]));
+                    }
+                });
+
+                return result;
             }],
     ['validate-alpha', 'Please use letters only (a-z or A-Z) in this field.', function (v) {
                 return Validation.get('IsEmpty').test(v) ||  /^[a-zA-Z]+$/.test(v)
@@ -332,7 +483,10 @@ Validation.addAllThese([
                 return Validation.get('IsEmpty').test(v) ||  /^[a-z]+[a-z0-9_]+$/.test(v)
             }],
     ['validate-alphanum', 'Please use only letters (a-z or A-Z) or numbers (0-9) only in this field. No spaces or other characters are allowed.', function(v) {
-                return Validation.get('IsEmpty').test(v) ||  /^[a-zA-Z0-9]+$/.test(v) /*!/\W/.test(v)*/
+                return Validation.get('IsEmpty').test(v) || /^[a-zA-Z0-9]+$/.test(v)
+            }],
+    ['validate-alphanum-with-spaces', 'Please use only letters (a-z or A-Z), numbers (0-9) or spaces only in this field.', function(v) {
+                    return Validation.get('IsEmpty').test(v) || /^[a-zA-Z0-9 ]+$/.test(v)
             }],
     ['validate-street', 'Please use only letters (a-z or A-Z) or numbers (0-9) or spaces and # only in this field.', function(v) {
                 return Validation.get('IsEmpty').test(v) ||  /^[ \w]{3,}([A-Za-z]\.)?([ \w]*\#\d+)?(\r\n| )[ \w]{3,}/.test(v)
@@ -350,28 +504,87 @@ Validation.addAllThese([
                 var test = new Date(v);
                 return Validation.get('IsEmpty').test(v) || !isNaN(test);
             }],
+    ['validate-date-range', 'The From Date value should be less than or equal to the To Date value.', function(v, elm) {
+            var m = /\bdate-range-(\w+)-(\w+)\b/.exec(elm.className);
+            if (!m || m[2] == 'to' || Validation.get('IsEmpty').test(v)) {
+                return true;
+            }
+
+            var currentYear = new Date().getFullYear() + '';
+            var normalizedTime = function(v) {
+                v = v.split(/[.\/]/);
+                if (v[2] && v[2].length < 4) {
+                    v[2] = currentYear.substr(0, v[2].length) + v[2];
+                }
+                return new Date(v.join('/')).getTime();
+            };
+
+            var dependentElements = Element.select(elm.form, '.validate-date-range.date-range-' + m[1] + '-to');
+            return !dependentElements.length || Validation.get('IsEmpty').test(dependentElements[0].value)
+                || normalizedTime(v) <= normalizedTime(dependentElements[0].value);
+        }],
     ['validate-email', 'Please enter a valid email address. For example johndoe@domain.com.', function (v) {
                 //return Validation.get('IsEmpty').test(v) || /\w{1,}[@][\w\-]{1,}([.]([\w\-]{1,})){1,3}$/.test(v)
                 //return Validation.get('IsEmpty').test(v) || /^[\!\#$%\*/?|\^\{\}`~&\'\+\-=_a-z0-9][\!\#$%\*/?|\^\{\}`~&\'\+\-=_a-z0-9\.]{1,30}[\!\#$%\*/?|\^\{\}`~&\'\+\-=_a-z0-9]@([a-z0-9_-]{1,30}\.){1,5}[a-z]{2,4}$/i.test(v)
-                return Validation.get('IsEmpty').test(v) || /^[a-z0-9,!\#\$%&'\*\+/=\?\^_`\{\|}~-]+(\.[a-z0-9,!#\$%&'\*\+/=\?\^_`\{\|}~-]+)*@[a-z0-9-]+(\.[a-z0-9-]+)*\.([a-z]{2,})/i.test(v)
+                return Validation.get('IsEmpty').test(v) || /^([a-z0-9,!\#\$%&'\*\+\/=\?\^_`\{\|\}~-]|[\u00A0-\uD7FF\uF900-\uFDCF\uFDF0-\uFFEF])+(\.([a-z0-9,!\#\$%&'\*\+\/=\?\^_`\{\|\}~-]|[\u00A0-\uD7FF\uF900-\uFDCF\uFDF0-\uFFEF])+)*@([a-z0-9-]|[\u00A0-\uD7FF\uF900-\uFDCF\uFDF0-\uFFEF])+(\.([a-z0-9-]|[\u00A0-\uD7FF\uF900-\uFDCF\uFDF0-\uFFEF])+)*\.(([a-z]|[\u00A0-\uD7FF\uF900-\uFDCF\uFDF0-\uFFEF]){2,})$/i.test(v)
             }],
-    ['validate-password', 'Please enter 6 or more characters. Leading or trailing spaces will be ignored.', function(v) {
+    ['validate-emailSender', 'Please use only visible characters and spaces.', function (v) {
+                return Validation.get('IsEmpty').test(v) ||  /^[\S ]+$/.test(v)
+                    }],
+    ['validate-password', 'Please enter 6 or more characters without leading or trailing spaces.', function(v) {
                 var pass=v.strip(); /*strip leading and trailing spaces*/
-                return !(pass.length>0 && pass.length < 6);
+                return (!(v.length>0 && v.length < 6) && v.length == pass.length);
+            }],
+    ['validate-admin-password', 'Please enter 7 or more characters. Password should contain both numeric and alphabetic characters.', function(v) {
+                var pass=v.strip();
+                if (0 == pass.length) {
+                    return true;
+                }
+                if (!(/[a-z]/i.test(v)) || !(/[0-9]/.test(v))) {
+                    return false;
+                }
+                return !(pass.length < 7);
             }],
     ['validate-cpassword', 'Please make sure your passwords match.', function(v) {
-                var pass = $('password') ? $('password') : $$('.validate-password')[0];
                 var conf = $('confirmation') ? $('confirmation') : $$('.validate-cpassword')[0];
+                var pass = false;
+                if ($('password')) {
+                    pass = $('password');
+                }
+                var passwordElements = $$('.validate-password');
+                for (var i = 0; i < passwordElements.size(); i++) {
+                    var passwordElement = passwordElements[i];
+                    if (passwordElement.up('form').id == conf.up('form').id) {
+                        pass = passwordElement;
+                    }
+                }
+                if ($$('.validate-admin-password').size()) {
+                    pass = $$('.validate-admin-password')[0];
+                }
                 return (pass.value == conf.value);
             }],
-    ['validate-url', 'Please enter a valid URL. http:// is required', function (v) {
-                return Validation.get('IsEmpty').test(v) || /^(http|https|ftp):\/\/(([A-Z0-9][A-Z0-9_-]*)(\.[A-Z0-9][A-Z0-9_-]*)+)(:(\d+))?\/?/i.test(v)
+    ['validate-both-passwords', 'Please make sure your passwords match.', function(v, input) {
+                var dependentInput = $(input.form[input.name == 'password' ? 'confirmation' : 'password']),
+                    isEqualValues  = input.value == dependentInput.value;
+
+                if (isEqualValues && dependentInput.hasClassName('validation-failed')) {
+                    Validation.test(this.className, dependentInput);
+                }
+
+                return dependentInput.value == '' || isEqualValues;
+            }],
+    ['validate-url', 'Please enter a valid URL. Protocol is required (http://, https:// or ftp://)', function (v) {
+                v = (v || '').replace(/^\s+/, '').replace(/\s+$/, '');
+                return Validation.get('IsEmpty').test(v) || /^(https?|ftp):\/\/(((([a-z]|\d|-|\.|_|~|[\u00A0-\uD7FF\uF900-\uFDCF\uFDF0-\uFFEF])|(%[\da-f]{2})|[!\$&'\(\)\*\+,;=]|:)*@)?(((\d|[1-9]\d|1\d\d|2[0-4]\d|25[0-5])\.(\d|[1-9]\d|1\d\d|2[0-4]\d|25[0-5])\.(\d|[1-9]\d|1\d\d|2[0-4]\d|25[0-5])\.(\d|[1-9]\d|1\d\d|2[0-4]\d|25[0-5]))|((([a-z]|\d|[\u00A0-\uD7FF\uF900-\uFDCF\uFDF0-\uFFEF])|(([a-z]|\d|[\u00A0-\uD7FF\uF900-\uFDCF\uFDF0-\uFFEF])([a-z]|\d|-|\.|_|~|[\u00A0-\uD7FF\uF900-\uFDCF\uFDF0-\uFFEF])*([a-z]|\d|[\u00A0-\uD7FF\uF900-\uFDCF\uFDF0-\uFFEF])))\.)+(([a-z]|[\u00A0-\uD7FF\uF900-\uFDCF\uFDF0-\uFFEF])|(([a-z]|[\u00A0-\uD7FF\uF900-\uFDCF\uFDF0-\uFFEF])([a-z]|\d|-|\.|_|~|[\u00A0-\uD7FF\uF900-\uFDCF\uFDF0-\uFFEF])*([a-z]|[\u00A0-\uD7FF\uF900-\uFDCF\uFDF0-\uFFEF])))\.?)(:\d*)?)(\/((([a-z]|\d|-|\.|_|~|[\u00A0-\uD7FF\uF900-\uFDCF\uFDF0-\uFFEF])|(%[\da-f]{2})|[!\$&'\(\)\*\+,;=]|:|@)+(\/(([a-z]|\d|-|\.|_|~|[\u00A0-\uD7FF\uF900-\uFDCF\uFDF0-\uFFEF])|(%[\da-f]{2})|[!\$&'\(\)\*\+,;=]|:|@)*)*)?)?(\?((([a-z]|\d|-|\.|_|~|[\u00A0-\uD7FF\uF900-\uFDCF\uFDF0-\uFFEF])|(%[\da-f]{2})|[!\$&'\(\)\*\+,;=]|:|@)|[\uE000-\uF8FF]|\/|\?)*)?(\#((([a-z]|\d|-|\.|_|~|[\u00A0-\uD7FF\uF900-\uFDCF\uFDF0-\uFFEF])|(%[\da-f]{2})|[!\$&'\(\)\*\+,;=]|:|@)|\/|\?)*)?$/i.test(v)
             }],
     ['validate-clean-url', 'Please enter a valid URL. For example http://www.example.com or www.example.com', function (v) {
                 return Validation.get('IsEmpty').test(v) || /^(http|https|ftp):\/\/(([A-Z0-9][A-Z0-9_-]*)(\.[A-Z0-9][A-Z0-9_-]*)+.(com|org|net|dk|at|us|tv|info|uk|co.uk|biz|se)$)(:(\d+))?\/?/i.test(v) || /^(www)((\.[A-Z0-9][A-Z0-9_-]*)+.(com|org|net|dk|at|us|tv|info|uk|co.uk|biz|se)$)(:(\d+))?\/?/i.test(v)
             }],
-    ['validate-identifier', 'Please enter a valid Identifier. For example example-page or example-page.html', function (v) {
-                return Validation.get('IsEmpty').test(v) || /^[A-Z0-9][A-Z0-9_-]+(\.[A-Z0-9_-]+)*$/i.test(v)
+    ['validate-identifier', 'Please enter a valid URL Key. For example "example-page", "example-page.html" or "anotherlevel/example-page".', function (v) {
+                return Validation.get('IsEmpty').test(v) || /^[a-z0-9][a-z0-9_\/-]+(\.[a-z0-9_-]+)?$/.test(v)
+            }],
+    ['validate-xml-identifier', 'Please enter a valid XML-identifier. For example something_1, block5, id-4.', function (v) {
+                return Validation.get('IsEmpty').test(v) || /^[A-Z][A-Z0-9_\/-]*$/i.test(v)
             }],
     ['validate-ssn', 'Please enter a valid social security number. For example 123-45-6789.', function(v) {
             return Validation.get('IsEmpty').test(v) || /^\d{3}-?\d{2}-?\d{4}$/.test(v);
@@ -407,11 +620,16 @@ Validation.addAllThese([
                 });
             }],
     ['validate-one-required-by-name', 'Please select one of the options.', function (v,elm) {
-                var inputs = $$('input');
+                var inputs = $$('input[name="' + elm.name.replace(/([\\"])/g, '\\$1') + '"]');
+
                 var error = 1;
-                for( i in inputs ) {
-                    if( inputs[i].checked == true && inputs[i].name == elm.name ) {
+                for(var i=0;i<inputs.length;i++) {
+                    if((inputs[i].type == 'checkbox' || inputs[i].type == 'radio') && inputs[i].checked == true) {
                         error = 0;
+                    }
+
+                    if(Validation.isOnChange && (inputs[i].type == 'checkbox' || inputs[i].type == 'radio')) {
+                        Validation.reset(inputs[i]);
                     }
                 }
 
@@ -421,34 +639,55 @@ Validation.addAllThese([
                     return false;
                 }
             }],
-    ['validate-not-negative-number', 'Please enter a valid number in this field.', function(v) {
-                return (!isNaN(v) && v>=0);
+    ['validate-not-negative-number', 'Please enter a number 0 or greater in this field.', function(v) {
+                if (Validation.get('IsEmpty').test(v)) {
+                    return true;
+                }
+                v = parseNumber(v);
+                return !isNaN(v) && v >= 0;
             }],
+    ['validate-zero-or-greater', 'Please enter a number 0 or greater in this field.', function(v) {
+            return Validation.get('validate-not-negative-number').test(v);
+        }],
+    ['validate-greater-than-zero', 'Please enter a number greater than 0 in this field.', function(v) {
+            if (Validation.get('IsEmpty').test(v)) {
+                return true;
+            }
+            v = parseNumber(v);
+            return !isNaN(v) && v > 0;
+        }],
+
+    ['validate-special-price', 'The Special Price is active only when lower than the Actual Price.', function(v) {
+        var priceInput = $('price');
+        var priceType = $('price_type');
+        var priceValue = parseFloat(v);
+
+        // Passed on non-related validators conditions (to not change order of validation)
+        if(
+            !priceInput
+            || Validation.get('IsEmpty').test(v)
+            || !Validation.get('validate-number').test(v)
+        ) {
+            return true;
+        }
+        if(priceType) {
+            return (priceType && priceValue <= 99.99);
+        }
+        return priceValue < parseFloat($F(priceInput));
+    }],
     ['validate-state', 'Please select State/Province.', function(v) {
                 return (v!=0 || v == '');
             }],
-
-    ['validate-new-password', 'Please enter valid password.', function(v) {
+    ['validate-new-password', 'Please enter 6 or more characters without leading or trailing spaces.', function(v) {
                 if (!Validation.get('validate-password').test(v)) return false;
                 if (Validation.get('IsEmpty').test(v) && v != '') return false;
                 return true;
             }],
-    ['validate-greater-than-zero', 'Please enter a number greater than 0 in this field.', function(v) {
-                if(v.length)
-                    return parseFloat(v) > 0;
-                else
-                    return true;
-            }],
-    ['validate-zero-or-greater', 'Please enter a number 0 or greater in this field.', function(v) {
-                if(v.length)
-                    return parseFloat(v) >= 0;
-                else
-                    return true;
-            }],
     ['validate-cc-number', 'Please enter a valid credit card number.', function(v, elm) {
                 // remove non-numerics
                 var ccTypeContainer = $(elm.id.substr(0,elm.id.indexOf('_cc_number')) + '_cc_type');
-                if (ccTypeContainer && (ccTypeContainer.value == 'OT' || ccTypeContainer.value == 'SS')) {
+                if (ccTypeContainer && typeof Validation.creditCartTypes.get(ccTypeContainer.value) != 'undefined'
+                        && Validation.creditCartTypes.get(ccTypeContainer.value)[2] == false) {
                     if (!Validation.get('IsEmpty').test(v) && Validation.get('validate-digits').test(v)) {
                         return true;
                     } else {
@@ -457,7 +696,7 @@ Validation.addAllThese([
                 }
                 return validateCreditCard(v);
             }],
-    ['validate-cc-type', 'Credit card number doesn\'t match credit card type', function(v, elm) {
+    ['validate-cc-type', 'Credit card number does not match credit card type.', function(v, elm) {
                 // remove credit card number delimiters such as "-" and space
                 elm.value = removeDelimiters(elm.value);
                 v         = removeDelimiters(v);
@@ -468,37 +707,55 @@ Validation.addAllThese([
                 }
                 var ccType = ccTypeContainer.value;
 
+                if (typeof Validation.creditCartTypes.get(ccType) == 'undefined') {
+                    return false;
+                }
+
                 // Other card type or switch or solo card
-                if (ccType == 'OT' || ccType == 'SS') {
+                if (Validation.creditCartTypes.get(ccType)[0]==false) {
                     return true;
                 }
 
-                // Credit card type detecting regexp
-                var ccTypeRegExp = {
-                    'VI': new RegExp('^4[0-9]{12}([0-9]{3})?$'),
-                    'MC': new RegExp('^5[1-5][0-9]{14}$'),
-                    'AE': new RegExp('^3[47][0-9]{13}$'),
-                    'DI': new RegExp('^6011[0-9]{12}$')
-                };
-
-                // Matched credit card type
-                var ccMatchedType = '';
-                $H(ccTypeRegExp).each(function (pair) {
-                    if (v.match(pair.value)) {
-                        ccMatchedType = pair.key;
+                var validationFailure = false;
+                Validation.creditCartTypes.each(function (pair) {
+                    if (pair.key == ccType) {
+                        if (pair.value[0] && !v.match(pair.value[0])) {
+                            validationFailure = true;
+                        }
                         throw $break;
                     }
                 });
 
-                if(ccMatchedType != ccType) {
+                if (validationFailure) {
                     return false;
+                }
+
+                if (ccTypeContainer.hasClassName('validation-failed') && Validation.isOnChange) {
+                    Validation.validate(ccTypeContainer);
                 }
 
                 return true;
             }],
-     ['validate-cc-type-select', 'Card type doesn\'t match credit card number', function(v, elm) {
+     ['validate-cc-type-select', 'Card type does not match credit card number.', function(v, elm) {
                 var ccNumberContainer = $(elm.id.substr(0,elm.id.indexOf('_cc_type')) + '_cc_number');
+                if (Validation.isOnChange && Validation.get('IsEmpty').test(ccNumberContainer.value)) {
+                    return true;
+                }
+                if (Validation.get('validate-cc-type').test(ccNumberContainer.value, ccNumberContainer)) {
+                    Validation.validate(ccNumberContainer);
+                }
                 return Validation.get('validate-cc-type').test(ccNumberContainer.value, ccNumberContainer);
+            }],
+     ['validate-cc-exp', 'Incorrect credit card expiration date.', function(v, elm) {
+                var ccExpMonth   = v;
+                var ccExpYear    = $(elm.id.substr(0,elm.id.indexOf('_expiration')) + '_expiration_yr').value;
+                var currentTime  = new Date();
+                var currentMonth = currentTime.getMonth() + 1;
+                var currentYear  = currentTime.getFullYear();
+                if (ccExpMonth < currentMonth && ccExpYear == currentYear) {
+                    return false;
+                }
+                return true;
             }],
      ['validate-cc-cvn', 'Please enter a valid credit card verification number.', function(v, elm) {
                 var ccTypeContainer = $(elm.id.substr(0,elm.id.indexOf('_cc_cid')) + '_cc_type');
@@ -507,20 +764,11 @@ Validation.addAllThese([
                 }
                 var ccType = ccTypeContainer.value;
 
-                switch (ccType) {
-                    case 'VI' :
-                    case 'MC' :
-                    case 'DI' :
-                        re = new RegExp('^[0-9]{3}$');
-                        break;
-                    case 'AE' :
-                        re = new RegExp('^[0-9]{4}$');
-                        break;
-                    case 'OT' :
-                    case 'SS' :
-                        re = new RegExp('^([0-9]{3}|[0-9]{4})?$');
-                        break;
+                if (typeof Validation.creditCartTypes.get(ccType) == 'undefined') {
+                    return false;
                 }
+
+                var re = Validation.creditCartTypes.get(ccType)[1];
 
                 if (v.match(re)) {
                     return true;
@@ -534,41 +782,128 @@ Validation.addAllThese([
                     return /^[A-Za-z]+[A-Za-z0-9_]+$/.test(v);
                 }
                 return true;
-            }]
+            }],
+     ['validate-css-length', 'Please input a valid CSS-length. For example 100px or 77pt or 20em or .5ex or 50%.', function (v) {
+                if (v != '' && v) {
+                    return /^[0-9\.]+(px|pt|em|ex|%)?$/.test(v) && (!(/\..*\./.test(v))) && !(/\.$/.test(v));
+                }
+                return true;
+            }],
+     ['validate-length', 'Text length does not satisfy specified text range.', function (v, elm) {
+                var reMax = new RegExp(/^maximum-length-[0-9]+$/);
+                var reMin = new RegExp(/^minimum-length-[0-9]+$/);
+                var result = true;
+                $w(elm.className).each(function(name, index) {
+                    if (name.match(reMax) && result) {
+                       var length = name.split('-')[2];
+                       result = (v.length <= length);
+                    }
+                    if (name.match(reMin) && result && !Validation.get('IsEmpty').test(v)) {
+                        var length = name.split('-')[2];
+                        result = (v.length >= length);
+                    }
+                });
+                return result;
+            }],
+     ['validate-percents', 'Please enter a number lower than 100.', {max:100}],
+     ['required-file', 'Please select a file', function(v, elm) {
+         var result = !Validation.get('IsEmpty').test(v);
+         if (result === false) {
+             ovId = elm.id + '_value';
+             if ($(ovId)) {
+                 result = !Validation.get('IsEmpty').test($(ovId).value);
+             }
+         }
+         return result;
+     }],
+     ['validate-cc-ukss', 'Please enter issue number or start date for switch/solo card type.', function(v,elm) {
+         var endposition;
+
+         if (elm.id.match(/(.)+_cc_issue$/)) {
+             endposition = elm.id.indexOf('_cc_issue');
+         } else if (elm.id.match(/(.)+_start_month$/)) {
+             endposition = elm.id.indexOf('_start_month');
+         } else {
+             endposition = elm.id.indexOf('_start_year');
+         }
+
+         var prefix = elm.id.substr(0,endposition);
+
+         var ccTypeContainer = $(prefix + '_cc_type');
+
+         if (!ccTypeContainer) {
+               return true;
+         }
+         var ccType = ccTypeContainer.value;
+
+         if(['SS','SM','SO'].indexOf(ccType) == -1){
+             return true;
+         }
+
+         $(prefix + '_cc_issue').advaiceContainer
+           = $(prefix + '_start_month').advaiceContainer
+           = $(prefix + '_start_year').advaiceContainer
+           = $(prefix + '_cc_type_ss_div').down('ul li.adv-container');
+
+         var ccIssue   =  $(prefix + '_cc_issue').value;
+         var ccSMonth  =  $(prefix + '_start_month').value;
+         var ccSYear   =  $(prefix + '_start_year').value;
+
+         var ccStartDatePresent = (ccSMonth && ccSYear) ? true : false;
+
+         if (!ccStartDatePresent && !ccIssue){
+             return false;
+         }
+         return true;
+     }]
 ]);
-
-
-// Credit Card Validation Javascript
-// copyright 12th May 2003, by Stephen Chapman, Felgall Pty Ltd
-
-// You have permission to copy and use this javascript provided that
-// the content of the script is not changed in any way.
-
-function validateCreditCard(s) {
-    // remove non-numerics
-    var v = "0123456789";
-    var w = "";
-    for (i=0; i < s.length; i++) {
-        x = s.charAt(i);
-        if (v.indexOf(x,0) != -1)
-        w += x;
-    }
-    // validate number
-    j = w.length / 2;
-    if (j < 6.5 || j > 8 || j == 7) return false;
-    k = Math.floor(j);
-    m = Math.ceil(j) - k;
-    c = 0;
-    for (i=0; i<k; i++) {
-        a = w.charAt(i*2+m) * 2;
-        c += a > 9 ? Math.floor(a/10 + a%10) : a;
-    }
-    for (i=0; i<k+m; i++) c += w.charAt(i*2+1-m) * 1;
-    return (c%10 == 0);
-}
 
 function removeDelimiters (v) {
     v = v.replace(/\s/g, '');
     v = v.replace(/\-/g, '');
     return v;
 }
+
+function parseNumber(v)
+{
+    if (typeof v != 'string') {
+        return parseFloat(v);
+    }
+
+    var isDot  = v.indexOf('.');
+    var isComa = v.indexOf(',');
+
+    if (isDot != -1 && isComa != -1) {
+        if (isComa > isDot) {
+            v = v.replace('.', '').replace(',', '.');
+        }
+        else {
+            v = v.replace(',', '');
+        }
+    }
+    else if (isComa != -1) {
+        v = v.replace(',', '.');
+    }
+
+    return parseFloat(v);
+}
+
+/**
+ * Hash with credit card types which can be simply extended in payment modules
+ * 0 - regexp for card number
+ * 1 - regexp for cvn
+ * 2 - check or not credit card number trough Luhn algorithm by
+ *     function validateCreditCard which you can find above in this file
+ */
+Validation.creditCartTypes = $H({
+//    'SS': [new RegExp('^((6759[0-9]{12})|(5018|5020|5038|6304|6759|6761|6763[0-9]{12,19})|(49[013][1356][0-9]{12})|(6333[0-9]{12})|(6334[0-4]\d{11})|(633110[0-9]{10})|(564182[0-9]{10}))([0-9]{2,3})?$'), new RegExp('^([0-9]{3}|[0-9]{4})?$'), true],
+    'SO': [new RegExp('^(6334[5-9]([0-9]{11}|[0-9]{13,14}))|(6767([0-9]{12}|[0-9]{14,15}))$'), new RegExp('^([0-9]{3}|[0-9]{4})?$'), true],
+    'VI': [new RegExp('^4[0-9]{12}([0-9]{3})?$'), new RegExp('^[0-9]{3}$'), true],
+    'MC': [new RegExp('^(5[1-5][0-9]{14}|2(22[1-9][0-9]{12}|2[3-9][0-9]{13}|[3-6][0-9]{14}|7[0-1][0-9]{13}|720[0-9]{12}))$'), new RegExp('^[0-9]{3}$'), true],
+    'AE': [new RegExp('^3[47][0-9]{13}$'), new RegExp('^[0-9]{4}$'), true],
+    'DI': [new RegExp('^(30[0-5][0-9]{13}|3095[0-9]{12}|35(2[8-9][0-9]{12}|[3-8][0-9]{13})|36[0-9]{12}|3[8-9][0-9]{14}|6011(0[0-9]{11}|[2-4][0-9]{11}|74[0-9]{10}|7[7-9][0-9]{10}|8[6-9][0-9]{10}|9[0-9]{11})|62(2(12[6-9][0-9]{10}|1[3-9][0-9]{11}|[2-8][0-9]{12}|9[0-1][0-9]{11}|92[0-5][0-9]{10})|[4-6][0-9]{13}|8[2-8][0-9]{12})|6(4[4-9][0-9]{13}|5[0-9]{14}))$'), new RegExp('^[0-9]{3}$'), true],
+    'JCB': [new RegExp('^(30[0-5][0-9]{13}|3095[0-9]{12}|35(2[8-9][0-9]{12}|[3-8][0-9]{13})|36[0-9]{12}|3[8-9][0-9]{14}|6011(0[0-9]{11}|[2-4][0-9]{11}|74[0-9]{10}|7[7-9][0-9]{10}|8[6-9][0-9]{10}|9[0-9]{11})|62(2(12[6-9][0-9]{10}|1[3-9][0-9]{11}|[2-8][0-9]{12}|9[0-1][0-9]{11}|92[0-5][0-9]{10})|[4-6][0-9]{13}|8[2-8][0-9]{12})|6(4[4-9][0-9]{13}|5[0-9]{14}))$'), new RegExp('^[0-9]{3,4}$'), true],
+    'DICL': [new RegExp('^(30[0-5][0-9]{13}|3095[0-9]{12}|35(2[8-9][0-9]{12}|[3-8][0-9]{13})|36[0-9]{12}|3[8-9][0-9]{14}|6011(0[0-9]{11}|[2-4][0-9]{11}|74[0-9]{10}|7[7-9][0-9]{10}|8[6-9][0-9]{10}|9[0-9]{11})|62(2(12[6-9][0-9]{10}|1[3-9][0-9]{11}|[2-8][0-9]{12}|9[0-1][0-9]{11}|92[0-5][0-9]{10})|[4-6][0-9]{13}|8[2-8][0-9]{12})|6(4[4-9][0-9]{13}|5[0-9]{14}))$'), new RegExp('^[0-9]{3}$'), true],
+    'SM': [new RegExp('(^(5[0678])[0-9]{11,18}$)|(^(6[^05])[0-9]{11,18}$)|(^(601)[^1][0-9]{9,16}$)|(^(6011)[0-9]{9,11}$)|(^(6011)[0-9]{13,16}$)|(^(65)[0-9]{11,13}$)|(^(65)[0-9]{15,18}$)|(^(49030)[2-9]([0-9]{10}$|[0-9]{12,13}$))|(^(49033)[5-9]([0-9]{10}$|[0-9]{12,13}$))|(^(49110)[1-2]([0-9]{10}$|[0-9]{12,13}$))|(^(49117)[4-9]([0-9]{10}$|[0-9]{12,13}$))|(^(49118)[0-2]([0-9]{10}$|[0-9]{12,13}$))|(^(4936)([0-9]{12}$|[0-9]{14,15}$))'), new RegExp('^([0-9]{3}|[0-9]{4})?$'), true],
+    'OT': [false, new RegExp('^([0-9]{3}|[0-9]{4})?$'), false]
+});

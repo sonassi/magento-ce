@@ -15,10 +15,9 @@
  * @category   Zend
  * @package    Zend_Service
  * @subpackage SlideShare
- * @copyright  Copyright (c) 2005-2008 Zend Technologies USA Inc. (http://www.zend.com)
+ * @copyright  Copyright (c) 2005-2015 Zend Technologies USA Inc. (http://www.zend.com)
  * @license    http://framework.zend.com/license/new-bsd     New BSD License
- * @version    $Id: SlideShow.php 8260 2008-02-21 21:35:56Z darby $
- * @author     John Coggeshall <john@zend.com>
+ * @version    $Id$
  */
 
 
@@ -29,13 +28,11 @@
  * @category   Zend
  * @package    Zend_Service
  * @subpackage SlideShare
- * @copyright  Copyright (c) 2005-2008 Zend Technologies USA Inc. (http://www.zend.com)
+ * @copyright  Copyright (c) 2005-2015 Zend Technologies USA Inc. (http://www.zend.com)
  * @license    http://framework.zend.com/license/new-bsd     New BSD License
- * @author     John Coggeshall <john@zend.com>
  */
 class Zend_Service_SlideShare_SlideShow
 {
-
     /**
      * Status constant mapping for web service
      *
@@ -88,11 +85,11 @@ class Zend_Service_SlideShare_SlideShow
     protected $_statusDescription;
 
     /**
-     * The Permanent link for the slide show
+     * The URL for the slide show
      *
-     * @var string the Permalink for the slide show
+     * @var string the URL for the slide show
      */
-    protected $_permalink;
+    protected $_url;
 
     /**
      * The number of views this slide show has received
@@ -330,7 +327,7 @@ class Zend_Service_SlideShare_SlideShow
     /**
      * Sets the description for the Slide show
      *
-     * @param strign $desc The description of the slide show
+     * @param string $desc The description of the slide show
      * @return Zend_Service_SlideShare_SlideShow
      */
     public function setDescription($desc)
@@ -396,23 +393,51 @@ class Zend_Service_SlideShare_SlideShow
     /**
      * Sets the permanent link of the slide show
      *
+     * @see Zend_Service_SlideShare_SlideShow::setUrl()
+     *
      * @param string $url The permanent URL for the slide show
      * @return Zend_Service_SlideShare_SlideShow
+     * @deprecated Since 1.12.10, use setUrl()
      */
     public function setPermaLink($url)
     {
-        $this->_permalink = (string)$url;
+        $this->setUrl($url);
         return $this;
     }
 
     /**
      * Gets the permanent link of the slide show
      *
+     * @see Zend_Service_SlideShare_SlideShow::getUrl()
+     *
      * @return string the permanent URL for the slide show
+     * @deprecated Since 1.12.10, use getUrl()
      */
     public function getPermaLink()
     {
-        return $this->_permalink;
+        return $this->getUrl();
+    }
+
+    /**
+     * Sets the URL of the slide show
+     *
+     * @param  string $url The URL for the slide show
+     * @return self
+     */
+    public function setUrl($url)
+    {
+        $this->_url = (string)$url;
+        return $this;
+    }
+
+    /**
+     * Gets the URL of the slide show
+     *
+     * @return string The URL for the slide show
+     */
+    public function getUrl()
+    {
+        return $this->_url;
     }
 
     /**

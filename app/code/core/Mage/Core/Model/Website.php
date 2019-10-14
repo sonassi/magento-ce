@@ -10,25 +10,54 @@
  * http://opensource.org/licenses/osl-3.0.php
  * If you did not receive a copy of the license and are unable to
  * obtain it through the world-wide-web, please send an email
- * to license@magentocommerce.com so we can send you a copy immediately.
+ * to license@magento.com so we can send you a copy immediately.
  *
- * @category   Mage
- * @package    Mage_Core
- * @copyright  Copyright (c) 2004-2007 Irubin Consulting Inc. DBA Varien (http://www.varien.com)
+ * DISCLAIMER
+ *
+ * Do not edit or add to this file if you wish to upgrade Magento to newer
+ * versions in the future. If you wish to customize Magento for your
+ * needs please refer to http://www.magento.com for more information.
+ *
+ * @category    Mage
+ * @package     Mage_Core
+ * @copyright  Copyright (c) 2006-2017 X.commerce, Inc. and affiliates (http://www.magento.com)
  * @license    http://opensource.org/licenses/osl-3.0.php  Open Software License (OSL 3.0)
  */
 
 /**
  * Core Website model
  *
- * @category   Mage
- * @package    Mage_Core
+ * @method Mage_Core_Model_Resource_Website _getResource()
+ * @method Mage_Core_Model_Resource_Website getResource()
+ * @method Mage_Core_Model_Website setCode(string $value)
+ * @method string getName()
+ * @method Mage_Core_Model_Website setName(string $value)
+ * @method int getSortOrder()
+ * @method Mage_Core_Model_Website setSortOrder(int $value)
+ * @method Mage_Core_Model_Website setDefaultGroupId(int $value)
+ * @method int getIsDefault()
+ * @method Mage_Core_Model_Website setIsDefault(int $value)
+ *
+ * @category    Mage
+ * @package     Mage_Core
+ * @author      Magento Core Team <core@magentocommerce.com>
  */
 
 class Mage_Core_Model_Website extends Mage_Core_Model_Abstract
 {
+    const ENTITY    = 'core_website';
     const CACHE_TAG = 'website';
     protected $_cacheTag = true;
+
+    /**
+     * @var string
+     */
+    protected $_eventPrefix = 'website';
+
+    /**
+     * @var string
+     */
+    protected $_eventObject = 'website';
 
     /**
      * Cache configuration array
@@ -108,6 +137,11 @@ class Mage_Core_Model_Website extends Mage_Core_Model_Abstract
     protected $_isCanDelete;
 
     /**
+     * @var bool
+     */
+    private $_isReadOnly = false;
+
+    /**
      * init model
      *
      */
@@ -173,15 +207,15 @@ class Mage_Core_Model_Website extends Mage_Core_Model_Abstract
             $config = Mage::getConfig()->getNode('websites/'.$this->getCode().'/'.$path);
             if (!$config) {
                 return false;
-                #throw Mage::exception('Mage_Core', Mage::helper('core')->__('Invalid websites configuration path: %s', $path));
+                #throw Mage::exception('Mage_Core', Mage::helper('core')->__('Invalid website\'s configuration path: %s', $path));
             }
-            if (!$config->children()) {
-                $value = (string)$config;
-            } else {
+            if ($config->hasChildren()) {
                 $value = array();
                 foreach ($config->children() as $k=>$v) {
                     $value[$k] = $v;
                 }
+            } else {
+                $value = (string)$config;
             }
             $this->_configCache[$path] = $value;
         }
@@ -284,7 +318,7 @@ class Mage_Core_Model_Website extends Mage_Core_Model_Abstract
      */
     public function getDefaultGroup()
     {
-        if (!$this->getDefaultGroupId()) {
+        if (!$this->hasDefaultGroupId()) {
             return false;
         }
         if (is_null($this->_groups)) {
@@ -403,11 +437,12 @@ class Mage_Core_Model_Website extends Mage_Core_Model_Abstract
      */
     public function isCanDelete()
     {
-        if (!$this->getId()) {
+        if ($this->_isReadOnly || !$this->getId()) {
             return false;
         }
         if (is_null($this->_isCanDelete)) {
-            $this->_isCanDelete = (Mage::getModel('core/website')->getCollection()->getSize() > 2);
+            $this->_isCanDelete = (Mage::getModel('core/website')->getCollection()->getSize() > 2)
+                && !$this->getIsDefault();
         }
         return $this->_isCanDelete;
     }
@@ -420,5 +455,104 @@ class Mage_Core_Model_Website extends Mage_Core_Model_Abstract
     public function getWebsiteGroupStore()
     {
         return join('-', array($this->getWebsiteId(), $this->getGroupId(), $this->getStoreId()));
+    }
+
+    public function getDefaultGroupId()
+    {
+        return $this->_getData('default_group_id');
+    }
+
+    public function getCode()
+    {
+        return $this->_getData('code');
+    }
+
+    protected function _beforeDelete()
+    {
+        $this->_protectFromNonAdmin();
+        return parent::_beforeDelete();
+    }
+
+    /**
+     * rewrite in order to clear configuration cache
+     *
+     * @return Mage_Core_Model_Website
+     */
+    protected function _afterDelete()
+    {
+        Mage::app()->clearWebsiteCache($this->getId());
+
+        parent::_afterDelete();
+        Mage::getConfig()->removeCache();
+        return $this;
+    }
+
+    /**
+     * Retrieve website base currency code
+     *
+     * @return string
+     */
+    public function getBaseCurrencyCode()
+    {
+        if ($this->getConfig(Mage_Core_Model_Store::XML_PATH_PRICE_SCOPE)
+            == Mage_Core_Model_Store::PRICE_SCOPE_GLOBAL
+        ) {
+            return Mage::app()->getBaseCurrencyCode();
+        } else {
+            return $this->getConfig(Mage_Directory_Model_Currency::XML_PATH_CURRENCY_BASE);
+        }
+    }
+
+    /**
+     * Retrieve website base currency
+     *
+     * @return Mage_Directory_Model_Currency
+     */
+    public function getBaseCurrency()
+    {
+        $currency = $this->getData('base_currency');
+        if (is_null($currency)) {
+            $currency = Mage::getModel('directory/currency')->load($this->getBaseCurrencyCode());
+            $this->setData('base_currency', $currency);
+        }
+        return $currency;
+    }
+
+    /**
+     * Retrieve Default Website Store or null
+     *
+     * @return Mage_Core_Model_Store
+     */
+    public function getDefaultStore()
+    {
+        // init stores if not loaded
+        $this->getStores();
+        return $this->_defaultStore;
+    }
+
+    /**
+     * Retrieve default stores select object
+     * Select fields website_id, store_id
+     *
+     * @param $withDefault include/exclude default admin website
+     * @return Varien_Db_Select
+     */
+    public function getDefaultStoresSelect($withDefault = false)
+    {
+        return $this->getResource()->getDefaultStoresSelect($withDefault);
+    }
+
+    /**
+     * Get/Set isReadOnly flag
+     *
+     * @param bool $value
+     * @return bool
+     */
+    public function isReadOnly($value = null)
+    {
+        if (null !== $value) {
+            $this->_isReadOnly = (bool)$value;
+        }
+        return $this->_isReadOnly;
     }
 }

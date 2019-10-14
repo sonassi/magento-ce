@@ -10,11 +10,17 @@
  * http://opensource.org/licenses/osl-3.0.php
  * If you did not receive a copy of the license and are unable to
  * obtain it through the world-wide-web, please send an email
- * to license@magentocommerce.com so we can send you a copy immediately.
+ * to license@magento.com so we can send you a copy immediately.
  *
- * @category   Mage
- * @package    Mage
- * @copyright  Copyright (c) 2004-2007 Irubin Consulting Inc. DBA Varien (http://www.varien.com)
+ * DISCLAIMER
+ *
+ * Do not edit or add to this file if you wish to upgrade Magento to newer
+ * versions in the future. If you wish to customize Magento for your
+ * needs please refer to http://www.magento.com for more information.
+ *
+ * @category    Mage
+ * @package     Mage
+ * @copyright  Copyright (c) 2006-2017 X.commerce, Inc. and affiliates (http://www.magento.com)
  * @license    http://opensource.org/licenses/osl-3.0.php  Open Software License (OSL 3.0)
  */
 
@@ -77,13 +83,18 @@
  * --db_host                    // required, You can specify server port, ex.: localhost:3307
  *                              // If you are not using default UNIX socket, you can specify it
  *                              // here instead of host, ex.: /var/run/mysqld/mysqld.sock
+ * --db_model                   // Database type (mysql4 by default)
  * --db_name                    // required, Database Name
  * --db_user                    // required, Database User Name
  * --db_pass                    // required, Database User Password
  * --db_prefix                  // optional, Database Tables Prefix
  *                              // No table prefix will be used if not specified
+ * Session options:
+ * --session_save <files|db>    // optional, where to store session data - in db or files. files by default
  * Web access options:
+ * --admin_frontname <path>     // optional, admin panel path, "admin" by default
  * --url                        // required, URL the store is supposed to be available at
+ * --skip_url_validation        // optional, skip validating base url during installation or not. No by default
  * --use_rewrites               // optional, Use Web Server (Apache) Rewrites,
  *                              // You could enable this option to use web server rewrites functionality for improved SEO
  *                              // Please make sure that mod_rewrite is enabled in Apache configuration
@@ -93,6 +104,8 @@
  *                              // Provide a complete base URL for SSL connection.
  *                              // For example: https://www.mydomain.com/magento/
  * --use_secure_admin           // optional, Run admin interface with SSL
+ * Backend interface options:
+ * --enable_charts              // optional, Enables Charts on the backend's dashboard
  * Admin user personal information:
  * --admin_lastname             // required, admin user last name
  * --admin_firstname            // required, admin user first name
@@ -108,13 +121,11 @@
 if (version_compare(phpversion(), '5.2.0', '<')===true) {
     die('ERROR: Whoops, it looks like you have an invalid PHP version. Magento supports PHP 5.2.0 or newer.');
 }
-
+set_include_path(dirname(__FILE__) . PATH_SEPARATOR . get_include_path());
+require 'app/bootstrap.php';
 require 'app/Mage.php';
 
 try {
-
-    Mage::loadRequiredExtensions();
-
     $app = Mage::app('default');
 
     $installer = Mage::getSingleton('install/installer_console');
@@ -134,8 +145,12 @@ try {
 }
 
 // print all errors if there were any
-if ($app instanceof Mage_Core_Model_Installer_Console) {
-    foreach ($installer->getErrors() as $error) {
-        echo 'ERROR: ' . $error . "\n";
+if ($installer instanceof Mage_Install_Model_Installer_Console) {
+    if ($installer->getErrors()) {
+        echo "\nFAILED\n";
+        foreach ($installer->getErrors() as $error) {
+            echo $error . "\n";
+        }
     }
 }
+exit(1); // don't delete this as this should notify about failed installation

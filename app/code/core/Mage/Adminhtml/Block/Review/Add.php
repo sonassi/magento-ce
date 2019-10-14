@@ -10,11 +10,17 @@
  * http://opensource.org/licenses/osl-3.0.php
  * If you did not receive a copy of the license and are unable to
  * obtain it through the world-wide-web, please send an email
- * to license@magentocommerce.com so we can send you a copy immediately.
+ * to license@magento.com so we can send you a copy immediately.
  *
- * @category   Mage
- * @package    Mage_Adminhtml
- * @copyright  Copyright (c) 2004-2007 Irubin Consulting Inc. DBA Varien (http://www.varien.com)
+ * DISCLAIMER
+ *
+ * Do not edit or add to this file if you wish to upgrade Magento to newer
+ * versions in the future. If you wish to customize Magento for your
+ * needs please refer to http://www.magento.com for more information.
+ *
+ * @category    Mage
+ * @package     Mage_Adminhtml
+ * @copyright  Copyright (c) 2006-2017 X.commerce, Inc. and affiliates (http://www.magento.com)
  * @license    http://opensource.org/licenses/osl-3.0.php  Open Software License (OSL 3.0)
  */
 
@@ -23,6 +29,7 @@
  *
  * @category   Mage
  * @package    Mage_Adminhtml
+ * @author      Magento Core Team <core@magentocommerce.com>
  */
 
 class Mage_Adminhtml_Block_Review_Add extends Mage_Adminhtml_Block_Widget_Form_Container
@@ -46,14 +53,15 @@ class Mage_Adminhtml_Block_Review_Add extends Mage_Adminhtml_Block_Widget_Form_C
         ';
 
         $this->_formInitScripts[] = '
+            //<![CDATA[
             var review = function() {
                 return {
                     productInfoUrl : null,
                     formHidden : true,
 
                     gridRowClick : function(data, click) {
-                        if(Event.findElement(click,\'TR\').id){
-                            review.productInfoUrl = Event.findElement(click,\'TR\').id;
+                        if(Event.findElement(click,\'TR\').title){
+                            review.productInfoUrl = Event.findElement(click,\'TR\').title;
                             review.loadProductData();
                             review.showForm();
                             review.formHidden = false;
@@ -61,7 +69,7 @@ class Mage_Adminhtml_Block_Review_Add extends Mage_Adminhtml_Block_Widget_Form_C
                     },
 
                     loadProductData : function() {
-                        var con = new Ext.lib.Ajax.request(\'POST\', review.productInfoUrl, {success:review.reqSuccess,failure:review.reqFailure});
+                        var con = new Ext.lib.Ajax.request(\'POST\', review.productInfoUrl, {success:review.reqSuccess,failure:review.reqFailure}, {form_key:FORM_KEY});
                     },
 
                     showForm : function() {
@@ -73,8 +81,15 @@ class Mage_Adminhtml_Block_Review_Add extends Mage_Adminhtml_Block_Widget_Form_C
 
                     updateRating: function() {
                         elements = [$("select_stores"), $("rating_detail").getElementsBySelector("input[type=\'radio\']")].flatten();
-                         $(\'save_button\').disabled = true;
-                        new Ajax.Updater("rating_detail", "'.$this->getUrl('*/*/ratingItems').'", {parameters:Form.serializeElements(elements), evalScripts: true,  onComplete:function(){ $(\'save_button\').disabled = false; } });
+                        $(\'save_button\').disabled = true;
+                        var params = Form.serializeElements(elements);
+                        if (!params.isAjax) {
+                            params.isAjax = "true";
+                        }
+                        if (!params.form_key) {
+                            params.form_key = FORM_KEY;
+                        }
+                        new Ajax.Updater("rating_detail", "'.$this->getUrl('*/*/ratingItems').'", {parameters:params, evalScripts: true,  onComplete:function(){ $(\'save_button\').disabled = false; } });
                     },
 
                     reqSuccess :function(o) {
@@ -93,10 +108,11 @@ class Mage_Adminhtml_Block_Review_Add extends Mage_Adminhtml_Block_Widget_Form_C
             }();
 
              Event.observe(window, \'load\', function(){
-             	if ($("select_stores")) {
-             		Event.observe($("select_stores"), \'change\', review.updateRating);
-             	}
+                 if ($("select_stores")) {
+                     Event.observe($("select_stores"), \'change\', review.updateRating);
+                 }
            });
+           //]]>
         ';
     }
 

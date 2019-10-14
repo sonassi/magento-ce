@@ -10,11 +10,17 @@
  * http://opensource.org/licenses/osl-3.0.php
  * If you did not receive a copy of the license and are unable to
  * obtain it through the world-wide-web, please send an email
- * to license@magentocommerce.com so we can send you a copy immediately.
+ * to license@magento.com so we can send you a copy immediately.
  *
- * @category   Mage
- * @package    Mage_Catalog
- * @copyright  Copyright (c) 2004-2007 Irubin Consulting Inc. DBA Varien (http://www.varien.com)
+ * DISCLAIMER
+ *
+ * Do not edit or add to this file if you wish to upgrade Magento to newer
+ * versions in the future. If you wish to customize Magento for your
+ * needs please refer to http://www.magento.com for more information.
+ *
+ * @category    Mage
+ * @package     Mage_Catalog
+ * @copyright  Copyright (c) 2006-2017 X.commerce, Inc. and affiliates (http://www.magento.com)
  * @license    http://opensource.org/licenses/osl-3.0.php  Open Software License (OSL 3.0)
  */
 
@@ -24,10 +30,22 @@
  *
  * @category   Mage
  * @package    Mage_Catalog
+ * @author      Magento Core Team <core@magentocommerce.com>
  */
 class Mage_Catalog_Block_Product_List extends Mage_Catalog_Block_Product_Abstract
 {
+    /**
+     * Default toolbar block name
+     *
+     * @var string
+     */
+    protected $_defaultToolbarBlock = 'catalog/product_list_toolbar';
 
+    /**
+     * Product Collection
+     *
+     * @var Mage_Eav_Model_Entity_Collection_Abstract
+     */
     protected $_productCollection;
 
     /**
@@ -38,31 +56,55 @@ class Mage_Catalog_Block_Product_List extends Mage_Catalog_Block_Product_Abstrac
     protected function _getProductCollection()
     {
         if (is_null($this->_productCollection)) {
-            $layer = Mage::getSingleton('catalog/layer');
+            $layer = $this->getLayer();
+            /* @var $layer Mage_Catalog_Model_Layer */
             if ($this->getShowRootCategory()) {
                 $this->setCategoryId(Mage::app()->getStore()->getRootCategoryId());
             }
 
-            // if this is a product view page
             if (Mage::registry('product')) {
-                // get collection of categories this product is associated with
+                /** @var Mage_Catalog_Model_Resource_Category_Collection $categories */
                 $categories = Mage::registry('product')->getCategoryCollection()
                     ->setPage(1, 1)
                     ->load();
-                // if the product is associated with any category
                 if ($categories->count()) {
-                    // show products from this category
-                    $this->setCategoryId(current($categories->getIterator()));
+                    $this->setCategoryId($categories->getFirstItem()->getId());
                 }
             }
 
+            $origCategory = null;
             if ($this->getCategoryId()) {
                 $category = Mage::getModel('catalog/category')->load($this->getCategoryId());
-                $layer->setCurrentCategory($category);
+                if ($category->getId()) {
+                    $origCategory = $layer->getCurrentCategory();
+                    $layer->setCurrentCategory($category);
+                    $this->addModelTags($category);
+                }
             }
             $this->_productCollection = $layer->getProductCollection();
+
+            $this->prepareSortableFieldsByCategory($layer->getCurrentCategory());
+
+            if ($origCategory) {
+                $layer->setCurrentCategory($origCategory);
+            }
         }
+
         return $this->_productCollection;
+    }
+
+    /**
+     * Get catalog layer model
+     *
+     * @return Mage_Catalog_Model_Layer
+     */
+    public function getLayer()
+    {
+        $layer = Mage::registry('current_layer');
+        if ($layer) {
+            return $layer;
+        }
+        return Mage::getSingleton('catalog/layer');
     }
 
     /**
@@ -91,22 +133,62 @@ class Mage_Catalog_Block_Product_List extends Mage_Catalog_Block_Product_Abstrac
      */
     protected function _beforeToHtml()
     {
-        $toolbar = $this->getLayout()->createBlock('catalog/product_list_toolbar', microtime());
+        $toolbar = $this->getToolbarBlock();
+
+        // called prepare sortable parameters
+        $collection = $this->_getProductCollection();
+
+        // use sortable parameters
         if ($orders = $this->getAvailableOrders()) {
             $toolbar->setAvailableOrders($orders);
+        }
+        if ($sort = $this->getSortBy()) {
+            $toolbar->setDefaultOrder($sort);
+        }
+        if ($dir = $this->getDefaultDirection()) {
+            $toolbar->setDefaultDirection($dir);
         }
         if ($modes = $this->getModes()) {
             $toolbar->setModes($modes);
         }
-        $toolbar->setCollection($this->_getProductCollection());
+
+        // set collection to toolbar and apply sort
+        $toolbar->setCollection($collection);
+
         $this->setChild('toolbar', $toolbar);
         Mage::dispatchEvent('catalog_block_product_list_collection', array(
-            'collection'=>$this->_getProductCollection(),
+            'collection' => $this->_getProductCollection()
         ));
 
         $this->_getProductCollection()->load();
-        Mage::getModel('review/review')->appendSummary($this->_getProductCollection());
-        return parent::_prepareLayout();
+
+        return parent::_beforeToHtml();
+    }
+
+    /**
+     * Retrieve Toolbar block
+     *
+     * @return Mage_Catalog_Block_Product_List_Toolbar
+     */
+    public function getToolbarBlock()
+    {
+        if ($blockName = $this->getToolbarBlockName()) {
+            if ($block = $this->getLayout()->getBlock($blockName)) {
+                return $block;
+            }
+        }
+        $block = $this->getLayout()->createBlock($this->_defaultToolbarBlock, microtime());
+        return $block;
+    }
+
+    /**
+     * Retrieve additional blocks html
+     *
+     * @return string
+     */
+    public function getAdditionalHtml()
+    {
+        return $this->getChildHtml('additional');
     }
 
     /**
@@ -131,4 +213,56 @@ class Mage_Catalog_Block_Product_List extends Mage_Catalog_Block_Product_Abstrac
         return $this;
     }
 
+    public function getPriceBlockTemplate()
+    {
+        return $this->_getData('price_block_template');
+    }
+
+    /**
+     * Retrieve Catalog Config object
+     *
+     * @return Mage_Catalog_Model_Config
+     */
+    protected function _getConfig()
+    {
+        return Mage::getSingleton('catalog/config');
+    }
+
+    /**
+     * Prepare Sort By fields from Category Data
+     *
+     * @param Mage_Catalog_Model_Category $category
+     * @return Mage_Catalog_Block_Product_List
+     */
+    public function prepareSortableFieldsByCategory($category) {
+        if (!$this->getAvailableOrders()) {
+            $this->setAvailableOrders($category->getAvailableSortByOptions());
+        }
+        $availableOrders = $this->getAvailableOrders();
+        if (!$this->getSortBy()) {
+            if ($categorySortBy = $category->getDefaultSortBy()) {
+                if (!$availableOrders) {
+                    $availableOrders = $this->_getConfig()->getAttributeUsedForSortByArray();
+                }
+                if (isset($availableOrders[$categorySortBy])) {
+                    $this->setSortBy($categorySortBy);
+                }
+            }
+        }
+
+        return $this;
+    }
+
+    /**
+     * Retrieve block cache tags based on product collection
+     *
+     * @return array
+     */
+    public function getCacheTags()
+    {
+        return array_merge(
+            parent::getCacheTags(),
+            $this->getItemsTags($this->_getProductCollection())
+        );
+    }
 }

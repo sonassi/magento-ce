@@ -15,22 +15,23 @@
  * @category   Zend
  * @package    Zend_XmlRpc
  * @subpackage Value
- * @copyright  Copyright (c) 2005-2008 Zend Technologies USA Inc. (http://www.zend.com)
+ * @copyright  Copyright (c) 2005-2015 Zend Technologies USA Inc. (http://www.zend.com)
  * @license    http://framework.zend.com/license/new-bsd     New BSD License
+ * @version    $Id$
  */
 
 
 /**
  * Zend_XmlRpc_Value_Scalar
  */
-require_once 'Zend/XmlRpc/Value/Scalar.php';
+#require_once 'Zend/XmlRpc/Value/Scalar.php';
 
 
 /**
  * @category   Zend
  * @package    Zend_XmlRpc
  * @subpackage Value
- * @copyright  Copyright (c) 2005-2008 Zend Technologies USA Inc. (http://www.zend.com)
+ * @copyright  Copyright (c) 2005-2015 Zend Technologies USA Inc. (http://www.zend.com)
  * @license    http://framework.zend.com/license/new-bsd     New BSD License
  */
 class Zend_XmlRpc_Value_Double extends Zend_XmlRpc_Value_Scalar
@@ -44,7 +45,9 @@ class Zend_XmlRpc_Value_Double extends Zend_XmlRpc_Value_Scalar
     public function __construct($value)
     {
         $this->_type = self::XMLRPC_TYPE_DOUBLE;
-        $this->_value = sprintf('%f',(float)$value);    // Make sure this value is float (double) and without the scientific notation
+        $precision = (int)ini_get('precision');
+        $formatString = '%1.' . $precision . 'F';
+        $this->_value = rtrim(sprintf($formatString, (float)$value), '0');
     }
 
     /**
@@ -56,6 +59,4 @@ class Zend_XmlRpc_Value_Double extends Zend_XmlRpc_Value_Scalar
     {
         return (float)$this->_value;
     }
-
 }
-

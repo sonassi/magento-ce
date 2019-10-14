@@ -10,11 +10,17 @@
  * http://opensource.org/licenses/osl-3.0.php
  * If you did not receive a copy of the license and are unable to
  * obtain it through the world-wide-web, please send an email
- * to license@magentocommerce.com so we can send you a copy immediately.
+ * to license@magento.com so we can send you a copy immediately.
  *
- * @category   Mage
- * @package    Mage_Adminhtml
- * @copyright  Copyright (c) 2004-2007 Irubin Consulting Inc. DBA Varien (http://www.varien.com)
+ * DISCLAIMER
+ *
+ * Do not edit or add to this file if you wish to upgrade Magento to newer
+ * versions in the future. If you wish to customize Magento for your
+ * needs please refer to http://www.magento.com for more information.
+ *
+ * @category    Mage
+ * @package     Mage_Adminhtml
+ * @copyright  Copyright (c) 2006-2017 X.commerce, Inc. and affiliates (http://www.magento.com)
  * @license    http://opensource.org/licenses/osl-3.0.php  Open Software License (OSL 3.0)
  */
 
@@ -23,11 +29,14 @@
  *
  * @category   Mage
  * @package    Mage_Adminhtml
+ * @author      Magento Core Team <core@magentocommerce.com>
  */
 class Mage_Adminhtml_Customer_GroupController extends Mage_Adminhtml_Controller_Action
 {
     protected function _initGroup()
     {
+        $this->_title($this->__('Customers'))->_title($this->__('Customer Groups'));
+
         Mage::register('current_group', Mage::getModel('customer/group'));
         $groupId = $this->getRequest()->getParam('id');
         if (!is_null($groupId)) {
@@ -40,13 +49,12 @@ class Mage_Adminhtml_Customer_GroupController extends Mage_Adminhtml_Controller_
      */
     public function indexAction()
     {
+        $this->_title($this->__('Customers'))->_title($this->__('Customer Groups'));
+
         $this->loadLayout();
         $this->_setActiveMenu('customer/group');
         $this->_addBreadcrumb(Mage::helper('customer')->__('Customers'), Mage::helper('customer')->__('Customers'));
         $this->_addBreadcrumb(Mage::helper('customer')->__('Customer Groups'), Mage::helper('customer')->__('Customer Groups'));
-
-        $this->_addContent($this->getLayout()->createBlock('adminhtml/customer_group', 'group'));
-
         $this->renderLayout();
     }
 
@@ -61,11 +69,15 @@ class Mage_Adminhtml_Customer_GroupController extends Mage_Adminhtml_Controller_
         $this->_addBreadcrumb(Mage::helper('customer')->__('Customers'), Mage::helper('customer')->__('Customers'));
         $this->_addBreadcrumb(Mage::helper('customer')->__('Customer Groups'), Mage::helper('customer')->__('Customer Groups'), $this->getUrl('*/customer_group'));
 
-        if (!is_null(Mage::registry('current_group')->getId())) {
+        $currentGroup = Mage::registry('current_group');
+
+        if (!is_null($currentGroup->getId())) {
             $this->_addBreadcrumb(Mage::helper('customer')->__('Edit Group'), Mage::helper('customer')->__('Edit Customer Groups'));
         } else {
             $this->_addBreadcrumb(Mage::helper('customer')->__('New Group'), Mage::helper('customer')->__('New Customer Groups'));
         }
+
+        $this->_title($currentGroup->getId() ? $currentGroup->getCode() : $this->__('New Group'));
 
         $this->getLayout()->getBlock('content')
             ->append($this->getLayout()->createBlock('adminhtml/customer_group_edit', 'group')
@@ -90,16 +102,21 @@ class Mage_Adminhtml_Customer_GroupController extends Mage_Adminhtml_Controller_
         $customerGroup = Mage::getModel('customer/group');
         $id = $this->getRequest()->getParam('id');
         if (!is_null($id)) {
-            $customerGroup->load($id);
+            $customerGroup->load((int)$id);
         }
 
-        if ($taxClass = $this->getRequest()->getParam('tax_class')) {
-            try {
-                $customerGroup->setCode($this->getRequest()->getParam('code'))
-                    ->setTaxClassId($taxClass)
-                    ->save();
+        $taxClass = (int)$this->getRequest()->getParam('tax_class');
 
-                Mage::getSingleton('adminhtml/session')->addSuccess(Mage::helper('customer')->__('Customer Group was successfully saved'));
+        if ($taxClass) {
+            try {
+                $customerGroupCode = (string)$this->getRequest()->getParam('code');
+
+                if (!empty($customerGroupCode)) {
+                    $customerGroup->setCode($customerGroupCode);
+                }
+
+                $customerGroup->setTaxClassId($taxClass)->save();
+                Mage::getSingleton('adminhtml/session')->addSuccess(Mage::helper('customer')->__('The customer group has been saved.'));
                 $this->getResponse()->setRedirect($this->getUrl('*/customer_group'));
                 return;
             } catch (Exception $e) {
@@ -111,7 +128,6 @@ class Mage_Adminhtml_Customer_GroupController extends Mage_Adminhtml_Controller_
         } else {
             $this->_forward('new');
         }
-
     }
 
     /**
@@ -124,8 +140,7 @@ class Mage_Adminhtml_Customer_GroupController extends Mage_Adminhtml_Controller_
             try {
                 $customerGroup->load($id);
                 $customerGroup->delete();
-
-                Mage::getSingleton('adminhtml/session')->addSuccess(Mage::helper('customer')->__('Customer Group was successfully deleted'));
+                Mage::getSingleton('adminhtml/session')->addSuccess(Mage::helper('customer')->__('The customer group has been deleted.'));
                 $this->getResponse()->setRedirect($this->getUrl('*/customer_group'));
                 return;
             } catch (Exception $e) {
@@ -140,6 +155,6 @@ class Mage_Adminhtml_Customer_GroupController extends Mage_Adminhtml_Controller_
 
     protected function _isAllowed()
     {
-	    return Mage::getSingleton('admin/session')->isAllowed('customer/group');
+        return Mage::getSingleton('admin/session')->isAllowed('customer/group');
     }
 }

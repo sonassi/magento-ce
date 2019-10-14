@@ -4,18 +4,24 @@
  *
  * NOTICE OF LICENSE
  *
- * This source file is subject to the Open Software License (OSL 3.0)
- * that is bundled with this package in the file LICENSE.txt.
+ * This source file is subject to the Academic Free License (AFL 3.0)
+ * that is bundled with this package in the file LICENSE_AFL.txt.
  * It is also available through the world-wide-web at this URL:
- * http://opensource.org/licenses/osl-3.0.php
+ * http://opensource.org/licenses/afl-3.0.php
  * If you did not receive a copy of the license and are unable to
  * obtain it through the world-wide-web, please send an email
- * to license@magentocommerce.com so we can send you a copy immediately.
+ * to license@magento.com so we can send you a copy immediately.
  *
- * @category   design_default
- * @package    Mage
- * @copyright  Copyright (c) 2004-2007 Irubin Consulting Inc. DBA Varien (http://www.varien.com)
- * @license    http://opensource.org/licenses/osl-3.0.php  Open Software License (OSL 3.0)
+ * DISCLAIMER
+ *
+ * Do not edit or add to this file if you wish to upgrade Magento to newer
+ * versions in the future. If you wish to customize Magento for your
+ * needs please refer to http://www.magento.com for more information.
+ *
+ * @category    design
+ * @package     default_default
+ * @copyright   Copyright (c) 2006-2017 X.commerce, Inc. and affiliates (http://www.magento.com)
+ * @license     http://opensource.org/licenses/afl-3.0.php  Academic Free License (AFL 3.0)
  */
 ?>
 <tr>
@@ -55,12 +61,13 @@
 <?php endif; ?>
 
 <?php if ($i==0): ?>
-    <script language="javascript">document.getElementById("gallery_thead").style.visibility="hidden";</script>
+    <script type="text/javascript">document.getElementById("gallery_thead").style.visibility="hidden";</script>
 <?php endif; ?>
 
 </tbody></table>
-        
-<script language="javascript">
+
+<script type="text/javascript">
+//<![CDATA[
 id = 0;
 num_of_images = <?php echo $i ?>;
 
@@ -73,12 +80,12 @@ function addNewImage()
     num_of_images++;
     new_file_input = '<input type="file" name="<?php echo $this->getElement()->getName() ?>_%j%[%id%]" size="1">';
 
-	// Sort order input
-	var new_row_input = document.createElement( 'input' );
-	new_row_input.type = 'text';
-	new_row_input.name = '<?php echo $this->getElement()->getParentName() ?>[position]['+id+']';
-	new_row_input.size = '3';
-	new_row_input.value = '0';
+    // Sort order input
+    var new_row_input = document.createElement( 'input' );
+    new_row_input.type = 'text';
+    new_row_input.name = '<?php echo $this->getElement()->getParentName() ?>[position]['+id+']';
+    new_row_input.size = '3';
+    new_row_input.value = '0';
 
     // Delete button
     new_row_button = '<?php echo $this->getDeleteButtonHtml("this") ?>';
@@ -102,10 +109,10 @@ function addNewImage()
         newCell.valign = "middle";
 
         if (j==2) {
-		    newCell.appendChild( new_row_input );
+            newCell.appendChild( new_row_input );
         }
         else if (j==3) {
-		    newCell.innerHTML = new_row_button;
+            newCell.innerHTML = new_row_button;
         }
         else {
             newCell.innerHTML = new_file_input.replace(/%j%/g, j).replace(/%id%/g, id);
@@ -129,7 +136,7 @@ function deleteImage(image)
         image.parentNode.parentNode.parentNode.removeChild( image.parentNode.parentNode );
     }
 }
+//]]>
 </script>
-
-</td>
+    </td>
 </tr>

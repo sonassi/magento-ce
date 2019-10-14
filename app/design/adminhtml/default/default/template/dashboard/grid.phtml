@@ -4,18 +4,24 @@
  *
  * NOTICE OF LICENSE
  *
- * This source file is subject to the Open Software License (OSL 3.0)
- * that is bundled with this package in the file LICENSE.txt.
+ * This source file is subject to the Academic Free License (AFL 3.0)
+ * that is bundled with this package in the file LICENSE_AFL.txt.
  * It is also available through the world-wide-web at this URL:
- * http://opensource.org/licenses/osl-3.0.php
+ * http://opensource.org/licenses/afl-3.0.php
  * If you did not receive a copy of the license and are unable to
  * obtain it through the world-wide-web, please send an email
- * to license@magentocommerce.com so we can send you a copy immediately.
+ * to license@magento.com so we can send you a copy immediately.
  *
- * @category   design_default
- * @package    Mage
- * @copyright  Copyright (c) 2004-2007 Irubin Consulting Inc. DBA Varien (http://www.varien.com)
- * @license    http://opensource.org/licenses/osl-3.0.php  Open Software License (OSL 3.0)
+ * DISCLAIMER
+ *
+ * Do not edit or add to this file if you wish to upgrade Magento to newer
+ * versions in the future. If you wish to customize Magento for your
+ * needs please refer to http://www.magento.com for more information.
+ *
+ * @category    design
+ * @package     default_default
+ * @copyright   Copyright (c) 2006-2017 X.commerce, Inc. and affiliates (http://www.magento.com)
+ * @license     http://opensource.org/licenses/afl-3.0.php  Academic Free License (AFL 3.0)
  */
 ?>
 <?php
@@ -23,11 +29,10 @@
 $numColumns = sizeof($this->getColumns());
 ?>
 <?php if($this->getCollection()): ?>
-
-<div class="grid" style="padding:0px;">
+<div class="grid np">
 <table cellspacing="0" style="border:0;" id="<?php echo $this->getId() ?>_table">
     <?php foreach ($this->getColumns() as $_column): ?>
-    <col <?php echo $_column->getHtmlProperty() ?>>
+    <col <?php echo $_column->getHtmlProperty() ?> />
     <?php endforeach; ?>
     <?php if ($this->getHeadersVisibility() || $this->getFilterVisibility()): ?>
         <thead>
@@ -43,7 +48,7 @@ $numColumns = sizeof($this->getColumns());
     <tbody>
     <?php if (($this->getCollection()->getSize()>0) && (!$this->getIsCollapsed())): ?>
     <?php foreach ($this->getCollection() as $_index=>$_item): ?>
-        <tr id="<?php echo $this->getRowId($_item) ?>">
+        <tr title="<?php echo $this->getRowId($_item) ?>">
         <?php $i=0;foreach ($this->getColumns() as $_column): ?>
             <td class="<?php echo $_column->getCssProperty() ?> <?php echo ++$i==$numColumns?'last':'' ?>"><?php echo (($_html = $_column->getRowField($_item)) != '' ? $_html : '&nbsp;') ?></td>
         <?php endforeach; ?>
@@ -58,7 +63,8 @@ $numColumns = sizeof($this->getColumns());
 </table>
 </div>
 <?php if($this->canDisplayContainer()): ?>
-<script type="text/javascript" language="javascript">
+<script type="text/javascript">
+//<![CDATA[
     <?php echo $this->getJsObjectName() ?> = new varienGrid('<?php echo $this->getId() ?>', '<?php echo $this->getGridUrl() ?>', '<?php echo $this->getVarNamePage() ?>', '<?php echo $this->getVarNameSort() ?>', '<?php echo $this->getVarNameDir() ?>', '<?php echo $this->getVarNameFilter() ?>');
     <?php echo $this->getJsObjectName() ?>.useAjax = '<?php echo $this->getUseAjax() ?>';
     <?php if($this->getRowClickCallback()): ?>
@@ -74,6 +80,7 @@ $numColumns = sizeof($this->getColumns());
     <?php if($this->getMassactionBlock()->isAvailable()): ?>
     <?php echo $this->getMassactionBlock()->getJavaScript() ?>
     <?php endif ?>
+//]]>
 </script>
 <?php endif; ?>
 <?php endif ?>

@@ -12,19 +12,21 @@
  * obtain it through the world-wide-web, please send an email
  * to license@zend.com so we can send you a copy immediately.
  *
+ * @category   Zend
  * @package    Zend_Memory
- * @copyright  Copyright (c) 2005-2008 Zend Technologies USA Inc. (http://www.zend.com)
+ * @copyright  Copyright (c) 2005-2015 Zend Technologies USA Inc. (http://www.zend.com)
  * @license    http://framework.zend.com/license/new-bsd     New BSD License
+ * @version    $Id$
  */
 
 /** Zend_Memory_Container_Movable */
-require_once 'Zend/Memory/Container/Movable.php';
+#require_once 'Zend/Memory/Container/Movable.php';
 
 /** Zend_Memory_Container_Locked */
-require_once 'Zend/Memory/Container/Locked.php';
+#require_once 'Zend/Memory/Container/Locked.php';
 
 /** Zend_Memory_AccessController */
-require_once 'Zend/Memory/AccessController.php';
+#require_once 'Zend/Memory/AccessController.php';
 
 
 /**
@@ -36,7 +38,7 @@ require_once 'Zend/Memory/AccessController.php';
  *
  * @category   Zend
  * @package    Zend_Memory
- * @copyright  Copyright (c) 2005-2008 Zend Technologies USA Inc. (http://www.zend.com)
+ * @copyright  Copyright (c) 2005-2015 Zend Technologies USA Inc. (http://www.zend.com)
  * @license    http://framework.zend.com/license/new-bsd     New BSD License
  */
 class Zend_Memory_Manager
@@ -166,7 +168,7 @@ class Zend_Memory_Manager
         $this->_generateMemManagerId();
 
         $memoryLimitStr = trim(ini_get('memory_limit'));
-        if ($memoryLimitStr != '') {
+        if ($memoryLimitStr != ''  &&  $memoryLimitStr != -1) {
             $this->_memoryLimit = (integer)$memoryLimitStr;
             switch (strtolower($memoryLimitStr[strlen($memoryLimitStr)-1])) {
                 case 'g':
@@ -405,6 +407,7 @@ class Zend_Memory_Manager
             }
         }
 
+        #require_once 'Zend/Memory/Exception.php';
         throw new Zend_Memory_Exception('Memory manager can\'t get enough space.');
     }
 

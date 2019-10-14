@@ -16,17 +16,19 @@
  * @category   Zend
  * @package    Zend_Service
  * @subpackage Flickr
- * @copyright  Copyright (c) 2005-2008 Zend Technologies USA Inc. (http://www.zend.com)
+ * @copyright  Copyright (c) 2005-2015 Zend Technologies USA Inc. (http://www.zend.com)
  * @license    http://framework.zend.com/license/new-bsd     New BSD License
- * @version    $Id: Flickr.php 8733 2008-03-10 15:56:48Z jokke $
+ * @version    $Id$
  */
 
+/** @see Zend_Xml_Security */
+#require_once 'Zend/Xml/Security.php';
 
 /**
  * @category   Zend
  * @package    Zend_Service
  * @subpackage Flickr
- * @copyright  Copyright (c) 2005-2008 Zend Technologies USA Inc. (http://www.zend.com)
+ * @copyright  Copyright (c) 2005-2015 Zend Technologies USA Inc. (http://www.zend.com)
  * @license    http://framework.zend.com/license/new-bsd     New BSD License
  */
 class Zend_Service_Flickr
@@ -34,7 +36,7 @@ class Zend_Service_Flickr
     /**
      * Base URI for the REST client
      */
-    const URI_BASE = 'http://www.flickr.com';
+    const URI_BASE = 'https://www.flickr.com';
 
     /**
      * Your Flickr API key
@@ -62,10 +64,6 @@ class Zend_Service_Flickr
      */
     public function __construct($apiKey)
     {
-        iconv_set_encoding('output_encoding', 'UTF-8');
-        iconv_set_encoding('input_encoding', 'UTF-8');
-        iconv_set_encoding('internal_encoding', 'UTF-8');
-
         $this->apiKey = (string) $apiKey;
     }
 
@@ -112,20 +110,19 @@ class Zend_Service_Flickr
             /**
              * @see Zend_Service_Exception
              */
-            require_once 'Zend/Service/Exception.php';
+            #require_once 'Zend/Service/Exception.php';
             throw new Zend_Service_Exception('An error occurred sending request. Status code: '
                                            . $response->getStatus());
         }
 
         $dom = new DOMDocument();
-        $dom->loadXML($response->getBody());
-
+        $dom = Zend_Xml_Security::scan($response->getBody(), $dom);
         self::_checkErrors($dom);
 
         /**
          * @see Zend_Service_Flickr_ResultSet
          */
-        require_once 'Zend/Service/Flickr/ResultSet.php';
+        #require_once 'Zend/Service/Flickr/ResultSet.php';
         return new Zend_Service_Flickr_ResultSet($dom, $this);
     }
 
@@ -176,23 +173,22 @@ class Zend_Service_Flickr
             /**
              * @see Zend_Service_Exception
              */
-            require_once 'Zend/Service/Exception.php';
+            #require_once 'Zend/Service/Exception.php';
             throw new Zend_Service_Exception('An error occurred sending request. Status code: '
                                            . $response->getStatus());
         }
 
         $dom = new DOMDocument();
-        $dom->loadXML($response->getBody());
-
+        $dom = Zend_Xml_Security::scan($response->getBody(), $dom);
         self::_checkErrors($dom);
 
         /**
          * @see Zend_Service_Flickr_ResultSet
          */
-        require_once 'Zend/Service/Flickr/ResultSet.php';
+        #require_once 'Zend/Service/Flickr/ResultSet.php';
         return new Zend_Service_Flickr_ResultSet($dom, $this);
     }
-    
+
     /**
      * Finds photos in a group's pool.
      *
@@ -212,7 +208,7 @@ class Zend_Service_Flickr
             /**
              * @see Zend_Service_Exception
              */
-            require_once 'Zend/Service/Exception.php';
+            #require_once 'Zend/Service/Exception.php';
             throw new Zend_Service_Exception('You must supply a group id');
         }
 
@@ -231,20 +227,19 @@ class Zend_Service_Flickr
             /**
             * @see Zend_Service_Exception
             */
-            require_once 'Zend/Service/Exception.php';
+            #require_once 'Zend/Service/Exception.php';
             throw new Zend_Service_Exception('An error occurred sending request. Status code: '
                                            . $response->getStatus());
         }
 
         $dom = new DOMDocument();
-        $dom->loadXML($response->getBody());
-
+        $dom = Zend_Xml_Security::scan($response->getBody(), $dom);
         self::_checkErrors($dom);
 
         /**
         * @see Zend_Service_Flickr_ResultSet
         */
-        require_once 'Zend/Service/Flickr/ResultSet.php';
+        #require_once 'Zend/Service/Flickr/ResultSet.php';
         return new Zend_Service_Flickr_ResultSet($dom, $this);
     }
 
@@ -269,7 +264,7 @@ class Zend_Service_Flickr
             /**
              * @see Zend_Service_Exception
              */
-            require_once 'Zend/Service/Exception.php';
+            #require_once 'Zend/Service/Exception.php';
             throw new Zend_Service_Exception('You must supply a username');
         }
 
@@ -281,13 +276,13 @@ class Zend_Service_Flickr
             /**
              * @see Zend_Service_Exception
              */
-            require_once 'Zend/Service/Exception.php';
+            #require_once 'Zend/Service/Exception.php';
             throw new Zend_Service_Exception('An error occurred sending request. Status code: '
                                            . $response->getStatus());
         }
 
         $dom = new DOMDocument();
-        $dom->loadXML($response->getBody());
+        $dom = Zend_Xml_Security::scan($response->getBody(), $dom);
         self::_checkErrors($dom);
         $xpath = new DOMXPath($dom);
         return (string) $xpath->query('//user')->item(0)->getAttribute('id');
@@ -311,7 +306,7 @@ class Zend_Service_Flickr
             /**
              * @see Zend_Service_Exception
              */
-            require_once 'Zend/Service/Exception.php';
+            #require_once 'Zend/Service/Exception.php';
             throw new Zend_Service_Exception('You must supply an e-mail address');
         }
 
@@ -325,13 +320,13 @@ class Zend_Service_Flickr
             /**
              * @see Zend_Service_Exception
              */
-            require_once 'Zend/Service/Exception.php';
+            #require_once 'Zend/Service/Exception.php';
             throw new Zend_Service_Exception('An error occurred sending request. Status code: '
                                            . $response->getStatus());
         }
 
         $dom = new DOMDocument();
-        $dom->loadXML($response->getBody());
+        $dom = Zend_Xml_Security::scan($response->getBody(), $dom);
         self::_checkErrors($dom);
         $xpath = new DOMXPath($dom);
         return (string) $xpath->query('//user')->item(0)->getAttribute('id');
@@ -353,7 +348,7 @@ class Zend_Service_Flickr
             /**
              * @see Zend_Service_Exception
              */
-            require_once 'Zend/Service/Exception.php';
+            #require_once 'Zend/Service/Exception.php';
             throw new Zend_Service_Exception('You must supply a photo ID');
         }
 
@@ -364,14 +359,14 @@ class Zend_Service_Flickr
         $response = $restClient->restGet('/services/rest/', $options);
 
         $dom = new DOMDocument();
-        $dom->loadXML($response->getBody());
+        $dom = Zend_Xml_Security::scan($response->getBody(), $dom);
         $xpath = new DOMXPath($dom);
         self::_checkErrors($dom);
         $retval = array();
         /**
          * @see Zend_Service_Flickr_Image
          */
-        require_once 'Zend/Service/Flickr/Image.php';
+        #require_once 'Zend/Service/Flickr/Image.php';
         foreach ($xpath->query('//size') as $size) {
             $label = (string) $size->getAttribute('label');
             $retval[$label] = new Zend_Service_Flickr_Image($size);
@@ -392,7 +387,7 @@ class Zend_Service_Flickr
             /**
              * @see Zend_Rest_Client
              */
-            require_once 'Zend/Rest/Client.php';
+            #require_once 'Zend/Rest/Client.php';
             $this->_restClient = new Zend_Rest_Client(self::URI_BASE);
         }
 
@@ -410,33 +405,33 @@ class Zend_Service_Flickr
     protected function _validateUserSearch(array $options)
     {
         $validOptions = array('api_key', 'method', 'user_id', 'per_page', 'page', 'extras', 'min_upload_date',
-                              'min_taken_date', 'max_upload_date', 'max_taken_date');
+                              'min_taken_date', 'max_upload_date', 'max_taken_date', 'safe_search');
 
         $this->_compareOptions($options, $validOptions);
 
         /**
          * @see Zend_Validate_Between
          */
-        require_once 'Zend/Validate/Between.php';
+        #require_once 'Zend/Validate/Between.php';
         $between = new Zend_Validate_Between(1, 500, true);
         if (!$between->isValid($options['per_page'])) {
             /**
              * @see Zend_Service_Exception
              */
-            require_once 'Zend/Service/Exception.php';
+            #require_once 'Zend/Service/Exception.php';
             throw new Zend_Service_Exception($options['per_page'] . ' is not valid for the "per_page" option');
         }
 
         /**
          * @see Zend_Validate_Int
          */
-        require_once 'Zend/Validate/Int.php';
+        #require_once 'Zend/Validate/Int.php';
         $int = new Zend_Validate_Int();
         if (!$int->isValid($options['page'])) {
             /**
              * @see Zend_Service_Exception
              */
-            require_once 'Zend/Service/Exception.php';
+            #require_once 'Zend/Service/Exception.php';
             throw new Zend_Service_Exception($options['page'] . ' is not valid for the "page" option');
         }
 
@@ -465,7 +460,9 @@ class Zend_Service_Flickr
     {
         $validOptions = array('method', 'api_key', 'user_id', 'tags', 'tag_mode', 'text', 'min_upload_date',
                               'max_upload_date', 'min_taken_date', 'max_taken_date', 'license', 'sort',
-                              'privacy_filter', 'bbox', 'accuracy', 'machine_tags', 'machine_tag_mode', 'group_id',
+                              'privacy_filter', 'bbox', 'accuracy', 'safe_search', 'content_type', 'machine_tags',
+                              'machine_tag_mode', 'group_id', 'contacts', 'woe_id', 'place_id', 'media', 'has_geo',
+                              'geo_context', 'lat', 'lon', 'radius', 'radius_units', 'is_commons', 'is_gallery',
                               'extras', 'per_page', 'page');
 
         $this->_compareOptions($options, $validOptions);
@@ -473,26 +470,26 @@ class Zend_Service_Flickr
         /**
          * @see Zend_Validate_Between
          */
-        require_once 'Zend/Validate/Between.php';
+        #require_once 'Zend/Validate/Between.php';
         $between = new Zend_Validate_Between(1, 500, true);
         if (!$between->isValid($options['per_page'])) {
             /**
              * @see Zend_Service_Exception
              */
-            require_once 'Zend/Service/Exception.php';
+            #require_once 'Zend/Service/Exception.php';
             throw new Zend_Service_Exception($options['per_page'] . ' is not valid for the "per_page" option');
         }
 
         /**
          * @see Zend_Validate_Int
          */
-        require_once 'Zend/Validate/Int.php';
+        #require_once 'Zend/Validate/Int.php';
         $int = new Zend_Validate_Int();
         if (!$int->isValid($options['page'])) {
             /**
              * @see Zend_Service_Exception
              */
-            require_once 'Zend/Service/Exception.php';
+            #require_once 'Zend/Service/Exception.php';
             throw new Zend_Service_Exception($options['page'] . ' is not valid for the "page" option');
         }
 
@@ -509,8 +506,8 @@ class Zend_Service_Flickr
         }
 
     }
-    
-    
+
+
     /**
     * Validate Group Search Options
     *
@@ -527,27 +524,27 @@ class Zend_Service_Flickr
         /**
         * @see Zend_Validate_Between
         */
-        require_once 'Zend/Validate/Between.php';
+        #require_once 'Zend/Validate/Between.php';
         $between = new Zend_Validate_Between(1, 500, true);
         if (!$between->isValid($options['per_page'])) {
             /**
             * @see Zend_Service_Exception
             */
-            require_once 'Zend/Service/Exception.php';
+            #require_once 'Zend/Service/Exception.php';
             throw new Zend_Service_Exception($options['per_page'] . ' is not valid for the "per_page" option');
         }
 
         /**
         * @see Zend_Validate_Int
         */
-        require_once 'Zend/Validate/Int.php';
+        #require_once 'Zend/Validate/Int.php';
         $int = new Zend_Validate_Int();
-        
+
         if (!$int->isValid($options['page'])) {
             /**
             * @see Zend_Service_Exception
             */
-            require_once 'Zend/Service/Exception.php';
+            #require_once 'Zend/Service/Exception.php';
             throw new Zend_Service_Exception($options['page'] . ' is not valid for the "page" option');
         }
 
@@ -580,7 +577,7 @@ class Zend_Service_Flickr
             /**
              * @see Zend_Service_Exception
              */
-            require_once 'Zend/Service/Exception.php';
+            #require_once 'Zend/Service/Exception.php';
             throw new Zend_Service_Exception('Search failed due to error: ' . $err->getAttribute('msg')
                                            . ' (error #' . $err->getAttribute('code') . ')');
         }
@@ -619,7 +616,7 @@ class Zend_Service_Flickr
             /**
              * @see Zend_Service_Exception
              */
-            require_once 'Zend/Service/Exception.php';
+            #require_once 'Zend/Service/Exception.php';
             throw new Zend_Service_Exception('The following parameters are invalid: ' . implode(',', $difference));
         }
     }

@@ -1,4 +1,37 @@
 <?php
+/**
+ * Magento
+ *
+ * NOTICE OF LICENSE
+ *
+ * This source file is subject to the Open Software License (OSL 3.0)
+ * that is bundled with this package in the file LICENSE.txt.
+ * It is also available through the world-wide-web at this URL:
+ * http://opensource.org/licenses/osl-3.0.php
+ * If you did not receive a copy of the license and are unable to
+ * obtain it through the world-wide-web, please send an email
+ * to license@magento.com so we can send you a copy immediately.
+ *
+ * DISCLAIMER
+ *
+ * Do not edit or add to this file if you wish to upgrade Magento to newer
+ * versions in the future. If you wish to customize Magento for your
+ * needs please refer to http://www.magento.com for more information.
+ *
+ * @category    Varien
+ * @package     Varien_Pear
+ * @copyright  Copyright (c) 2006-2017 X.commerce, Inc. and affiliates (http://www.magento.com)
+ * @license    http://opensource.org/licenses/osl-3.0.php  Open Software License (OSL 3.0)
+ */
+
+/**
+ * Pear package routines
+ * *
+ * @category   Varien
+ * @package    Varien_Pear
+ * @author      Magento Core Team <core@magentocommerce.com>
+ */
+
 // Looks like PEAR is being developed without E_NOTICE (1.7.0RC1)
 error_reporting(E_ALL & ~E_NOTICE);
 
@@ -9,7 +42,11 @@ if (!defined('DS')) {
 
 // add PEAR lib in include_path if needed
 $_includePath = get_include_path();
-$_pearPhpDir = dirname(dirname(dirname(__FILE__))) . DS . 'downloader' . DS . 'pearlib' . DS . 'php';
+$_pearDir = dirname(dirname(dirname(__FILE__))) . DS . 'downloader' . DS . 'pearlib';
+if (!getenv('PHP_PEAR_INSTALL_DIR')) {
+    putenv('PHP_PEAR_INSTALL_DIR=' . $_pearDir);
+}
+$_pearPhpDir = $_pearDir . DS . 'php';
 if (strpos($_includePath, $_pearPhpDir) === false) {
     if (substr($_includePath, 0, 2) === '.' . PATH_SEPARATOR) {
         $_includePath = '.' . PATH_SEPARATOR . $_pearPhpDir . PATH_SEPARATOR . substr($_includePath, 2);
@@ -124,7 +161,7 @@ class Varien_Pear
     public function getRegistry($redirectOnChange=true)
     {
         if (!$this->_registry) {
-            $this->_registry = new PEAR_Registry($this->getPearDir().DS.'php');
+            $this->_registry = new Varien_Pear_Registry($this->getPearDir().DS.'php');
 
             $changed = false;
             foreach ($this->getMagentoChannels() as $channel) {
@@ -135,7 +172,7 @@ class Varien_Pear
             }
 
             if ($changed) {
-                $this->_registry = new PEAR_Registry($this->getPearDir().DS.'php');
+                $this->_registry = new Varien_Pear_Registry($this->getPearDir().DS.'php');
             }
 //            if ($changed && self::$reloadOnRegistryUpdate && empty($_GET['pear_registry'])) {
 //                echo "TEST:";

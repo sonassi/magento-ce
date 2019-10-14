@@ -10,11 +10,17 @@
  * http://opensource.org/licenses/osl-3.0.php
  * If you did not receive a copy of the license and are unable to
  * obtain it through the world-wide-web, please send an email
- * to license@magentocommerce.com so we can send you a copy immediately.
+ * to license@magento.com so we can send you a copy immediately.
  *
- * @category   Mage
- * @package    Mage_Install
- * @copyright  Copyright (c) 2004-2007 Irubin Consulting Inc. DBA Varien (http://www.varien.com)
+ * DISCLAIMER
+ *
+ * Do not edit or add to this file if you wish to upgrade Magento to newer
+ * versions in the future. If you wish to customize Magento for your
+ * needs please refer to http://www.magento.com for more information.
+ *
+ * @category    Mage
+ * @package     Mage_Install
+ * @copyright  Copyright (c) 2006-2017 X.commerce, Inc. and affiliates (http://www.magento.com)
  * @license    http://opensource.org/licenses/osl-3.0.php  Open Software License (OSL 3.0)
  */
 
@@ -23,6 +29,7 @@
  *
  * @category   Mage
  * @package    Mage_Install
+ * @author      Magento Core Team <core@magentocommerce.com>
  */
 class Mage_Install_Block_Locale extends Mage_Install_Block_Abstract
 {
@@ -55,7 +62,8 @@ class Mage_Install_Block_Locale extends Mage_Install_Block_Abstract
      */
     public function getPostUrl()
     {
-        return $this->getUrl('*/*/localePost');
+        return $this->getCurrentStep()->getNextUrl();
+        //return $this->getUrl('*/*/localePost');
     }
 
     /**
@@ -81,7 +89,7 @@ class Mage_Install_Block_Locale extends Mage_Install_Block_Abstract
             ->setTitle(Mage::helper('install')->__('Locale'))
             ->setClass('required-entry')
             ->setValue($this->getLocale()->__toString())
-            ->setOptions(Mage::app()->getLocale()->getOptionLocales())
+            ->setOptions(Mage::app()->getLocale()->getTranslatedOptionLocales())
             ->getHtml();
         return $html;
     }
@@ -111,7 +119,9 @@ class Mage_Install_Block_Locale extends Mage_Install_Block_Abstract
      */
     public function getTimezone()
     {
-        $timezone = Mage::app()->getLocale()->getTimezone();
+        $timezone = Mage::getSingleton('install/session')->getTimezone()
+            ? Mage::getSingleton('install/session')->getTimezone()
+            : Mage::app()->getLocale()->getTimezone();
         if ($timezone == Mage_Core_Model_Locale::DEFAULT_TIMEZONE) {
             $timezone = 'America/Los_Angeles';
         }
@@ -143,7 +153,9 @@ class Mage_Install_Block_Locale extends Mage_Install_Block_Abstract
      */
     public function getCurrency()
     {
-        return Mage::app()->getLocale()->getCurrency();
+        return Mage::getSingleton('install/session')->getCurrency()
+            ? Mage::getSingleton('install/session')->getCurrency()
+            : Mage::app()->getLocale()->getCurrency();
     }
 
     public function getFormData()

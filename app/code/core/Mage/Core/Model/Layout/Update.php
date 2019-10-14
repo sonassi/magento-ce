@@ -10,17 +10,28 @@
  * http://opensource.org/licenses/osl-3.0.php
  * If you did not receive a copy of the license and are unable to
  * obtain it through the world-wide-web, please send an email
- * to license@magentocommerce.com so we can send you a copy immediately.
+ * to license@magento.com so we can send you a copy immediately.
  *
- * @category   Mage
- * @package    Mage_Core
- * @copyright  Copyright (c) 2004-2007 Irubin Consulting Inc. DBA Varien (http://www.varien.com)
+ * DISCLAIMER
+ *
+ * Do not edit or add to this file if you wish to upgrade Magento to newer
+ * versions in the future. If you wish to customize Magento for your
+ * needs please refer to http://www.magento.com for more information.
+ *
+ * @category    Mage
+ * @package     Mage_Core
+ * @copyright  Copyright (c) 2006-2017 X.commerce, Inc. and affiliates (http://www.magento.com)
  * @license    http://opensource.org/licenses/osl-3.0.php  Open Software License (OSL 3.0)
  */
 
 
 class Mage_Core_Model_Layout_Update
 {
+    /**
+     * Additional tag for cleaning layout cache convenience
+     */
+    const LAYOUT_GENERAL_CACHE_TAG = 'LAYOUT_GENERAL_CACHE_TAG';
+
     /**
      * Layout Update Simplexml Element Class Name
      *
@@ -144,7 +155,7 @@ class Mage_Core_Model_Layout_Update
     public function getCacheId()
     {
         if (!$this->_cacheId) {
-            $this->_cacheId = Mage::app()->getStore()->getId().'_'.md5(join('__', $this->getHandles()));
+            $this->_cacheId = 'LAYOUT_'.Mage::app()->getStore()->getId().md5(join('__', $this->getHandles()));
         }
         return $this->_cacheId;
     }
@@ -182,7 +193,9 @@ class Mage_Core_Model_Layout_Update
             return false;
         }
         $str = $this->asString();
-        return Mage::app()->saveCache($str, $this->getCacheId(), $this->getHandles(), null);
+        $tags = $this->getHandles();
+        $tags[] = self::LAYOUT_GENERAL_CACHE_TAG;
+        return Mage::app()->saveCache($str, $this->getCacheId(), $tags, null);
     }
 
     /**
@@ -230,65 +243,98 @@ class Mage_Core_Model_Layout_Update
      */
     public function merge($handle)
     {
-        if (!$this->fetchPackageLayoutUpdates($handle)
-            && !$this->fetchDbLayoutUpdates($handle)) {
-            #$this->removeHandle($handle);
+        $packageUpdatesStatus = $this->fetchPackageLayoutUpdates($handle);
+        if (Mage::app()->isInstalled()) {
+            $this->fetchDbLayoutUpdates($handle);
         }
+//        if (!$this->fetchPackageLayoutUpdates($handle)
+//            && !$this->fetchDbLayoutUpdates($handle)) {
+//            #$this->removeHandle($handle);
+//        }
         return $this;
     }
 
     public function fetchFileLayoutUpdates()
     {
-        $elementClass = $this->getElementClass();
-
-        $design = Mage::getSingleton('core/design_package');
-        $area = $design->getArea();
         $storeId = Mage::app()->getStore()->getId();
-        $cacheKey = 'LAYOUT_'.$area.'_STORE'.$storeId.'_'.$design->getPackageName().'_'.$design->getTheme('layout');
-#echo "TEST:".$cacheKey;
-        $cacheTags = array('layout');
+        $elementClass = $this->getElementClass();
+        $design = Mage::getSingleton('core/design_package');
+        $cacheKey = 'LAYOUT_' . $design->getArea() . '_STORE' . $storeId . '_' . $design->getPackageName() . '_'
+            . $design->getTheme('layout');
 
+        $cacheTags = array(self::LAYOUT_GENERAL_CACHE_TAG);
         if (Mage::app()->useCache('layout') && ($layoutStr = Mage::app()->loadCache($cacheKey))) {
             $this->_packageLayout = simplexml_load_string($layoutStr, $elementClass);
         }
-
         if (empty($layoutStr)) {
-            $updatesRoot = Mage::app()->getConfig()->getNode($area.'/layout/updates');
-            $updateFiles = array();
-            foreach ($updatesRoot->children() as $updateNode) {
-                if ($updateNode->file) {
-                    $updateFiles[] = (string)$updateNode->file;
-                }
-            }
-
-            // custom local layout updates file - load always last
-            $updateFiles[] = 'local.xml';
-
-            $layoutStr = '';
-            #$layoutXml = new $elementClass('<layouts/>');
-            foreach ($updateFiles as $file) {
-                $filename = $design->getLayoutFilename($file);
-                if (!is_readable($filename)) {
-                    continue;
-                }
-                $fileStr = file_get_contents($filename);
-                $fileStr = str_replace($this->_subst['from'], $this->_subst['to'], $fileStr);
-                $fileXml = simplexml_load_string($fileStr, $elementClass);
-                if (!$fileXml instanceof SimpleXMLElement) {
-                    continue;
-                }
-                $layoutStr .= $fileXml->innerXml();
-
-                #$layoutXml->appendChild($fileXml);
-            }
-            $layoutXml = simplexml_load_string('<layouts>'.$layoutStr.'</layouts>', $elementClass);
-
-            $this->_packageLayout = $layoutXml;
-
+            $this->_packageLayout = $this->getFileLayoutUpdatesXml(
+                $design->getArea(),
+                $design->getPackageName(),
+                $design->getTheme('layout'),
+                $storeId
+            );
             if (Mage::app()->useCache('layout')) {
                 Mage::app()->saveCache($this->_packageLayout->asXml(), $cacheKey, $cacheTags, null);
             }
         }
+
+
+
+//        $elementClass = $this->getElementClass();
+//
+//        $design = Mage::getSingleton('core/design_package');
+//        $area = $design->getArea();
+//        $storeId = Mage::app()->getStore()->getId();
+//        $cacheKey = 'LAYOUT_'.$area.'_STORE'.$storeId.'_'.$design->getPackageName().'_'.$design->getTheme('layout');
+//#echo "TEST:".$cacheKey;
+//        $cacheTags = array('layout');
+//
+//        if (Mage::app()->useCache('layout') && ($layoutStr = Mage::app()->loadCache($cacheKey))) {
+//            $this->_packageLayout = simplexml_load_string($layoutStr, $elementClass);
+//        }
+//
+//        if (empty($layoutStr)) {
+//            $updatesRoot = Mage::app()->getConfig()->getNode($area.'/layout/updates');
+//            Mage::dispatchEvent('core_layout_update_updates_get_after', array('updates' => $updatesRoot));
+//            $updateFiles = array();
+//            foreach ($updatesRoot->children() as $updateNode) {
+//                if ($updateNode->file) {
+//                    $module = $updateNode->getAttribute('module');
+//                    if ($module && Mage::getStoreConfigFlag('advanced/modules_disable_output/' . $module)) {
+//                        continue;
+//                    }
+//                    $updateFiles[] = (string)$updateNode->file;
+//                }
+//            }
+//
+//            // custom local layout updates file - load always last
+//            $updateFiles[] = 'local.xml';
+//
+//            $layoutStr = '';
+//            #$layoutXml = new $elementClass('<layouts/>');
+//            foreach ($updateFiles as $file) {
+//                $filename = $design->getLayoutFilename($file);
+//                if (!is_readable($filename)) {
+//                    continue;
+//                }
+//                $fileStr = file_get_contents($filename);
+//                $fileStr = str_replace($this->_subst['from'], $this->_subst['to'], $fileStr);
+//                $fileXml = simplexml_load_string($fileStr, $elementClass);
+//                if (!$fileXml instanceof SimpleXMLElement) {
+//                    continue;
+//                }
+//                $layoutStr .= $fileXml->innerXml();
+//
+//                #$layoutXml->appendChild($fileXml);
+//            }
+//            $layoutXml = simplexml_load_string('<layouts>'.$layoutStr.'</layouts>', $elementClass);
+//
+//            $this->_packageLayout = $layoutXml;
+//
+//            if (Mage::app()->useCache('layout')) {
+//                Mage::app()->saveCache($this->_packageLayout->asXml(), $cacheKey, $cacheTags, null);
+//            }
+//        }
 
         return $this;
     }
@@ -297,17 +343,14 @@ class Mage_Core_Model_Layout_Update
     {
         $_profilerKey = 'layout/package_update: '.$handle;
         Varien_Profiler::start($_profilerKey);
-
         if (empty($this->_packageLayout)) {
             $this->fetchFileLayoutUpdates();
         }
         foreach ($this->_packageLayout->$handle as $updateXml) {
 #echo '<textarea style="width:600px; height:400px;">'.$handle.':'.print_r($updateXml,1).'</textarea>';
             $this->fetchRecursiveUpdates($updateXml);
-
             $this->addUpdate($updateXml->innerXml());
         }
-
         Varien_Profiler::stop($_profilerKey);
 
         return true;
@@ -317,25 +360,29 @@ class Mage_Core_Model_Layout_Update
     {
         $_profilerKey = 'layout/db_update: '.$handle;
         Varien_Profiler::start($_profilerKey);
-
-        try {
-            $updateStr = Mage::getResourceModel('core/layout')->fetchUpdatesByHandle($handle);
-            if (!$updateStr) {
-                return false;
-            }
-            $updateStr = str_replace($this->_subst['from'], $this->_subst['to'], $updateStr);
-            $updateXml = simplexml_load_string($updateStr, $this->getElementClass());
-            $this->fetchRecursiveUpdates($updateXml);
-
-            $this->addUpdate($update);
-        } catch (PDOException $e) {
-            throw $e;
-        } catch (Exception $e) {
-
+        $updateStr = $this->_getUpdateString($handle);
+        if (!$updateStr) {
+            return false;
         }
+        $updateStr = '<update_xml>' . $updateStr . '</update_xml>';
+        $updateStr = str_replace($this->_subst['from'], $this->_subst['to'], $updateStr);
+        $updateXml = simplexml_load_string($updateStr, $this->getElementClass());
+        $this->fetchRecursiveUpdates($updateXml);
+        $this->addUpdate($updateXml->innerXml());
 
         Varien_Profiler::stop($_profilerKey);
         return true;
+    }
+
+    /**
+     * Get update string
+     *
+     * @param string $handle
+     * @return mixed
+     */
+    protected function _getUpdateString($handle)
+    {
+        return Mage::getResourceModel('core/layout')->fetchUpdatesByHandle($handle);
     }
 
     public function fetchRecursiveUpdates($updateXml)
@@ -343,8 +390,70 @@ class Mage_Core_Model_Layout_Update
         foreach ($updateXml->children() as $child) {
             if (strtolower($child->getName())=='update' && isset($child['handle'])) {
                 $this->merge((string)$child['handle']);
+                // Adding merged layout handle to the list of applied hanles
+                $this->addHandle((string)$child['handle']);
             }
         }
         return $this;
+    }
+
+    /**
+     * Collect and merge layout updates from file
+     *
+     * @param string $area
+     * @param string $package
+     * @param string $theme
+     * @param integer|null $storeId
+     * @return Mage_Core_Model_Layout_Element
+     */
+    public function getFileLayoutUpdatesXml($area, $package, $theme, $storeId = null)
+    {
+        if (null === $storeId) {
+            $storeId = Mage::app()->getStore()->getId();
+        }
+        /* @var $design Mage_Core_Model_Design_Package */
+        $design = Mage::getSingleton('core/design_package');
+        $layoutXml = null;
+        $elementClass = $this->getElementClass();
+        $updatesRoot = Mage::app()->getConfig()->getNode($area.'/layout/updates');
+        Mage::dispatchEvent('core_layout_update_updates_get_after', array('updates' => $updatesRoot));
+        $updates = $updatesRoot->asArray();
+        $themeUpdates = Mage::getSingleton('core/design_config')->getNode("$area/$package/$theme/layout/updates");
+        if ($themeUpdates && is_array($themeUpdates->asArray())) {
+            //array_values() to ensure that theme-specific layouts don't override, but add to module layouts
+            $updates = array_merge($updates, array_values($themeUpdates->asArray()));
+        }
+        $updateFiles = array();
+        foreach ($updates as $updateNode) {
+            if (!empty($updateNode['file'])) {
+                $module = isset($updateNode['@']['module']) ? $updateNode['@']['module'] : false;
+                if ($module && Mage::getStoreConfigFlag('advanced/modules_disable_output/' . $module, $storeId)) {
+                    continue;
+                }
+                $updateFiles[] = $updateNode['file'];
+            }
+        }
+        // custom local layout updates file - load always last
+        $updateFiles[] = 'local.xml';
+        $layoutStr = '';
+        foreach ($updateFiles as $file) {
+            $filename = $design->getLayoutFilename($file, array(
+                '_area'    => $area,
+                '_package' => $package,
+                '_theme'   => $theme
+            ));
+            if (!is_readable($filename)) {
+                continue;
+            }
+            $fileStr = file_get_contents($filename);
+            $fileStr = str_replace($this->_subst['from'], $this->_subst['to'], $fileStr);
+            $fileXml = simplexml_load_string($fileStr, $elementClass);
+            if (!$fileXml instanceof SimpleXMLElement) {
+                continue;
+            }
+            $layoutStr .= $fileXml->innerXml();
+        }
+        $layoutXml = simplexml_load_string('<layouts>'.$layoutStr.'</layouts>', $elementClass);
+        return $layoutXml;
     }
 }

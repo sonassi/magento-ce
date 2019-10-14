@@ -5,7 +5,15 @@
 
 #    Action php5-cgi /cgi-bin/php5-cgi
 #    AddHandler php5-cgi .php
-#    php_flag cgi.fix_pathinfo on
+
+############################################
+## GoDaddy specific options
+
+#   Options -MultiViews
+
+## you might also need to add this line to php.ini
+##     cgi.fix_pathinfo = 1
+## if it still doesn't work, rename php.ini to php5.ini
 
 ############################################
 ## this line is specific for 1and1 hosting
@@ -23,13 +31,20 @@
 ############################################
 ## adjust memory limit
 
-    php_value memory_limit 64M
+#    php_value memory_limit 64M
+    php_value memory_limit 256M
     php_value max_execution_time 18000
 
 ############################################
 ## disable magic quotes for php request vars
 
     php_flag magic_quotes_gpc off
+
+############################################
+## disable automatic session start
+## before autoload was initialized
+
+    php_flag session.auto_start off
 
 ############################################
 ## enable resulting html compression
@@ -40,6 +55,11 @@
 # disable user agent verification to not break multiple image upload
 
     php_flag suhosin.session.cryptua off
+
+###########################################
+# turn off compatibility with PHP4 when dealing with objects
+
+    php_flag zend.ze1_compatibility_mode Off
 
 </IfModule>
 
@@ -57,8 +77,10 @@
 ## enable apache served files compression
 ## http://developer.yahoo.com/performance/rules.html#gzip
 
-    # Insert filter
-    #SetOutputFilter DEFLATE
+    # Insert filter on all content
+    ###SetOutputFilter DEFLATE
+    # Insert filter on selected content types only
+    #AddOutputFilterByType DEFLATE text/html text/plain text/xml text/css text/javascript
 
     # Netscape 4.x has some problems...
     #BrowserMatch ^Mozilla/4 gzip-only-text/html
@@ -68,6 +90,7 @@
 
     # MSIE masquerades as Netscape, but it is fine
     #BrowserMatch \bMSIE !no-gzip !gzip-only-text/html
+
     # Don't compress images
     #SetEnvIfNoCase Request_URI \.(?:gif|jpe?g|png)$ no-gzip dont-vary
 
@@ -100,10 +123,48 @@
     #RewriteBase /magento/
 
 ############################################
+## uncomment next line to enable light API calls processing
+
+#    RewriteRule ^api/([a-z][0-9a-z_]+)/?$ api.php?type=$1 [QSA,L]
+
+############################################
+## rewrite API2 calls to api.php (by now it is REST only)
+
+    RewriteRule ^api/rest api.php?type=rest [QSA,L]
+
+############################################
 ## workaround for HTTP authorization
 ## in CGI environment
 
     RewriteRule .* - [E=HTTP_AUTHORIZATION:%{HTTP:Authorization}]
+
+############################################
+## TRACE and TRACK HTTP methods disabled to prevent XSS attacks
+
+    RewriteCond %{REQUEST_METHOD} ^TRAC[EK]
+    RewriteRule .* - [L,R=405]
+
+<IfModule mod_setenvif.c>
+    <IfModule mod_headers.c>
+
+        ############################################
+        # X-Content-Type-Options: nosniff disable content-type sniffing on some browsers.
+        Header set X-Content-Type-Options: nosniff
+
+        ############################################
+        # This header forces to enables the Cross-site scripting (XSS) filter in browsers (if disabled)
+        BrowserMatch \bMSIE\s8 ie8
+        Header set X-XSS-Protection: "1; mode=block" env=!ie8
+
+    </IfModule>
+</IfModule>
+
+############################################
+## redirect for mobile user agents
+
+    #RewriteCond %{REQUEST_URI} !^/mobiledirectoryhere/.*$
+    #RewriteCond %{HTTP_USER_AGENT} "android|blackberry|ipad|iphone|ipod|iemobile|opera mobile|palmos|webos|googlebot-mobile" [NC]
+    #RewriteRule ^(.*)$ /mobiledirectoryhere/ [L,R=302]
 
 ############################################
 ## always send 404 on missing files in these folders
@@ -148,9 +209,41 @@
     Order allow,deny
     Allow from all
 
+###########################################
+## Deny access to release notes to prevent disclosure of the installed Magento version
+
+    <Files RELEASE_NOTES.txt>
+        order allow,deny
+        deny from all
+    </Files>
+
 ############################################
 ## If running in cluster environment, uncomment this
 ## http://developer.yahoo.com/performance/rules.html#etags
 
     #FileETag none
 
+###########################################
+## Deny access to cron.php
+    <Files cron.php>
+
+############################################
+## uncomment next lines to enable cron access with base HTTP authorization
+## http://httpd.apache.org/docs/2.2/howto/auth.html
+##
+## Warning: .htpasswd file should be placed somewhere not accessible from the web.
+## This is so that folks cannot download the password file.
+## For example, if your documents are served out of /usr/local/apache/htdocs
+## you might want to put the password file(s) in /usr/local/apache/.
+
+        #AuthName "Cron auth"
+        #AuthUserFile ../.htpasswd
+        #AuthType basic
+        #Require valid-user
+
+############################################
+
+        Order allow,deny
+        Deny from all
+
+    </Files>

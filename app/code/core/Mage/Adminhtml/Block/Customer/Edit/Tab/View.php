@@ -10,11 +10,17 @@
  * http://opensource.org/licenses/osl-3.0.php
  * If you did not receive a copy of the license and are unable to
  * obtain it through the world-wide-web, please send an email
- * to license@magentocommerce.com so we can send you a copy immediately.
+ * to license@magento.com so we can send you a copy immediately.
  *
- * @category   Mage
- * @package    Mage_Adminhtml
- * @copyright  Copyright (c) 2004-2007 Irubin Consulting Inc. DBA Varien (http://www.varien.com)
+ * DISCLAIMER
+ *
+ * Do not edit or add to this file if you wish to upgrade Magento to newer
+ * versions in the future. If you wish to customize Magento for your
+ * needs please refer to http://www.magento.com for more information.
+ *
+ * @category    Mage
+ * @package     Mage_Adminhtml
+ * @copyright  Copyright (c) 2006-2017 X.commerce, Inc. and affiliates (http://www.magento.com)
  * @license    http://opensource.org/licenses/osl-3.0.php  Open Software License (OSL 3.0)
  */
 
@@ -23,48 +29,16 @@
  *
  * @category   Mage
  * @package    Mage_Adminhtml
+ * @author      Magento Core Team <core@magentocommerce.com>
  */
-class Mage_Adminhtml_Block_Customer_Edit_Tab_View extends Mage_Adminhtml_Block_Template
+class Mage_Adminhtml_Block_Customer_Edit_Tab_View
+ extends Mage_Adminhtml_Block_Template
+ implements Mage_Adminhtml_Block_Widget_Tab_Interface
 {
 
     protected $_customer;
 
     protected $_customerLog;
-
-    public function __construct()
-    {
-        parent::__construct();
-        $this->setTemplate('customer/tab/view.phtml');
-    }
-
-    protected function _prepareLayout()
-    {
-        $this->setChild('sales', $this->getLayout()->createBlock('adminhtml/customer_edit_tab_view_sales'));
-
-        $accordion = $this->getLayout()->createBlock('adminhtml/widget_accordion')
-            ->setId('customerViewAccordion');
-            //->setShowOnlyOne(0)
-
-        /* @var $accordion Mage_Adminhtml_Block_Widget_Accordion */
-        $accordion->addItem('lastOrders', array(
-            'title'     => Mage::helper('customer')->__('Recent Orders'),
-            'content'   => $this->getLayout()->createBlock('adminhtml/customer_edit_tab_view_orders'),
-            'open'      => true
-        ));
-
-        $accordion->addItem('shopingCart', array(
-            'title' => Mage::helper('customer')->__('Shopping Cart'),
-            'content' => $this->getLayout()->createBlock('adminhtml/customer_edit_tab_view_cart'),
-        ));
-
-        $accordion->addItem('wishlist', array(
-            'title' => Mage::helper('customer')->__('Wishlist'),
-            'content' => $this->getLayout()->createBlock('adminhtml/customer_edit_tab_view_wishlist'),
-        ));
-
-        $this->setChild('accordion', $accordion);
-        return parent::_prepareLayout();
-    }
 
     public function getCustomer()
     {
@@ -83,42 +57,110 @@ class Mage_Adminhtml_Block_Customer_Edit_Tab_View extends Mage_Adminhtml_Block_T
         }
     }
 
+    /**
+     * Load Customer Log model
+     *
+     * @return Mage_Log_Model_Customer
+     */
     public function getCustomerLog()
     {
         if (!$this->_customerLog) {
             $this->_customerLog = Mage::getModel('log/customer')
-                ->load($this->getCustomer()->getId());
-
+                ->loadByCustomer($this->getCustomer()->getId());
         }
         return $this->_customerLog;
     }
 
+    /**
+     * Get customer creation date
+     *
+     * @return string
+     */
     public function getCreateDate()
     {
-        return $this->formatDate($this->getCustomer()->getCreatedAt(), Mage_Core_Model_Locale::FORMAT_TYPE_MEDIUM, true);
+        return $this->_getCoreHelper()->formatDate($this->getCustomer()->getCreatedAt(),
+            Mage_Core_Model_Locale::FORMAT_TYPE_MEDIUM, true);
     }
 
+    public function getStoreCreateDate()
+    {
+        $date = Mage::app()->getLocale()->storeDate(
+            $this->getCustomer()->getStoreId(),
+            $this->getCustomer()->getCreatedAtTimestamp(),
+            true
+        );
+        return $this->formatDate($date, Mage_Core_Model_Locale::FORMAT_TYPE_MEDIUM, true);
+    }
+
+    public function getStoreCreateDateTimezone()
+    {
+        return Mage::app()->getStore($this->getCustomer()->getStoreId())
+            ->getConfig(Mage_Core_Model_Locale::XML_PATH_DEFAULT_TIMEZONE);
+    }
+
+    /**
+     * Get customer last login date
+     *
+     * @return string
+     */
     public function getLastLoginDate()
     {
-        if ($date = $this->getCustomerLog()->getLoginAt()) {
+        $date = $this->getCustomerLog()->getLoginAtTimestamp();
+        if ($date) {
+            return Mage::helper('core')->formatDate($date, Mage_Core_Model_Locale::FORMAT_TYPE_MEDIUM, true);
+        }
+        return Mage::helper('customer')->__('Never');
+    }
+
+    public function getStoreLastLoginDate()
+    {
+        if ($date = $this->getCustomerLog()->getLoginAtTimestamp()) {
+            $date = Mage::app()->getLocale()->storeDate(
+                $this->getCustomer()->getStoreId(),
+                $date,
+                true
+            );
             return $this->formatDate($date, Mage_Core_Model_Locale::FORMAT_TYPE_MEDIUM, true);
         }
         return Mage::helper('customer')->__('Never');
+    }
+
+    public function getStoreLastLoginDateTimezone()
+    {
+        return Mage::app()->getStore($this->getCustomer()->getStoreId())
+            ->getConfig(Mage_Core_Model_Locale::XML_PATH_DEFAULT_TIMEZONE);
     }
 
     public function getCurrentStatus()
     {
         $log = $this->getCustomerLog();
         if ($log->getLogoutAt() ||
-            strtotime(now())-strtotime($log->getLastVisitAt())>Mage_Log_Model_Visitor::ONLINE_MINUTES_INTERVAL*60) {
+            strtotime(now())-strtotime($log->getLastVisitAt())>Mage_Log_Model_Visitor::getOnlineMinutesInterval()*60) {
             return Mage::helper('customer')->__('Offline');
         }
         return Mage::helper('customer')->__('Online');
     }
 
+    public function getIsConfirmedStatus()
+    {
+        $this->getCustomer();
+        if (!$this->_customer->getConfirmation()) {
+            return Mage::helper('customer')->__('Confirmed');
+        }
+        if ($this->_customer->isConfirmationRequired()) {
+            return Mage::helper('customer')->__('Not confirmed, cannot login');
+        }
+        return Mage::helper('customer')->__('Not confirmed, can login');
+    }
+
     public function getCreatedInStore()
     {
         return Mage::app()->getStore($this->getCustomer()->getStoreId())->getName();
+    }
+
+    public function getStoreId()
+    {
+        return $this->getCustomer()->getStoreId();
     }
 
     public function getBillingAddressHtml()
@@ -128,7 +170,7 @@ class Mage_Adminhtml_Block_Customer_Edit_Tab_View extends Mage_Adminhtml_Block_T
             $html = $address->format('html');
         }
         else {
-            $html = Mage::helper('customer')->__("Customer doesn't have primary billing address");
+            $html = Mage::helper('customer')->__('The customer does not have default billing address.');
         }
         return $html;
     }
@@ -143,4 +185,39 @@ class Mage_Adminhtml_Block_Customer_Edit_Tab_View extends Mage_Adminhtml_Block_T
         return $this->getChildHtml('sales');
     }
 
+    public function getTabLabel()
+    {
+        return Mage::helper('customer')->__('Customer View');
+    }
+
+    public function getTabTitle()
+    {
+        return Mage::helper('customer')->__('Customer View');
+    }
+
+    public function canShowTab()
+    {
+        if (Mage::registry('current_customer')->getId()) {
+            return true;
+        }
+        return false;
+    }
+
+    public function isHidden()
+    {
+        if (Mage::registry('current_customer')->getId()) {
+            return false;
+        }
+        return true;
+    }
+
+    /**
+     * Return instance of core helper
+     *
+     * @return Mage_Core_Helper_Data
+     */
+    protected function _getCoreHelper()
+    {
+        return Mage::helper('core');
+    }
 }

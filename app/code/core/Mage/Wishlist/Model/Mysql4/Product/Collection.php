@@ -10,71 +10,28 @@
  * http://opensource.org/licenses/osl-3.0.php
  * If you did not receive a copy of the license and are unable to
  * obtain it through the world-wide-web, please send an email
- * to license@magentocommerce.com so we can send you a copy immediately.
+ * to license@magento.com so we can send you a copy immediately.
  *
- * @category   Mage
- * @package    Mage_Wishlist
- * @copyright  Copyright (c) 2004-2007 Irubin Consulting Inc. DBA Varien (http://www.varien.com)
+ * DISCLAIMER
+ *
+ * Do not edit or add to this file if you wish to upgrade Magento to newer
+ * versions in the future. If you wish to customize Magento for your
+ * needs please refer to http://www.magento.com for more information.
+ *
+ * @category    Mage
+ * @package     Mage_Wishlist
+ * @copyright  Copyright (c) 2006-2017 X.commerce, Inc. and affiliates (http://www.magento.com)
  * @license    http://opensource.org/licenses/osl-3.0.php  Open Software License (OSL 3.0)
  */
 
 
 /**
- * Wishlist product collection
+ * Wishlist Product collection
  *
- * @category   Mage
- * @package    Mage_Wishlist
+ * @category    Mage
+ * @package     Mage_Wishlist
+ * @author      Magento Core Team <core@magentocommerce.com>
  */
-class Mage_Wishlist_Model_Mysql4_Product_Collection extends Mage_Catalog_Model_Resource_Eav_Mysql4_Product_Collection
+class Mage_Wishlist_Model_Mysql4_Product_Collection extends Mage_Wishlist_Model_Resource_Product_Collection
 {
-
-    public function addWishlistFilter(Mage_Wishlist_Model_Wishlist    $wishlist)
-    {
-        $this->_joinFields['e_id'] = array('table'=>'e','field'=>'entity_id');
-
-        $this->joinTable('wishlist/item',
-            'product_id=e_id',
-            array(
-                'product_id' => 'product_id',
-                'description' => 'description',
-                'store_id' => 'store_id',
-                'added_at' => 'added_at',
-                'wishlist_id' => 'wishlist_id',
-                'wishlist_item_id' => 'wishlist_item_id',
-            ),
-            array('wishlist_id'=>$wishlist->getId())
-        );
-        return $this;
-    }
-
-    public function addWishListSortOrder($att='added_at', $dir='desc')
-    {
-    	$this->setOrder($att, $dir);
-    	return $this;
-    }
-
-    public function addStoreData()
-    {
-        if(!isset($this->_joinFields['e_id'])) {
-            return $this;
-        }
-
-        $dayTable = $this->_getAttributeTableAlias('days_in_wishlist');
-        $this->joinField('store_name', 'core/store', 'name', 'store_id=store_id')
-            ->joinField('days_in_wishlist',
-                'wishlist/item',
-                "(TO_DAYS('" . Mage::getSingleton('core/date')->date() . "') - TO_DAYS(DATE_ADD(".$dayTable.".added_at, INTERVAL " .(int) Mage::getSingleton('core/date')->getGmtOffset() . " SECOND)))",
-                'wishlist_item_id=wishlist_item_id');
-
-        return $this;
-    }
-
-    protected function _getAttributeFieldName($attributeCode)
-    {
-        if($attributeCode == 'days_in_wishlist') {
-            return $this->_joinFields[$attributeCode]['field'];
-        }
-        return parent::_getAttributeFieldName($attributeCode);
-    }
-
 }

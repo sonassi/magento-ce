@@ -10,11 +10,17 @@
  * http://opensource.org/licenses/osl-3.0.php
  * If you did not receive a copy of the license and are unable to
  * obtain it through the world-wide-web, please send an email
- * to license@magentocommerce.com so we can send you a copy immediately.
+ * to license@magento.com so we can send you a copy immediately.
  *
- * @category   Mage
- * @package    Mage_Adminhtml
- * @copyright  Copyright (c) 2004-2007 Irubin Consulting Inc. DBA Varien (http://www.varien.com)
+ * DISCLAIMER
+ *
+ * Do not edit or add to this file if you wish to upgrade Magento to newer
+ * versions in the future. If you wish to customize Magento for your
+ * needs please refer to http://www.magento.com for more information.
+ *
+ * @category    Mage
+ * @package     Mage_Adminhtml
+ * @copyright  Copyright (c) 2006-2017 X.commerce, Inc. and affiliates (http://www.magento.com)
  * @license    http://opensource.org/licenses/osl-3.0.php  Open Software License (OSL 3.0)
  */
 
@@ -23,11 +29,13 @@
  *
  * @category   Mage
  * @package    Mage_Adminhtml
+ * @author      Magento Core Team <core@magentocommerce.com>
  */
 class Mage_Adminhtml_Report_ShopcartController extends Mage_Adminhtml_Controller_Action
 {
     public function _initAction()
     {
+        $act = $this->getRequest()->getActionName();
         $this->loadLayout()
             ->_addBreadcrumb(Mage::helper('reports')->__('Reports'), Mage::helper('reports')->__('Reports'))
             ->_addBreadcrumb(Mage::helper('reports')->__('Shopping Cart'), Mage::helper('reports')->__('Shopping Cart'));
@@ -36,6 +44,10 @@ class Mage_Adminhtml_Report_ShopcartController extends Mage_Adminhtml_Controller
 
     public function customerAction()
     {
+        $this->_title($this->__('Reports'))
+             ->_title($this->__('Shopping Cart'))
+             ->_title($this->__('Customer Shopping Carts'));
+
         $this->_initAction()
             ->_setActiveMenu('report/shopcart/customer')
             ->_addBreadcrumb(Mage::helper('reports')->__('Customers Report'), Mage::helper('reports')->__('Customers Report'))
@@ -50,7 +62,7 @@ class Mage_Adminhtml_Report_ShopcartController extends Mage_Adminhtml_Controller
     {
         $fileName   = 'shopcart_customer.csv';
         $content    = $this->getLayout()->createBlock('adminhtml/report_shopcart_customer_grid')
-            ->getCsv();
+            ->getCsvFile();
 
         $this->_prepareDownloadResponse($fileName, $content);
     }
@@ -62,13 +74,17 @@ class Mage_Adminhtml_Report_ShopcartController extends Mage_Adminhtml_Controller
     {
         $fileName   = 'shopcart_customer.xml';
         $content    = $this->getLayout()->createBlock('adminhtml/report_shopcart_customer_grid')
-            ->getExcel($fileName);
+            ->getExcelFile($fileName);
 
         $this->_prepareDownloadResponse($fileName, $content);
     }
 
     public function productAction()
     {
+        $this->_title($this->__('Reports'))
+             ->_title($this->__('Shopping Cart'))
+             ->_title($this->__('Products in Carts'));
+
         $this->_initAction()
             ->_setActiveMenu('report/shopcart/product')
             ->_addBreadcrumb(Mage::helper('reports')->__('Products Report'), Mage::helper('reports')->__('Products Report'))
@@ -83,7 +99,7 @@ class Mage_Adminhtml_Report_ShopcartController extends Mage_Adminhtml_Controller
     {
         $fileName   = 'shopcart_product.csv';
         $content    = $this->getLayout()->createBlock('adminhtml/report_shopcart_product_grid')
-            ->getCsv();
+            ->getCsvFile();
 
         $this->_prepareDownloadResponse($fileName, $content);
     }
@@ -95,16 +111,20 @@ class Mage_Adminhtml_Report_ShopcartController extends Mage_Adminhtml_Controller
     {
         $fileName   = 'shopcart_product.xml';
         $content    = $this->getLayout()->createBlock('adminhtml/report_shopcart_product_grid')
-            ->getExcel($fileName);
+            ->getExcelFile($fileName);
 
         $this->_prepareDownloadResponse($fileName, $content);
     }
 
     public function abandonedAction()
     {
+        $this->_title($this->__('Reports'))
+             ->_title($this->__('Shopping Cart'))
+             ->_title($this->__('Abandoned Carts'));
+
         $this->_initAction()
             ->_setActiveMenu('report/shopcart/abandoned')
-            ->_addBreadcrumb(Mage::helper('reports')->__('Abandoned carts'), Mage::helper('reports')->__('Abandoned carts'))
+            ->_addBreadcrumb(Mage::helper('reports')->__('Abandoned Carts'), Mage::helper('reports')->__('Abandoned Carts'))
             ->_addContent($this->getLayout()->createBlock('adminhtml/report_shopcart_abandoned'))
             ->renderLayout();
     }
@@ -116,7 +136,7 @@ class Mage_Adminhtml_Report_ShopcartController extends Mage_Adminhtml_Controller
     {
         $fileName   = 'shopcart_abandoned.csv';
         $content    = $this->getLayout()->createBlock('adminhtml/report_shopcart_abandoned_grid')
-            ->getCsv();
+            ->getCsvFile();
 
         $this->_prepareDownloadResponse($fileName, $content);
     }
@@ -128,14 +148,15 @@ class Mage_Adminhtml_Report_ShopcartController extends Mage_Adminhtml_Controller
     {
         $fileName   = 'shopcart_abandoned.xml';
         $content    = $this->getLayout()->createBlock('adminhtml/report_shopcart_abandoned_grid')
-            ->getExcel($fileName);
+            ->getExcelFile($fileName);
 
         $this->_prepareDownloadResponse($fileName, $content);
     }
 
     protected function _isAllowed()
     {
-        switch ($this->getRequest()->getActionName()) {
+        $action = strtolower($this->getRequest()->getActionName());
+        switch ($action) {
             case 'customer':
                 return Mage::getSingleton('admin/session')->isAllowed('report/shopcart/customer');
                 break;

@@ -10,11 +10,17 @@
  * http://opensource.org/licenses/osl-3.0.php
  * If you did not receive a copy of the license and are unable to
  * obtain it through the world-wide-web, please send an email
- * to license@magentocommerce.com so we can send you a copy immediately.
+ * to license@magento.com so we can send you a copy immediately.
  *
- * @category   Mage
- * @package    Mage_Adminhtml
- * @copyright  Copyright (c) 2004-2007 Irubin Consulting Inc. DBA Varien (http://www.varien.com)
+ * DISCLAIMER
+ *
+ * Do not edit or add to this file if you wish to upgrade Magento to newer
+ * versions in the future. If you wish to customize Magento for your
+ * needs please refer to http://www.magento.com for more information.
+ *
+ * @category    Mage
+ * @package     Mage_Adminhtml
+ * @copyright  Copyright (c) 2006-2017 X.commerce, Inc. and affiliates (http://www.magento.com)
  * @license    http://opensource.org/licenses/osl-3.0.php  Open Software License (OSL 3.0)
  */
 
@@ -23,8 +29,9 @@
  *
  * @category   Mage
  * @package    Mage_Adminhtml
+ * @author      Magento Core Team <core@magentocommerce.com>
  */
-class Mage_Adminhtml_Block_Report_Shopcart_Abandoned_Grid extends Mage_Adminhtml_Block_Widget_Grid
+class Mage_Adminhtml_Block_Report_Shopcart_Abandoned_Grid extends Mage_Adminhtml_Block_Report_Grid_Shopcart
 {
 
     public function __construct()
@@ -35,33 +42,36 @@ class Mage_Adminhtml_Block_Report_Shopcart_Abandoned_Grid extends Mage_Adminhtml
 
     protected function _prepareCollection()
     {
-        if ($this->getRequest()->getParam('website')) {
-            $storeIds = Mage::app()->getWebsite($this->getRequest()->getParam('website'))->getStoreIds();
-        } else if ($this->getRequest()->getParam('group')) {
-            $storeIds = Mage::app()->getGroup($this->getRequest()->getParam('group'))->getStoreIds();
-        } else if ($this->getRequest()->getParam('store')) {
-            $storeIds = array((int)$this->getRequest()->getParam('store'));
-        } else {
-            $storeIds = '';
+        /** @var $collection Mage_Reports_Model_Resource_Quote_Collection */
+        $collection = Mage::getResourceModel('reports/quote_collection');
+
+        $filter = $this->getParam($this->getVarNameFilter(), array());
+        if ($filter) {
+            $filter = base64_decode($filter);
+            parse_str(urldecode($filter), $data);
         }
 
-        $collection = Mage::getResourceModel('reports/quote_collection')
-            ->addAttributeToSelect('*')
-            ->addAttributeToFilter('items_count', array('neq' => '0'))
-            ->setActiveFilter()
-            ->addCustomerName()
-            ->addCustomerEmail()
-            ->addAttributeToSelect('coupon_code')
-            ->addSubtotal($storeIds)
-            ->groupByAttribute('entity_id')
-            ->setOrder('updated_at');
-
-        if (is_array($storeIds)) {
-            $collection->addAttributeToFilter('store_id', array('in' => $storeIds));
+        if (!empty($data)) {
+            $collection->prepareForAbandonedReport($this->_storeIds, $data);
+        } else {
+            $collection->prepareForAbandonedReport($this->_storeIds);
         }
 
         $this->setCollection($collection);
         return parent::_prepareCollection();
+    }
+
+    protected function _addColumnFilterToCollection($column)
+    {
+        $field = ( $column->getFilterIndex() ) ? $column->getFilterIndex() : $column->getIndex();
+        $skip = array('subtotal', 'customer_name', 'email'/*, 'created_at', 'updated_at'*/);
+
+        if (in_array($field, $skip)) {
+            return $this;
+        }
+
+        parent::_addColumnFilterToCollection($column);
+        return $this;
     }
 
     protected function _prepareColumns()
@@ -72,9 +82,9 @@ class Mage_Adminhtml_Block_Report_Shopcart_Abandoned_Grid extends Mage_Adminhtml
             'sortable'  =>false
         ));
 
-        $this->addColumn('customer_email', array(
+        $this->addColumn('email', array(
             'header'    =>Mage::helper('reports')->__('Email'),
-            'index'     =>'customer_email',
+            'index'     =>'email',
             'sortable'  =>false
         ));
 
@@ -96,14 +106,27 @@ class Mage_Adminhtml_Block_Report_Shopcart_Abandoned_Grid extends Mage_Adminhtml
             'type'      =>'number'
         ));
 
+        if ($this->getRequest()->getParam('website')) {
+            $storeIds = Mage::app()->getWebsite($this->getRequest()->getParam('website'))->getStoreIds();
+        } else if ($this->getRequest()->getParam('group')) {
+            $storeIds = Mage::app()->getGroup($this->getRequest()->getParam('group'))->getStoreIds();
+        } else if ($this->getRequest()->getParam('store')) {
+            $storeIds = array((int)$this->getRequest()->getParam('store'));
+        } else {
+            $storeIds = array();
+        }
+        $this->setStoreIds($storeIds);
+        $currencyCode = $this->getCurrentCurrencyCode();
+
         $this->addColumn('subtotal', array(
-            'header'    =>Mage::helper('reports')->__('Subtotal'),
-            'width'     =>'80px',
-            'type'      =>'currency',
-            'currency_code' => (string) Mage::getStoreConfig(Mage_Directory_Model_Currency::XML_PATH_CURRENCY_BASE),
-            'index'     =>'subtotal',
-            'sortable'  =>false,
-            'renderer'  =>'adminhtml/report_grid_column_renderer_currency'
+            'header'        => Mage::helper('reports')->__('Subtotal'),
+            'width'         => '80px',
+            'type'          => 'currency',
+            'currency_code' => $currencyCode,
+            'index'         => 'subtotal',
+            'sortable'      => false,
+            'renderer'      => 'adminhtml/report_grid_column_renderer_currency',
+            'rate'          => $this->getRate($currencyCode),
         ));
 
         $this->addColumn('coupon_code', array(
@@ -114,23 +137,32 @@ class Mage_Adminhtml_Block_Report_Shopcart_Abandoned_Grid extends Mage_Adminhtml
         ));
 
         $this->addColumn('created_at', array(
-            'header'    =>Mage::helper('reports')->__('Created at'),
+            'header'    =>Mage::helper('reports')->__('Created At'),
             'width'     =>'170px',
             'type'      =>'datetime',
             'index'     =>'created_at',
+            'filter_index'=>'main_table.created_at',
             'sortable'  =>false
         ));
 
         $this->addColumn('updated_at', array(
-            'header'    =>Mage::helper('reports')->__('Updated at'),
+            'header'    =>Mage::helper('reports')->__('Updated At'),
             'width'     =>'170px',
             'type'      =>'datetime',
             'index'     =>'updated_at',
+            'filter_index'=>'main_table.updated_at',
+            'sortable'  =>false
+        ));
+
+        $this->addColumn('remote_ip', array(
+            'header'    =>Mage::helper('reports')->__('IP Address'),
+            'width'     =>'80px',
+            'index'     =>'remote_ip',
             'sortable'  =>false
         ));
 
         $this->addExportType('*/*/exportAbandonedCsv', Mage::helper('reports')->__('CSV'));
-        $this->addExportType('*/*/exportAbandonedExcel', Mage::helper('reports')->__('Excel'));
+        $this->addExportType('*/*/exportAbandonedExcel', Mage::helper('reports')->__('Excel XML'));
 
         return parent::_prepareColumns();
     }
@@ -138,15 +170,5 @@ class Mage_Adminhtml_Block_Report_Shopcart_Abandoned_Grid extends Mage_Adminhtml
     public function getRowUrl($row)
     {
         return $this->getUrl('*/customer/edit', array('id'=>$row->getCustomerId(), 'active_tab'=>'cart'));
-    }
-
-    public function getRowClickCallback(){
-        return "function(grid, evt) {
-            var trElement = Event.findElement(evt, 'tr');
-            console.log(trElement);
-            if(trElement){
-                var newWindow = window.open(trElement.id, '_blank');
-                newWindow.focus();
-            }}";
     }
 }

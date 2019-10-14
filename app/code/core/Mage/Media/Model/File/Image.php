@@ -10,11 +10,17 @@
  * http://opensource.org/licenses/osl-3.0.php
  * If you did not receive a copy of the license and are unable to
  * obtain it through the world-wide-web, please send an email
- * to license@magentocommerce.com so we can send you a copy immediately.
+ * to license@magento.com so we can send you a copy immediately.
  *
- * @category   Mage
- * @package    Mage_Media
- * @copyright  Copyright (c) 2004-2007 Irubin Consulting Inc. DBA Varien (http://www.varien.com)
+ * DISCLAIMER
+ *
+ * Do not edit or add to this file if you wish to upgrade Magento to newer
+ * versions in the future. If you wish to customize Magento for your
+ * needs please refer to http://www.magento.com for more information.
+ *
+ * @category    Mage
+ * @package     Mage_Media
+ * @copyright  Copyright (c) 2006-2017 X.commerce, Inc. and affiliates (http://www.magento.com)
  * @license    http://opensource.org/licenses/osl-3.0.php  Open Software License (OSL 3.0)
  */
 
@@ -24,6 +30,7 @@
  *
  * @category   Mage
  * @package    Mage_Media
+ * @author      Magento Core Team <core@magentocommerce.com>
  */
 class Mage_Media_Model_File_Image extends Mage_Core_Model_Resource_Abstract
 {
@@ -77,7 +84,7 @@ class Mage_Media_Model_File_Image extends Mage_Core_Model_Resource_Abstract
     public function getImage(Mage_Media_Model_Image $object)
     {
         $resource = false;
-        switch($object->getExtension()) {
+        switch(strtolower($object->getExtension())) {
             case 'jpg':
             case 'jpeg':
                 $resource = imagecreatefromjpeg($object->getFilePath());
@@ -93,7 +100,7 @@ class Mage_Media_Model_File_Image extends Mage_Core_Model_Resource_Abstract
         }
 
         if(!$resource) {
-            Mage::throwException(Mage::helper('media')->__('Image not exists or invalid'));
+            Mage::throwException(Mage::helper('media')->__('The image does not exist or is invalid.'));
         }
 
 
@@ -160,7 +167,8 @@ class Mage_Media_Model_File_Image extends Mage_Core_Model_Resource_Abstract
             $extension = $object->getExtension();
         }
 
-        switch ($extension) {
+        $result = false;
+        switch (strtolower($extension)) {
             case 'jpg':
             case 'jpeg':
                 $result = imagejpeg($object->getTmpImage(), $object->getFilePath(true), 80);
@@ -174,7 +182,7 @@ class Mage_Media_Model_File_Image extends Mage_Core_Model_Resource_Abstract
         }
 
         if(!$result) {
-            Mage::throwException(Mage::helper('media')->__('Error while creating image'));
+            Mage::throwException(Mage::helper('media')->__('An error occurred while creating the image.'));
         }
 
         return $this;
@@ -190,7 +198,7 @@ class Mage_Media_Model_File_Image extends Mage_Core_Model_Resource_Abstract
     {
         $info = @getimagesize($object->getFilePath());
         if(!$info) {
-            Mage::throwException(Mage::helper('media')->__('Image not exists or invalid'));
+            Mage::throwException(Mage::helper('media')->__('The image does not exist or is invalid.'));
         }
 
         $info = array('width'=>$info[0], 'height'=>$info[1], 'type'=>$info[2]);

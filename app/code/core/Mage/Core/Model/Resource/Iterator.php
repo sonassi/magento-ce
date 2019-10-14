@@ -10,17 +10,24 @@
  * http://opensource.org/licenses/osl-3.0.php
  * If you did not receive a copy of the license and are unable to
  * obtain it through the world-wide-web, please send an email
- * to license@magentocommerce.com so we can send you a copy immediately.
+ * to license@magento.com so we can send you a copy immediately.
  *
- * @category   Mage
- * @package    Mage_Core
- * @copyright  Copyright (c) 2004-2007 Irubin Consulting Inc. DBA Varien (http://www.varien.com)
+ * DISCLAIMER
+ *
+ * Do not edit or add to this file if you wish to upgrade Magento to newer
+ * versions in the future. If you wish to customize Magento for your
+ * needs please refer to http://www.magento.com for more information.
+ *
+ * @category    Mage
+ * @package     Mage_Core
+ * @copyright  Copyright (c) 2006-2017 X.commerce, Inc. and affiliates (http://www.magento.com)
  * @license    http://opensource.org/licenses/osl-3.0.php  Open Software License (OSL 3.0)
  */
 
 /**
  * Active record implementation
  *
+ * @author      Magento Core Team <core@magentocommerce.com>
  */
 class Mage_Core_Model_Resource_Iterator extends Varien_Object
 {
@@ -28,14 +35,14 @@ class Mage_Core_Model_Resource_Iterator extends Varien_Object
      * Walk over records fetched from query one by one using callback function
      *
      * @param Zend_Db_Statement_Interface|Zend_Db_Select|string $query
-     * @param array|string $callback
+     * @param array|string $callbacks
      * @param array $args
-     * @return Mage_Core_Model_Resource_Activerecord
+     * @param Varien_Db_Adapter_Interface $adapter
+     * @return Mage_Core_Model_Resource_Iterator
      */
-    public function walk($query, array $callbacks, array $args=array())
+    public function walk($query, array $callbacks, array $args=array(), $adapter = null)
     {
-        $stmt = $this->_getStatement($query);
-
+        $stmt = $this->_getStatement($query, $adapter);
         $args['idx'] = 0;
         while ($row = $stmt->fetch()) {
             $args['row'] = $row;
@@ -57,8 +64,9 @@ class Mage_Core_Model_Resource_Iterator extends Varien_Object
      * @param Zend_Db_Statement_Interface|Zend_Db_Select|string $query
      * @param Zend_Db_Adapter_Abstract $conn
      * @return Zend_Db_Statement_Interface
+     * @throws Mage_Core_Exception
      */
-    protected function _getStatement($query, $conn=null)
+    protected function _getStatement($query, $conn = null)
     {
         if ($query instanceof Zend_Db_Statement_Interface) {
             return $query;
@@ -68,15 +76,13 @@ class Mage_Core_Model_Resource_Iterator extends Varien_Object
             return $query->query();
         }
 
-        $hlp = Mage::helper('core');
-
         if (is_string($query)) {
             if (!$conn instanceof Zend_Db_Adapter_Abstract) {
-                Mage::throwException($hlp->__('Invalid connection'));
+                Mage::throwException(Mage::helper('core')->__('Invalid connection'));
             }
             return $conn->query($query);
         }
 
-        Mage::throwException($hlp->__('Invalid query'));
+        Mage::throwException(Mage::helper('core')->__('Invalid query'));
     }
 }

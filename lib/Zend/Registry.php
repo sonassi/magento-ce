@@ -14,9 +14,9 @@
  *
  * @category   Zend
  * @package    Zend_Registry
- * @copyright  Copyright (c) 2005-2008 Zend Technologies USA Inc. (http://www.zend.com)
+ * @copyright  Copyright (c) 2005-2015 Zend Technologies USA Inc. (http://www.zend.com)
  * @license    http://framework.zend.com/license/new-bsd     New BSD License
- * @version    $Id: Registry.php 8064 2008-02-16 10:58:39Z thomas $
+ * @version    $Id$
  */
 
 /**
@@ -24,7 +24,7 @@
  *
  * @category   Zend
  * @package    Zend_Registry
- * @copyright  Copyright (c) 2005-2008 Zend Technologies USA Inc. (http://www.zend.com)
+ * @copyright  Copyright (c) 2005-2015 Zend Technologies USA Inc. (http://www.zend.com)
  * @license    http://framework.zend.com/license/new-bsd     New BSD License
  */
 class Zend_Registry extends ArrayObject
@@ -66,7 +66,7 @@ class Zend_Registry extends ArrayObject
     public static function setInstance(Zend_Registry $registry)
     {
         if (self::$_registry !== null) {
-            require_once 'Zend/Exception.php';
+            #require_once 'Zend/Exception.php';
             throw new Zend_Exception('Registry is already initialized');
         }
 
@@ -97,20 +97,22 @@ class Zend_Registry extends ArrayObject
     public static function setClassName($registryClassName = 'Zend_Registry')
     {
         if (self::$_registry !== null) {
-            require_once 'Zend/Exception.php';
+            #require_once 'Zend/Exception.php';
             throw new Zend_Exception('Registry is already initialized');
         }
 
         if (!is_string($registryClassName)) {
-            require_once 'Zend/Exception.php';
+            #require_once 'Zend/Exception.php';
             throw new Zend_Exception("Argument is not a class name");
         }
 
         /**
          * @see Zend_Loader
          */
-        require_once 'Zend/Loader.php';
-        Zend_Loader::loadClass($registryClassName);
+        if (!class_exists($registryClassName)) {
+            #require_once 'Zend/Loader.php';
+            Zend_Loader::loadClass($registryClassName);
+        }
 
         self::$_registryClassName = $registryClassName;
     }
@@ -134,14 +136,14 @@ class Zend_Registry extends ArrayObject
      *
      * @param string $index - get the value associated with $index
      * @return mixed
-     * @throws Zend_Exception if no entry is registerd for $index.
+     * @throws Zend_Exception if no entry is registered for $index.
      */
     public static function get($index)
     {
         $instance = self::getInstance();
 
         if (!$instance->offsetExists($index)) {
-            require_once 'Zend/Exception.php';
+            #require_once 'Zend/Exception.php';
             throw new Zend_Exception("No entry is registered for key '$index'");
         }
 
@@ -179,6 +181,18 @@ class Zend_Registry extends ArrayObject
             return false;
         }
         return self::$_registry->offsetExists($index);
+    }
+
+    /**
+     * Constructs a parent ArrayObject with default
+     * ARRAY_AS_PROPS to allow acces as an object
+     *
+     * @param array $array data array
+     * @param integer $flags ArrayObject flags
+     */
+    public function __construct($array = array(), $flags = parent::ARRAY_AS_PROPS)
+    {
+        parent::__construct($array, $flags);
     }
 
     /**

@@ -16,9 +16,9 @@
  * @category   Zend
  * @package    Zend_Service
  * @subpackage Amazon
- * @copyright  Copyright (c) 2005-2008 Zend Technologies USA Inc. (http://www.zend.com)
+ * @copyright  Copyright (c) 2005-2015 Zend Technologies USA Inc. (http://www.zend.com)
  * @license    http://framework.zend.com/license/new-bsd     New BSD License
- * @version    $Id: CustomerReview.php 8064 2008-02-16 10:58:39Z thomas $
+ * @version    $Id$
  */
 
 
@@ -26,11 +26,46 @@
  * @category   Zend
  * @package    Zend_Service
  * @subpackage Amazon
- * @copyright  Copyright (c) 2005-2008 Zend Technologies USA Inc. (http://www.zend.com)
+ * @copyright  Copyright (c) 2005-2015 Zend Technologies USA Inc. (http://www.zend.com)
  * @license    http://framework.zend.com/license/new-bsd     New BSD License
  */
 class Zend_Service_Amazon_CustomerReview
 {
+    /**
+     * @var string
+     */
+    public $Rating;
+
+    /**
+     * @var string
+     */
+    public $HelpfulVotes;
+
+    /**
+     * @var string
+     */
+    public $CustomerId;
+
+    /**
+     * @var string
+     */
+    public $TotalVotes;
+
+    /**
+     * @var string
+     */
+    public $Date;
+
+    /**
+     * @var string
+     */
+    public $Summary;
+
+    /**
+     * @var string
+     */
+    public $Content;
+
     /**
      * Assigns values to properties relevant to CustomerReview
      *
@@ -40,7 +75,7 @@ class Zend_Service_Amazon_CustomerReview
     public function __construct(DOMElement $dom)
     {
         $xpath = new DOMXPath($dom->ownerDocument);
-        $xpath->registerNamespace('az', 'http://webservices.amazon.com/AWSECommerceService/2005-10-05');
+        $xpath->registerNamespace('az', 'http://webservices.amazon.com/AWSECommerceService/2011-08-01');
         foreach (array('Rating', 'HelpfulVotes', 'CustomerId', 'TotalVotes', 'Date', 'Summary', 'Content') as $el) {
             $result = $xpath->query("./az:$el/text()", $dom);
             if ($result->length == 1) {

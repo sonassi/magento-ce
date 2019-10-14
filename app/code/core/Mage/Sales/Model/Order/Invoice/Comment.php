@@ -10,16 +10,42 @@
  * http://opensource.org/licenses/osl-3.0.php
  * If you did not receive a copy of the license and are unable to
  * obtain it through the world-wide-web, please send an email
- * to license@magentocommerce.com so we can send you a copy immediately.
+ * to license@magento.com so we can send you a copy immediately.
  *
- * @category   Mage
- * @package    Mage_Sales
- * @copyright  Copyright (c) 2004-2007 Irubin Consulting Inc. DBA Varien (http://www.varien.com)
+ * DISCLAIMER
+ *
+ * Do not edit or add to this file if you wish to upgrade Magento to newer
+ * versions in the future. If you wish to customize Magento for your
+ * needs please refer to http://www.magento.com for more information.
+ *
+ * @category    Mage
+ * @package     Mage_Sales
+ * @copyright  Copyright (c) 2006-2017 X.commerce, Inc. and affiliates (http://www.magento.com)
  * @license    http://opensource.org/licenses/osl-3.0.php  Open Software License (OSL 3.0)
  */
 
 
-class Mage_Sales_Model_Order_Invoice_Comment extends Mage_Core_Model_Abstract
+/**
+ * Enter description here ...
+ *
+ * @method Mage_Sales_Model_Resource_Order_Invoice_Comment _getResource()
+ * @method Mage_Sales_Model_Resource_Order_Invoice_Comment getResource()
+ * @method int getParentId()
+ * @method Mage_Sales_Model_Order_Invoice_Comment setParentId(int $value)
+ * @method int getIsCustomerNotified()
+ * @method Mage_Sales_Model_Order_Invoice_Comment setIsCustomerNotified(int $value)
+ * @method int getIsVisibleOnFront()
+ * @method Mage_Sales_Model_Order_Invoice_Comment setIsVisibleOnFront(int $value)
+ * @method string getComment()
+ * @method Mage_Sales_Model_Order_Invoice_Comment setComment(string $value)
+ * @method string getCreatedAt()
+ * @method Mage_Sales_Model_Order_Invoice_Comment setCreatedAt(string $value)
+ *
+ * @category    Mage
+ * @package     Mage_Sales
+ * @author      Magento Core Team <core@magentocommerce.com>
+ */
+class Mage_Sales_Model_Order_Invoice_Comment extends Mage_Sales_Model_Abstract
 {
     /**
      * Invoice instance
@@ -56,5 +82,34 @@ class Mage_Sales_Model_Order_Invoice_Comment extends Mage_Core_Model_Abstract
     public function getInvoice()
     {
         return $this->_invoice;
+    }
+
+    /**
+     * Get store object
+     *
+     * @return Mage_Core_Model_Store
+     */
+    public function getStore()
+    {
+        if ($this->getInvoice()) {
+            return $this->getInvoice()->getStore();
+        }
+        return Mage::app()->getStore();
+    }
+
+    /**
+     * Before object save
+     *
+     * @return Mage_Sales_Model_Order_Invoice_Comment
+     */
+    protected function _beforeSave()
+    {
+        parent::_beforeSave();
+
+        if (!$this->getParentId() && $this->getInvoice()) {
+            $this->setParentId($this->getInvoice()->getId());
+        }
+
+        return $this;
     }
 }

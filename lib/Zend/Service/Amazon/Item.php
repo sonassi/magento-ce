@@ -16,9 +16,9 @@
  * @category   Zend
  * @package    Zend_Service
  * @subpackage Amazon
- * @copyright  Copyright (c) 2005-2008 Zend Technologies USA Inc. (http://www.zend.com)
+ * @copyright  Copyright (c) 2005-2015 Zend Technologies USA Inc. (http://www.zend.com)
  * @license    http://framework.zend.com/license/new-bsd     New BSD License
- * @version    $Id: Item.php 8064 2008-02-16 10:58:39Z thomas $
+ * @version    $Id$
  */
 
 
@@ -26,25 +26,85 @@
  * @category   Zend
  * @package    Zend_Service
  * @subpackage Amazon
- * @copyright  Copyright (c) 2005-2008 Zend Technologies USA Inc. (http://www.zend.com)
+ * @copyright  Copyright (c) 2005-2015 Zend Technologies USA Inc. (http://www.zend.com)
  * @license    http://framework.zend.com/license/new-bsd     New BSD License
  */
 class Zend_Service_Amazon_Item
 {
+    /**
+     * @var string
+     */
     public $ASIN;
+
+    /**
+     * @var string
+     */
     public $DetailPageURL;
+
+    /**
+     * @var int
+     */
     public $SalesRank;
+
+    /**
+     * @var int
+     */
+    public $TotalReviews;
+
+    /**
+     * @var int
+     */
+    public $AverageRating;
+
+    /**
+     * @var string
+     */
     public $SmallImage;
+
+    /**
+     * @var string
+     */
     public $MediumImage;
+
+    /**
+     * @var string
+     */
     public $LargeImage;
+
+    /**
+     * @var string
+     */
     public $Subjects;
+
+    /**
+     * @var Zend_Service_Amazon_OfferSet
+     */
     public $Offers;
-    public $CustomerReviews;
-    public $SimilarProducts;
-    public $Accessories;
-    public $Tracks;
-    public $ListmaniaLists;
-    public $PromotionalTag;
+
+    /**
+     * @var Zend_Service_Amazon_CustomerReview[]
+     */
+    public $CustomerReviews = array();
+
+    /**
+     * @var Zend_Service_Amazon_SimilarProducts[]
+     */
+    public $SimilarProducts = array();
+
+    /**
+     * @var Zend_Service_Amazon_Accessories[]
+     */
+    public $Accessories = array();
+
+    /**
+     * @var array
+     */
+    public $Tracks = array();
+
+    /**
+     * @var Zend_Service_Amazon_ListmaniaLists[]
+     */
+    public $ListmaniaLists = array();
 
     protected $_dom;
 
@@ -52,13 +112,24 @@ class Zend_Service_Amazon_Item
     /**
      * Parse the given <Item> element
      *
-     * @param  DOMElement $dom
+     * @param  null|DOMElement $dom
      * @return void
+     * @throws    Zend_Service_Amazon_Exception
+     *
+     * @group ZF-9547
      */
-    public function __construct(DOMElement $dom)
+    public function __construct($dom)
     {
+        if (null === $dom) {
+            #require_once 'Zend/Service/Amazon/Exception.php';
+            throw new Zend_Service_Amazon_Exception('Item element is empty');
+        }
+        if (!$dom instanceof DOMElement) {
+            #require_once 'Zend/Service/Amazon/Exception.php';
+            throw new Zend_Service_Amazon_Exception('Item is not a valid DOM element');
+        }
         $xpath = new DOMXPath($dom->ownerDocument);
-        $xpath->registerNamespace('az', 'http://webservices.amazon.com/AWSECommerceService/2005-10-05');
+        $xpath->registerNamespace('az', 'http://webservices.amazon.com/AWSECommerceService/2011-08-01');
         $this->ASIN = $xpath->query('./az:ASIN/text()', $dom)->item(0)->data;
 
         $result = $xpath->query('./az:DetailPageURL/text()', $dom);
@@ -93,7 +164,7 @@ class Zend_Service_Amazon_Item
                 /**
                  * @see Zend_Service_Amazon_Image
                  */
-                require_once 'Zend/Service/Amazon/Image.php';
+                #require_once 'Zend/Service/Amazon/Image.php';
                 $this->$im = new Zend_Service_Amazon_Image($result->item(0));
             }
         }
@@ -108,7 +179,7 @@ class Zend_Service_Amazon_Item
             /**
              * @see Zend_Service_Amazon_CustomerReview
              */
-            require_once 'Zend/Service/Amazon/CustomerReview.php';
+            #require_once 'Zend/Service/Amazon/CustomerReview.php';
             foreach ($result as $review) {
                 $this->CustomerReviews[] = new Zend_Service_Amazon_CustomerReview($review);
             }
@@ -121,7 +192,7 @@ class Zend_Service_Amazon_Item
             /**
              * @see Zend_Service_Amazon_EditorialReview
              */
-            require_once 'Zend/Service/Amazon/EditorialReview.php';
+            #require_once 'Zend/Service/Amazon/EditorialReview.php';
             foreach ($result as $r) {
                 $this->EditorialReviews[] = new Zend_Service_Amazon_EditorialReview($r);
             }
@@ -132,7 +203,7 @@ class Zend_Service_Amazon_Item
             /**
              * @see Zend_Service_Amazon_SimilarProduct
              */
-            require_once 'Zend/Service/Amazon/SimilarProduct.php';
+            #require_once 'Zend/Service/Amazon/SimilarProduct.php';
             foreach ($result as $r) {
                 $this->SimilarProducts[] = new Zend_Service_Amazon_SimilarProduct($r);
             }
@@ -143,7 +214,7 @@ class Zend_Service_Amazon_Item
             /**
              * @see Zend_Service_Amazon_ListmaniaList
              */
-            require_once 'Zend/Service/Amazon/ListmaniaList.php';
+            #require_once 'Zend/Service/Amazon/ListmaniaList.php';
             foreach ($result as $r) {
                 $this->ListmaniaLists[] = new Zend_Service_Amazon_ListmaniaList($r);
             }
@@ -153,7 +224,9 @@ class Zend_Service_Amazon_Item
         if ($result->length > 1) {
             foreach ($result as $disk) {
                 foreach ($xpath->query('./*/text()', $disk) as $t) {
-                    $this->Tracks[$disk->getAttribute('number')] = (string) $t->data;
+                    // TODO: For consistency in a bugfix all tracks are appended to one single array
+                    // Erroreous line: $this->Tracks[$disk->getAttribute('number')] = (string) $t->data;
+                    $this->Tracks[] = (string) $t->data;
                 }
             }
         } else if ($result->length == 1) {
@@ -168,7 +241,7 @@ class Zend_Service_Amazon_Item
             /**
              * @see Zend_Service_Amazon_OfferSet
              */
-            require_once 'Zend/Service/Amazon/OfferSet.php';
+            #require_once 'Zend/Service/Amazon/OfferSet.php';
             $this->Offers = new Zend_Service_Amazon_OfferSet($dom);
         }
 
@@ -177,7 +250,7 @@ class Zend_Service_Amazon_Item
             /**
              * @see Zend_Service_Amazon_Accessories
              */
-            require_once 'Zend/Service/Amazon/Accessories.php';
+            #require_once 'Zend/Service/Amazon/Accessories.php';
             foreach ($result as $r) {
                 $this->Accessories[] = new Zend_Service_Amazon_Accessories($r);
             }

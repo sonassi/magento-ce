@@ -10,11 +10,17 @@
  * http://opensource.org/licenses/osl-3.0.php
  * If you did not receive a copy of the license and are unable to
  * obtain it through the world-wide-web, please send an email
- * to license@magentocommerce.com so we can send you a copy immediately.
+ * to license@magento.com so we can send you a copy immediately.
  *
- * @category   Mage
- * @package    Mage_ProductAlert
- * @copyright  Copyright (c) 2004-2007 Irubin Consulting Inc. DBA Varien (http://www.varien.com)
+ * DISCLAIMER
+ *
+ * Do not edit or add to this file if you wish to upgrade Magento to newer
+ * versions in the future. If you wish to customize Magento for your
+ * needs please refer to http://www.magento.com for more information.
+ *
+ * @category    Mage
+ * @package     Mage_ProductAlert
+ * @copyright  Copyright (c) 2006-2017 X.commerce, Inc. and affiliates (http://www.magento.com)
  * @license    http://opensource.org/licenses/osl-3.0.php  Open Software License (OSL 3.0)
  */
 
@@ -23,6 +29,7 @@
  *
  * @category   Mage
  * @package    Mage_ProductAlert
+ * @author      Magento Core Team <core@magentocommerce.com>
  */
 class Mage_ProductAlert_AddController extends Mage_Core_Controller_Front_Action
 {
@@ -38,6 +45,13 @@ class Mage_ProductAlert_AddController extends Mage_Core_Controller_Front_Action
         }
     }
 
+    public function testObserverAction()
+    {
+        $object = new Varien_Object();
+        $observer = Mage::getSingleton('productalert/observer');
+        $observer->process($object);
+    }
+
     public function priceAction()
     {
         $session = Mage::getSingleton('catalog/session');
@@ -51,8 +65,12 @@ class Mage_ProductAlert_AddController extends Mage_Core_Controller_Front_Action
         $product = Mage::getModel('catalog/product')->load($productId);
         if (!$product->getId()) {
             /* @var $product Mage_Catalog_Model_Product */
-            $session->addError($this->__('Not enough parameters'));
-            $this->_redirectUrl($backUrl);
+            $session->addError($this->__('Not enough parameters.'));
+            if ($this->_isUrlInternal($backUrl)) {
+                $this->_redirectUrl($backUrl);
+            } else {
+                $this->_redirect('/');
+            }
             return ;
         }
 
@@ -63,10 +81,10 @@ class Mage_ProductAlert_AddController extends Mage_Core_Controller_Front_Action
                 ->setPrice($product->getFinalPrice())
                 ->setWebsiteId(Mage::app()->getStore()->getWebsiteId());
             $model->save();
-            $session->addSuccess($this->__('Alert subscription was saved successfully'));
+            $session->addSuccess($this->__('The alert subscription has been saved.'));
         }
         catch (Exception $e) {
-            $session->addException($e, $this->__('Please try again later'));
+            $session->addException($e, $this->__('Unable to update the alert subscription.'));
         }
         $this->_redirectReferer();
     }
@@ -84,7 +102,7 @@ class Mage_ProductAlert_AddController extends Mage_Core_Controller_Front_Action
 
         if (!$product = Mage::getModel('catalog/product')->load($productId)) {
             /* @var $product Mage_Catalog_Model_Product */
-            $session->addError($this->__('Not enough parameters'));
+            $session->addError($this->__('Not enough parameters.'));
             $this->_redirectUrl($backUrl);
             return ;
         }
@@ -95,10 +113,10 @@ class Mage_ProductAlert_AddController extends Mage_Core_Controller_Front_Action
                 ->setProductId($product->getId())
                 ->setWebsiteId(Mage::app()->getStore()->getWebsiteId());
             $model->save();
-            $session->addSuccess($this->__('Alert subscription was saved successfully'));
+            $session->addSuccess($this->__('Alert subscription has been saved.'));
         }
         catch (Exception $e) {
-            $session->addException($e, $this->__('Please try again later'));
+            $session->addException($e, $this->__('Unable to update the alert subscription.'));
         }
         $this->_redirectReferer();
     }

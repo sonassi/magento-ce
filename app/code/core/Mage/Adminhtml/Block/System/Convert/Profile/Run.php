@@ -10,11 +10,17 @@
  * http://opensource.org/licenses/osl-3.0.php
  * If you did not receive a copy of the license and are unable to
  * obtain it through the world-wide-web, please send an email
- * to license@magentocommerce.com so we can send you a copy immediately.
+ * to license@magento.com so we can send you a copy immediately.
  *
- * @category   Mage
- * @package    Mage_Adminhtml
- * @copyright  Copyright (c) 2004-2007 Irubin Consulting Inc. DBA Varien (http://www.varien.com)
+ * DISCLAIMER
+ *
+ * Do not edit or add to this file if you wish to upgrade Magento to newer
+ * versions in the future. If you wish to customize Magento for your
+ * needs please refer to http://www.magento.com for more information.
+ *
+ * @category    Mage
+ * @package     Mage_Adminhtml
+ * @copyright  Copyright (c) 2006-2017 X.commerce, Inc. and affiliates (http://www.magento.com)
  * @license    http://opensource.org/licenses/osl-3.0.php  Open Software License (OSL 3.0)
  */
 
@@ -23,55 +29,146 @@
  *
  * @category   Mage
  * @package    Mage_Adminhtml
+ * @author     Magento Core Team <core@magentocommerce.com>
  */
 class Mage_Adminhtml_Block_System_Convert_Profile_Run extends Mage_Adminhtml_Block_Abstract
 {
+    /**
+     * Flag for batch model
+     * @var boolean
+     */
+    protected $_batchModelPrepared = false;
+    /**
+     * Batch model instance
+     * @var Mage_Dataflow_Model_Batch
+     */
+    protected $_batchModel = null;
+    /**
+     * Preparing batch model (initialization)
+     * @return Mage_Adminhtml_Block_System_Convert_Profile_Run
+     */
+    protected function _prepareBatchModel()
+    {
+        if ($this->_batchModelPrepared) {
+            return $this;
+        }
+        $this->setShowFinished(true);
+        $batchModel = Mage::getSingleton('dataflow/batch');
+        $this->_batchModel = $batchModel;
+        if ($batchModel->getId()) {
+            if ($batchModel->getAdapter()) {
+                $this->setBatchModelHasAdapter(true);
+                $numberOfRecords = $this->getProfile()->getData('gui_data/import/number_of_records');
+                if (!$numberOfRecords) {
+                    $batchParams = $batchModel->getParams();
+                    $numberOfRecords = isset($batchParams['number_of_records']) ? $batchParams['number_of_records'] : 1;
+                }
+                $this->setNumberOfRecords($numberOfRecords);
+                $this->setShowFinished(false);
+                $batchImportModel = $batchModel->getBatchImportModel();
+                $importIds = $batchImportModel->getIdCollection();
+                $this->setBatchItemsCount(count($importIds));
+                $this->setBatchConfig(
+                    array(
+                        'styles' => array(
+                            'error' => array(
+                                'icon' => Mage::getDesign()->getSkinUrl('images/error_msg_icon.gif'),
+                                'bg'   => '#FDD'
+                            ),
+                            'message' => array(
+                                'icon' => Mage::getDesign()->getSkinUrl('images/fam_bullet_success.gif'),
+                                'bg'   => '#DDF'
+                            ),
+                            'loader'  => Mage::getDesign()->getSkinUrl('images/ajax-loader.gif')
+                        ),
+                        'template' => '<li style="#{style}" id="#{id}">'
+                                    . '<img id="#{id}_img" src="#{image}" class="v-middle" style="margin-right:5px"/>'
+                                    . '<span id="#{id}_status" class="text">#{text}</span>'
+                                    . '</li>',
+                        'text'     => $this->__('Processed <strong>%s%% %s/%d</strong> records', '#{percent}', '#{updated}', $this->getBatchItemsCount()),
+                        'successText'  => $this->__('Imported <strong>%s</strong> records', '#{updated}')
+                    )
+                );
+                $jsonIds = array_chunk($importIds, $numberOfRecords);
+                $importData = array();
+                foreach ($jsonIds as $part => $ids) {
+                    $importData[] = array(
+                        'batch_id'   => $batchModel->getId(),
+                        'rows[]'     => $ids
+                    );
+                }
+                $this->setImportData($importData);
+            } else {
+                $this->setBatchModelHasAdapter(false);
+                $batchModel->delete();
+            }
+        }
+        $this->_batchModelPrepared = true;
+        return $this;
+    }
+    /**
+     * Return a batch model instance
+     * @return Mage_Dataflow_Model_Batch
+     */
+    protected function _getBatchModel()
+    {
+        return $this->_batchModel;
+    }
+    /**
+     * Return a batch model config JSON
+     * @return string
+     */
+    public function getBatchConfigJson()
+    {
+        return Mage::helper('core')->jsonEncode(
+            $this->getBatchConfig()
+        );
+    }
+    /**
+     * Encoding to JSON
+     * @param string $source
+     * @return string JSON
+     */
+    public function jsonEncode($source)
+    {
+        return Mage::helper('core')->jsonEncode($source);
+    }
+    /**
+     * Get a profile
+     * @return object
+     */
     public function getProfile()
     {
         return Mage::registry('current_convert_profile');
     }
-
-    protected function _toHtml()
+    /**
+     * Generating form key
+     * @return string
+     */
+    public function getFormKey()
     {
-        $profile = $this->getProfile();
-
-        echo '<html><head>';
-
-        $headBlock = $this->getLayout()->createBlock('page/html_head');
-        $headBlock->addJs('prototype/prototype.js');
-        echo $headBlock->getCssJsHtml();
-
-        echo '<style type="text/css">
-    ul { list-style-type:none; padding:0; margin:0; }
-    li { margin-left:0; border:solid #CCC 1px; margin:2px; padding:2px 2px 2px 2px; font:normal 12px sans-serif; }
-    img { margin-right:5px; }
-    </style>
-    <title>'.($profile->getId() ? $this->htmlEscape($profile->getName()) : $this->__('No profile')).'</title>
-</head><body>';
-        echo '<ul>';
-        echo '<li>';
-        if ($profile->getId()) {
-            echo '<img src="'.Mage::getDesign()->getSkinUrl('images/note_msg_icon.gif').'" class="v-middle" style="margin-right:5px"/>';
-            echo $this->__("Starting profile execution, please wait...");
-            echo '</li>';
-            echo '<li style="background-color:#FFD;">';
-            echo '<img src="'.Mage::getDesign()->getSkinUrl('images/fam_bullet_error.gif').'" class="v-middle" style="margin-right:5px"/>';
-            echo $this->__("Warning: Please don't close window during importing/exporting data");
-            echo '</li>';
-        } else {
-            echo '<img src="'.Mage::getDesign()->getSkinUrl('images/error_msg_icon.gif').'" class="v-middle" style="margin-right:5px"/>';
-            echo $this->__("No profile loaded...");
-        }
-        echo '</li>';
-        echo '</ul>';
-
-        if ($profile->getId()) {
-
-            echo '<ul id="profileRows">';
-
-            ob_implicit_flush();
-            $profile->run();
-            foreach ($profile->getExceptions() as $e) {
+        return Mage::getSingleton('core/session')->getFormKey();
+    }
+    /**
+     * Return batch model and initialize it if need
+     * @return Mage_Dataflow_Model_Batch
+     */
+    public function getBatchModel()
+    {
+        return $this->_prepareBatchModel()
+            ->_getBatchModel();
+    }
+    /**
+     * Generating exceptions data
+     * @return array
+     */
+    public function getExceptions()
+    {
+        if (!is_null(parent::getExceptions()))
+            return parent::getExceptions();
+        $exceptions = array();
+        $this->getProfile()->run();
+        foreach ($this->getProfile()->getExceptions() as $e) {
                 switch ($e->getLevel()) {
                     case Varien_Convert_Exception::FATAL:
                         $img = 'error_msg_icon.gif';
@@ -90,177 +187,14 @@ class Mage_Adminhtml_Block_System_Convert_Profile_Run extends Mage_Adminhtml_Blo
                         $liStyle = 'background-color:#DDF; ';
                         break;
                 }
-                echo '<li style="'.$liStyle.'">';
-                echo '<img src="'.Mage::getDesign()->getSkinUrl('images/'.$img).'" class="v-middle"/>';
-                echo $e->getMessage();
-                if ($e->getPosition()) {
-                    echo " <small>(".$e->getPosition().")</small>";
-                }
-                echo "</li>";
-            }
-
-            echo '<li id="liFinished" style="display:none;">';
-            echo '<img src="'.Mage::getDesign()->getSkinUrl('images/note_msg_icon.gif').'" class="v-middle" style="margin-right:5px"/>';
-            echo $this->__("Finished profile execution.");
-            echo '</li>';
-
-
-            echo "</ul>";
-
-
-            $showFinished = true;
-            $batchModel = Mage::getSingleton('dataflow/batch');
-            if ($batchModel->getId()) {
-                if ($batchModel->getAdapter()) {
-
-                    $showFinished = false;
-                    $batchImportModel = $batchModel->getBatchImportModel();
-                    $importIds = $batchImportModel->getIdCollection();
-                    $countItems = count($importIds);
-
-                    $batchConfig = array(
-                        'styles' => array(
-                            'error' => array(
-                                'icon' => Mage::getDesign()->getSkinUrl('images/error_msg_icon.gif'),
-                                'bg'   => '#FDD'
-                            ),
-                            'message' => array(
-                                'icon' => Mage::getDesign()->getSkinUrl('images/fam_bullet_success.gif'),
-                                'bg'   => '#DDF'
-                            ),
-                            'loader'  => Mage::getDesign()->getSkinUrl('images/ajax-loader.gif')
-                        ),
-                        'template' => '<li style="#{style}" id="#{id}">'
-                                    . '<img src="#{image}" class="v-middle" style="margin-right:5px"/>'
-                                    . '<span class="text">#{text}</span>'
-                                    . '</li>',
-                        'text'     => $this->__('Processed <strong>%s%% %s/%d</strong> records', '#{percent}', '#{updated}', $countItems),
-                        'successText'  => $this->__('Imported <strong>%s</strong> records', '#{updated}')
-                    );
-echo '
-<script type="text/javascript">
-var countOfStartedProfiles = 0;
-var countOfUpdated = 0;
-var countOfError = 0;
-var importData = [];
-var totalRecords = ' . $countItems . ';
-var config= '.Zend_Json::encode($batchConfig).';
-</script>
-<script type="text/javascript">
-function addImportData(data) {
-    importData.push(data);
-}
-
-function execImportData() {
-    if (importData.length == 0) {
-
-        $("updatedRows").down("img").src = config.styles.message.icon;
-        $("updatedRows").style.backgroundColor = config.styles.message.bg;
-        new Insertion.Before($("liFinished"), config.tpl.evaluate({
-            style: "background-color:"+config.styles.message.bg,
-            image: config.styles.message.icon,
-            text: config.tplSccTxt.evaluate({updated:(countOfUpdated-countOfError)}),
-            id: "updatedFinish"
-        }));
-        new Ajax.Request("' . $this->getUrl('*/*/batchFinish', array('id' => $batchModel->getId())) .'", {
-            onComplete: function() {
-                $(\'liFinished\').show();
-            }
-        });
-    } else {
-        sendImportData(importData.shift());
-    }
-}
-
-function sendImportData(data) {
-    if (!config.tpl) {
-        config.tpl = new Template(config.template);
-        config.tplTxt = new Template(config.text);
-        config.tplSccTxt = new Template(config.successText);
-    }
-    if (!$("updatedRows")) {
-        new Insertion.Before($("liFinished"), config.tpl.evaluate({
-            style: "background-color: #FFD;",
-            image: config.styles.loader,
-            text: config.tplTxt.evaluate({updated:countOfUpdated, percent:getPercent()}),
-            id: "updatedRows"
-        }));
-    }
-    countOfStartedProfiles++;
-
-    new Ajax.Request("'.$this->getUrl('*/*/batchRun').'", {
-      method: "post",
-      parameters: data,
-      onSuccess: function(transport) {
-        countOfStartedProfiles --;
-        countOfUpdated += data["rows[]"].length;
-        if (transport.responseText.isJSON()) {
-            addProfileRow(transport.responseText.evalJSON());
-        } else {
-            new Insertion.Before($("updatedRows"), config.tpl.evaluate({
-                style: "background-color:"+config.styles.error.bg,
-                image: config.styles.error.icon,
-                text: transport.responseText.escapeHTML(),
-                id: "error-" + countOfStartedProfiles
-            }));
-            countOfError += data["rows[]"].length;
+                $exceptions[] = array(
+                    "style"     => $liStyle,
+                    "src"       => Mage::getDesign()->getSkinUrl('images/'.$img),
+                    "message"   => $e->getMessage(),
+                    "position" => $e->getPosition()
+                );
         }
-        execImportData();
-      }
-    });
-}
-
-function getPercent() {
-    return Math.ceil((countOfUpdated/totalRecords)*1000)/10;
-}
-
-function addProfileRow(data) {
-    if (data.errors.length > 0) {
-        for (var i=0, length=data.errors.length; i<length; i++) {
-            new Insertion.Before($("updatedRows"), config.tpl.evaluate({
-                style: "background-color:"+config.styles.error.bg,
-                image: config.styles.error.icon,
-                text: data.errors[i],
-                id: "id-" + (countOfUpdated + i + 1)
-            }));
-            countOfError ++;
-        }
-    }
-    $("updatedRows").down(".text").update(config.tplTxt.evaluate({updated:countOfUpdated, percent:getPercent()}));
-
-}
-</script>
-';
-
-
-                    $jsonIds = array_chunk($importIds, 1);
-                    foreach ($jsonIds as $part => $ids) {
-                        $data = array(
-                            'batch_id'   => $batchModel->getId(),
-                            'rows[]'     => $ids
-                        );
-                        echo '<script type="text/javascript">addImportData('.Zend_Json::encode($data).')</script>';
-                    }
-                    echo '<script type="text/javascript">execImportData()</script>';
-                    //print $this->getUrl('*/*/batchFinish', array('id' => $batchModel->getId()));
-                }
-                else {
-                    $batchModel->delete();
-                }
-            }
-
-            if ($showFinished) {
-                echo "<script type=\"text/javascript\">$('liFinished').show();</script>";
-            }
-        }
-        /*
-        echo '<li>';
-        echo '<img src="'.Mage::getDesign()->getSkinUrl('images/note_msg_icon.gif').'" class="v-middle" style="margin-right:5px"/>';
-        echo $this->__("Finished profile execution.");
-        echo '</li>';
-        echo "</ul>";
-        */
-        echo '</body></html>';
-        exit;
+        parent::setExceptions($exceptions);
+        return $exceptions;
     }
 }

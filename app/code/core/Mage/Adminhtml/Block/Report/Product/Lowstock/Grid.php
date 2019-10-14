@@ -10,11 +10,17 @@
  * http://opensource.org/licenses/osl-3.0.php
  * If you did not receive a copy of the license and are unable to
  * obtain it through the world-wide-web, please send an email
- * to license@magentocommerce.com so we can send you a copy immediately.
+ * to license@magento.com so we can send you a copy immediately.
  *
- * @category   Mage
- * @package    Mage_Adminhtml
- * @copyright  Copyright (c) 2004-2007 Irubin Consulting Inc. DBA Varien (http://www.varien.com)
+ * DISCLAIMER
+ *
+ * Do not edit or add to this file if you wish to upgrade Magento to newer
+ * versions in the future. If you wish to customize Magento for your
+ * needs please refer to http://www.magento.com for more information.
+ *
+ * @category    Mage
+ * @package     Mage_Adminhtml
+ * @copyright  Copyright (c) 2006-2017 X.commerce, Inc. and affiliates (http://www.magento.com)
  * @license    http://opensource.org/licenses/osl-3.0.php  Open Software License (OSL 3.0)
  */
 
@@ -23,9 +29,11 @@
  *
  * @category   Mage
  * @package    Mage_Adminhtml
+ * @author      Magento Core Team <core@magentocommerce.com>
  */
 class Mage_Adminhtml_Block_Report_Product_Lowstock_Grid extends Mage_Adminhtml_Block_Widget_Grid
 {
+//    protected $_saveParametersInSession = true;
 
     public function __construct()
     {
@@ -48,17 +56,19 @@ class Mage_Adminhtml_Block_Report_Product_Lowstock_Grid extends Mage_Adminhtml_B
             $storeId = '';
         }
 
-        $collection = Mage::getModel('catalog/product')->getCollection()
+        /** @var $collection Mage_Reports_Model_Resource_Product_Lowstock_Collection  */
+        $collection = Mage::getResourceModel('reports/product_lowstock_collection')
             ->addAttributeToSelect('*')
             ->setStoreId($storeId)
-            ->addStoreFilter($storeId)
-            ->joinField('qty',
-                'cataloginventory/stock_item',
-                'qty',
-                'product_id=entity_id',
-                '{{table}}.stock_id=1',
-                'left')
-            ->setOrder('qty', 'asc');
+            ->filterByIsQtyProductTypes()
+            ->joinInventoryItem('qty')
+            ->useManageStockFilter($storeId)
+            ->useNotifyStockQtyFilter($storeId)
+            ->setOrder('qty', Varien_Data_Collection::SORT_ORDER_ASC);
+
+        if( $storeId ) {
+            $collection->addStoreFilter($storeId);
+        }
 
         $this->setCollection($collection);
         return parent::_prepareCollection();
@@ -73,7 +83,7 @@ class Mage_Adminhtml_Block_Report_Product_Lowstock_Grid extends Mage_Adminhtml_B
         ));
 
         $this->addColumn('sku', array(
-            'header'    =>Mage::helper('reports')->__('Product Sku'),
+            'header'    =>Mage::helper('reports')->__('Product SKU'),
             'sortable'  =>false,
             'index'     =>'sku'
         ));
@@ -89,7 +99,7 @@ class Mage_Adminhtml_Block_Report_Product_Lowstock_Grid extends Mage_Adminhtml_B
         ));
 
         $this->addExportType('*/*/exportLowstockCsv', Mage::helper('reports')->__('CSV'));
-        $this->addExportType('*/*/exportLowstockExcel', Mage::helper('reports')->__('Excel'));
+        $this->addExportType('*/*/exportLowstockExcel', Mage::helper('reports')->__('Excel XML'));
 
         return parent::_prepareColumns();
     }

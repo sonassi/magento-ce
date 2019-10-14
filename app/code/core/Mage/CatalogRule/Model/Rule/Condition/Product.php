@@ -10,211 +10,129 @@
  * http://opensource.org/licenses/osl-3.0.php
  * If you did not receive a copy of the license and are unable to
  * obtain it through the world-wide-web, please send an email
- * to license@magentocommerce.com so we can send you a copy immediately.
+ * to license@magento.com so we can send you a copy immediately.
  *
- * @category   Mage
- * @package    Mage_CatalogRule
- * @copyright  Copyright (c) 2004-2007 Irubin Consulting Inc. DBA Varien (http://www.varien.com)
+ * DISCLAIMER
+ *
+ * Do not edit or add to this file if you wish to upgrade Magento to newer
+ * versions in the future. If you wish to customize Magento for your
+ * needs please refer to http://www.magento.com for more information.
+ *
+ * @category    Mage
+ * @package     Mage_CatalogRule
+ * @copyright  Copyright (c) 2006-2017 X.commerce, Inc. and affiliates (http://www.magento.com)
  * @license    http://opensource.org/licenses/osl-3.0.php  Open Software License (OSL 3.0)
  */
 
 
-class Mage_CatalogRule_Model_Rule_Condition_Product extends Mage_Rule_Model_Condition_Abstract
+/**
+ * Catalog Rule Product Condition data model
+ */
+class Mage_CatalogRule_Model_Rule_Condition_Product extends Mage_Rule_Model_Condition_Product_Abstract
 {
-    public function getAttributeObject()
+    /**
+     * Validate product attribute value for condition
+     *
+     * @param Varien_Object $object
+     * @return bool
+     */
+    public function validate(Varien_Object $object)
     {
-        $obj = Mage::getSingleton('eav/config')
-            ->getAttribute('catalog_product', $this->getAttribute());
-        if ($obj && !$obj->getEntity()) {
-            $obj->setEntity(Mage::getResourceSingleton('catalog/product'));
+        $attrCode = $this->getAttribute();
+        if ('category_ids' == $attrCode) {
+            return $this->validateAttribute($object->getCategoryIds());
         }
-        return $obj;
-    }
-
-    protected function _addSpecialAttributes(array &$attributes)
-    {
-        $attributes['attribute_set_id'] = Mage::helper('catalogrule')->__('Attribute Set');
-        $attributes['category_ids'] = Mage::helper('catalogrule')->__('Category');
-    }
-
-    public function loadAttributeOptions()
-    {
-        $productAttributes = Mage::getResourceSingleton('catalog/product')
-            ->loadAllAttributes()->getAttributesByCode();
-
-        $attributes = array();
-        foreach ($productAttributes as $attr) {
-            if (!$attr->isAllowedForRuleCondition()) {
-                continue;
-            }
-            $attributes[$attr->getAttributeCode()] = $attr->getFrontend()->getLabel();
+        if ('attribute_set_id' == $attrCode) {
+            return $this->validateAttribute($object->getData($attrCode));
         }
 
-        $this->_addSpecialAttributes($attributes);
+        $oldAttrValue = $object->hasData($attrCode) ? $object->getData($attrCode) : null;
+        $object->setData($attrCode, $this->_getAttributeValue($object));
+        $result = $this->_validateProduct($object);
+        $this->_restoreOldAttrValue($object, $oldAttrValue);
 
-        asort($attributes);
-        $this->setAttributeOption($attributes);
-
-        return $this;
+        return (bool)$result;
     }
 
-    public function getValueOption($option=null)
+    /**
+     * Validate product
+     *
+     * @param Varien_Object $object
+     * @return bool
+     */
+    protected function _validateProduct($object)
     {
-        if (!$this->getData('value_option')) {
-            if ($this->getAttribute()==='attribute_set_id') {
-                $entityTypeId = Mage::getSingleton('eav/config')
-                    ->getEntityType('catalog_product')->getId();
-                $options = Mage::getResourceModel('eav/entity_attribute_set_collection')
-                    ->setEntityTypeFilter($entityTypeId)
-                    ->load()->toOptionHash();
-                $this->setData('value_option', $options);
-            } elseif (is_object($this->getAttributeObject()) && $this->getAttributeObject()->usesSource()) {
-                $optionsArr = $this->getAttributeObject()->getSource()->getAllOptions();
-                $options = array();
-                foreach ($optionsArr as $o) {
-                    if (is_array($o['value'])) {
-
-                    } else {
-                        $options[$o['value']] = $o['label'];
-                    }
-                }
-                $this->setData('value_option', $options);
-            }
-        }
-        return $this->getData('value_option'.(!is_null($option) ? '/'.$option : ''));
+        return Mage_Rule_Model_Condition_Abstract::validate($object);
     }
 
-    public function getValueSelectOptions()
+    /**
+     * Restore old attribute value
+     *
+     * @param Varien_Object $object
+     * @param mixed $oldAttrValue
+     */
+    protected function _restoreOldAttrValue($object, $oldAttrValue)
     {
-        if (!$this->getData('value_select_options')) {
-            if ($this->getAttribute()==='attribute_set_id') {
-                $entityTypeId = Mage::getSingleton('eav/config')
-                    ->getEntityType('catalog_product')->getId();
-                $options = Mage::getResourceModel('eav/entity_attribute_set_collection')
-                    ->setEntityTypeFilter($entityTypeId)
-                    ->load()->toOptionArray();
-                $this->setData('value_select_options', $options);
-            } elseif (is_object($this->getAttributeObject()) && $this->getAttributeObject()->usesSource()) {
-                $optionsArr = $this->getAttributeObject()->getSource()->getAllOptions();
-                $this->setData('value_select_options', $optionsArr);
-            }
-        }
-        return $this->getData('value_select_options');
-    }
-
-    public function getValueAfterElementHtml()
-    {
-        $html = '';
-
-        switch ($this->getAttribute()) {
-            case 'sku': case 'category_ids':
-                $image = Mage::getDesign()->getSkinUrl('images/rule_chooser_trigger.gif');
-                break;
-        }
-
-        if (!empty($image)) {
-            $html = '<a href="javascript:void(0)" class="rule-chooser-trigger"><img src="' . $image . '" alt="" align="absmiddle" class="rule-chooser-trigger" title="' . Mage::helper('rule')->__('Open Chooser') . '" /></a>';
-        }
-        return $html;
-    }
-
-    public function getAttributeElement()
-    {
-        $element = parent::getAttributeElement();
-        $element->setShowAsText(true);
-        return $element;
-    }
-
-    public function collectValidatedAttributes($productCollection)
-    {
-        $attributes = $this->getRule()->getCollectedAttributes();
-        $attributes[$this->getAttribute()] = true;
-        $this->getRule()->setCollectedAttributes($attributes);
-        $productCollection->addAttributeToSelect($this->getAttribute());
-        return $this;
-    }
-
-    public function getInputType()
-    {
-        if ($this->getAttribute()==='attribute_set_id') {
-            return 'select';
-        }
-        if (!is_object($this->getAttributeObject())) {
-            return 'string';
-        }
-        switch ($this->getAttributeObject()->getFrontendInput()) {
-            case 'select':
-                return 'select';
-
-            case 'date':
-                return 'date';
-
-            default:
-                return 'string';
+        $attrCode = $this->getAttribute();
+        if (is_null($oldAttrValue)) {
+            $object->unsetData($attrCode);
+        } else {
+            $object->setData($attrCode, $oldAttrValue);
         }
     }
 
-    public function getValueElementType()
+    /**
+     * Get attribute value
+     *
+     * @param Varien_Object $object
+     * @return mixed
+     */
+    protected function _getAttributeValue($object)
     {
-        if ($this->getAttribute()==='attribute_set_id') {
-            return 'select';
-        }
-        if (!is_object($this->getAttributeObject())) {
-            return 'text';
-        }
-        switch ($this->getAttributeObject()->getFrontendInput()) {
-            case 'select':
-                return 'select';
+        $attrCode = $this->getAttribute();
+        $storeId = $object->getStoreId();
+        $defaultStoreId = Mage_Core_Model_App::ADMIN_STORE_ID;
+        $productValues  = isset($this->_entityAttributeValues[$object->getId()])
+            ? $this->_entityAttributeValues[$object->getId()] : array();
+        $defaultValue = isset($productValues[$defaultStoreId])
+            ? $productValues[$defaultStoreId] : $object->getData($attrCode);
+        $value = isset($productValues[$storeId]) ? $productValues[$storeId] : $defaultValue;
 
-            case 'date':
-                return 'date';
+        $value = $this->_prepareDatetimeValue($value, $object);
+        $value = $this->_prepareMultiselectValue($value, $object);
 
-            default:
-                return 'text';
-        }
+        return $value;
     }
 
-    public function getValueElement()
+    /**
+     * Prepare datetime attribute value
+     *
+     * @param mixed $value
+     * @param Varien_Object $object
+     * @return mixed
+     */
+    protected function _prepareDatetimeValue($value, $object)
     {
-        $element = parent::getValueElement();
-        if (is_object($this->getAttributeObject())) {
-            switch ($this->getAttributeObject()->getFrontendInput()) {
-                case 'date':
-                    $element->setImage(Mage::getDesign()->getSkinUrl('images/grid-cal.gif'));
-                    break;
-            }
+        $attribute = $object->getResource()->getAttribute($this->getAttribute());
+        if ($attribute && $attribute->getBackendType() == 'datetime') {
+            $value = strtotime($value);
         }
-
-        return $element;
+        return $value;
     }
 
-    public function getValueElementChooserUrl()
+    /**
+     * Prepare multiselect attribute value
+     *
+     * @param mixed $value
+     * @param Varien_Object $object
+     * @return mixed
+     */
+    protected function _prepareMultiselectValue($value, $object)
     {
-        $url = false;
-        switch ($this->getAttribute()) {
-            case 'sku': case 'category_ids':
-                $url = 'adminhtml/promo_widget/chooser'
-                    .'/attribute/'.$this->getAttribute();
-                if ($this->getJsFormObject()) {
-                    $url .= '/form/'.$this->getJsFormObject();
-                }
-                break;
+        $attribute = $object->getResource()->getAttribute($this->getAttribute());
+        if ($attribute && $attribute->getFrontendInput() == 'multiselect') {
+            $value = strlen($value) ? explode(',', $value) : array();
         }
-        return $url!==false ? Mage::helper('adminhtml')->getUrl($url) : '';
-    }
-
-    public function getExplicitApply()
-    {
-        switch ($this->getAttribute()) {
-            case 'sku': case 'category_ids':
-                return true;
-        }
-        if (is_object($this->getAttributeObject())) {
-            switch ($this->getAttributeObject()->getFrontendInput()) {
-                case 'date':
-                    return true;
-            }
-        }
-        return false;
+        return $value;
     }
 }

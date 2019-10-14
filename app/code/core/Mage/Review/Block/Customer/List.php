@@ -10,11 +10,17 @@
  * http://opensource.org/licenses/osl-3.0.php
  * If you did not receive a copy of the license and are unable to
  * obtain it through the world-wide-web, please send an email
- * to license@magentocommerce.com so we can send you a copy immediately.
+ * to license@magento.com so we can send you a copy immediately.
  *
- * @category   Mage
- * @package    Mage_Review
- * @copyright  Copyright (c) 2004-2007 Irubin Consulting Inc. DBA Varien (http://www.varien.com)
+ * DISCLAIMER
+ *
+ * Do not edit or add to this file if you wish to upgrade Magento to newer
+ * versions in the future. If you wish to customize Magento for your
+ * needs please refer to http://www.magento.com for more information.
+ *
+ * @category    Mage
+ * @package     Mage_Review
+ * @copyright  Copyright (c) 2006-2017 X.commerce, Inc. and affiliates (http://www.magento.com)
  * @license    http://opensource.org/licenses/osl-3.0.php  Open Software License (OSL 3.0)
  */
 
@@ -24,12 +30,20 @@
  *
  * @category   Mage
  * @package    Mage_Review
+ * @author      Magento Core Team <core@magentocommerce.com>
  */
-class Mage_Review_Block_Customer_List extends Mage_Core_Block_Template
+class Mage_Review_Block_Customer_List extends Mage_Customer_Block_Account_Dashboard
 {
-
+    /**
+     * Product reviews collection
+     *
+     * @var Mage_Review_Model_Resource_Review_Product_Collection
+     */
     protected $_collection;
 
+    /**
+     * Initializes collection
+     */
     protected function _construct()
     {
         $this->_collection = Mage::getModel('review/review')->getProductCollection();
@@ -39,50 +53,94 @@ class Mage_Review_Block_Customer_List extends Mage_Core_Block_Template
             ->setDateOrder();
     }
 
+    /**
+     * Gets collection items count
+     *
+     * @return int
+     */
     public function count()
     {
         return $this->_collection->getSize();
     }
 
+    /**
+     * Get html code for toolbar
+     *
+     * @return string
+     */
     public function getToolbarHtml()
     {
         return $this->getChildHtml('toolbar');
     }
 
+    /**
+     * Initializes toolbar
+     *
+     * @return Mage_Core_Block_Abstract
+     */
     protected function _prepareLayout()
     {
         $toolbar = $this->getLayout()->createBlock('page/html_pager', 'customer_review_list.toolbar')
-            ->setCollection($this->_getCollection());
+            ->setCollection($this->getCollection());
 
         $this->setChild('toolbar', $toolbar);
         return parent::_prepareLayout();
     }
 
+    /**
+     * Get collection
+     *
+     * @return Mage_Review_Model_Resource_Review_Product_Collection
+     */
     protected function _getCollection()
     {
         return $this->_collection;
     }
 
+    /**
+     * Get collection
+     *
+     * @return Mage_Review_Model_Resource_Review_Product_Collection
+     */
     public function getCollection()
     {
         return $this->_getCollection();
     }
 
+    /**
+     * Get review link
+     *
+     * @return string
+     */
     public function getReviewLink()
     {
-        return Mage::getUrl('customer/review/view/');
+        return Mage::getUrl('review/customer/view/');
     }
 
+    /**
+     * Get product link
+     *
+     * @return string
+     */
     public function getProductLink()
     {
         return Mage::getUrl('catalog/product/view/');
     }
 
+    /**
+     * Format date in short format
+     *
+     * @param $date
+     * @return string
+     */
     public function dateFormat($date)
     {
         return $this->formatDate($date, Mage_Core_Model_Locale::FORMAT_TYPE_SHORT);
     }
 
+    /**
+     * @return Mage_Core_Block_Abstract
+     */
     protected function _beforeToHtml()
     {
         $this->_getCollection()
@@ -90,5 +148,4 @@ class Mage_Review_Block_Customer_List extends Mage_Core_Block_Template
             ->addReviewSummary();
         return parent::_beforeToHtml();
     }
-
 }

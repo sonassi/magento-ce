@@ -14,24 +14,25 @@
  *
  * @category   Zend
  * @package    Zend_Controller
- * @copyright  Copyright (c) 2005-2008 Zend Technologies USA Inc. (http://www.zend.com)
+ * @copyright  Copyright (c) 2005-2015 Zend Technologies USA Inc. (http://www.zend.com)
  * @license    http://framework.zend.com/license/new-bsd     New BSD License
  */
 
 /**
- * Zend_XmlRpc_Exception
- */
-require_once 'Zend/XmlRpc/Exception.php';
-
-/**
  * Zend_XmlRpc_Value
  */
-require_once 'Zend/XmlRpc/Value.php';
+#require_once 'Zend/XmlRpc/Value.php';
 
 /**
  * Zend_XmlRpc_Fault
  */
-require_once 'Zend/XmlRpc/Fault.php';
+#require_once 'Zend/XmlRpc/Fault.php';
+
+/** @see Zend_Xml_Security */
+#require_once 'Zend/Xml/Security.php';
+
+/** @see Zend_Xml_Exception */
+#require_once 'Zend/Xml/Exception.php';
 
 /**
  * XmlRpc Request object
@@ -46,9 +47,9 @@ require_once 'Zend/XmlRpc/Fault.php';
  *
  * @category Zend
  * @package  Zend_XmlRpc
- * @copyright  Copyright (c) 2005-2008 Zend Technologies USA Inc. (http://www.zend.com)
+ * @copyright  Copyright (c) 2005-2015 Zend Technologies USA Inc. (http://www.zend.com)
  * @license    http://framework.zend.com/license/new-bsd     New BSD License
- * @version $Id: Request.php 8997 2008-03-22 17:17:05Z matthew $
+ * @version $Id$
  */
 class Zend_XmlRpc_Request
 {
@@ -121,6 +122,7 @@ class Zend_XmlRpc_Request
     public function setEncoding($encoding)
     {
         $this->_encoding = $encoding;
+        Zend_XmlRpc_Value::setEncoding($encoding);
         return $this;
     }
 
@@ -285,7 +287,7 @@ class Zend_XmlRpc_Request
 
     /**
      * Return parameter types
-     * 
+     *
      * @return array
      */
     public function getTypes()
@@ -308,8 +310,8 @@ class Zend_XmlRpc_Request
         }
 
         try {
-            $xml = @new SimpleXMLElement($request);
-        } catch (Exception $e) {
+            $xml = Zend_Xml_Security::scan($request);
+        } catch (Zend_Xml_Exception $e) {
             // Not valid XML
             $this->_fault = new Zend_XmlRpc_Fault(631);
             $this->_fault->setEncoding($this->getEncoding());
@@ -331,7 +333,7 @@ class Zend_XmlRpc_Request
             $types = array();
             $argv  = array();
             foreach ($xml->params->children() as $param) {
-                if (! $param->value instanceof SimpleXMLElement) {
+                if (!isset($param->value)) {
                     $this->_fault = new Zend_XmlRpc_Fault(633);
                     $this->_fault->setEncoding($this->getEncoding());
                     return false;
@@ -406,29 +408,29 @@ class Zend_XmlRpc_Request
      *
      * @return string
      */
-    public function saveXML()
+    public function saveXml()
     {
         $args   = $this->_getXmlRpcParams();
         $method = $this->getMethod();
 
-        $dom = new DOMDocument('1.0', $this->getEncoding());
-        $mCall = $dom->appendChild($dom->createElement('methodCall'));
-        $mName = $mCall->appendChild($dom->createElement('methodName', $method));
+        $generator = Zend_XmlRpc_Value::getGenerator();
+        $generator->openElement('methodCall')
+                  ->openElement('methodName', $method)
+                  ->closeElement('methodName');
 
         if (is_array($args) && count($args)) {
-            $params = $mCall->appendChild($dom->createElement('params'));
+            $generator->openElement('params');
 
             foreach ($args as $arg) {
-                /* @var $arg Zend_XmlRpc_Value */
-                $argDOM = new DOMDocument('1.0', $this->getEncoding());
-                $argDOM->loadXML($arg->saveXML());
-
-                $param = $params->appendChild($dom->createElement('param'));
-                $param->appendChild($dom->importNode($argDOM->documentElement, 1));
+                $generator->openElement('param');
+                $arg->generateXml();
+                $generator->closeElement('param');
             }
+            $generator->closeElement('params');
         }
+        $generator->closeElement('methodCall');
 
-        return $dom->saveXML();
+        return $generator->flush();
     }
 
     /**

@@ -10,11 +10,17 @@
  * http://opensource.org/licenses/osl-3.0.php
  * If you did not receive a copy of the license and are unable to
  * obtain it through the world-wide-web, please send an email
- * to license@magentocommerce.com so we can send you a copy immediately.
+ * to license@magento.com so we can send you a copy immediately.
  *
- * @category   Mage
- * @package    Mage_Adminhtml
- * @copyright  Copyright (c) 2004-2007 Irubin Consulting Inc. DBA Varien (http://www.varien.com)
+ * DISCLAIMER
+ *
+ * Do not edit or add to this file if you wish to upgrade Magento to newer
+ * versions in the future. If you wish to customize Magento for your
+ * needs please refer to http://www.magento.com for more information.
+ *
+ * @category    Mage
+ * @package     Mage_Adminhtml
+ * @copyright  Copyright (c) 2006-2017 X.commerce, Inc. and affiliates (http://www.magento.com)
  * @license    http://opensource.org/licenses/osl-3.0.php  Open Software License (OSL 3.0)
  */
 
@@ -24,10 +30,10 @@
  *
  * @category   Mage
  * @package    Mage_Adminhtml
+ * @author      Magento Core Team <core@magentocommerce.com>
  */
 class Mage_Adminhtml_Block_Cms_Block_Edit extends Mage_Adminhtml_Block_Widget_Form_Container
 {
-
     public function __construct()
     {
         $this->_objectId = 'block_id';
@@ -39,7 +45,7 @@ class Mage_Adminhtml_Block_Cms_Block_Edit extends Mage_Adminhtml_Block_Widget_Fo
         $this->_updateButton('delete', 'label', Mage::helper('cms')->__('Delete Block'));
 
         $this->_addButton('saveandcontinue', array(
-            'label'     => Mage::helper('adminhtml')->__('Save And Continue Edit'),
+            'label'     => Mage::helper('adminhtml')->__('Save and Continue Edit'),
             'onclick'   => 'saveAndContinueEdit()',
             'class'     => 'save',
         ), -100);
@@ -67,7 +73,7 @@ class Mage_Adminhtml_Block_Cms_Block_Edit extends Mage_Adminhtml_Block_Widget_Fo
     public function getHeaderText()
     {
         if (Mage::registry('cms_block')->getId()) {
-            return Mage::helper('cms')->__("Edit Block '%s'", $this->htmlEscape(Mage::registry('cms_block')->getTitle()));
+            return Mage::helper('cms')->__("Edit Block '%s'", $this->escapeHtml(Mage::registry('cms_block')->getTitle()));
         }
         else {
             return Mage::helper('cms')->__('New Block');

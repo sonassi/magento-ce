@@ -10,11 +10,17 @@
  * http://opensource.org/licenses/osl-3.0.php
  * If you did not receive a copy of the license and are unable to
  * obtain it through the world-wide-web, please send an email
- * to license@magentocommerce.com so we can send you a copy immediately.
+ * to license@magento.com so we can send you a copy immediately.
  *
- * @category   Mage
- * @package    Mage_Customer
- * @copyright  Copyright (c) 2004-2007 Irubin Consulting Inc. DBA Varien (http://www.varien.com)
+ * DISCLAIMER
+ *
+ * Do not edit or add to this file if you wish to upgrade Magento to newer
+ * versions in the future. If you wish to customize Magento for your
+ * needs please refer to http://www.magento.com for more information.
+ *
+ * @category    Mage
+ * @package     Mage_Customer
+ * @copyright  Copyright (c) 2006-2017 X.commerce, Inc. and affiliates (http://www.magento.com)
  * @license    http://opensource.org/licenses/osl-3.0.php  Open Software License (OSL 3.0)
  */
 
@@ -24,8 +30,11 @@
  *
  * @category   Mage
  * @package    Mage_Customer
+ * @author      Magento Core Team <core@magentocommerce.com>
  */
-class Mage_Customer_Block_Address_Renderer_Default extends Mage_Core_Block_Abstract implements Mage_Customer_Block_Address_Renderer_Interface
+class Mage_Customer_Block_Address_Renderer_Default
+    extends Mage_Core_Block_Abstract
+    implements Mage_Customer_Block_Address_Renderer_Interface
 {
     /**
      * Format type object
@@ -56,34 +65,76 @@ class Mage_Customer_Block_Address_Renderer_Default extends Mage_Core_Block_Abstr
         return $this;
     }
 
+    public function getFormat(Mage_Customer_Model_Address_Abstract $address=null)
+    {
+        $countryFormat = is_null($address)
+            ? false
+            : $address->getCountryModel()->getFormat($this->getType()->getCode());
+        $format = $countryFormat ? $countryFormat->getFormat() : $this->getType()->getDefaultFormat();
+        return $format;
+    }
+
     /**
      * Render address
      *
      * @param Mage_Customer_Model_Address_Abstract $address
      * @return string
      */
-    public function render(Mage_Customer_Model_Address_Abstract $address)
+    public function render(Mage_Customer_Model_Address_Abstract $address, $format=null)
     {
-        $format        = $this->getType()->getDefaultFormat();
-        $countryFormat = $address->getCountryModel()->getFormat($this->getType()->getCode());
-
-        $address->getRegion();
-        $address->getCountry();
-        $address->explodeStreetAddress();
-
-        if ($countryFormat) {
-            $format = $countryFormat->getFormat();
+        switch ($this->getType()->getCode()) {
+            case 'html':
+                $dataFormat = Mage_Customer_Model_Attribute_Data::OUTPUT_FORMAT_HTML;
+                break;
+            case 'pdf':
+                $dataFormat = Mage_Customer_Model_Attribute_Data::OUTPUT_FORMAT_PDF;
+                break;
+            case 'oneline':
+                $dataFormat = Mage_Customer_Model_Attribute_Data::OUTPUT_FORMAT_ONELINE;
+                break;
+            default:
+                $dataFormat = Mage_Customer_Model_Attribute_Data::OUTPUT_FORMAT_TEXT;
+                break;
         }
 
-        $formater = new Varien_Filter_Template();
-        $data = $address->getData();
-        if ($this->getType()->getHtmlEscape()) {
-            foreach ($data as $key => $value) {
-            	$data[$key] = $this->htmlEscape($value);
+        $formater   = new Varien_Filter_Template();
+        $attributes = Mage::helper('customer/address')->getAttributes();
+
+        $data = array();
+        foreach ($attributes as $attribute) {
+            /* @var $attribute Mage_Customer_Model_Attribute */
+            if (!$attribute->getIsVisible()) {
+                continue;
+            }
+            if ($attribute->getAttributeCode() == 'country_id') {
+                $data['country'] = $address->getCountryModel()->getName();
+            } else if ($attribute->getAttributeCode() == 'region') {
+                $data['region'] = Mage::helper('directory')->__($address->getRegion());
+            } else {
+                $dataModel = Mage_Customer_Model_Attribute_Data::factory($attribute, $address);
+                $value     = $dataModel->outputValue($dataFormat);
+                if ($attribute->getFrontendInput() == 'multiline') {
+                    $values    = $dataModel->outputValue(Mage_Customer_Model_Attribute_Data::OUTPUT_FORMAT_ARRAY);
+                    // explode lines
+                    foreach ($values as $k => $v) {
+                        $key = sprintf('%s%d', $attribute->getAttributeCode(), $k + 1);
+                        $data[$key] = $v;
+                    }
+                }
+                $data[$attribute->getAttributeCode()] = $value;
             }
         }
-        $formater->setVariables(array_merge($data, array('country'=>$address->getCountryModel()->getName())));
+
+        if ($this->getType()->getHtmlEscape()) {
+            foreach ($data as $key => $value) {
+                $data[$key] = $this->escapeHtml($value);
+            }
+        }
+
+        $formater->setVariables($data);
+
+        $format = !is_null($format) ? $format : $this->getFormat($address);
+
         return $formater->filter($format);
     }
-
 }

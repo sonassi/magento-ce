@@ -10,11 +10,17 @@
  * http://opensource.org/licenses/osl-3.0.php
  * If you did not receive a copy of the license and are unable to
  * obtain it through the world-wide-web, please send an email
- * to license@magentocommerce.com so we can send you a copy immediately.
+ * to license@magento.com so we can send you a copy immediately.
  *
- * @category   Mage
- * @package    Mage_Core
- * @copyright  Copyright (c) 2004-2007 Irubin Consulting Inc. DBA Varien (http://www.varien.com)
+ * DISCLAIMER
+ *
+ * Do not edit or add to this file if you wish to upgrade Magento to newer
+ * versions in the future. If you wish to customize Magento for your
+ * needs please refer to http://www.magento.com for more information.
+ *
+ * @category    Mage
+ * @package     Mage_Core
+ * @copyright  Copyright (c) 2006-2017 X.commerce, Inc. and affiliates (http://www.magento.com)
  * @license    http://opensource.org/licenses/osl-3.0.php  Open Software License (OSL 3.0)
  */
 
@@ -22,51 +28,10 @@
 /**
  * Url rewrite resource model class
  *
- *
- * @category   Mage
- * @package    Mage_Core
+ * @category    Mage
+ * @package     Mage_Core
+ * @author      Magento Core Team <core@magentocommerce.com>
  */
-class Mage_Core_Model_Mysql4_Url_Rewrite extends Mage_Core_Model_Mysql4_Abstract
+class Mage_Core_Model_Mysql4_Url_Rewrite extends Mage_Core_Model_Resource_Url_Rewrite
 {
-    protected $_tagTable;
-
-    protected function _construct()
-    {
-        $this->_init('core/url_rewrite', 'url_rewrite_id');
-        $this->_tagTable = $this->getTable('url_rewrite_tag');
-        $this->_uniqueFields = array(
-//            array(
-//                'field' => array('target_path','store_id'),
-//                'title' => Mage::helper('core')->__('Target path for specified store')
-//            ),
-//
-            array(
-                'field' => array('id_path','store_id','is_system'),
-                'title' => Mage::helper('core')->__('Id path for specified store')
-            ),
-            array(
-                 'field' => array('request_path','store_id'),
-                 'title' => Mage::helper('core')->__('Request path for specified store'),
-            )
-        );
-    }
-
-    /**
-     * Retrieve select object for load object data
-     *
-     * @param string $field
-     * @param mixed $value
-     * @return Zend_Db_Select
-     */
-    protected function _getLoadSelect($field, $value, $object)
-    {
-        $select = parent::_getLoadSelect($field, $value, $object);
-
-        if (!is_null($object->getStoreId())) {
-            $select->where('store_id=0 or store_id=?', $object->getStoreId());
-            $select->order('store_id', 'desc');
-        }
-
-        return $select;
-    }
 }

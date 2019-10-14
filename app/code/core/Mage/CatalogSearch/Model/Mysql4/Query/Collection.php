@@ -10,58 +10,28 @@
  * http://opensource.org/licenses/osl-3.0.php
  * If you did not receive a copy of the license and are unable to
  * obtain it through the world-wide-web, please send an email
- * to license@magentocommerce.com so we can send you a copy immediately.
+ * to license@magento.com so we can send you a copy immediately.
  *
- * @category   Mage
- * @package    Mage_CatalogSearch
- * @copyright  Copyright (c) 2004-2007 Irubin Consulting Inc. DBA Varien (http://www.varien.com)
+ * DISCLAIMER
+ *
+ * Do not edit or add to this file if you wish to upgrade Magento to newer
+ * versions in the future. If you wish to customize Magento for your
+ * needs please refer to http://www.magento.com for more information.
+ *
+ * @category    Mage
+ * @package     Mage_CatalogSearch
+ * @copyright  Copyright (c) 2006-2017 X.commerce, Inc. and affiliates (http://www.magento.com)
  * @license    http://opensource.org/licenses/osl-3.0.php  Open Software License (OSL 3.0)
  */
+
 
 /**
  * Catalog search query collection
  *
+ * @category    Mage
+ * @package     Mage_CatalogSearch
+ * @author      Magento Core Team <core@magentocommerce.com>
  */
-class Mage_CatalogSearch_Model_Mysql4_Query_Collection extends Mage_Core_Model_Mysql4_Collection_Abstract
+class Mage_CatalogSearch_Model_Mysql4_Query_Collection extends Mage_CatalogSearch_Model_Resource_Query_Collection
 {
-    protected function _construct()
-    {
-        $this->_init('catalogsearch/query');
-    }
-
-    public function setQueryFilter($query)
-    {
-    	$this->getSelect()->reset(Zend_Db_Select::FROM)->distinct(true)
-    		->from(
-    			array('main_table'=>$this->getTable('catalogsearch/search_query')),
-    			array('query'=>"if(ifnull(synonim_for,'')<>'', synonim_for, query_text)", 'num_results')
-    		)
-    		->where('num_results>0 and display_in_terms=1 and query_text like ?', $query.'%')
-    		->order('popularity desc');
-		return $this;
-    }
-
-    public function setPopularQueryFilter($storeIds = null)
-    {
-    	$this->getSelect()->reset(Zend_Db_Select::FROM)->distinct(true)
-    		->from(
-    			array('main_table'=>$this->getTable('catalogsearch/search_query')),
-    			array('name'=>"if(ifnull(synonim_for,'')<>'', synonim_for, query_text)", 'num_results')
-    		);
-        if ($storeIds) {
-            $this->getSelect()->where('num_results>0 and store_id in (?)', $storeIds);
-        } else if ($storeIds === null){
-    		$this->getSelect()->where('num_results>0 and store_id=?',Mage::app()->getStore()->getId());
-        }
-
-        $this->getSelect()->order(array('popularity desc','name'));
-
-		return $this;
-    }
-
-    public function setRecentQueryFilter()
-    {
-    	$this->setOrder('updated_at', 'desc');
-		return $this;
-    }
 }

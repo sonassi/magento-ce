@@ -10,11 +10,17 @@
  * http://opensource.org/licenses/osl-3.0.php
  * If you did not receive a copy of the license and are unable to
  * obtain it through the world-wide-web, please send an email
- * to license@magentocommerce.com so we can send you a copy immediately.
+ * to license@magento.com so we can send you a copy immediately.
  *
- * @category   Varien
- * @package    Varien_Http
- * @copyright  Copyright (c) 2004-2007 Irubin Consulting Inc. DBA Varien (http://www.varien.com)
+ * DISCLAIMER
+ *
+ * Do not edit or add to this file if you wish to upgrade Magento to newer
+ * versions in the future. If you wish to customize Magento for your
+ * needs please refer to http://www.magento.com for more information.
+ *
+ * @category    Varien
+ * @package     Varien_Http
+ * @copyright  Copyright (c) 2006-2017 X.commerce, Inc. and affiliates (http://www.magento.com)
  * @license    http://opensource.org/licenses/osl-3.0.php  Open Software License (OSL 3.0)
  */
 
@@ -23,9 +29,15 @@
  *
  * @category   Varien
  * @package    Varien_Http
+ * @author      Magento Core Team <core@magentocommerce.com>
  */
 class Varien_Http_Client extends Zend_Http_Client
 {
+    /**
+     * Internal flag to allow decoding of request body
+     *
+     * @var bool
+     */
     protected $_urlEncodeBody = true;
 
     public function __construct($uri = null, $config = null)
@@ -49,15 +61,27 @@ class Varien_Http_Client extends Zend_Http_Client
         return parent::request($method);
     }
 
+    /**
+     * Change value of internal flag to disable/enable custom prepare functionality
+     *
+     * @param bool $flag
+     * @return Varien_Http_Client
+     */
     public function setUrlEncodeBody($flag)
     {
         $this->_urlEncodeBody = $flag;
         return $this;
     }
 
-    protected function prepare_body()
+    /**
+     * Adding custom functionality to decode data after
+     * standard prepare functionality
+     *
+     * @return string
+     */
+    protected function _prepareBody()
     {
-        $body = parent::prepare_body();
+        $body = parent::_prepareBody();
 
         if (!$this->_urlEncodeBody && $body) {
             $body = urldecode($body);

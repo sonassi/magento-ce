@@ -10,22 +10,35 @@
  * http://opensource.org/licenses/osl-3.0.php
  * If you did not receive a copy of the license and are unable to
  * obtain it through the world-wide-web, please send an email
- * to license@magentocommerce.com so we can send you a copy immediately.
+ * to license@magento.com so we can send you a copy immediately.
  *
- * @category   Mage
- * @package    Mage_Cms
- * @copyright  Copyright (c) 2004-2007 Irubin Consulting Inc. DBA Varien (http://www.varien.com)
+ * DISCLAIMER
+ *
+ * Do not edit or add to this file if you wish to upgrade Magento to newer
+ * versions in the future. If you wish to customize Magento for your
+ * needs please refer to http://www.magento.com for more information.
+ *
+ * @category    Mage
+ * @package     Mage_Cms
+ * @copyright  Copyright (c) 2006-2017 X.commerce, Inc. and affiliates (http://www.magento.com)
  * @license    http://opensource.org/licenses/osl-3.0.php  Open Software License (OSL 3.0)
  */
 
+
 /**
- * Cms page content
+ * Cms page content block
  *
  * @category   Mage
  * @package    Mage_Cms
+ * @author     Magento Core Team <core@magentocommerce.com>
  */
 class Mage_Cms_Block_Page extends Mage_Core_Block_Abstract
 {
+    /**
+     * Retrieve Page instance
+     *
+     * @return Mage_Cms_Model_Page
+     */
     public function getPage()
     {
         if (!$this->hasData('page')) {
@@ -36,41 +49,79 @@ class Mage_Cms_Block_Page extends Mage_Core_Block_Abstract
             } else {
                 $page = Mage::getSingleton('cms/page');
             }
+            $this->addModelTags($page);
             $this->setData('page', $page);
         }
         return $this->getData('page');
     }
 
+    /**
+     * Prepare global layout
+     *
+     * @return Mage_Cms_Block_Page
+     */
     protected function _prepareLayout()
     {
         $page = $this->getPage();
+        $breadcrumbsArray = array();
 
         // show breadcrumbs
         if (Mage::getStoreConfig('web/default/show_cms_breadcrumbs')
             && ($breadcrumbs = $this->getLayout()->getBlock('breadcrumbs'))
             && ($page->getIdentifier()!==Mage::getStoreConfig('web/default/cms_home_page'))
             && ($page->getIdentifier()!==Mage::getStoreConfig('web/default/cms_no_route'))) {
-                $breadcrumbs->addCrumb('home', array('label'=>Mage::helper('cms')->__('Home'), 'title'=>Mage::helper('cms')->__('Go to Home Page'), 'link'=>Mage::getBaseUrl()));
-                $breadcrumbs->addCrumb('cms_page', array('label'=>$page->getTitle(), 'title'=>$page->getTitle()));
+            $breadcrumbsArray[] = array(
+                'crumbName' => 'home',
+                'crumbInfo' => array(
+                    'label' => Mage::helper('cms')->__('Home'),
+                    'title' => Mage::helper('cms')->__('Go to Home Page'),
+                    'link'  => Mage::getBaseUrl()
+                )
+            );
+            $breadcrumbsArray[] = array(
+                'crumbName' => 'cms_page',
+                'crumbInfo' => array(
+                    'label' => $page->getTitle(),
+                    'title' => $page->getTitle()
+                )
+            );
+            $breadcrumbsObject = new Varien_Object();
+            $breadcrumbsObject->setCrumbs($breadcrumbsArray);
+
+            Mage::dispatchEvent('cms_generate_breadcrumbs', array('breadcrumbs' => $breadcrumbsObject));
+
+            foreach ($breadcrumbsObject->getCrumbs() as $breadcrumbsItem) {
+                $breadcrumbs->addCrumb($breadcrumbsItem['crumbName'], $breadcrumbsItem['crumbInfo']);
+            }
         }
 
-        if ($root = $this->getLayout()->getBlock('root')) {
-            $template = (string)Mage::getConfig()->getNode('global/cms/layouts/'.$page->getRootTemplate().'/template');
-            $root->setTemplate($template);
+        $root = $this->getLayout()->getBlock('root');
+        if ($root) {
             $root->addBodyClass('cms-'.$page->getIdentifier());
         }
 
-        if ($head = $this->getLayout()->getBlock('head')) {
+        $head = $this->getLayout()->getBlock('head');
+        if ($head) {
             $head->setTitle($page->getTitle());
             $head->setKeywords($page->getMetaKeywords());
             $head->setDescription($page->getMetaDescription());
         }
+
+        return parent::_prepareLayout();
     }
 
+    /**
+     * Prepare HTML content
+     *
+     * @return string
+     */
     protected function _toHtml()
     {
-        $processor = Mage::getModel('core/email_template_filter');
-
-        return $processor->filter($this->getPage()->getContent());
+        /* @var $helper Mage_Cms_Helper_Data */
+        $helper = Mage::helper('cms');
+        $processor = $helper->getPageTemplateProcessor();
+        $html = $processor->filter($this->getPage()->getContent());
+        $html = $this->getMessagesBlock()->toHtml() . $html;
+        return $html;
     }
 }

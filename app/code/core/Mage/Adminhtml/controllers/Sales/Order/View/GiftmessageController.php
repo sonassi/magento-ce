@@ -10,11 +10,17 @@
  * http://opensource.org/licenses/osl-3.0.php
  * If you did not receive a copy of the license and are unable to
  * obtain it through the world-wide-web, please send an email
- * to license@magentocommerce.com so we can send you a copy immediately.
+ * to license@magento.com so we can send you a copy immediately.
  *
- * @category   Mage
- * @package    Mage_Adminhtml
- * @copyright  Copyright (c) 2004-2007 Irubin Consulting Inc. DBA Varien (http://www.varien.com)
+ * DISCLAIMER
+ *
+ * Do not edit or add to this file if you wish to upgrade Magento to newer
+ * versions in the future. If you wish to customize Magento for your
+ * needs please refer to http://www.magento.com for more information.
+ *
+ * @category    Mage
+ * @package     Mage_Adminhtml
+ * @copyright  Copyright (c) 2006-2017 X.commerce, Inc. and affiliates (http://www.magento.com)
  * @license    http://opensource.org/licenses/osl-3.0.php  Open Software License (OSL 3.0)
  */
 
@@ -24,6 +30,7 @@
  *
  * @category   Mage
  * @package    Mage_Adminhtml
+ * @author      Magento Core Team <core@magentocommerce.com>
  */
 class Mage_Adminhtml_Sales_Order_View_GiftmessageController extends Mage_Adminhtml_Controller_Action
 {
@@ -45,16 +52,16 @@ class Mage_Adminhtml_Sales_Order_View_GiftmessageController extends Mage_Adminht
         } catch (Mage_Core_Exception $e) {
             $this->_getSession()->addError($e->getMessage());
         } catch (Exception $e) {
-            $this->_getSession()->addError(Mage::helper('giftmessage')->__('Error while saving gift message'));
+            $this->_getSession()->addError(Mage::helper('giftmessage')->__('An error occurred while saving the gift message.'));
         }
 
         if($this->getRequest()->getParam('type')=='order_item') {
             $this->getResponse()->setBody(
-                $this->getLayout()->createBlock('adminhtml/sales_order_view_items_info')->toHtml()
+                 $this->_getGiftmessageSaveModel()->getSaved() ? 'YES' : 'NO'
             );
         } else {
             $this->getResponse()->setBody(
-                Mage::helper('giftmessage')->__('Gift message has been successfully saved')
+                Mage::helper('giftmessage')->__('The gift message has been saved.')
             );
         }
     }
@@ -67,6 +74,16 @@ class Mage_Adminhtml_Sales_Order_View_GiftmessageController extends Mage_Adminht
     protected function _getGiftmessageSaveModel()
     {
         return Mage::getSingleton('adminhtml/giftmessage_save');
+    }
+
+    /**
+     * Acl check for admin
+     *
+     * @return bool
+     */
+    protected function _isAllowed()
+    {
+        return Mage::getSingleton('admin/session')->isAllowed('sales/order');
     }
 
 }

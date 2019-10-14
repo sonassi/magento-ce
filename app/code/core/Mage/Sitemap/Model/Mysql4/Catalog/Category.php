@@ -10,93 +10,28 @@
  * http://opensource.org/licenses/osl-3.0.php
  * If you did not receive a copy of the license and are unable to
  * obtain it through the world-wide-web, please send an email
- * to license@magentocommerce.com so we can send you a copy immediately.
+ * to license@magento.com so we can send you a copy immediately.
  *
- * @category   Mage
- * @package    Mage_Sitemap
- * @copyright  Copyright (c) 2004-2007 Irubin Consulting Inc. DBA Varien (http://www.varien.com)
+ * DISCLAIMER
+ *
+ * Do not edit or add to this file if you wish to upgrade Magento to newer
+ * versions in the future. If you wish to customize Magento for your
+ * needs please refer to http://www.magento.com for more information.
+ *
+ * @category    Mage
+ * @package     Mage_Sitemap
+ * @copyright  Copyright (c) 2006-2017 X.commerce, Inc. and affiliates (http://www.magento.com)
  * @license    http://opensource.org/licenses/osl-3.0.php  Open Software License (OSL 3.0)
  */
+
 
 /**
  * Sitemap resource catalog collection model
  *
- * @category   Mage
- * @package    Mage_Sitemap
+ * @category    Mage
+ * @package     Mage_Sitemap
+ * @author      Magento Core Team <core@magentocommerce.com>
  */
-
-class Mage_Sitemap_Model_Mysql4_Catalog_Category extends Mage_Core_Model_Mysql4_Abstract
+class Mage_Sitemap_Model_Mysql4_Catalog_Category extends Mage_Sitemap_Model_Resource_Catalog_Category
 {
-    /**
-     * Init resource model (catalog/category)
-     */
-    protected function _construct()
-    {
-        $this->_init('catalog/category', 'entity_id');
-    }
-    
-    /**
-     * Get category collection array
-     * 
-     * @return array
-     */
-    public function getCollection($storeId)
-    {
-        $categories = array();
-        
-        $store = Mage::app()->getStore($storeId);
-        /* @var $store Mage_Core_Model_Store */
-        
-        if (!$store) {
-            return false;
-        }
-        
-        $select = $this->_getWriteAdapter()->select()
-            ->from($this->getMainTable())
-            ->where($this->getIdFieldName() . '=?', $store->getRootCategoryId());
-        $categoryRow = $this->_getWriteAdapter()->fetchRow($select);
-        
-        if (!$categoryRow) {
-            return false;
-        }
-        
-        $urConditions = array(
-            'e.entity_id=ur.category_id',
-            $this->_getWriteAdapter()->quoteInto('ur.store_id=?', $store->getId()),
-            'ur.product_id IS NULL',
-            $this->_getWriteAdapter()->quoteInto('ur.is_system=?', 1),
-        );
-        $select = $this->_getWriteAdapter()->select()
-            ->from(array('e' => $this->getMainTable()), array($this->getIdFieldName()))
-            ->joinLeft(
-                array('ur' => $this->getTable('core/url_rewrite')),
-                join(' AND ', $urConditions),
-                array('url'=>'request_path')
-            )
-            ->where('e.path LIKE ?', $categoryRow['path'] . '/%')
-            ->where('e.is_active=?', 1);
-        $query = $this->_getWriteAdapter()->query($select);
-        while ($row = $query->fetch()) {
-            $category = $this->_prepareCategory($row);
-            $categories[$category->getId()] = $category;
-        }
-        
-        return $categories;
-    }
-    
-    /**
-     * Prepare category
-     * 
-     * @param array $categoryRow
-     * @return Varien_Object
-     */
-    protected function _prepareCategory(array $categoryRow)
-    {
-        $category = new Varien_Object();
-    	$category->setId($categoryRow[$this->getIdFieldName()]);
-    	$categoryUrl = !empty($categoryRow['url']) ? $categoryRow['url'] : 'catalog/category/view/id/' . $category->getId();
-    	$category->setUrl($categoryUrl);
-    	return $category;
-    }
-    
 }

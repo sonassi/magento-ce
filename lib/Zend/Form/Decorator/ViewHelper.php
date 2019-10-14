@@ -14,12 +14,12 @@
  *
  * @category   Zend
  * @package    Zend_Form
- * @copyright  Copyright (c) 2005-2008 Zend Technologies USA Inc. (http://www.zend.com)
+ * @copyright  Copyright (c) 2005-2015 Zend Technologies USA Inc. (http://www.zend.com)
  * @license    http://framework.zend.com/license/new-bsd     New BSD License
  */
 
 /** Zend_Form_Decorator_Abstract */
-require_once 'Zend/Form/Decorator/Abstract.php';
+#require_once 'Zend/Form/Decorator/Abstract.php';
 
 /**
  * Zend_Form_Decorator_ViewHelper
@@ -31,15 +31,15 @@ require_once 'Zend/Form/Decorator/Abstract.php';
  * - placement: whether to append or prepend the generated content to the passed in content
  * - helper:    the name of the view helper to use
  *
- * Assumes the view helper accepts three parameters, the name, value, and 
+ * Assumes the view helper accepts three parameters, the name, value, and
  * optional attributes; these will be provided by the element.
- * 
+ *
  * @category   Zend
  * @package    Zend_Form
  * @subpackage Decorator
- * @copyright  Copyright (c) 2005-2008 Zend Technologies USA Inc. (http://www.zend.com)
+ * @copyright  Copyright (c) 2005-2015 Zend Technologies USA Inc. (http://www.zend.com)
  * @license    http://framework.zend.com/license/new-bsd     New BSD License
- * @version    $Id: ViewHelper.php 8631 2008-03-07 17:36:42Z matthew $
+ * @version    $Id$
  */
 class Zend_Form_Decorator_ViewHelper extends Zend_Form_Decorator_Abstract
 {
@@ -54,14 +54,6 @@ class Zend_Form_Decorator_ViewHelper extends Zend_Form_Decorator_Abstract
     );
 
     /**
-     * Element types representing checkboxes
-     * @var array
-     */
-    protected $_checkboxTypes = array(
-        'Zend_Form_Element_Checkbox'
-    );
-
-    /**
      * View helper to use when rendering
      * @var string
      */
@@ -69,8 +61,8 @@ class Zend_Form_Decorator_ViewHelper extends Zend_Form_Decorator_Abstract
 
     /**
      * Set view helper to use when rendering
-     * 
-     * @param  string $helper 
+     *
+     * @param  string $helper
      * @return Zend_Form_Decorator_Element_ViewHelper
      */
     public function setHelper($helper)
@@ -113,9 +105,9 @@ class Zend_Form_Decorator_ViewHelper extends Zend_Form_Decorator_Abstract
     /**
      * Get name
      *
-     * If element is a Zend_Form_Element, will attempt to namespace it if the 
+     * If element is a Zend_Form_Element, will attempt to namespace it if the
      * element belongs to an array.
-     * 
+     *
      * @return string
      */
     public function getName()
@@ -147,7 +139,7 @@ class Zend_Form_Decorator_ViewHelper extends Zend_Form_Decorator_Abstract
      * Retrieve element attributes
      *
      * Set id to element name and/or array item.
-     * 
+     *
      * @return array
      */
     public function getElementAttribs()
@@ -190,8 +182,8 @@ class Zend_Form_Decorator_ViewHelper extends Zend_Form_Decorator_Abstract
      * Get value
      *
      * If element type is one of the button types, returns the label.
-     * 
-     * @param  Zend_Form_Element $element 
+     *
+     * @param  Zend_Form_Element $element
      * @return string|null
      */
     public function getValue($element)
@@ -202,13 +194,12 @@ class Zend_Form_Decorator_ViewHelper extends Zend_Form_Decorator_Abstract
 
         foreach ($this->_buttonTypes as $type) {
             if ($element instanceof $type) {
-                return $element->getLabel();
-            }
-        }
+                if (stristr($type, 'button')) {
+                    $element->content = $element->getLabel();
 
-        foreach ($this->_checkboxTypes as $type) {
-            if ($element instanceof $type) {
-                return $element->getCheckedValue();
+                    return $element->getValue();
+                }
+                return $element->getLabel();
             }
         }
 
@@ -218,10 +209,10 @@ class Zend_Form_Decorator_ViewHelper extends Zend_Form_Decorator_Abstract
     /**
      * Render an element using a view helper
      *
-     * Determine view helper from 'viewHelper' option, or, if none set, from 
-     * the element type. Then call as 
+     * Determine view helper from 'viewHelper' option, or, if none set, from
+     * the element type. Then call as
      * helper($element->getName(), $element->getValue(), $element->getAttribs())
-     * 
+     *
      * @param  string $content
      * @return string
      * @throws Zend_Form_Decorator_Exception if element or view are not registered
@@ -232,7 +223,7 @@ class Zend_Form_Decorator_ViewHelper extends Zend_Form_Decorator_Abstract
 
         $view = $element->getView();
         if (null === $view) {
-            require_once 'Zend/Form/Decorator/Exception.php';
+            #require_once 'Zend/Form/Decorator/Exception.php';
             throw new Zend_Form_Decorator_Exception('ViewHelper decorator cannot render without a registered view object');
         }
 
@@ -240,11 +231,31 @@ class Zend_Form_Decorator_ViewHelper extends Zend_Form_Decorator_Abstract
             $element->getMultiOptions();
         }
 
-        $helper    = $this->getHelper();
-        $separator = $this->getSeparator();
-        $value     = $this->getValue($element);
+        $helper        = $this->getHelper();
+        $separator     = $this->getSeparator();
+        $value         = $this->getValue($element);
+        $attribs       = $this->getElementAttribs();
+        $name          = $element->getFullyQualifiedName();
+        $id            = $element->getId();
+        $attribs['id'] = $id;
 
-        $elementContent = $view->$helper($this->getName(), $value, $this->getElementAttribs(), $element->options);
+        $helperObject  = $view->getHelper($helper);
+        if (method_exists($helperObject, 'setTranslator')) {
+            $helperObject->setTranslator($element->getTranslator());
+        }
+
+        // Check list separator
+        if (isset($attribs['listsep'])
+            && in_array($helper, array('formMulticheckbox', 'formRadio', 'formSelect'))
+        ) {
+            $listsep = $attribs['listsep'];
+            unset($attribs['listsep']);
+
+            $elementContent = $view->$helper($name, $value, $attribs, $element->options, $listsep);
+        } else {
+            $elementContent = $view->$helper($name, $value, $attribs, $element->options);
+        }
+
         switch ($this->getPlacement()) {
             case self::APPEND:
                 return $content . $separator . $elementContent;

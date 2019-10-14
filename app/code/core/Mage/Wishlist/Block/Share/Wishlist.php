@@ -10,11 +10,17 @@
  * http://opensource.org/licenses/osl-3.0.php
  * If you did not receive a copy of the license and are unable to
  * obtain it through the world-wide-web, please send an email
- * to license@magentocommerce.com so we can send you a copy immediately.
+ * to license@magento.com so we can send you a copy immediately.
  *
- * @category   Mage
- * @package    Mage_Wishlist
- * @copyright  Copyright (c) 2004-2007 Irubin Consulting Inc. DBA Varien (http://www.varien.com)
+ * DISCLAIMER
+ *
+ * Do not edit or add to this file if you wish to upgrade Magento to newer
+ * versions in the future. If you wish to customize Magento for your
+ * needs please refer to http://www.magento.com for more information.
+ *
+ * @category    Mage
+ * @package     Mage_Wishlist
+ * @copyright  Copyright (c) 2006-2017 X.commerce, Inc. and affiliates (http://www.magento.com)
  * @license    http://opensource.org/licenses/osl-3.0.php  Open Software License (OSL 3.0)
  */
 
@@ -24,80 +30,56 @@
  *
  * @category   Mage
  * @package    Mage_Wishlist
+ * @author     Magento Core Team <core@magentocommerce.com>
  */
-class Mage_Wishlist_Block_Share_Wishlist extends Mage_Core_Block_Template
+class Mage_Wishlist_Block_Share_Wishlist extends Mage_Wishlist_Block_Abstract
 {
-
-    protected $_collection = null;
+    /**
+     * Customer instance
+     *
+     * @var Mage_Customer_Model_Customer
+     */
     protected $_customer = null;
 
+    /**
+     * Prepare global layout
+     *
+     * @return Mage_Wishlist_Block_Share_Wishlist
+     *
+     */
     protected function _prepareLayout()
     {
-        if ($headBlock = $this->getLayout()->getBlock('head')) {
+        parent::_prepareLayout();
+
+        $headBlock = $this->getLayout()->getBlock('head');
+        if ($headBlock) {
             $headBlock->setTitle($this->getHeader());
         }
+        return $this;
     }
 
-    public function getWishlist()
-    {
-        if(is_null($this->_collection)) {
-            $this->_collection = Mage::registry('shared_wishlist')->getProductCollection()
-                ->addAttributeToSelect('name')
-                ->addAttributeToSelect('price')
-                ->addAttributeToSelect('special_price')
-                ->addAttributeToSelect('special_from_date')
-                ->addAttributeToSelect('special_to_date')
-                ->addAttributeToSelect('image')
-                ->addAttributeToSelect('small_image')
-                ->addAttributeToSelect('thumbnail')
-                ->addAttributeToFilter('store_id', array('in'=>Mage::registry('shared_wishlist')->getSharedStoreIds()))
-                ->addStoreFilter();
-
-            Mage::getSingleton('catalog/product_status')->addVisibleFilterToCollection($this->_collection);
-            Mage::getSingleton('catalog/product_visibility')->addVisibleInCatalogFilterToCollection($this->_collection);
-        }
-
-        return $this->_collection;
-    }
-
+    /**
+     * Retrieve Shared Wishlist Customer instance
+     *
+     * @return Mage_Customer_Model_Customer
+     */
     public function getWishlistCustomer()
     {
-        if(is_null($this->_customer)) {
+        if (is_null($this->_customer)) {
             $this->_customer = Mage::getModel('customer/customer')
-                ->load(Mage::registry('shared_wishlist')->getCustomerId());
-
+                ->load($this->_getWishlist()->getCustomerId());
         }
 
         return $this->_customer;
     }
 
-
-    public function getEscapedDescription($item)
-    {
-        if ($item->getDescription()) {
-            return $this->htmlEscape($item->getDescription());
-        }
-        return '&nbsp;';
-    }
-
+    /**
+     * Retrieve Page Header
+     *
+     * @return string
+     */
     public function getHeader()
     {
-        return Mage::helper('wishlist')->__("%s's Wishlist", $this->htmlEscape($this->getWishlistCustomer()->getFirstname()));
-    }
-
-    public function getFormatedDate($date)
-    {
-        return $this->formatDate($date, Mage_Core_Model_Locale::FORMAT_TYPE_MEDIUM);
-    }
-
-    public function isSaleable()
-    {
-        foreach ($this->getWishlist() as $item) {
-            if ($item->isSaleable()) {
-                return true;
-            }
-        }
-
-        return false;
+        return Mage::helper('wishlist')->__("%s's Wishlist", $this->escapeHtml($this->getWishlistCustomer()->getFirstname()));
     }
 }

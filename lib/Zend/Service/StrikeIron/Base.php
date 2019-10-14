@@ -15,23 +15,23 @@
  * @category   Zend
  * @package    Zend_Service
  * @subpackage StrikeIron
- * @copyright  Copyright (c) 2005-2008 Zend Technologies USA Inc. (http://www.zend.com)
+ * @copyright  Copyright (c) 2005-2015 Zend Technologies USA Inc. (http://www.zend.com)
  * @license    http://framework.zend.com/license/new-bsd     New BSD License
- * @version    $Id: Base.php 8064 2008-02-16 10:58:39Z thomas $
+ * @version    $Id$
  */
 
 
 /**
  * @see Zend_Service_StrikeIron_Decorator
  */
-require_once 'Zend/Service/StrikeIron/Decorator.php';
+#require_once 'Zend/Service/StrikeIron/Decorator.php';
 
 
 /**
  * @category   Zend
  * @package    Zend_Service
  * @subpackage StrikeIron
- * @copyright  Copyright (c) 2005-2008 Zend Technologies USA Inc. (http://www.zend.com)
+ * @copyright  Copyright (c) 2005-2015 Zend Technologies USA Inc. (http://www.zend.com)
  * @license    http://framework.zend.com/license/new-bsd     New BSD License
  */
 class Zend_Service_StrikeIron_Base
@@ -65,7 +65,7 @@ class Zend_Service_StrikeIron_Base
             /**
              * @see Zend_Service_StrikeIron_Exception
              */
-            require_once 'Zend/Service/StrikeIron/Exception.php';
+            #require_once 'Zend/Service/StrikeIron/Exception.php';
             throw new Zend_Service_StrikeIron_Exception('SOAP extension is not enabled');
         }
 
@@ -102,8 +102,8 @@ class Zend_Service_StrikeIron_Base
             /**
              * @see Zend_Service_StrikeIron_Exception
              */
-            require_once 'Zend/Service/StrikeIron/Exception.php';
-            throw new Zend_Service_StrikeIron_Exception($message, $e->getCode());
+            #require_once 'Zend/Service/StrikeIron/Exception.php';
+            throw new Zend_Service_StrikeIron_Exception($message, $e->getCode(), $e);
         }
 
         // transform/decorate the result and return it
@@ -148,7 +148,7 @@ class Zend_Service_StrikeIron_Base
                     /**
                      * @see Zend_Service_StrikeIron_Exception
                      */
-                    require_once 'Zend/Service/StrikeIron/Exception.php';
+                    #require_once 'Zend/Service/StrikeIron/Exception.php';
                     throw new Zend_Service_StrikeIron_Exception('Header must be instance of SoapHeader');
                 } else if ($header->name == 'LicenseInfo') {
                     $foundLicenseInfo = true;
@@ -193,10 +193,10 @@ class Zend_Service_StrikeIron_Base
      * on what was originally called.
      *
      * @see    __call()
-     * @param  $result  Raw result returned from SOAPClient_>__soapCall()
-     * @param  $method  Method name that was passed to SOAPClient->__soapCall()
-     * @param  $params  Method parameters that were passed to SOAPClient->__soapCall()
-     * @return mixed    Transformed result
+     * @param  object $result  Raw result returned from SOAPClient_>__soapCall()
+     * @param  string $method  Method name that was passed to SOAPClient->__soapCall()
+     * @param  array  $params  Method parameters that were passed to SOAPClient->__soapCall()
+     * @return mixed  Transformed result
      */
     protected function _transformResult($result, $method, $params)
     {
@@ -265,7 +265,7 @@ class Zend_Service_StrikeIron_Base
             /**
              * @see Zend_Service_StrikeIron_Exception
              */
-            require_once 'Zend/Service/StrikeIron/Exception.php';
+            #require_once 'Zend/Service/StrikeIron/Exception.php';
             throw new Zend_Service_StrikeIron_Exception($msg);
         }
 

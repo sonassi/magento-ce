@@ -4,22 +4,28 @@
  *
  * NOTICE OF LICENSE
  *
- * This source file is subject to the Open Software License (OSL 3.0)
- * that is bundled with this package in the file LICENSE.txt.
+ * This source file is subject to the Academic Free License (AFL 3.0)
+ * that is bundled with this package in the file LICENSE_AFL.txt.
  * It is also available through the world-wide-web at this URL:
- * http://opensource.org/licenses/osl-3.0.php
+ * http://opensource.org/licenses/afl-3.0.php
  * If you did not receive a copy of the license and are unable to
  * obtain it through the world-wide-web, please send an email
- * to license@magentocommerce.com so we can send you a copy immediately.
+ * to license@magento.com so we can send you a copy immediately.
  *
- * @category   design_default
- * @package    Mage
- * @copyright  Copyright (c) 2004-2007 Irubin Consulting Inc. DBA Varien (http://www.varien.com)
- * @license    http://opensource.org/licenses/osl-3.0.php  Open Software License (OSL 3.0)
+ * DISCLAIMER
+ *
+ * Do not edit or add to this file if you wish to upgrade Magento to newer
+ * versions in the future. If you wish to customize Magento for your
+ * needs please refer to http://www.magento.com for more information.
+ *
+ * @category    design
+ * @package     default_default
+ * @copyright   Copyright (c) 2006-2017 X.commerce, Inc. and affiliates (http://www.magento.com)
+ * @license     http://opensource.org/licenses/afl-3.0.php  Academic Free License (AFL 3.0)
  */
 ?>
-<script type="text/javascript" language="javascript">
-
+<script type="text/javascript">
+//<![CDATA[
 var freeModel = Class.create();
 freeModel.prototype = {
     initialize : function()
@@ -35,7 +41,7 @@ freeModel.prototype = {
         } else {
             var freeMethodElements = $$('.free-method');
         }
-        for(var i in freeMethodElements) {
+        for(var i=0;i<freeMethodElements.length; i++) {
             Event.observe(freeMethodElements[i], 'change', this.checkFreeMethod.bind(this));
             this.initFreeMethod(freeMethodElements[i]);
         }
@@ -153,10 +159,10 @@ originModel.prototype = {
                         if(this.regionElement.value && (this.regionElement.value == data[i].value || this.regionElement.value == data[i].label)) {
                             html+= ' selected';
                         }
-                        html+='>'+data[i].label+'</option>';
+                        html+='>'+data[i].label+'<\/option>';
                     }
                 }
-                html+= '</select>';
+                html+= '<\/select>';
 
                 var parentNode = this.regionElement.parentNode;
                 var regionElementId = this.regionElement.id;
@@ -181,15 +187,20 @@ var perPageModel = Class.create();
 perPageModel.prototype = {
     initialize : function()
     {
-        this.gridOptions = '<?php echo Mage::getConfig()->getNode('frontend/catalog/per_page_values/grid') ?>';
-        this.listOptions = '<?php echo Mage::getConfig()->getNode('frontend/catalog/per_page_values/list') ?>';
         this.listModeElement = $('catalog_frontend_list_mode');
         if (this.listModeElement) {
-            this.gridPerPageSelect = $('catalog_frontend_grid_per_page').up(1);
-            this.listPerPageSelect = $('catalog_frontend_list_per_page').up(1);
+            this.gridValuesElement = $('catalog_frontend_grid_per_page_values');
+            this.listValuesElement = $('catalog_frontend_list_per_page_values');
+            this.listElement = $('catalog_frontend_list_per_page');
+            this.gridElement = $('catalog_frontend_grid_per_page');
+
+            this.gridOptions = [];
+            this.listOptions = [];
+
             this.refreshPerPageSelect();
             this.bindListModeChange();
         }
+        this.addValidate();
     },
     bindListModeChange : function()
     {
@@ -199,21 +210,64 @@ perPageModel.prototype = {
     {
         if (this.listModeElement.value != '') {
             if (this.listModeElement.value == 'grid') {
-                this.listPerPageSelect.hide();
-                this.gridPerPageSelect.show();
+                this.listElement.up(1).hide();
+                this.listValuesElement.up(1).hide();
+
+                this.gridElement.up(1).show();
+                this.gridValuesElement.up(1).show();
             }
             else if (this.listModeElement.value == 'grid-list' || this.listModeElement.value == 'list-grid') {
-                this.listPerPageSelect.show();
-                this.gridPerPageSelect.show();
+                this.listElement.up(1).show();
+                this.listValuesElement.up(1).show();
+
+                this.gridElement.up(1).show();
+                this.gridValuesElement.up(1).show();
             }
             else if (this.listModeElement.value == 'list') {
-                this.listPerPageSelect.show();
-                this.gridPerPageSelect.hide();
+                this.listElement.up(1).show();
+                this.listValuesElement.up(1).show();
+
+                this.gridElement.up(1).hide();
+                this.gridValuesElement.up(1).hide();
             }
         }
+    },
+    addValidate : function()
+    {
+        Validation.add('validate-per-page-value-list', '<?php echo Mage::helper('core')->jsQuoteEscape($this->__('Please enter a valid value, ex: 10,20,30')) ?>', function(v) {
+            var isValid = !Validation.get('IsEmpty').test(v);
+            var values  = v.split(',');
+            for (var i=0;i<values.length;i++) {
+                if (!/^[0-9]+$/.test(values[i])) {
+                    isValid = false;
+                }
+            }
+            return isValid;
+        });
+        Validation.add('validate-per-page-value', '<?php echo Mage::helper('core')->jsQuoteEscape($this->__('Please enter a valid value from list')) ?>', function(v, elm) {
+            if (Validation.get('IsEmpty').test(v)) {
+                return false;
+            }
+            var values = $(elm.id + '_values').value.split(',');
+            return values.indexOf(v) != -1;
+        });
     }
 }
 
 perPageSelect = new perPageModel();
 
+function showHint() {
+    $$('.hint').each(function(element){
+        Event.observe(element, 'mouseover', function(){
+            element.down().show()
+        });
+        Event.observe(element, 'mouseout', function(){
+            element.down().hide()
+        });
+    });
+}
+Event.observe(window, 'load', function(){
+    showHint();
+});
+//]]>
 </script>

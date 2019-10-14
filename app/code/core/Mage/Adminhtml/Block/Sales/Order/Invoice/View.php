@@ -10,11 +10,17 @@
  * http://opensource.org/licenses/osl-3.0.php
  * If you did not receive a copy of the license and are unable to
  * obtain it through the world-wide-web, please send an email
- * to license@magentocommerce.com so we can send you a copy immediately.
+ * to license@magento.com so we can send you a copy immediately.
  *
- * @category   Mage
- * @package    Mage_Adminhtml
- * @copyright  Copyright (c) 2004-2007 Irubin Consulting Inc. DBA Varien (http://www.varien.com)
+ * DISCLAIMER
+ *
+ * Do not edit or add to this file if you wish to upgrade Magento to newer
+ * versions in the future. If you wish to customize Magento for your
+ * needs please refer to http://www.magento.com for more information.
+ *
+ * @category    Mage
+ * @package     Mage_Adminhtml
+ * @copyright  Copyright (c) 2006-2017 X.commerce, Inc. and affiliates (http://www.magento.com)
  * @license    http://opensource.org/licenses/osl-3.0.php  Open Software License (OSL 3.0)
  */
 
@@ -23,15 +29,23 @@
  *
  * @category   Mage
  * @package    Mage_Adminhtml
+ * @author      Magento Core Team <core@magentocommerce.com>
  */
 class Mage_Adminhtml_Block_Sales_Order_Invoice_View extends Mage_Adminhtml_Block_Widget_Form_Container
 {
+    /**
+     * Admin session
+     *
+     * @var Mage_Admin_Model_Session
+     */
+    protected $_session;
 
     public function __construct()
     {
         $this->_objectId    = 'invoice_id';
         $this->_controller  = 'sales_order_invoice';
         $this->_mode        = 'view';
+        $this->_session = Mage::getSingleton('admin/session');
 
         parent::__construct();
 
@@ -39,7 +53,7 @@ class Mage_Adminhtml_Block_Sales_Order_Invoice_View extends Mage_Adminhtml_Block
         $this->_removeButton('reset');
         $this->_removeButton('delete');
 
-        if ($this->getInvoice()->canCancel()) {
+        if ($this->_isAllowedAction('cancel') && $this->getInvoice()->canCancel()) {
             $this->_addButton('cancel', array(
                 'label'     => Mage::helper('sales')->__('Cancel'),
                 'class'     => 'delete',
@@ -48,17 +62,33 @@ class Mage_Adminhtml_Block_Sales_Order_Invoice_View extends Mage_Adminhtml_Block
             );
         }
 
-        if ($this->getInvoice()->getOrder()->canCreditmemo() && !$this->getInvoice()->getIsUsedForRefund()) {
-            $this->_addButton('capture', array(
-                'label'     => Mage::helper('sales')->__('Credit Memo'),
-                'class'     => 'save',
-                'onclick'   => 'setLocation(\''.$this->getCreditMemoUrl().'\')'
-                )
+        if ($this->_isAllowedAction('emails')) {
+            $confirmationMessage = Mage::helper('core')->jsQuoteEscape(
+                Mage::helper('sales')->__('Are you sure you want to send Invoice email to customer?')
             );
+            $this->addButton('send_notification', array(
+                'label'     => Mage::helper('sales')->__('Send Email'),
+                'onclick'   => 'confirmSetLocation(\'' . $confirmationMessage . '\', \'' . $this->getEmailUrl() . '\')'
+            ));
         }
 
-        if (Mage::getSingleton('admin/session')->isAllowed('sales/order/actions/capture')
-            && $this->getInvoice()->canCapture()) {
+        $orderPayment = $this->getInvoice()->getOrder()->getPayment();
+
+        if ($this->_isAllowedAction('creditmemo') && $this->getInvoice()->getOrder()->canCreditmemo()) {
+            if (($orderPayment->canRefundPartialPerInvoice()
+                && $this->getInvoice()->canRefund()
+                && $orderPayment->getAmountPaid() > $orderPayment->getAmountRefunded())
+                || ($orderPayment->canRefund() && !$this->getInvoice()->getIsUsedForRefund())) {
+                $this->_addButton('capture', array( // capture?
+                    'label'     => Mage::helper('sales')->__('Credit Memo'),
+                    'class'     => 'go',
+                    'onclick'   => 'setLocation(\''.$this->getCreditMemoUrl().'\')'
+                    )
+                );
+            }
+        }
+
+        if ($this->_isAllowedAction('capture') && $this->getInvoice()->canCapture()) {
             $this->_addButton('capture', array(
                 'label'     => Mage::helper('sales')->__('Capture'),
                 'class'     => 'save',
@@ -99,27 +129,16 @@ class Mage_Adminhtml_Block_Sales_Order_Invoice_View extends Mage_Adminhtml_Block
     public function getHeaderText()
     {
         if ($this->getInvoice()->getEmailSent()) {
-            $emailSent = Mage::helper('sales')->__('Invoice email sent');
+            $emailSent = Mage::helper('sales')->__('the invoice email was sent');
         }
         else {
-            $emailSent = Mage::helper('sales')->__('Invoice email not sent');
+            $emailSent = Mage::helper('sales')->__('the invoice email is not sent');
         }
-
-        $header = Mage::helper('sales')->__('Invoice #%s | %s (%s)',
-            $this->getInvoice()->getIncrementId(),
-            $this->getInvoice()->getStateName(),
-            $emailSent
-        );
-        /*$header = Mage::helper('sales')->__('Invoice #%s | Order Date: %s | Customer Name: %s',
-            $this->getInvoice()->getIncrementId(),
-            $this->formatDate($this->getInvoice()->getOrder()->getCreatedAt(), 'medium', true),
-            $this->getInvoice()->getOrder()->getCustomerName()
-        );*/
-        return $header;
+        return Mage::helper('sales')->__('Invoice #%1$s | %2$s | %4$s (%3$s)', $this->getInvoice()->getIncrementId(), $this->getInvoice()->getStateName(), $emailSent, $this->formatDate($this->getInvoice()->getCreatedAtDate(), 'medium', true));
     }
 
     public function getBackUrl()
-    {//return 'http://google.com.ua';
+    {
         return $this->getUrl(
             '*/sales_order/view',
             array(
@@ -143,6 +162,14 @@ class Mage_Adminhtml_Block_Sales_Order_Invoice_View extends Mage_Adminhtml_Block
         return $this->getUrl('*/*/cancel', array('invoice_id'=>$this->getInvoice()->getId()));
     }
 
+    public function getEmailUrl()
+    {
+        return $this->getUrl('*/*/email', array(
+            'order_id'  => $this->getInvoice()->getOrder()->getId(),
+            'invoice_id'=> $this->getInvoice()->getId(),
+        ));
+    }
+
     public function getCreditMemoUrl()
     {
         return $this->getUrl('*/sales_order_creditmemo/start', array(
@@ -157,9 +184,27 @@ class Mage_Adminhtml_Block_Sales_Order_Invoice_View extends Mage_Adminhtml_Block
             'invoice_id' => $this->getInvoice()->getId()
         ));
     }
-    
-    public function updateBackButtonUrl()
+
+    public function updateBackButtonUrl($flag)
     {
-        return $this->_updateButton('back', 'onclick', 'setLocation(\'' . $this->getUrl('*/sales_invoice/') . '\')');
+        if ($flag) {
+            if ($this->getInvoice()->getBackUrl()) {
+                return $this->_updateButton('back', 'onclick', 'setLocation(\'' . $this->getInvoice()->getBackUrl()
+                    . '\')');
+            }
+            return $this->_updateButton('back', 'onclick', 'setLocation(\'' . $this->getUrl('*/sales_invoice/') . '\')');
+        }
+        return $this;
+    }
+
+    /**
+     * Check whether is allowed action
+     *
+     * @param string $action
+     * @return bool
+     */
+    protected function _isAllowedAction($action)
+    {
+        return $this->_session->isAllowed('sales/order/actions/' . $action);
     }
 }

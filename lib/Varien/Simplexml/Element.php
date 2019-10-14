@@ -10,11 +10,17 @@
  * http://opensource.org/licenses/osl-3.0.php
  * If you did not receive a copy of the license and are unable to
  * obtain it through the world-wide-web, please send an email
- * to license@magentocommerce.com so we can send you a copy immediately.
+ * to license@magento.com so we can send you a copy immediately.
  *
- * @category   Varien
- * @package    Varien_Simplexml
- * @copyright  Copyright (c) 2004-2007 Irubin Consulting Inc. DBA Varien (http://www.varien.com)
+ * DISCLAIMER
+ *
+ * Do not edit or add to this file if you wish to upgrade Magento to newer
+ * versions in the future. If you wish to customize Magento for your
+ * needs please refer to http://www.magento.com for more information.
+ *
+ * @category    Varien
+ * @package     Varien_Simplexml
+ * @copyright  Copyright (c) 2006-2017 X.commerce, Inc. and affiliates (http://www.magento.com)
  * @license    http://opensource.org/licenses/osl-3.0.php  Open Software License (OSL 3.0)
  */
 
@@ -24,6 +30,7 @@
  *
  * @category   Varien
  * @package    Varien_Simplexml
+ * @author      Magento Core Team <core@magentocommerce.com>
  */
 class Varien_Simplexml_Element extends SimpleXMLElement
 {
@@ -85,6 +92,16 @@ class Varien_Simplexml_Element extends SimpleXMLElement
         return false;
     }
 
+    /**
+     * Returns attribute value by attribute name
+     *
+     * @return string
+     */
+    public function getAttribute($name){
+        $attrs = $this->attributes();
+        return isset($attrs[$name]) ? (string)$attrs[$name] : null;
+    }
+
 /*
     public function addAttribute($name, $value=null, $namespace=null)
     {
@@ -122,17 +139,33 @@ class Varien_Simplexml_Element extends SimpleXMLElement
     /**
      * Find a descendant of a node by path
      *
-     * @todo Do we need to make it xpath look-a-like?
-     * @todo param string $path Subset of xpath. Example: "child/grand[@attrName='attrValue']/subGrand"
-     * @param string $path Example: "child/grand@attrName=attrValue/subGrand" (to make it faster without regex)
-     * @return Varien_Simplexml_Element
+     * @todo    Do we need to make it xpath look-a-like?
+     * @todo    Check if we still need all this and revert to plain XPath if this makes any sense
+     * @todo    param string $path Subset of xpath. Example: "child/grand[@attrName='attrValue']/subGrand"
+     * @param   string $path Example: "child/grand@attrName=attrValue/subGrand" (to make it faster without regex)
+     * @return  Varien_Simplexml_Element
      */
     public function descend($path)
     {
-        #$node = $this->xpath($path);
-        #return $node[0];
-
-        $pathArr = explode('/', $path);
+        # $node = $this->xpath($path);
+        # return $node[0];
+        if (is_array($path)) {
+            $pathArr = $path;
+        } else {
+            // Simple exploding by / does not suffice,
+            // as an attribute value may contain a / inside
+            // Note that there are three matches for different kinds of attribute values specification
+            if(strpos($path, "@") === false) {
+                $pathArr = explode('/', $path);
+            }
+            else {
+                $regex = "#([^@/\\\"]+(?:@[^=/]+=(?:\\\"[^\\\"]*\\\"|[^/]*))?)/?#";
+                $pathArr = $pathMatches = array();
+                if(preg_match_all($regex, $path, $pathMatches)) {
+                    $pathArr = $pathMatches[1];
+                }
+            }
+        }
         $desc = $this;
         foreach ($pathArr as $nodeName) {
             if (strpos($nodeName, '@')!==false) {
@@ -141,10 +174,15 @@ class Varien_Simplexml_Element extends SimpleXMLElement
                 $nodeName = $a[0];
                 $attributeName = $b[0];
                 $attributeValue = $b[1];
+                //
+                // Does a very simplistic trimming of attribute value.
+                //
+                $attributeValue = trim($attributeValue, '"');
                 $found = false;
-                foreach ($this->$nodeName as $desc) {
-                    if ((string)$nodeChild[$attributeName]===$attributeValue) {
+                foreach ($desc->$nodeName as $subdesc) {
+                    if ((string)$subdesc[$attributeName]===$attributeValue) {
                         $found = true;
+                        $desc = $subdesc;
                         break;
                     }
                 }
@@ -164,30 +202,54 @@ class Varien_Simplexml_Element extends SimpleXMLElement
     /**
      * Returns the node and children as an array
      *
-     * @return array
+     * @return array|string
      */
     public function asArray()
     {
-        $r = array();
+        return $this->_asArray();
+    }
 
-        $attributes = $this->attributes();
-        foreach($attributes as $k=>$v) {
-            if ($v) $r['@'][$k] = (string) $v;
-        }
+    /**
+     * asArray() analog, but without attributes
+     * @return array|string
+     */
+    public function asCanonicalArray()
+    {
+        return $this->_asArray(true);
+    }
 
-        if (!($children = $this->children())) {
-            $r = (string) $this;
-            return $r;
-        }
-
-        foreach($children as $childName=>$child) {
-            $r[$childName] = array();
-            foreach ($child as $index=>$element) {
-                $r[$childName][$index] = $element->asArray();
+    /**
+     * Returns the node and children as an array
+     *
+     * @param bool $isCanonical - whether to ignore attributes
+     * @return array|string
+     */
+    protected function _asArray($isCanonical = false)
+    {
+        $result = array();
+        if (!$isCanonical) {
+            // add attributes
+            foreach ($this->attributes() as $attributeName => $attribute) {
+                if ($attribute) {
+                    $result['@'][$attributeName] = (string)$attribute;
+                }
             }
         }
-
-        return $r;
+        // add children values
+        if ($this->hasChildren()) {
+            foreach ($this->children() as $childName => $child) {
+                $result[$childName] = $child->_asArray($isCanonical);
+            }
+        } else {
+            if (empty($result)) {
+                // return as string, if nothing was found
+                $result = (string) $this;
+            } else {
+                // value has zero key element
+                $result[0] = (string) $this;
+            }
+        }
+        return $result;
     }
 
     /**
@@ -223,10 +285,10 @@ class Varien_Simplexml_Element extends SimpleXMLElement
             $out .= $pad.'</'.$this->getName().'>'.$nl;
         } else {
             $value = (string)$this;
-            if (empty($value)) {
-                $out .= '/>'.$nl;
-            } else {
+            if (strlen($value)) {
                 $out .= '>'.$this->xmlentities($value).'</'.$this->getName().'>'.$nl;
+            } else {
+                $out .= '/>'.$nl;
             }
         }
 
@@ -258,14 +320,18 @@ class Varien_Simplexml_Element extends SimpleXMLElement
      * @param  string
      * @return string
      */
-    public function xmlentities($value='')
+    public function xmlentities($value = null)
     {
-        if (empty($value)) {
+        if (is_null($value)) {
             $value = $this;
         }
         $value = (string)$value;
 
-        $value = str_replace(array('&', '"', "'", '<', '>'), array('&amp;', '&quot;', '&apos;', '&lt;', '&gt;'), $value);
+        $value = str_replace(
+            array('&', '"', "'", '<', '>'),
+            array('&amp;', '&quot;', '&apos;', '&lt;', '&gt;'),
+            $value
+        );
 
         return $value;
     }
@@ -279,7 +345,16 @@ class Varien_Simplexml_Element extends SimpleXMLElement
     public function appendChild($source)
     {
         if ($source->children()) {
-            $child = $this->addChild($source->getName());
+            /**
+             * @see http://bugs.php.net/bug.php?id=41867 , fixed in 5.2.4
+             */
+            if (version_compare(phpversion(), '5.2.4', '<')===true) {
+                $name = $source->children()->getName();
+            }
+            else {
+                $name = $source->getName();
+            }
+            $child = $this->addChild($name);
         } else {
             $child = $this->addChild($source->getName(), $this->xmlentities($source));
         }
@@ -290,7 +365,7 @@ class Varien_Simplexml_Element extends SimpleXMLElement
             $child->addAttribute($key, $this->xmlentities($value));
         }
 
-        foreach ($source as $sourceChild) {
+        foreach ($source->children() as $sourceChild) {
             $child->appendChild($sourceChild);
         }
         return $this;
@@ -341,7 +416,7 @@ class Varien_Simplexml_Element extends SimpleXMLElement
             // handle string node
             if (isset($this->$sourceName)) {
                 // if target already has children return without regard
-                if ($this->$sourceName->children()) {
+                if ($this->$sourceName->hasChildren()) {
                     return $this;
                 }
                 if ($overwrite) {
@@ -377,6 +452,48 @@ class Varien_Simplexml_Element extends SimpleXMLElement
             $targetChild->extendChild($childNode, $overwrite);
         }
 
+        return $this;
+    }
+
+    public function setNode($path, $value, $overwrite=true)
+    {
+        $arr1 = explode('/', $path);
+        $arr = array();
+        foreach ($arr1 as $v) {
+            if (!empty($v)) $arr[] = $v;
+        }
+        $last = sizeof($arr)-1;
+        $node = $this;
+        foreach ($arr as $i=>$nodeName) {
+            if ($last===$i) {
+                /*
+                if (isset($xml->$nodeName)) {
+                    if ($overwrite) {
+                        unset($xml->$nodeName);
+                    } else {
+                        continue;
+                    }
+                }
+                $xml->addChild($nodeName, $xml->xmlentities($value));
+                */
+                if (!isset($node->$nodeName) || $overwrite) {
+                    // http://bugs.php.net/bug.php?id=36795
+                    // comment on [8 Feb 8:09pm UTC]
+                    if (isset($node->$nodeName) && (version_compare(phpversion(), '5.2.6', '<')===true)) {
+                        $node->$nodeName = $node->xmlentities($value);
+                    } else {
+                        $node->$nodeName = $value;
+                    }
+                }
+            } else {
+                if (!isset($node->$nodeName)) {
+                    $node = $node->addChild($nodeName);
+                } else {
+                    $node = $node->$nodeName;
+                }
+            }
+
+        }
         return $this;
     }
 
@@ -513,5 +630,6 @@ class Varien_Simplexml_Element extends SimpleXMLElement
         return $this;
     }
 */
+
 
 }

@@ -3,16 +3,24 @@
  *
  * NOTICE OF LICENSE
  *
- * This source file is subject to the Open Software License (OSL 3.0)
- * that is bundled with this package in the file LICENSE.txt.
+ * This source file is subject to the Academic Free License (AFL 3.0)
+ * that is bundled with this package in the file LICENSE_AFL.txt.
  * It is also available through the world-wide-web at this URL:
- * http://opensource.org/licenses/osl-3.0.php
+ * http://opensource.org/licenses/afl-3.0.php
  * If you did not receive a copy of the license and are unable to
  * obtain it through the world-wide-web, please send an email
- * to license@magentocommerce.com so we can send you a copy immediately.
+ * to license@magento.com so we can send you a copy immediately.
  *
- * @copyright  Copyright (c) 2004-2007 Irubin Consulting Inc. DBA Varien (http://www.varien.com)
- * @license    http://opensource.org/licenses/osl-3.0.php  Open Software License (OSL 3.0)
+ * DISCLAIMER
+ *
+ * Do not edit or add to this file if you wish to upgrade Magento to newer
+ * versions in the future. If you wish to customize Magento for your
+ * needs please refer to http://www.magento.com for more information.
+ *
+ * @category    Varien
+ * @package     js
+ * @copyright   Copyright (c) 2006-2017 X.commerce, Inc. and affiliates (http://www.magento.com)
+ * @license     http://opensource.org/licenses/afl-3.0.php  Academic Free License (AFL 3.0)
  */
 if(typeof Product=='undefined') {
     var Product = {};
@@ -24,16 +32,19 @@ Product.Zoom = Class.create();
 /**
  * Image zoom control
  *
+ * @author      Magento Core Team <core@magentocommerce.com>
  */
 Product.Zoom.prototype = {
-    initialize: function(imageEl, trackEl, handleEl, zoomInEl, zoomOutEl){
+    initialize: function(imageEl, trackEl, handleEl, zoomInEl, zoomOutEl, hintEl){
         this.containerEl = $(imageEl).parentNode;
         this.imageEl = $(imageEl);
         this.handleEl = $(handleEl);
         this.trackEl = $(trackEl);
+        this.hintEl = $(hintEl);
 
         this.containerDim = Element.getDimensions(this.containerEl);
         this.imageDim = Element.getDimensions(this.imageEl);
+
         this.imageDim.ratio = this.imageDim.width/this.imageDim.height;
 
         this.floorZoom = 1;
@@ -44,10 +55,11 @@ Product.Zoom.prototype = {
             this.ceilingZoom = this.imageDim.height / this.containerDim.height;
         }
 
-        if (this.imageDim.width < this.containerDim.width
-            && this.imageDim.height < this.containerDim.height) {
+        if (this.imageDim.width <= this.containerDim.width
+            && this.imageDim.height <= this.containerDim.height) {
             this.trackEl.up().hide();
-            this.containerEl.removeClassName('main-product-img');
+            this.hintEl.hide();
+            this.containerEl.removeClassName('product-image-zoom');
             return;
         }
 
@@ -96,26 +108,45 @@ Product.Zoom.prototype = {
 
     toggleFull: function () {
         this.showFull = !this.showFull;
-        //TODO: hide selects for IE only
-        for (i=0; i<this.selects.length; i++) {
-            this.selects[i].style.visibility = this.showFull ? 'hidden' : 'visible';
+
+        //Hide selects for IE6 only
+        if (typeof document.body.style.maxHeight == "undefined")  {
+            for (i=0; i<this.selects.length; i++) {
+                this.selects[i].style.visibility = this.showFull ? 'hidden' : 'visible';
+            }
         }
+        val_scale = !this.showFull ? this.slider.value : 1;
+        this.scale(val_scale);
+
         this.trackEl.style.visibility = this.showFull ? 'hidden' : 'visible';
         this.containerEl.style.overflow = this.showFull ? 'visible' : 'hidden';
-        this.containerEl.style.zIndex = this.showFull ? '100' : '1';
+        this.containerEl.style.zIndex = this.showFull ? '1000' : '9';
 
         return this;
     },
 
     scale: function (v) {
-        var centerX = (this.containerDim.width*(1-this.imageZoom)/2-this.imageX)/this.imageZoom;
-        var centerY = (this.containerDim.height*(1-this.imageZoom)/2-this.imageY)/this.imageZoom;
+        var centerX  = (this.containerDim.width*(1-this.imageZoom)/2-this.imageX)/this.imageZoom;
+        var centerY  = (this.containerDim.height*(1-this.imageZoom)/2-this.imageY)/this.imageZoom;
+        var overSize = (this.imageDim.width > this.containerDim.width || this.imageDim.height > this.containerDim.height);
 
         this.imageZoom = this.floorZoom+(v*(this.ceilingZoom-this.floorZoom));
 
-        this.imageEl.style.width = (this.imageZoom*this.containerDim.width)+'px';
-        if(this.containerDim.ratio){
-          this.imageEl.style.height = (this.imageZoom*this.containerDim.width*this.containerDim.ratio)+'px'; // for safari
+        if (overSize) {
+            if (this.imageDim.width > this.imageDim.height) {
+                this.imageEl.style.width = (this.imageZoom*this.containerDim.width)+'px';
+            } else {
+                this.imageEl.style.height = (this.imageZoom*this.containerDim.height)+'px';
+            }
+            if (this.containerDim.ratio) {
+                if (this.imageDim.width > this.imageDim.height) {
+                    this.imageEl.style.height = (this.imageZoom*this.containerDim.width*this.containerDim.ratio)+'px'; // for safari
+                } else {
+                    this.imageEl.style.width = (this.imageZoom*this.containerDim.height*this.containerDim.ratio)+'px'; // for safari
+                }
+            }
+        } else {
+            this.slider.setDisabled();
         }
 
         this.imageX = this.containerDim.width*(1-this.imageZoom)/2-centerX*this.imageZoom;
@@ -128,19 +159,23 @@ Product.Zoom.prototype = {
 
     startZoomIn: function()
     {
-        this.zoomBtnPressed = true;
-        this.sliderAccel = .002;
-        this.periodicalZoom();
-        this.zoomer = new PeriodicalExecuter(this.periodicalZoom.bind(this), .05);
+        if (!this.slider.disabled) {
+            this.zoomBtnPressed = true;
+            this.sliderAccel = .002;
+            this.periodicalZoom();
+            this.zoomer = new PeriodicalExecuter(this.periodicalZoom.bind(this), .05);
+        }
         return this;
     },
 
     startZoomOut: function()
     {
-        this.zoomBtnPressed = true;
-        this.sliderAccel = -.002;
-        this.periodicalZoom();
-        this.zoomer = new PeriodicalExecuter(this.periodicalZoom.bind(this), .05);
+        if (!this.slider.disabled) {
+            this.zoomBtnPressed = true;
+            this.sliderAccel = -.002;
+            this.periodicalZoom();
+            this.zoomer = new PeriodicalExecuter(this.periodicalZoom.bind(this), .05);
+        }
         return this;
     },
 
@@ -189,6 +224,14 @@ Product.Zoom.prototype = {
         y = y>yMin ? yMin : y;
         y = y<yMax ? yMax : y;
 
+        if (this.containerDim.width > dim.width) {
+            x = (this.containerDim.width/2) - (dim.width/2);
+        }
+
+        if (this.containerDim.height > dim.height) {
+            y = (this.containerDim.height/2) - (dim.height/2);
+        }
+
         this.imageX = x;
         this.imageY = y;
 
@@ -197,20 +240,21 @@ Product.Zoom.prototype = {
 
         return [x,y];
     }
-}
+};
 
 /**************************** CONFIGURABLE PRODUCT **************************/
 Product.Config = Class.create();
 Product.Config.prototype = {
     initialize: function(config){
         this.config     = config;
+        this.taxConfig  = this.config.taxConfig;
         this.settings   = $$('.super-attribute-select');
         this.state      = new Hash();
         this.priceTemplate = new Template(this.config.template);
         this.prices     = config.prices;
 
         this.settings.each(function(element){
-            Event.observe(element, 'change', this.configure.bind(this))
+            Event.observe(element, 'change', this.configure.bind(this));
         }.bind(this));
 
         // fill state
@@ -221,7 +265,7 @@ Product.Config.prototype = {
                 element.attributeId = attributeId;
                 this.state[attributeId] = false;
             }
-        }.bind(this))
+        }.bind(this));
 
         // Init settings dropdown
         var childSettings = [];
@@ -229,7 +273,7 @@ Product.Config.prototype = {
             var prevSetting = this.settings[i-1] ? this.settings[i-1] : false;
             var nextSetting = this.settings[i+1] ? this.settings[i+1] : false;
             if(i==0){
-                this.fillSelect(this.settings[i])
+                this.fillSelect(this.settings[i]);
             }
             else {
                 this.settings[i].disabled=true;
@@ -240,14 +284,32 @@ Product.Config.prototype = {
             childSettings.push(this.settings[i]);
         }
 
-        // try retireve options from url
+        // Set default values - from config and overwrite them by url values
+        if (config.defaultValues) {
+            this.values = config.defaultValues;
+        }
+
         var separatorIndex = window.location.href.indexOf('#');
-        if (separatorIndex!=-1) {
+        if (separatorIndex != -1) {
             var paramsStr = window.location.href.substr(separatorIndex+1);
-            this.values = paramsStr.toQueryParams();
+            var urlValues = paramsStr.toQueryParams();
+            if (!this.values) {
+                this.values = {};
+            }
+            for (var i in urlValues) {
+                this.values[i] = urlValues[i];
+            }
+        }
+
+        this.configureForValues();
+        document.observe("dom:loaded", this.configureForValues.bind(this));
+    },
+
+    configureForValues: function () {
+        if (this.values) {
             this.settings.each(function(element){
                 var attributeId = element.attributeId;
-                element.value = this.values[attributeId];
+                element.value = (typeof(this.values[attributeId]) == 'undefined')? '' : this.values[attributeId];
                 this.configureElement(element);
             }.bind(this));
         }
@@ -272,12 +334,13 @@ Product.Config.prototype = {
             this.resetChildren(element);
         }
         this.reloadPrice();
+//      Calculator.updatePrice();
     },
 
     reloadOptionLabels: function(element){
         var selectedPrice;
         if(element.options[element.selectedIndex].config){
-            selectedPrice = parseFloat(element.options[element.selectedIndex].config.price)
+            selectedPrice = parseFloat(element.options[element.selectedIndex].config.price);
         }
         else{
             selectedPrice = 0;
@@ -305,7 +368,8 @@ Product.Config.prototype = {
         var attributeId = element.id.replace(/[a-z]*/, '');
         var options = this.getAttributeOptions(attributeId);
         this.clearSelect(element);
-        element.options[0] = new Option(this.config.chooseText, '');
+        element.options[0] = new Option('', '');
+        element.options[0].innerHTML = this.config.chooseText;
 
         var prevConfig = false;
         if(element.prevSetting){
@@ -339,9 +403,29 @@ Product.Config.prototype = {
 
     getOptionLabel: function(option, price){
         var price = parseFloat(price);
+        if (this.taxConfig.includeTax) {
+            var tax = price / (100 + this.taxConfig.defaultTax) * this.taxConfig.defaultTax;
+            var excl = price - tax;
+            var incl = excl*(1+(this.taxConfig.currentTax/100));
+        } else {
+            var tax = price * (this.taxConfig.currentTax / 100);
+            var excl = price;
+            var incl = excl + tax;
+        }
+
+        if (this.taxConfig.showIncludeTax || this.taxConfig.showBothPrices) {
+            price = incl;
+        } else {
+            price = excl;
+        }
+
         var str = option.label;
         if(price){
-            str+= ' (' + this.formatPrice(price, true) + ')';
+            if (this.taxConfig.showBothPrices) {
+                str+= ' ' + this.formatPrice(excl, true) + ' (' + this.formatPrice(price, true) + ' ' + this.taxConfig.inclTaxTitle + ')';
+            } else {
+                str+= ' ' + this.formatPrice(price, true);
+            }
         }
         return str;
     },
@@ -383,19 +467,24 @@ Product.Config.prototype = {
     },
 
     reloadPrice: function(){
-        var price = parseFloat(this.config.basePrice);
+        var price    = 0;
+        var oldPrice = 0;
         for(var i=this.settings.length-1;i>=0;i--){
             var selected = this.settings[i].options[this.settings[i].selectedIndex];
             if(selected.config){
-                price+= parseFloat(selected.config.price);
+                price    += parseFloat(selected.config.price);
+                oldPrice += parseFloat(selected.config.oldPrice);
             }
         }
-        price = this.formatPrice(price);
+
+        optionsPrice.changePrice('config', {'price': price, 'oldPrice': oldPrice});
+        optionsPrice.reload();
+
+        return price;
 
         if($('product-price-'+this.config.productId)){
             $('product-price-'+this.config.productId).innerHTML = price;
         }
-
         this.reloadOldPrice();
     },
 
@@ -406,9 +495,12 @@ Product.Config.prototype = {
             for(var i=this.settings.length-1;i>=0;i--){
                 var selected = this.settings[i].options[this.settings[i].selectedIndex];
                 if(selected.config){
-                    price+= parseFloat(selected.config.price);
+                    var parsedOldPrice = parseFloat(selected.config.oldPrice);
+                    price += isNaN(parsedOldPrice) ? 0 : parsedOldPrice;
                 }
             }
+            if (price < 0)
+                price = 0;
             price = this.formatPrice(price);
 
             if($('old-price-'+this.config.productId)){
@@ -417,7 +509,7 @@ Product.Config.prototype = {
 
         }
     }
-}
+};
 
 
 /**************************** SUPER PRODUCTS ********************************/
@@ -456,4 +548,4 @@ Product.Super.Configurable.prototype = {
             });
         }
     }
-}
+};

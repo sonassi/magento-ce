@@ -10,11 +10,17 @@
  * http://opensource.org/licenses/osl-3.0.php
  * If you did not receive a copy of the license and are unable to
  * obtain it through the world-wide-web, please send an email
- * to license@magentocommerce.com so we can send you a copy immediately.
+ * to license@magento.com so we can send you a copy immediately.
  *
- * @category   Mage
- * @package    Mage_Adminhtml
- * @copyright  Copyright (c) 2004-2007 Irubin Consulting Inc. DBA Varien (http://www.varien.com)
+ * DISCLAIMER
+ *
+ * Do not edit or add to this file if you wish to upgrade Magento to newer
+ * versions in the future. If you wish to customize Magento for your
+ * needs please refer to http://www.magento.com for more information.
+ *
+ * @category    Mage
+ * @package     Mage_Adminhtml
+ * @copyright  Copyright (c) 2006-2017 X.commerce, Inc. and affiliates (http://www.magento.com)
  * @license    http://opensource.org/licenses/osl-3.0.php  Open Software License (OSL 3.0)
  */
 
@@ -23,6 +29,7 @@
  *
  * @category   Mage
  * @package    Mage_Adminhtml
+ * @author      Magento Core Team <core@magentocommerce.com>
  */
 
 class Mage_Adminhtml_Block_Catalog_Product_Attribute_Edit_Tab_Front extends Mage_Adminhtml_Block_Widget_Form
@@ -49,29 +56,29 @@ class Mage_Adminhtml_Block_Catalog_Product_Attribute_Edit_Tab_Front extends Mage
 
         $fieldset->addField('is_searchable', 'select', array(
             'name' => 'is_searchable',
-            'label' => Mage::helper('catalog')->__('Use in quick search'),
-            'title' => Mage::helper('catalog')->__('Use in quick search'),
+            'label' => Mage::helper('catalog')->__('Use in Quick Search'),
+            'title' => Mage::helper('catalog')->__('Use in Quick Search'),
             'values' => $yesno,
         ));
 
         $fieldset->addField('is_visible_in_advanced_search', 'select', array(
             'name' => 'is_visible_in_advanced_search',
-            'label' => Mage::helper('catalog')->__('Use in advanced search'),
-            'title' => Mage::helper('catalog')->__('Use in advanced search'),
+            'label' => Mage::helper('catalog')->__('Use in Advanced Search'),
+            'title' => Mage::helper('catalog')->__('Use in Advanced Search'),
             'values' => $yesno,
         ));
 
         $fieldset->addField('is_comparable', 'select', array(
             'name' => 'is_comparable',
-            'label' => Mage::helper('catalog')->__('Comparable on Front-end'),
-            'title' => Mage::helper('catalog')->__('Comparable on Front-end'),
+            'label' => Mage::helper('catalog')->__('Comparable on the Frontend'),
+            'title' => Mage::helper('catalog')->__('Comparable on the Frontend'),
             'values' => $yesno,
         ));
 
 
         $fieldset->addField('is_filterable', 'select', array(
             'name' => 'is_filterable',
-            'label' => Mage::helper('catalog')->__("Use In Layered Navigation<br/>(Can be used only with catalog input type 'Dropdown')"),
+            'label' => Mage::helper('catalog')->__("Use in Layered Navigation<br/>(Can be used only with catalog input type 'Dropdown')"),
             'title' => Mage::helper('catalog')->__('Can be used only with catalog input type Dropdown'),
             'values' => array(
                 array('value' => '0', 'label' => Mage::helper('catalog')->__('No')),
@@ -80,14 +87,14 @@ class Mage_Adminhtml_Block_Catalog_Product_Attribute_Edit_Tab_Front extends Mage
             ),
         ));
 
-        if ($model->getIsUserDefined() || !$model->getId()) {
+//        if ($model->getIsUserDefined() || !$model->getId()) {
             $fieldset->addField('is_visible_on_front', 'select', array(
                 'name' => 'is_visible_on_front',
                 'label' => Mage::helper('catalog')->__('Visible on Catalog Pages on Front-end'),
                 'title' => Mage::helper('catalog')->__('Visible on Catalog Pages on Front-end'),
                 'values' => $yesno,
             ));
-        }
+//        }
 
         $form->setValues($model->getData());
 

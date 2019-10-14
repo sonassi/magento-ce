@@ -10,37 +10,28 @@
  * http://opensource.org/licenses/osl-3.0.php
  * If you did not receive a copy of the license and are unable to
  * obtain it through the world-wide-web, please send an email
- * to license@magentocommerce.com so we can send you a copy immediately.
+ * to license@magento.com so we can send you a copy immediately.
  *
- * @category   Mage
- * @package    Mage_Review
- * @copyright  Copyright (c) 2004-2007 Irubin Consulting Inc. DBA Varien (http://www.varien.com)
+ * DISCLAIMER
+ *
+ * Do not edit or add to this file if you wish to upgrade Magento to newer
+ * versions in the future. If you wish to customize Magento for your
+ * needs please refer to http://www.magento.com for more information.
+ *
+ * @category    Mage
+ * @package     Mage_Review
+ * @copyright  Copyright (c) 2006-2017 X.commerce, Inc. and affiliates (http://www.magento.com)
  * @license    http://opensource.org/licenses/osl-3.0.php  Open Software License (OSL 3.0)
  */
+
 
 /**
  * Review sttuses collection
  *
- * @category   Mage
- * @package    Mage_Review
+ * @category    Mage
+ * @package     Mage_Review
+ * @author      Magento Core Team <core@magentocommerce.com>
  */
-
-class Mage_Review_Model_Mysql4_Review_Status_Collection extends Varien_Data_Collection_Db
+class Mage_Review_Model_Mysql4_Review_Status_Collection extends Mage_Review_Model_Resource_Review_Status_Collection
 {
-    protected $_reviewStatusTable;
-
-    public function __construct()
-    {
-        parent::__construct(Mage::getSingleton('core/resource')->getConnection('review_read'));
-        
-        $this->_setIdFieldName('status_id');
-        $this->_reviewStatusTable = Mage::getSingleton('core/resource')->getTableName('review/review_status');
-
-        $this->_select->from($this->_reviewStatusTable);
-    }
-
-    public function toOptionArray()
-    {
-        return parent::_toOptionArray('status_id', 'status_code');
-    }
 }

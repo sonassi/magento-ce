@@ -10,11 +10,17 @@
  * http://opensource.org/licenses/osl-3.0.php
  * If you did not receive a copy of the license and are unable to
  * obtain it through the world-wide-web, please send an email
- * to license@magentocommerce.com so we can send you a copy immediately.
+ * to license@magento.com so we can send you a copy immediately.
  *
- * @category   Mage
- * @package    Mage_Adminhtml
- * @copyright  Copyright (c) 2004-2007 Irubin Consulting Inc. DBA Varien (http://www.varien.com)
+ * DISCLAIMER
+ *
+ * Do not edit or add to this file if you wish to upgrade Magento to newer
+ * versions in the future. If you wish to customize Magento for your
+ * needs please refer to http://www.magento.com for more information.
+ *
+ * @category    Mage
+ * @package     Mage_Adminhtml
+ * @copyright  Copyright (c) 2006-2017 X.commerce, Inc. and affiliates (http://www.magento.com)
  * @license    http://opensource.org/licenses/osl-3.0.php  Open Software License (OSL 3.0)
  */
 
@@ -25,6 +31,7 @@ include_once "ProfileController.php";
  *
  * @category   Mage
  * @package    Mage_Adminhtml
+ * @author      Magento Core Team <core@magentocommerce.com>
  */
 class Mage_Adminhtml_System_Convert_GuiController extends Mage_Adminhtml_System_Convert_ProfileController
 {
@@ -33,6 +40,10 @@ class Mage_Adminhtml_System_Convert_GuiController extends Mage_Adminhtml_System_
      */
     public function indexAction()
     {
+        $this->_title($this->__('System'))
+             ->_title($this->__('Import and Export'))
+             ->_title($this->__('Profiles'));
+
         if ($this->getRequest()->getQuery('ajax')) {
             $this->_forward('grid');
             return;
@@ -54,8 +65,8 @@ class Mage_Adminhtml_System_Convert_GuiController extends Mage_Adminhtml_System_
         /**
          * Add breadcrumb item
          */
-        $this->_addBreadcrumb(Mage::helper('adminhtml')->__('Import/Export GUI Profiles'), Mage::helper('adminhtml')->__('Import/Export GUI Profiles'));
-        $this->_addBreadcrumb(Mage::helper('adminhtml')->__('Manage Profiles'), Mage::helper('adminhtml')->__('Manage Profiles'));
+        $this->_addBreadcrumb(Mage::helper('adminhtml')->__('Import/Export'), Mage::helper('adminhtml')->__('Import/Export'));
+        $this->_addBreadcrumb(Mage::helper('adminhtml')->__('Profiles'), Mage::helper('adminhtml')->__('Profiles'));
 
         $this->renderLayout();
     }
@@ -81,6 +92,8 @@ class Mage_Adminhtml_System_Convert_GuiController extends Mage_Adminhtml_System_
         if (!empty($data)) {
             $profile->addData($data);
         }
+
+        $this->_title($profile->getId() ? $profile->getName() : $this->__('New Profile'));
 
         $this->_setActiveMenu('system/convert');
 
@@ -117,26 +130,25 @@ class Mage_Adminhtml_System_Convert_GuiController extends Mage_Adminhtml_System_
         }
         $this->_initProfile();
         $profile = Mage::registry('current_convert_profile');
-
     }
 
     protected function _isAllowed()
     {
-        switch ($this->getRequest()->getActionName()) {
-            case 'index':
-                $aclResource = 'admin/system/convert/gui';
-                break;
-            case 'grid':
-                $aclResource = 'admin/system/convert/gui';
-                break;
-            case 'run':
-                $aclResource = 'admin/system/convert/gui/run';
-                break;
-            default:
-                $aclResource = 'admin/system/convert/gui/edit';
-                break;
-        }
+//        switch ($this->getRequest()->getActionName()) {
+//            case 'index':
+//                $aclResource = 'admin/system/convert/gui';
+//                break;
+//            case 'grid':
+//                $aclResource = 'admin/system/convert/gui';
+//                break;
+//            case 'run':
+//                $aclResource = 'admin/system/convert/gui/run';
+//                break;
+//            default:
+//                $aclResource = 'admin/system/convert/gui/edit';
+//                break;
+//        }
 
-        return Mage::getSingleton('admin/session')->isAllowed($aclResource);
+        return Mage::getSingleton('admin/session')->isAllowed('admin/system/convert/gui');
     }
 }

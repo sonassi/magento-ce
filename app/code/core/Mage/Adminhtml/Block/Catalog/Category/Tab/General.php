@@ -10,11 +10,17 @@
  * http://opensource.org/licenses/osl-3.0.php
  * If you did not receive a copy of the license and are unable to
  * obtain it through the world-wide-web, please send an email
- * to license@magentocommerce.com so we can send you a copy immediately.
+ * to license@magento.com so we can send you a copy immediately.
  *
- * @category   Mage
- * @package    Mage_Adminhtml
- * @copyright  Copyright (c) 2004-2007 Irubin Consulting Inc. DBA Varien (http://www.varien.com)
+ * DISCLAIMER
+ *
+ * Do not edit or add to this file if you wish to upgrade Magento to newer
+ * versions in the future. If you wish to customize Magento for your
+ * needs please refer to http://www.magento.com for more information.
+ *
+ * @category    Mage
+ * @package     Mage_Adminhtml
+ * @copyright  Copyright (c) 2006-2017 X.commerce, Inc. and affiliates (http://www.magento.com)
  * @license    http://opensource.org/licenses/osl-3.0.php  Open Software License (OSL 3.0)
  */
 
@@ -23,6 +29,7 @@
  *
  * @category   Mage
  * @package    Mage_Adminhtml
+ * @author      Magento Core Team <core@magentocommerce.com>
  */
 class Mage_Adminhtml_Block_Catalog_Category_Tab_General extends Mage_Adminhtml_Block_Catalog_Form
 {
@@ -45,28 +52,46 @@ class Mage_Adminhtml_Block_Catalog_Category_Tab_General extends Mage_Adminhtml_B
 
     public function _prepareLayout()
     {
-    parent::_prepareLayout();
+        parent::_prepareLayout();
         $form = new Varien_Data_Form();
         $form->setHtmlIdPrefix('_general');
         $form->setDataObject($this->getCategory());
 
         $fieldset = $form->addFieldset('base_fieldset', array('legend'=>Mage::helper('catalog')->__('General Information')));
 
+        if (!$this->getCategory()->getId()) {
+//            $fieldset->addField('path', 'select', array(
+//                'name'  => 'path',
+//                'label' => Mage::helper('catalog')->__('Parent Category'),
+//                'value' => base64_decode($this->getRequest()->getParam('parent')),
+//                'values'=> $this->_getParentCategoryOptions(),
+//                //'required' => true,
+//                //'class' => 'required-entry'
+//                ),
+//                'name'
+//            );
+            $parentId = $this->getRequest()->getParam('parent');
+            if (!$parentId) {
+                $parentId = Mage_Catalog_Model_Category::TREE_ROOT_ID;
+            }
+            $fieldset->addField('path', 'hidden', array(
+                'name'  => 'path',
+                'value' => $parentId
+            ));
+        } else {
+            $fieldset->addField('id', 'hidden', array(
+                'name'  => 'id',
+                'value' => $this->getCategory()->getId()
+            ));
+            $fieldset->addField('path', 'hidden', array(
+                'name'  => 'path',
+                'value' => $this->getCategory()->getPath()
+            ));
+        }
+
         $this->_setFieldset($this->getCategory()->getAttributes(true), $fieldset);
 
-        if (!$this->getCategory()->getId()) {
-            $fieldset->addField('path', 'select', array(
-                'name'  => 'path',
-                'label' => Mage::helper('catalog')->__('Parent Category'),
-                'value' => base64_decode($this->getRequest()->getParam('parent')),
-                'values'=> $this->_getParentCategoryOptions(),
-                //'required' => true,
-                //'class' => 'required-entry'
-                ),
-                'name'
-            );
-        }
-        else {
+        if ($this->getCategory()->getId()) {
             if ($this->getCategory()->getLevel() == 1) {
                 $fieldset->removeField('url_key');
                 $fieldset->addField('url_key', 'hidden', array(
@@ -92,13 +117,13 @@ class Mage_Adminhtml_Block_Catalog_Category_Tab_General extends Mage_Adminhtml_B
     protected function _getParentCategoryOptions($node=null, &$options=array())
     {
         if (is_null($node)) {
-            $node = $this->getLayout()->getBlock('category.tree')->getRoot();
+            $node = $this->getRoot();
         }
 
         if ($node) {
             $options[] = array(
                'value' => $node->getPathId(),
-               'label' => str_repeat('&nbsp;', max(0, 3*($node->getLevel()))) . $this->htmlEscape($node->getName()),
+               'label' => str_repeat('&nbsp;', max(0, 3*($node->getLevel()))) . $this->escapeHtml($node->getName()),
             );
 
             foreach ($node->getChildren() as $child) {

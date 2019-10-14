@@ -10,11 +10,17 @@
  * http://opensource.org/licenses/osl-3.0.php
  * If you did not receive a copy of the license and are unable to
  * obtain it through the world-wide-web, please send an email
- * to license@magentocommerce.com so we can send you a copy immediately.
+ * to license@magento.com so we can send you a copy immediately.
  *
- * @category   Mage
- * @package    Mage_Eav
- * @copyright  Copyright (c) 2004-2007 Irubin Consulting Inc. DBA Varien (http://www.varien.com)
+ * DISCLAIMER
+ *
+ * Do not edit or add to this file if you wish to upgrade Magento to newer
+ * versions in the future. If you wish to customize Magento for your
+ * needs please refer to http://www.magento.com for more information.
+ *
+ * @category    Mage
+ * @package     Mage_Eav
+ * @copyright  Copyright (c) 2006-2017 X.commerce, Inc. and affiliates (http://www.magento.com)
  * @license    http://opensource.org/licenses/osl-3.0.php  Open Software License (OSL 3.0)
  */
 
@@ -22,47 +28,50 @@
 /**
  * Entity/Attribute/Model - attribute selection source from configuration
  *
+ * this class should be abstract, but kept usual for legacy purposes
+ *
  * @category   Mage
  * @package    Mage_Eav
+ * @author     Magento Core Team <core@magentocommerce.com>
  */
 class Mage_Eav_Model_Entity_Attribute_Source_Config extends Mage_Eav_Model_Entity_Attribute_Source_Abstract
 {
     /**
+     * Config Node Path
+     *
+     * @var Mage_Core_Model_Config_Element
+     */
+    protected $_configNodePath;
+
+    /**
      * Retrieve all options for the source from configuration
      *
+     * @throws Mage_Eav_Exception
      * @return array
      */
     public function getAllOptions()
     {
-        if (is_null($this->_options)) {
+        if ($this->_options === null) {
             $this->_options = array();
-            return $this->_options;
-            if (!$this->_options) {
-                $rootNode = false;
-                if ($this->getConfig()->rootNode) {
-                    $rootNode = Mage::getConfig()->getNode((string)$this->getConfig()->rootNode);
-                } elseif ($this->getConfig()->rootNodeXpath) {
-                    $rootNode = Mage::getConfig()->getXpath((string)$this->getConfig()->rootNode);
-                }
-
-                if (!$rootNode) {
-                    $rootNode = $this->getConfig()->options;
-                }
-
-                if (!$rootNode) {
-                    throw Mage::exception('Mage_Eav', Mage::helper('eav')->__('No options root node found'));
-                }
-                foreach ($rootNode->children() as $option) {
-                    //$this->_options[(string)$option->value] = (string)$option->label;
-                    $this->_options[] = array(
-                        'value' => (string)$option->value,
-                        'label' => (string)$option->label
-                    );
-                }
+            $rootNode = null;
+            if ($this->_configNodePath) {
+                $rootNode = Mage::getConfig()->getNode($this->_configNodePath);
+            }
+            if (!$rootNode) {
+                throw Mage::exception('Mage_Eav', Mage::helper('eav')->__('Failed to load node %s from config', $this->_configNodePath));
+            }
+            $options = $rootNode->children();
+            if (empty($options)) {
+                throw Mage::exception('Mage_Eav', Mage::helper('eav')->__('No options found in config node %s', $this->_configNodePath));
+            }
+            foreach ($options as $option) {
+                $this->_options[] = array(
+                    'value' => (string)$option->value,
+                    'label' => Mage::helper('eav')->__((string)$option->label)
+                );
             }
         }
 
         return $this->_options;
     }
-
 }

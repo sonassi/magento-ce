@@ -10,17 +10,35 @@
  * http://opensource.org/licenses/osl-3.0.php
  * If you did not receive a copy of the license and are unable to
  * obtain it through the world-wide-web, please send an email
- * to license@magentocommerce.com so we can send you a copy immediately.
+ * to license@magento.com so we can send you a copy immediately.
  *
- * @category   Mage
- * @package    Mage_Directory
- * @copyright  Copyright (c) 2004-2007 Irubin Consulting Inc. DBA Varien (http://www.varien.com)
+ * DISCLAIMER
+ *
+ * Do not edit or add to this file if you wish to upgrade Magento to newer
+ * versions in the future. If you wish to customize Magento for your
+ * needs please refer to http://www.magento.com for more information.
+ *
+ * @category    Mage
+ * @package     Mage_Directory
+ * @copyright  Copyright (c) 2006-2017 X.commerce, Inc. and affiliates (http://www.magento.com)
  * @license    http://opensource.org/licenses/osl-3.0.php  Open Software License (OSL 3.0)
  */
 
 /**
  * Country model
  *
+ * @method Mage_Directory_Model_Resource_Country _getResource()
+ * @method Mage_Directory_Model_Resource_Country getResource()
+ * @method string getCountryId()
+ * @method Mage_Directory_Model_Country setCountryId(string $value)
+ * @method string getIso2Code()
+ * @method Mage_Directory_Model_Country setIso2Code(string $value)
+ * @method string getIso3Code()
+ * @method Mage_Directory_Model_Country setIso3Code(string $value)
+ *
+ * @category    Mage
+ * @package     Mage_Directory
+ * @author      Magento Core Team <core@magentocommerce.com>
  */
 class Mage_Directory_Model_Country extends Mage_Core_Model_Abstract
 {
@@ -58,6 +76,7 @@ class Mage_Directory_Model_Country extends Mage_Core_Model_Abstract
 
     public function formatAddress(Varien_Object $address, $html=false)
     {
+        //TODO: is it still used?
         $address->getRegion();
         $address->getCountry();
 
@@ -96,7 +115,7 @@ T: {{telephone}}";
     /**
      * Retrive formats for
      *
-     * @return Mage_Directory_Model_Mysql4_Country_Format_Collection
+     * @return Mage_Directory_Model_Resource_Country_Format_Collection
      */
     public function getFormats()
     {
@@ -137,7 +156,7 @@ T: {{telephone}}";
         if(!$this->getData('name')) {
             $this->setData(
                 'name',
-                Mage::app()->getLocale()->getLocale()->getCountryTranslation($this->getId())
+                Mage::app()->getLocale()->getCountryTranslation($this->getId())
             );
         }
         return $this->getData('name');

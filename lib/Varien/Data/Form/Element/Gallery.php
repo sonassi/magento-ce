@@ -10,11 +10,17 @@
  * http://opensource.org/licenses/osl-3.0.php
  * If you did not receive a copy of the license and are unable to
  * obtain it through the world-wide-web, please send an email
- * to license@magentocommerce.com so we can send you a copy immediately.
+ * to license@magento.com so we can send you a copy immediately.
  *
- * @category   Varien
- * @package    Varien_Data
- * @copyright  Copyright (c) 2004-2007 Irubin Consulting Inc. DBA Varien (http://www.varien.com)
+ * DISCLAIMER
+ *
+ * Do not edit or add to this file if you wish to upgrade Magento to newer
+ * versions in the future. If you wish to customize Magento for your
+ * needs please refer to http://www.magento.com for more information.
+ *
+ * @category    Varien
+ * @package     Varien_Data
+ * @copyright  Copyright (c) 2006-2017 X.commerce, Inc. and affiliates (http://www.magento.com)
  * @license    http://opensource.org/licenses/osl-3.0.php  Open Software License (OSL 3.0)
  */
 
@@ -23,6 +29,7 @@
  *
  * @category   Varien
  * @package    Varien_Data
+ * @author      Magento Core Team <core@magentocommerce.com>
  */
 class Varien_Data_Form_Element_Gallery extends Varien_Data_Form_Element_Abstract
 {
@@ -38,11 +45,11 @@ class Varien_Data_Form_Element_Gallery extends Varien_Data_Form_Element_Abstract
 
         $html = '<table id="gallery" class="gallery" border="0" cellspacing="3" cellpadding="0">';
         $html .= '<thead id="gallery_thead" class="gallery"><tr class="gallery"><td class="gallery" valign="middle" align="center">Big Image</td><td class="gallery" valign="middle" align="center">Thumbnail</td><td class="gallery" valign="middle" align="center">Small Thumb</td><td class="gallery" valign="middle" align="center">Sort Order</td><td class="gallery" valign="middle" align="center">Delete</td></tr></thead>';
-$widgetButton = $this->getForm()->getParent()->getLayout();
-$buttonHtml = $widgetButton->createBlock('adminhtml/widget_button')
+        $widgetButton = $this->getForm()->getParent()->getLayout();
+        $buttonHtml = $widgetButton->createBlock('adminhtml/widget_button')
                 ->setData(
                     array(
-					    'label'     => __('Add New Image'),
+                        'label'     => 'Add New Image',
                         'onclick'   => 'addNewImg()',
                         'class'     => 'add'))
                 ->toHtml();
@@ -73,7 +80,7 @@ $buttonHtml = $widgetButton->createBlock('adminhtml/widget_button')
             }
         }
         if ($i==0) {
-            $html .= '<script language="javascript">document.getElementById("gallery_thead").style.visibility="hidden";</script>';
+            $html .= '<script type="text/javascript">document.getElementById("gallery_thead").style.visibility="hidden";</script>';
         }
 
         $html .= '</tbody></table>';
@@ -85,7 +92,7 @@ $buttonHtml = $widgetButton->createBlock('adminhtml/widget_button')
                     -1,
                         \'<a href="file:///%file%" target="_blank" onclick="imagePreview(\\\''.$this->getHtmlId().'_image_new_%id%\\\');return false;"><img src="file:///%file%" width="50" align="absmiddle" class="small-image-preview" style="padding-bottom:3px; width:"></a> <div id="'.$this->getHtmlId().'_image_new_%id%" style="display:none" class="image-preview"><img src="file:///%file%"></div>\',
                         "",
-                        \'<input type="file" name="'.parent::getName().'[new_image][%id%][%j%]" size="1">\'
+                        \'<input type="file" name="'.parent::getName().'[new_image][%id%][%j%]" size="1" />\'
                     );
                     multi_selector.addElement( document.getElementById( "'.$this->getHtmlId().'" ) );
                     </script>';
@@ -104,19 +111,19 @@ $buttonHtml = $widgetButton->createBlock('adminhtml/widget_button')
             document.getElementById("gallery_thead").style.visibility="visible";
 
             id--;
-            new_file_input = '<input type="file" name="{$name}_%j%[%id%]" size="1">';
+            new_file_input = '<input type="file" name="{$name}_%j%[%id%]" size="1" />';
 
-		    // Sort order input
-		    var new_row_input = document.createElement( 'input' );
-		    new_row_input.type = 'text';
-		    new_row_input.name = '{$parentName}[position]['+id+']';
-		    new_row_input.size = '3';
-		    new_row_input.value = '0';
+            // Sort order input
+            var new_row_input = document.createElement( 'input' );
+            new_row_input.type = 'text';
+            new_row_input.name = '{$parentName}[position]['+id+']';
+            new_row_input.size = '3';
+            new_row_input.value = '0';
 
-		    // Delete button
-		    var new_row_button = document.createElement( 'input' );
-		    new_row_button.type = 'checkbox';
-		    new_row_button.value = 'Delete';
+            // Delete button
+            var new_row_button = document.createElement( 'input' );
+            new_row_button.type = 'checkbox';
+            new_row_button.value = 'Delete';
 
             table = document.getElementById( "gallery" );
 
@@ -137,10 +144,10 @@ $buttonHtml = $widgetButton->createBlock('adminhtml/widget_button')
                 newCell.valign = "middle";
 
                 if (j==3) {
-		            newCell.appendChild( new_row_input );
+                    newCell.appendChild( new_row_input );
                 }
                 else if (j==4) {
-		            newCell.appendChild( new_row_button );
+                    newCell.appendChild( new_row_button );
                 }
                 else {
                     newCell.innerHTML = new_file_input.replace(/%j%/g, j).replace(/%id%/g, id);
@@ -148,18 +155,18 @@ $buttonHtml = $widgetButton->createBlock('adminhtml/widget_button')
 
             }
 
-		    // Delete function
-		    new_row_button.onclick= function(){
+            // Delete function
+            new_row_button.onclick= function(){
 
                 this.parentNode.parentNode.parentNode.removeChild( this.parentNode.parentNode );
 
-			    // Appease Safari
-			    //    without it Safari wants to reload the browser window
-			    //    which nixes your already queued uploads
-			    return false;
-		    };
+                // Appease Safari
+                //    without it Safari wants to reload the browser window
+                //    which nixes your already queued uploads
+                return false;
+            };
 
-	    }
+        }
         </script>
 
 EndSCRIPT;

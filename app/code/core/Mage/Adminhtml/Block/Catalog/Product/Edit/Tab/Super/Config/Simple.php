@@ -10,11 +10,17 @@
  * http://opensource.org/licenses/osl-3.0.php
  * If you did not receive a copy of the license and are unable to
  * obtain it through the world-wide-web, please send an email
- * to license@magentocommerce.com so we can send you a copy immediately.
+ * to license@magento.com so we can send you a copy immediately.
  *
- * @category   Mage
- * @package    Mage_Adminhtml
- * @copyright  Copyright (c) 2004-2007 Irubin Consulting Inc. DBA Varien (http://www.varien.com)
+ * DISCLAIMER
+ *
+ * Do not edit or add to this file if you wish to upgrade Magento to newer
+ * versions in the future. If you wish to customize Magento for your
+ * needs please refer to http://www.magento.com for more information.
+ *
+ * @category    Mage
+ * @package     Mage_Adminhtml
+ * @copyright  Copyright (c) 2006-2017 X.commerce, Inc. and affiliates (http://www.magento.com)
  * @license    http://opensource.org/licenses/osl-3.0.php  Open Software License (OSL 3.0)
  */
 
@@ -23,14 +29,24 @@
  *
  * @category   Mage
  * @package    Mage_Adminhtml
+ * @author      Magento Core Team <core@magentocommerce.com>
  */
-class Mage_Adminhtml_Block_Catalog_Product_Edit_Tab_Super_Config_Simple extends Mage_Adminhtml_Block_Catalog_Product_Edit_Tab_Attributes
+class Mage_Adminhtml_Block_Catalog_Product_Edit_Tab_Super_Config_Simple
+    extends Mage_Adminhtml_Block_Catalog_Product_Edit_Tab_Attributes
 {
+    /**
+     * Link to currently editing product
+     *
+     * @var Mage_Catalog_Model_Product
+     */
+    protected $_product = null;
+
     protected function _prepareForm()
     {
         $form = new Varien_Data_Form();
 
         $form->setFieldNameSuffix('simple_product');
+        $form->setDataObject($this->_getProduct());
 
         $fieldset = $form->addFieldset('simple_product', array(
             'legend' => Mage::helper('catalog')->__('Quick simple product creation')
@@ -41,7 +57,7 @@ class Mage_Adminhtml_Block_Catalog_Product_Edit_Tab_Super_Config_Simple extends 
             'additional'   => array('name', 'sku', 'visibility', 'status')
         );
 
-        $availableTypes = array('text', 'select', 'multiselect', 'textarea', 'price');
+        $availableTypes = array('text', 'select', 'multiselect', 'textarea', 'price', 'weight');
 
         $attributes = Mage::getModel('catalog/product')
             ->setTypeId(Mage_Catalog_Model_Product_Type::TYPE_SIMPLE)
@@ -55,15 +71,18 @@ class Mage_Adminhtml_Block_Catalog_Product_Edit_Tab_Super_Config_Simple extends 
                 // If not applied to configurable
                 && !in_array(Mage_Catalog_Model_Product_Type::TYPE_CONFIGURABLE, $attribute->getApplyTo())
                 // If not used in configurable
-                && !in_array($attribute->getId(),$this->_getProduct()->getTypeInstance()->getUsedProductAttributeIds()))
+                && !in_array($attribute->getId(),
+                    $this->_getProduct()->getTypeInstance(true)->getUsedProductAttributeIds($this->_getProduct()))
+                )
                 // Or in additional
-                || in_array($attribute->getAttributeCode(), $attributesConfig['additional'])) {
-
+                || in_array($attribute->getAttributeCode(), $attributesConfig['additional'])
+            ) {
                 $inputType = $attribute->getFrontend()->getInputType();
                 if (!in_array($inputType, $availableTypes)) {
                     continue;
                 }
                 $attributeCode = $attribute->getAttributeCode();
+                $attribute->setAttributeCode('simple_product_' . $attributeCode);
                 $element = $fieldset->addField(
                     'simple_product_' . $attributeCode,
                      $inputType,
@@ -80,7 +99,7 @@ class Mage_Adminhtml_Block_Catalog_Product_Edit_Tab_Super_Config_Simple extends 
                     $element->setAfterElementHtml(
                          '<input type="checkbox" id="simple_product_' . $attributeCode . '_autogenerate" '
                          . 'name="simple_product[' . $attributeCode . '_autogenerate]" value="1" '
-                         . 'onclick="toggleValueElements(this, this.parentNode)" checked/> '
+                         . 'onclick="toggleValueElements(this, this.parentNode)" checked="checked" /> '
                          . '<label for="simple_product_' . $attributeCode . '_autogenerate" >'
                          . Mage::helper('catalog')->__('Autogenerate')
                          . '</label>'
@@ -96,12 +115,13 @@ class Mage_Adminhtml_Block_Catalog_Product_Edit_Tab_Super_Config_Simple extends 
         }
 
         /* Configurable attributes */
-        foreach ($this->_getProduct()->getTypeInstance()->getUsedProductAttributes() as $attribute) {
+        $usedAttributes = $this->_getProduct()->getTypeInstance(true)->getUsedProductAttributes($this->_getProduct());
+        foreach ($usedAttributes as $attribute) {
             $attributeCode =  $attribute->getAttributeCode();
             $fieldset->addField( 'simple_product_' . $attributeCode, 'select',  array(
                 'label' => $attribute->getFrontend()->getLabel(),
                 'name'  => $attributeCode,
-                'values' => $attribute->getSource()->getAllOptions(),
+                'values' => $attribute->getSource()->getAllOptions(true, true),
                 'required' => true,
                 'class'    => 'validate-configurable',
                 'onchange' => 'superProduct.showPricing(this, \'' . $attributeCode . '\')'
@@ -160,8 +180,6 @@ class Mage_Adminhtml_Block_Catalog_Product_Edit_Tab_Super_Config_Simple extends 
             )
         ));
 
-
-
         $this->setForm($form);
     }
 
@@ -172,6 +190,9 @@ class Mage_Adminhtml_Block_Catalog_Product_Edit_Tab_Super_Config_Simple extends 
      */
     protected function _getProduct()
     {
-        return Mage::registry('current_product');
+        if (!$this->_product) {
+            $this->_product = Mage::registry('current_product');
+        }
+        return $this->_product;
     }
 } // Class Mage_Adminhtml_Block_Catalog_Product_Edit_Tab_Super_Config_Simple End

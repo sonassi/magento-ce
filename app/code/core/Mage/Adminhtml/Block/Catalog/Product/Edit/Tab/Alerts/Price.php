@@ -10,11 +10,17 @@
  * http://opensource.org/licenses/osl-3.0.php
  * If you did not receive a copy of the license and are unable to
  * obtain it through the world-wide-web, please send an email
- * to license@magentocommerce.com so we can send you a copy immediately.
+ * to license@magento.com so we can send you a copy immediately.
  *
- * @category   Mage
- * @package    Mage_Adminhtml
- * @copyright  Copyright (c) 2004-2007 Irubin Consulting Inc. DBA Varien (http://www.varien.com)
+ * DISCLAIMER
+ *
+ * Do not edit or add to this file if you wish to upgrade Magento to newer
+ * versions in the future. If you wish to customize Magento for your
+ * needs please refer to http://www.magento.com for more information.
+ *
+ * @category    Mage
+ * @package     Mage_Adminhtml
+ * @copyright  Copyright (c) 2006-2017 X.commerce, Inc. and affiliates (http://www.magento.com)
  * @license    http://opensource.org/licenses/osl-3.0.php  Open Software License (OSL 3.0)
  */
 
@@ -24,6 +30,7 @@
  *
  * @category   Mage
  * @package    Mage_Adminhtml
+ * @author      Magento Core Team <core@magentocommerce.com>
  */
 class Mage_Adminhtml_Block_Catalog_Product_Edit_Tab_Alerts_Price extends Mage_Adminhtml_Block_Widget_Grid
 {
@@ -33,7 +40,7 @@ class Mage_Adminhtml_Block_Catalog_Product_Edit_Tab_Alerts_Price extends Mage_Ad
 
         $this->setId('alertPrice');
         $this->setDefaultSort('add_date');
-        $this->setDefaultSort('desc');
+        $this->setDefaultSort('DESC');
         $this->setUseAjax(true);
         $this->setFilterVisibility(false);
         $this->setEmptyText(Mage::helper('catalog')->__('There are no customers for this alert'));
@@ -46,10 +53,12 @@ class Mage_Adminhtml_Block_Catalog_Product_Edit_Tab_Alerts_Price extends Mage_Ad
         if ($store = $this->getRequest()->getParam('store')) {
             $websiteId = Mage::app()->getStore($store)->getWebsiteId();
         }
-        $collection = Mage::getModel('productalert/price')
-            ->getCustomerCollection()
-            ->join($productId, $websiteId);
-        $this->setCollection($collection);
+        if (Mage::helper('catalog')->isModuleEnabled('Mage_ProductAlert')) {
+            $collection = Mage::getModel('productalert/price')
+                ->getCustomerCollection()
+                ->join($productId, $websiteId);
+            $this->setCollection($collection);
+        }
         return parent::_prepareCollection();
     }
 
@@ -59,6 +68,12 @@ class Mage_Adminhtml_Block_Catalog_Product_Edit_Tab_Alerts_Price extends Mage_Ad
             'header'    => Mage::helper('catalog')->__('First Name'),
             'index'     => 'firstname',
         ));
+
+        $this->addColumn('middlename', array(
+            'header'    => Mage::helper('catalog')->__('Middle Name'),
+            'index'     => 'middlename',
+        ));
+
 
         $this->addColumn('lastname', array(
             'header'    => Mage::helper('catalog')->__('Last Name'),

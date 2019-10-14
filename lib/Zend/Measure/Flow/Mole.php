@@ -12,32 +12,30 @@
  * obtain it through the world-wide-web, please send an email
  * to license@zend.com so we can send you a copy immediately.
  *
- * @category   Zend
- * @package    Zend_Measure
- * @copyright  Copyright (c) 2005-2008 Zend Technologies USA Inc. (http://www.zend.com)
- * @version    $Id: Mole.php 8064 2008-02-16 10:58:39Z thomas $
- * @license    http://framework.zend.com/license/new-bsd     New BSD License
+ * @category  Zend
+ * @package   Zend_Measure
+ * @copyright  Copyright (c) 2005-2015 Zend Technologies USA Inc. (http://www.zend.com)
+ * @license   http://framework.zend.com/license/new-bsd     New BSD License
+ * @version   $Id$
  */
-
 
 /**
  * Implement needed classes
  */
-require_once 'Zend/Measure/Exception.php';
-require_once 'Zend/Measure/Abstract.php';
-require_once 'Zend/Locale.php';
-
+#require_once 'Zend/Measure/Abstract.php';
+#require_once 'Zend/Locale.php';
 
 /**
+ * Class for handling flow mole conversions
+ *
  * @category   Zend
  * @package    Zend_Measure
  * @subpackage Zend_Measure_Flow_Mole
- * @copyright  Copyright (c) 2005-2008 Zend Technologies USA Inc. (http://www.zend.com)
+ * @copyright  Copyright (c) 2005-2015 Zend Technologies USA Inc. (http://www.zend.com)
  * @license    http://framework.zend.com/license/new-bsd     New BSD License
  */
 class Zend_Measure_Flow_Mole extends Zend_Measure_Abstract
 {
-    // Mole definitions
     const STANDARD = 'MOLE_PER_SECOND';
 
     const CENTIMOLE_PER_DAY    = 'CENTIMOLE_PER_DAY';
@@ -61,7 +59,12 @@ class Zend_Measure_Flow_Mole extends Zend_Measure_Abstract
     const MOLE_PER_MINUTE      = 'MOLE_PER_MINUTE';
     const MOLE_PER_SECOND      = 'MOLE_PER_SECOND';
 
-    protected $_UNITS = array(
+    /**
+     * Calculations for all flow mole units
+     *
+     * @var array
+     */
+    protected $_units = array(
         'CENTIMOLE_PER_DAY'    => array(array('' => '0.01', '/' => '86400'),     'cmol/day'),
         'CENTIMOLE_PER_HOUR'   => array(array('' => '0.01', '/' => '3600'),      'cmol/h'),
         'CENTIMOLE_PER_MINUTE' => array(array('' => '0.01', '/' => '60'),        'cmol/m'),

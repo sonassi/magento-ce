@@ -15,26 +15,26 @@
  * @category   Zend
  * @package    Zend_Form
  * @subpackage Element
- * @copyright  Copyright (c) 2005-2008 Zend Technologies USA Inc. (http://www.zend.com)
+ * @copyright  Copyright (c) 2005-2015 Zend Technologies USA Inc. (http://www.zend.com)
  * @license    http://framework.zend.com/license/new-bsd     New BSD License
  */
 
 /** Zend_Form_Element_Multi */
-require_once 'Zend/Form/Element/Multi.php';
+#require_once 'Zend/Form/Element/Multi.php';
 
 /**
  * MultiCheckbox form element
  *
- * Allows specifyinc a (multi-)dimensional associative array of values to use 
- * as labelled checkboxes; these will return an array of values for those 
+ * Allows specifyinc a (multi-)dimensional associative array of values to use
+ * as labelled checkboxes; these will return an array of values for those
  * checkboxes selected.
- * 
+ *
  * @category   Zend
  * @package    Zend_Form
  * @subpackage Element
- * @copyright  Copyright (c) 2005-2008 Zend Technologies USA Inc. (http://www.zend.com)
+ * @copyright  Copyright (c) 2005-2015 Zend Technologies USA Inc. (http://www.zend.com)
  * @license    http://framework.zend.com/license/new-bsd     New BSD License
- * @version    $Id: MultiCheckbox.php 8628 2008-03-07 15:04:13Z matthew $
+ * @version    $Id$
  */
 class Zend_Form_Element_MultiCheckbox extends Zend_Form_Element_Multi
 {
@@ -49,4 +49,25 @@ class Zend_Form_Element_MultiCheckbox extends Zend_Form_Element_Multi
      * @var bool
      */
     protected $_isArray = true;
+
+    /**
+     * Load default decorators
+     *
+     * @return Zend_Form_Element_MultiCheckbox
+     */
+    public function loadDefaultDecorators()
+    {
+        if ($this->loadDefaultDecoratorsIsDisabled()) {
+            return $this;
+        }
+
+        parent::loadDefaultDecorators();
+
+        // Disable 'for' attribute
+        if (false !== $decorator = $this->getDecorator('label')) {
+            $decorator->setOption('disableFor', true);
+        }
+
+        return $this;
+    }
 }

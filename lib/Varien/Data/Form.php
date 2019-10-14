@@ -10,11 +10,17 @@
  * http://opensource.org/licenses/osl-3.0.php
  * If you did not receive a copy of the license and are unable to
  * obtain it through the world-wide-web, please send an email
- * to license@magentocommerce.com so we can send you a copy immediately.
+ * to license@magento.com so we can send you a copy immediately.
  *
- * @category   Varien
- * @package    Varien_Data
- * @copyright  Copyright (c) 2004-2007 Irubin Consulting Inc. DBA Varien (http://www.varien.com)
+ * DISCLAIMER
+ *
+ * Do not edit or add to this file if you wish to upgrade Magento to newer
+ * versions in the future. If you wish to customize Magento for your
+ * needs please refer to http://www.magento.com for more information.
+ *
+ * @category    Varien
+ * @package     Varien_Data
+ * @copyright  Copyright (c) 2006-2017 X.commerce, Inc. and affiliates (http://www.magento.com)
  * @license    http://opensource.org/licenses/osl-3.0.php  Open Software License (OSL 3.0)
  */
 
@@ -23,6 +29,7 @@
  *
  * @category   Varien
  * @package    Varien_Data
+ * @author      Magento Core Team <core@magentocommerce.com>
  */
 class Varien_Data_Form extends Varien_Data_Form_Abstract
 {
@@ -59,7 +66,7 @@ class Varien_Data_Form extends Varien_Data_Form_Abstract
     {
         self::$_defaultFieldsetRenderer = $renderer;
     }
-    
+
     public static function setFieldsetElementRenderer(Varien_Data_Form_Element_Renderer_Interface $renderer)
     {
         self::$_defaultFieldsetElementRenderer = $renderer;
@@ -74,10 +81,19 @@ class Varien_Data_Form extends Varien_Data_Form_Abstract
     {
         return self::$_defaultFieldsetRenderer;
     }
-    
+
     public static function getFieldsetElementRenderer()
     {
         return self::$_defaultFieldsetElementRenderer;
+    }
+
+    /**
+     * Return allowed HTML form attributes
+     * @return array
+     */
+    public function getHtmlAttributes()
+    {
+        return array('id', 'name', 'method', 'action', 'enctype', 'class', 'onsubmit');
     }
 
     /**
@@ -159,6 +175,12 @@ class Varien_Data_Form extends Varien_Data_Form_Abstract
         return $this;
     }
 
+    /**
+     * Add suffix to name of all elements
+     *
+     * @param string $suffix
+     * @return Varien_Data_Form
+     */
     public function addFieldNameSuffix($suffix)
     {
         foreach ($this->_allElements as $element) {
@@ -167,10 +189,14 @@ class Varien_Data_Form extends Varien_Data_Form_Abstract
                 $element->setName($this->addSuffixToName($name, $suffix));
             }
         }
+        return $this;
     }
 
     public function addSuffixToName($name, $suffix)
     {
+        if (!$name) {
+            return $suffix;
+        }
         $vars = explode('[', $name);
         $newName = $suffix;
         foreach ($vars as $index=>$value) {
@@ -190,12 +216,28 @@ class Varien_Data_Form extends Varien_Data_Form_Abstract
         return $this;
     }
 
+    public function setFieldContainerIdPrefix($prefix)
+    {
+        $this->setData('field_container_id_prefix', $prefix);
+        return $this;
+    }
+
+    public function getFieldContainerIdPrefix()
+    {
+        return $this->getData('field_container_id_prefix');
+    }
+
     public function toHtml()
     {
         Varien_Profiler::start('form/toHtml');
         $html = '';
         if ($useContainer = $this->getUseContainer()) {
-            $html.= '<form '.$this->serialize(array('id', 'name', 'method', 'action', 'enctype', 'class', 'onsubmit')).'>';
+            $html .= '<form '.$this->serialize($this->getHtmlAttributes()).'>';
+            $html .= '<div>';
+            if (strtolower($this->getData('method')) == 'post') {
+                $html .= '<input name="form_key" type="hidden" value="'.Mage::getSingleton('core/session')->getFormKey().'" />';
+            }
+            $html .= '</div>';
         }
 
         foreach ($this->getElements() as $element) {

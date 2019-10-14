@@ -10,11 +10,17 @@
  * http://opensource.org/licenses/osl-3.0.php
  * If you did not receive a copy of the license and are unable to
  * obtain it through the world-wide-web, please send an email
- * to license@magentocommerce.com so we can send you a copy immediately.
+ * to license@magento.com so we can send you a copy immediately.
  *
- * @category   Mage
- * @package    Mage_Adminhtml
- * @copyright  Copyright (c) 2004-2007 Irubin Consulting Inc. DBA Varien (http://www.varien.com)
+ * DISCLAIMER
+ *
+ * Do not edit or add to this file if you wish to upgrade Magento to newer
+ * versions in the future. If you wish to customize Magento for your
+ * needs please refer to http://www.magento.com for more information.
+ *
+ * @category    Mage
+ * @package     Mage_Adminhtml
+ * @copyright  Copyright (c) 2006-2017 X.commerce, Inc. and affiliates (http://www.magento.com)
  * @license    http://opensource.org/licenses/osl-3.0.php  Open Software License (OSL 3.0)
  */
 
@@ -23,6 +29,7 @@
  *
  * @category   Mage
  * @package    Mage_Adminhtml
+ * @author      Magento Core Team <core@magentocommerce.com>
  */
 class Mage_Adminhtml_Block_Catalog_Product_Grid extends Mage_Adminhtml_Block_Widget_Grid
 {
@@ -31,8 +38,8 @@ class Mage_Adminhtml_Block_Catalog_Product_Grid extends Mage_Adminhtml_Block_Wid
     {
         parent::__construct();
         $this->setId('productGrid');
-        $this->setDefaultSort('id');
-        $this->setDefaultDir('desc');
+        $this->setDefaultSort('entity_id');
+        $this->setDefaultDir('DESC');
         $this->setSaveParametersInSession(true);
         $this->setUseAjax(true);
         $this->setVarNameFilter('product_filter');
@@ -52,26 +59,65 @@ class Mage_Adminhtml_Block_Catalog_Product_Grid extends Mage_Adminhtml_Block_Wid
             ->addAttributeToSelect('sku')
             ->addAttributeToSelect('name')
             ->addAttributeToSelect('attribute_set_id')
-            ->addAttributeToSelect('type_id')
-            ->joinField('qty',
+            ->addAttributeToSelect('type_id');
+
+        if (Mage::helper('catalog')->isModuleEnabled('Mage_CatalogInventory')) {
+            $collection->joinField('qty',
                 'cataloginventory/stock_item',
                 'qty',
                 'product_id=entity_id',
                 '{{table}}.stock_id=1',
                 'left');
-
+        }
         if ($store->getId()) {
             //$collection->setStoreId($store->getId());
+            $adminStore = Mage_Core_Model_App::ADMIN_STORE_ID;
             $collection->addStoreFilter($store);
-            $collection->joinAttribute('custom_name', 'catalog_product/name', 'entity_id', null, 'inner', $store->getId());
-            $collection->joinAttribute('status', 'catalog_product/status', 'entity_id', null, 'inner', $store->getId());
-            $collection->joinAttribute('visibility', 'catalog_product/visibility', 'entity_id', null, 'inner', $store->getId());
-            $collection->joinAttribute('price', 'catalog_product/price', 'entity_id', null, 'left', $store->getId());
+            $collection->joinAttribute(
+                'name',
+                'catalog_product/name',
+                'entity_id',
+                null,
+                'inner',
+                $adminStore
+            );
+            $collection->joinAttribute(
+                'custom_name',
+                'catalog_product/name',
+                'entity_id',
+                null,
+                'inner',
+                $store->getId()
+            );
+            $collection->joinAttribute(
+                'status',
+                'catalog_product/status',
+                'entity_id',
+                null,
+                'inner',
+                $store->getId()
+            );
+            $collection->joinAttribute(
+                'visibility',
+                'catalog_product/visibility',
+                'entity_id',
+                null,
+                'inner',
+                $store->getId()
+            );
+            $collection->joinAttribute(
+                'price',
+                'catalog_product/price',
+                'entity_id',
+                null,
+                'left',
+                $store->getId()
+            );
         }
         else {
             $collection->addAttributeToSelect('price');
-            $collection->addAttributeToSelect('status');
-            $collection->addAttributeToSelect('visibility');
+            $collection->joinAttribute('status', 'catalog_product/status', 'entity_id', null, 'inner');
+            $collection->joinAttribute('visibility', 'catalog_product/visibility', 'entity_id', null, 'inner');
         }
 
         $this->setCollection($collection);
@@ -98,10 +144,11 @@ class Mage_Adminhtml_Block_Catalog_Product_Grid extends Mage_Adminhtml_Block_Wid
 
     protected function _prepareColumns()
     {
-        $this->addColumn('id',
+        $this->addColumn('entity_id',
             array(
                 'header'=> Mage::helper('catalog')->__('ID'),
                 'width' => '50px',
+                'type'  => 'number',
                 'index' => 'entity_id',
         ));
         $this->addColumn('name',
@@ -114,7 +161,7 @@ class Mage_Adminhtml_Block_Catalog_Product_Grid extends Mage_Adminhtml_Block_Wid
         if ($store->getId()) {
             $this->addColumn('custom_name',
                 array(
-                    'header'=> Mage::helper('catalog')->__('Name In %s', $store->getName()),
+                    'header'=> Mage::helper('catalog')->__('Name in %s', $store->getName()),
                     'index' => 'custom_name',
             ));
         }
@@ -158,13 +205,15 @@ class Mage_Adminhtml_Block_Catalog_Product_Grid extends Mage_Adminhtml_Block_Wid
                 'index' => 'price',
         ));
 
-        $this->addColumn('qty',
-            array(
-                'header'=> Mage::helper('catalog')->__('Qty'),
-                'width' => '100px',
-                'type'  => 'number',
-                'index' => 'qty',
-        ));
+        if (Mage::helper('catalog')->isModuleEnabled('Mage_CatalogInventory')) {
+            $this->addColumn('qty',
+                array(
+                    'header'=> Mage::helper('catalog')->__('Qty'),
+                    'width' => '100px',
+                    'type'  => 'number',
+                    'index' => 'qty',
+            ));
+        }
 
         $this->addColumn('visibility',
             array(
@@ -217,7 +266,9 @@ class Mage_Adminhtml_Block_Catalog_Product_Grid extends Mage_Adminhtml_Block_Wid
                 'index'     => 'stores',
         ));
 
-        $this->addRssList('rss/catalog/notifystock', Mage::helper('catalog')->__('Notify Low Stock RSS'));
+        if (Mage::helper('catalog')->isModuleEnabled('Mage_Rss')) {
+            $this->addRssList('rss/catalog/notifystock', Mage::helper('catalog')->__('Notify Low Stock RSS'));
+        }
 
         return parent::_prepareColumns();
     }
@@ -250,11 +301,14 @@ class Mage_Adminhtml_Block_Catalog_Product_Grid extends Mage_Adminhtml_Block_Wid
              )
         ));
 
-        $this->getMassactionBlock()->addItem('attributes', array(
-            'label' => Mage::helper('catalog')->__('Update attributes'),
-            'url'   => $this->getUrl('*/catalog_product_action_attribute/edit', array('_current'=>true))
-        ));
+        if (Mage::getSingleton('admin/session')->isAllowed('catalog/update_attributes')){
+            $this->getMassactionBlock()->addItem('attributes', array(
+                'label' => Mage::helper('catalog')->__('Update Attributes'),
+                'url'   => $this->getUrl('*/catalog_product_action_attribute/edit', array('_current'=>true))
+            ));
+        }
 
+        Mage::dispatchEvent('adminhtml_catalog_product_grid_prepare_massaction', array('block' => $this));
         return $this;
     }
 

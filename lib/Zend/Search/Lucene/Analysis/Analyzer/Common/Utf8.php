@@ -15,20 +15,21 @@
  * @category   Zend
  * @package    Zend_Search_Lucene
  * @subpackage Analysis
- * @copyright  Copyright (c) 2005-2008 Zend Technologies USA Inc. (http://www.zend.com)
+ * @copyright  Copyright (c) 2005-2015 Zend Technologies USA Inc. (http://www.zend.com)
  * @license    http://framework.zend.com/license/new-bsd     New BSD License
+ * @version    $Id$
  */
 
 
 /** Zend_Search_Lucene_Analysis_Analyzer_Common */
-require_once 'Zend/Search/Lucene/Analysis/Analyzer/Common.php';
+#require_once 'Zend/Search/Lucene/Analysis/Analyzer/Common.php';
 
 
 /**
  * @category   Zend
  * @package    Zend_Search_Lucene
  * @subpackage Analysis
- * @copyright  Copyright (c) 2005-2008 Zend Technologies USA Inc. (http://www.zend.com)
+ * @copyright  Copyright (c) 2005-2015 Zend Technologies USA Inc. (http://www.zend.com)
  * @license    http://framework.zend.com/license/new-bsd     New BSD License
  */
 
@@ -47,7 +48,7 @@ class Zend_Search_Lucene_Analysis_Analyzer_Common_Utf8 extends Zend_Search_Lucen
      * @var integer
      */
     private $_bytePosition;
-    
+
     /**
      * Object constructor
      *
@@ -57,7 +58,7 @@ class Zend_Search_Lucene_Analysis_Analyzer_Common_Utf8 extends Zend_Search_Lucen
     {
         if (@preg_match('/\pL/u', 'a') != 1) {
             // PCRE unicode support is turned off
-            require_once 'Zend/Search/Lucene/Exception.php';
+            #require_once 'Zend/Search/Lucene/Exception.php';
             throw new Zend_Search_Lucene_Exception('Utf8 analyzer needs PCRE unicode support to be enabled.');
         }
     }
@@ -100,12 +101,12 @@ class Zend_Search_Lucene_Analysis_Analyzer_Common_Utf8 extends Zend_Search_Lucen
 
             // matched string
             $matchedWord = $match[0][0];
-            
+
             // binary position of the matched word in the input stream
             $binStartPos = $match[0][1];
-            
+
             // character position of the matched word in the input stream
-            $startPos = $this->_position + 
+            $startPos = $this->_position +
                         iconv_strlen(substr($this->_input,
                                             $this->_bytePosition,
                                             $binStartPos - $this->_bytePosition),

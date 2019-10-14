@@ -10,11 +10,17 @@
  * http://opensource.org/licenses/osl-3.0.php
  * If you did not receive a copy of the license and are unable to
  * obtain it through the world-wide-web, please send an email
- * to license@magentocommerce.com so we can send you a copy immediately.
+ * to license@magento.com so we can send you a copy immediately.
  *
- * @category   Mage
- * @package    Mage_Adminhtml
- * @copyright  Copyright (c) 2004-2007 Irubin Consulting Inc. DBA Varien (http://www.varien.com)
+ * DISCLAIMER
+ *
+ * Do not edit or add to this file if you wish to upgrade Magento to newer
+ * versions in the future. If you wish to customize Magento for your
+ * needs please refer to http://www.magento.com for more information.
+ *
+ * @category    Mage
+ * @package     Mage_Adminhtml
+ * @copyright  Copyright (c) 2006-2017 X.commerce, Inc. and affiliates (http://www.magento.com)
  * @license    http://opensource.org/licenses/osl-3.0.php  Open Software License (OSL 3.0)
  */
 
@@ -23,62 +29,84 @@
  *
  * @category   Mage
  * @package    Mage_Adminhtml
+ * @author     Magento Core Team <core@magentocommerce.com>
  */
-class Mage_Adminhtml_Block_Report_Sales_Refunded_Grid extends Mage_Adminhtml_Block_Report_Grid
+class Mage_Adminhtml_Block_Report_Sales_Refunded_Grid extends Mage_Adminhtml_Block_Report_Grid_Abstract
 {
+    protected $_columnGroupBy = 'period';
 
     public function __construct()
     {
         parent::__construct();
-        $this->setId('gridRefunded');
+        $this->setCountTotals(true);
     }
 
-    protected function _prepareCollection()
+    public function getResourceCollectionName()
     {
-        parent::_prepareCollection();
-        $this->getCollection()->initReport('reports/refunded_collection');
+        return ($this->getFilterData()->getData('report_type') == 'created_at_refunded')
+            ? 'sales/report_refunded_collection_refunded'
+            : 'sales/report_refunded_collection_order';
     }
 
     protected function _prepareColumns()
     {
-        $this->addColumn('orders', array(
-            'header'    =>Mage::helper('reports')->__('Number of Orders'),
-            'index'     =>'orders',
-            'total'     =>'sum',
-            'type'      =>'number'
+        $this->addColumn('period', array(
+            'header'        => Mage::helper('sales')->__('Period'),
+            'index'         => 'period',
+            'width'         => 100,
+            'sortable'      => false,
+            'period_type'   => $this->getPeriodType(),
+            'renderer'      => 'adminhtml/report_sales_grid_column_renderer_date',
+            'totals_label'  => Mage::helper('sales')->__('Total'),
+            'html_decorators' => array('nobr'),
         ));
 
-        $currency_code = (string) Mage::app()->getStore((int)$this->getParam('store'))->getBaseCurrencyCode();
+        $this->addColumn('orders_count', array(
+            'header'    => Mage::helper('sales')->__('Number of Refunded Orders'),
+            'index'     => 'orders_count',
+            'type'      => 'number',
+            'total'     => 'sum',
+            'sortable'  => false
+        ));
+
+        if ($this->getFilterData()->getStoreIds()) {
+            $this->setStoreIds(explode(',', $this->getFilterData()->getStoreIds()));
+        }
+        $currencyCode = $this->getCurrentCurrencyCode();
+        $rate = $this->getRate($currencyCode);
 
         $this->addColumn('refunded', array(
-            'header'    =>Mage::helper('reports')->__('Total Refunded'),
-            'type'      =>'currency',
-            'currency_code'=>$currency_code,
-            'index'     =>'refunded',
-            'total'     =>'sum',
-            'renderer'  =>'adminhtml/report_grid_column_renderer_currency'
+            'header'        => Mage::helper('sales')->__('Total Refunded'),
+            'type'          => 'currency',
+            'currency_code' => $currencyCode,
+            'index'         => 'refunded',
+            'total'         => 'sum',
+            'sortable'      => false,
+            'rate'          => $rate,
         ));
 
         $this->addColumn('online_refunded', array(
-            'header'    =>Mage::helper('reports')->__('Online Refunded'),
-            'type'      =>'currency',
-            'currency_code'=>$currency_code,
-            'index'     =>'online_refunded',
-            'total'     =>'sum',
-            'renderer'  =>'adminhtml/report_grid_column_renderer_currency'
+            'header'        => Mage::helper('sales')->__('Online Refunded'),
+            'type'          => 'currency',
+            'currency_code' => $currencyCode,
+            'index'         => 'online_refunded',
+            'total'         => 'sum',
+            'sortable'      => false,
+            'rate'          => $rate,
         ));
 
         $this->addColumn('offline_refunded', array(
-            'header'    =>Mage::helper('reports')->__('Offline Refunded'),
-            'type'      =>'currency',
-            'currency_code'=>$currency_code,
-            'index'     =>'offline_refunded',
-            'total'     =>'sum',
-            'renderer'  =>'adminhtml/report_grid_column_renderer_currency'
+            'header'        => Mage::helper('sales')->__('Offline Refunded'),
+            'type'          => 'currency',
+            'currency_code' => $currencyCode,
+            'index'         => 'offline_refunded',
+            'total'         => 'sum',
+            'sortable'      => false,
+            'rate'          => $rate,
         ));
 
-        $this->addExportType('*/*/exportRefundedCsv', Mage::helper('reports')->__('CSV'));
-        $this->addExportType('*/*/exportRefundedExcel', Mage::helper('reports')->__('Excel'));
+        $this->addExportType('*/*/exportRefundedCsv', Mage::helper('adminhtml')->__('CSV'));
+        $this->addExportType('*/*/exportRefundedExcel', Mage::helper('adminhtml')->__('Excel XML'));
 
         return parent::_prepareColumns();
     }

@@ -15,25 +15,26 @@
  * @category   Zend
  * @package    Zend_Rest
  * @subpackage Client
- * @copyright  Copyright (c) 2005-2008 Zend Technologies USA Inc. (http://www.zend.com)
+ * @copyright  Copyright (c) 2005-2015 Zend Technologies USA Inc. (http://www.zend.com)
  * @license    http://framework.zend.com/license/new-bsd     New BSD License
+ * @version    $Id$
  */
 
 
 /** Zend_Service_Abstract */
-require_once 'Zend/Service/Abstract.php';
+#require_once 'Zend/Service/Abstract.php';
 
 /** Zend_Rest_Client_Result */
-require_once 'Zend/Rest/Client/Result.php';
+#require_once 'Zend/Rest/Client/Result.php';
 
 /** Zend_Uri */
-require_once 'Zend/Uri.php';
+#require_once 'Zend/Uri.php';
 
 /**
  * @category   Zend
  * @package    Zend_Rest
  * @subpackage Client
- * @copyright  Copyright (c) 2005-2008 Zend Technologies USA Inc. (http://www.zend.com)
+ * @copyright  Copyright (c) 2005-2015 Zend Technologies USA Inc. (http://www.zend.com)
  * @license    http://framework.zend.com/license/new-bsd     New BSD License
  */
 class Zend_Rest_Client extends Zend_Service_Abstract
@@ -49,6 +50,13 @@ class Zend_Rest_Client extends Zend_Service_Abstract
      * @var Zend_Uri_Http
      */
     protected $_uri = null;
+    
+    /**
+     * Flag indicating the Zend_Http_Client is fresh and needs no reset.
+     * Must be set explicitly if you want to keep preset parameters.
+     * @var bool true if you do not want a reset. Default false.
+     */
+    protected $_noReset = false;
 
     /**
      * Constructor
@@ -97,11 +105,11 @@ class Zend_Rest_Client extends Zend_Service_Abstract
      * @throws Zend_Rest_Client_Exception
      * @return void
      */
-    final private function _prepareRest($path)
+    private function _prepareRest($path)
     {
         // Get the URI object and configure it
         if (!$this->_uri instanceof Zend_Uri_Http) {
-            require_once 'Zend/Rest/Client/Exception.php';
+            #require_once 'Zend/Rest/Client/Exception.php';
             throw new Zend_Rest_Client_Exception('URI object must be set before performing call');
         }
 
@@ -117,7 +125,29 @@ class Zend_Rest_Client extends Zend_Service_Abstract
          * Get the HTTP client and configure it for the endpoint URI.  Do this each time
          * because the Zend_Http_Client instance is shared among all Zend_Service_Abstract subclasses.
          */
-        self::getHttpClient()->resetParameters()->setUri($this->_uri);
+        if ($this->_noReset) {
+            // if $_noReset we do not want to reset on this request, 
+            // but we do on any subsequent request
+            $this->_noReset = false;
+        } else {
+            self::getHttpClient()->resetParameters();
+        }
+        
+        self::getHttpClient()->setUri($this->_uri);
+    }
+    
+    /**
+     * Tells Zend_Rest_Client not to reset all parameters on it's 
+     * Zend_Http_Client. If you want no reset, this must be called explicitly
+     * before every request for which you do not want to reset the parameters.
+     * Parameters will accumulate between requests, but as soon as you do not
+     * call this function prior to any request, all preset parameters will be reset
+     * as by default.
+     * @param boolean $bool
+     */
+    public function setNoReset($bool = true)
+    {
+        $this->_noReset = $bool;
     }
 
     /**
@@ -125,9 +155,10 @@ class Zend_Rest_Client extends Zend_Service_Abstract
      *
      * @param string $path
      * @param array  $query Array of GET parameters
+     * @throws Zend_Http_Client_Exception
      * @return Zend_Http_Response
      */
-    final public function restGet($path, array $query = null)
+    public function restGet($path, array $query = null)
     {
         $this->_prepareRest($path);
         $client = self::getHttpClient();
@@ -162,9 +193,10 @@ class Zend_Rest_Client extends Zend_Service_Abstract
      *
      * @param string $path
      * @param mixed $data Raw data to send
+     * @throws Zend_Http_Client_Exception
      * @return Zend_Http_Response
      */
-    final public function restPost($path, $data = null)
+    public function restPost($path, $data = null)
     {
         $this->_prepareRest($path);
         return $this->_performPost('POST', $data);
@@ -175,9 +207,10 @@ class Zend_Rest_Client extends Zend_Service_Abstract
      *
      * @param string $path
      * @param mixed $data Raw data to send in request
+     * @throws Zend_Http_Client_Exception
      * @return Zend_Http_Response
      */
-    final public function restPut($path, $data = null)
+    public function restPut($path, $data = null)
     {
         $this->_prepareRest($path);
         return $this->_performPost('PUT', $data);
@@ -187,12 +220,13 @@ class Zend_Rest_Client extends Zend_Service_Abstract
      * Performs an HTTP DELETE request to $path.
      *
      * @param string $path
+     * @throws Zend_Http_Client_Exception
      * @return Zend_Http_Response
      */
-    final public function restDelete($path)
+    public function restDelete($path, $data = null)
     {
         $this->_prepareRest($path);
-        return self::getHttpClient()->request('DELETE');
+        return $this->_performPost('DELETE', $data);
     }
 
     /**
@@ -203,12 +237,6 @@ class Zend_Rest_Client extends Zend_Service_Abstract
      * method (post, get, delete, put):
      * <code>
      * $response = $rest->sayHello('Foo', 'Manchu')->get();
-     * </code>
-     *
-     * You can also use an HTTP request method as a calling method, using the
-     * path as the first argument:
-     * <code>
-     * $rest->get('/sayHello', 'Foo', 'Manchu');
      * </code>
      *
      * Or use them together, but in sequential calls:
@@ -233,12 +261,17 @@ class Zend_Rest_Client extends Zend_Service_Abstract
             $this->_data['rest'] = 1;
             $data = array_slice($args, 1) + $this->_data;
             $response = $this->{'rest' . $method}($args[0], $data);
+            $this->_data = array();//Initializes for next Rest method.
             return new Zend_Rest_Client_Result($response->getBody());
         } else {
             // More than one arg means it's definitely a Zend_Rest_Server
             if (sizeof($args) == 1) {
-                $this->_data[$method] = $args[0];
-                $this->_data['arg1']  = $args[0];
+                // Uses first called function name as method name
+                if (!isset($this->_data['method'])) {
+                    $this->_data['method'] = $method;
+                    $this->_data['arg1']  = $args[0];
+                }
+                $this->_data[$method]  = $args[0];
             } else {
                 $this->_data['method'] = $method;
                 if (sizeof($args) > 0) {

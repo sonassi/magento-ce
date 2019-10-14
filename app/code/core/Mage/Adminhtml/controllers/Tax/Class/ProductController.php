@@ -10,11 +10,17 @@
  * http://opensource.org/licenses/osl-3.0.php
  * If you did not receive a copy of the license and are unable to
  * obtain it through the world-wide-web, please send an email
- * to license@magentocommerce.com so we can send you a copy immediately.
+ * to license@magento.com so we can send you a copy immediately.
  *
- * @category   Mage
- * @package    Mage_Adminhtml
- * @copyright  Copyright (c) 2004-2007 Irubin Consulting Inc. DBA Varien (http://www.varien.com)
+ * DISCLAIMER
+ *
+ * Do not edit or add to this file if you wish to upgrade Magento to newer
+ * versions in the future. If you wish to customize Magento for your
+ * needs please refer to http://www.magento.com for more information.
+ *
+ * @category    Mage
+ * @package     Mage_Adminhtml
+ * @copyright  Copyright (c) 2006-2017 X.commerce, Inc. and affiliates (http://www.magento.com)
  * @license    http://opensource.org/licenses/osl-3.0.php  Open Software License (OSL 3.0)
  */
 
@@ -23,6 +29,7 @@
  *
  * @category   Mage
  * @package    Mage_Adminhtml
+ * @author      Magento Core Team <core@magentocommerce.com>
  */
 class Mage_Adminhtml_Tax_Class_ProductController extends Mage_Adminhtml_Controller_Action
 {
@@ -32,8 +39,15 @@ class Mage_Adminhtml_Tax_Class_ProductController extends Mage_Adminhtml_Controll
      */
     public function indexAction()
     {
+        $this->_title($this->__('Sales'))
+             ->_title($this->__('Tax'))
+             ->_title($this->__('Product Tax Classes'));
+
         $this->_initAction()
-            ->_addContent($this->getLayout()->createBlock('adminhtml/tax_class')->setClassType('PRODUCT'))
+            ->_addContent(
+                $this->getLayout()->createBlock('adminhtml/tax_class')
+                    ->setClassType(Mage_Tax_Model_Class::TAX_CLASS_TYPE_PRODUCT)
+            )
             ->renderLayout();
     }
 
@@ -52,16 +66,24 @@ class Mage_Adminhtml_Tax_Class_ProductController extends Mage_Adminhtml_Controll
      */
     public function editAction()
     {
+        $this->_title($this->__('Sales'))
+             ->_title($this->__('Tax'))
+             ->_title($this->__('Product Tax Classes'));
+
         $classId    = $this->getRequest()->getParam('id');
         $model      = Mage::getModel('tax/class');
         if ($classId) {
             $model->load($classId);
-            if (!$model->getId() || $model->getClassType() != 'PRODUCT') {
-                Mage::getSingleton('adminhtml/session')->addError(Mage::helper('tax')->__('This class no longer exists'));
+            if (!$model->getId() || $model->getClassType() != Mage_Tax_Model_Class::TAX_CLASS_TYPE_PRODUCT) {
+                Mage::getSingleton('adminhtml/session')->addError(
+                    Mage::helper('tax')->__('This class no longer exists')
+                );
                 $this->_redirect('*/*/');
                 return;
             }
         }
+
+        $this->_title($model->getId() ? $model->getClassName() : $this->__('New Class'));
 
         $data = Mage::getSingleton('adminhtml/session')->getClassData(true);
         if (!empty($data)) {
@@ -71,8 +93,15 @@ class Mage_Adminhtml_Tax_Class_ProductController extends Mage_Adminhtml_Controll
         Mage::register('tax_class', $model);
 
         $this->_initAction()
-            ->_addBreadcrumb($classId ? Mage::helper('tax')->__('Edit Class') :  Mage::helper('tax')->__('New Class'), $classId ?  Mage::helper('tax')->__('Edit Class') :  Mage::helper('tax')->__('New Class'))
-            ->_addContent($this->getLayout()->createBlock('adminhtml/tax_class_edit')->setData('action', $this->getUrl('*/tax_class/save'))->setClassType('PRODUCT'))
+            ->_addBreadcrumb(
+                $classId ? Mage::helper('tax')->__('Edit Class') :  Mage::helper('tax')->__('New Class'),
+                $classId ?  Mage::helper('tax')->__('Edit Class') :  Mage::helper('tax')->__('New Class')
+            )
+            ->_addContent(
+                $this->getLayout()->createBlock('adminhtml/tax_class_edit')
+                    ->setData('action', $this->getUrl('*/tax_class/save'))
+                    ->setClassType(Mage_Tax_Model_Class::TAX_CLASS_TYPE_PRODUCT)
+            )
             ->renderLayout();
     }
 
@@ -83,22 +112,23 @@ class Mage_Adminhtml_Tax_Class_ProductController extends Mage_Adminhtml_Controll
     public function deleteAction()
     {
         $classId    = $this->getRequest()->getParam('id');
+        $session    = Mage::getSingleton('adminhtml/session');
         $classModel = Mage::getModel('tax/class')
             ->load($classId);
 
-        if (!$classModel->getId() || $classModel->getClassType() != 'PRODUCT') {
-            Mage::getSingleton('adminhtml/session')->addError(Mage::helper('tax')->__('This class no longer exists'));
+        if (!$classModel->getId() || $classModel->getClassType() != Mage_Tax_Model_Class::TAX_CLASS_TYPE_PRODUCT) {
+            $session->addError(Mage::helper('tax')->__('This class no longer exists'));
             $this->_redirect('*/*/');
             return;
         }
 
-        $ruleCollection = Mage::getModel('tax/rule')
+        $ruleCollection = Mage::getModel('tax/calculation_rule')
             ->getCollection()
-            ->setClassTypeFilter('PRODUCT', $classId);
+            ->setClassTypeFilter(Mage_Tax_Model_Class::TAX_CLASS_TYPE_PRODUCT, $classId);
 
         if ($ruleCollection->getSize() > 0) {
-            Mage::getSingleton('adminhtml/session')->addError(Mage::helper('tax')->__('You cannot delete this tax class as it is used in Tax Rules. You have to delete the rules it is used in first.'));
-            $this->_redirectReferer();
+            $session->addError(Mage::helper('tax')->__('You cannot delete this tax class as it is used in Tax Rules. You have to delete the rules it is used in first.'));
+            $this->_redirect('*/*/edit/', array('id' => $classId));
             return;
         }
 
@@ -108,26 +138,24 @@ class Mage_Adminhtml_Tax_Class_ProductController extends Mage_Adminhtml_Controll
         $productCount = $productCollection->getSize();
 
         if ($productCount > 0) {
-            Mage::getSingleton('adminhtml/session')->addError(Mage::helper('tax')->__('You cannot delete this tax class as it is used for %d products.', $productCount));
-            $this->_redirectReferer();
+            $session->addError(Mage::helper('tax')->__('You cannot delete this tax class as it is used for %d products.', $productCount));
+            $this->_redirect('*/*/edit/', array('id' => $classId));
             return;
         }
 
         try {
             $classModel->delete();
 
-            Mage::getSingleton('adminhtml/session')->addSuccess(Mage::helper('tax')->__('Tax class was successfully deleted'));
+            $session->addSuccess(Mage::helper('tax')->__('The tax class has been deleted.'));
             $this->getResponse()->setRedirect($this->getUrl("*/*/"));
             return;
-        }
-        catch (Mage_Core_Exception $e) {
-            Mage::getSingleton('adminhtml/session')->addError($e->getMessage());
-        }
-        catch (Exception $e) {
-            Mage::getSingleton('adminhtml/session')->addError(Mage::helper('tax')->__('Error while deleting this class. Please try again later.'));
+        } catch (Mage_Core_Exception $e) {
+            $session->addError($e->getMessage());
+        } catch (Exception $e) {
+            $session->addException($e, Mage::helper('tax')->__('An error occurred while deleting this tax class.'));
         }
 
-        $this->_redirectReferer();
+        $this->_redirect('*/*/edit/', array('id' => $classId));
     }
 
     /**

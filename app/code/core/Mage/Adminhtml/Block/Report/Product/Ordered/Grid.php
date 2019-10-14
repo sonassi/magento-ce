@@ -10,19 +10,24 @@
  * http://opensource.org/licenses/osl-3.0.php
  * If you did not receive a copy of the license and are unable to
  * obtain it through the world-wide-web, please send an email
- * to license@magentocommerce.com so we can send you a copy immediately.
+ * to license@magento.com so we can send you a copy immediately.
  *
- * @category   Mage
- * @package    Mage_Adminhtml
- * @copyright  Copyright (c) 2004-2007 Irubin Consulting Inc. DBA Varien (http://www.varien.com)
+ * DISCLAIMER
+ *
+ * Do not edit or add to this file if you wish to upgrade Magento to newer
+ * versions in the future. If you wish to customize Magento for your
+ * needs please refer to http://www.magento.com for more information.
+ *
+ * @category    Mage
+ * @package     Mage_Adminhtml
+ * @copyright  Copyright (c) 2006-2017 X.commerce, Inc. and affiliates (http://www.magento.com)
  * @license    http://opensource.org/licenses/osl-3.0.php  Open Software License (OSL 3.0)
  */
 
 /**
  * Adminhtml bestsellers products report grid block
  *
- * @category   Mage
- * @package    Mage_Adminhtml
+ * @deprecated after 1.4.0.1
  */
 class Mage_Adminhtml_Block_Report_Product_Ordered_Grid extends Mage_Adminhtml_Block_Report_Grid
 {
@@ -46,12 +51,15 @@ class Mage_Adminhtml_Block_Report_Product_Ordered_Grid extends Mage_Adminhtml_Bl
             'index'     =>'name'
         ));
 
+        $baseCurrencyCode = $this->getCurrentCurrencyCode();
+
         $this->addColumn('price', array(
-            'header'    =>Mage::helper('reports')->__('Price'),
-            'width'     =>'120px',
-            'type'      =>'currency',
-            'currency_code' => (string) Mage::app()->getStore((int)$this->getParam('store'))->getBaseCurrencyCode(),
-            'index'     =>'price'
+            'header'        => Mage::helper('reports')->__('Price'),
+            'width'         => '120px',
+            'type'          => 'currency',
+            'currency_code' => $baseCurrencyCode,
+            'index'         => 'price',
+            'rate'          => $this->getRate($baseCurrencyCode),
         ));
 
         $this->addColumn('ordered_qty', array(
@@ -64,7 +72,7 @@ class Mage_Adminhtml_Block_Report_Product_Ordered_Grid extends Mage_Adminhtml_Bl
         ));
 
         $this->addExportType('*/*/exportOrderedCsv', Mage::helper('reports')->__('CSV'));
-        $this->addExportType('*/*/exportOrderedExcel', Mage::helper('reports')->__('Excel'));
+        $this->addExportType('*/*/exportOrderedExcel', Mage::helper('reports')->__('Excel XML'));
 
         return parent::_prepareColumns();
     }

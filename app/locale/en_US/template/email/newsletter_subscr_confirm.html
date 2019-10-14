@@ -1,37 +1,31 @@
 <!--@subject Newsletter subscription confirmation @-->
+<!--@vars
+{"store url=\"\"":"Store Url",
+"var logo_url":"Email Logo Image Url",
+"var logo_alt":"Email Logo Image Alt",
+"htmlescape var=$customer.name":"Customer Name",
+"var subscriber.getConfirmationLink()":"Subscriber Confirmation Url"}
+@-->
+<!--@styles
+@-->
 
-<style type="text/css">
-body,td { color:#2f2f2f; font:11px/1.35em Verdana, Arial, Helvetica, sans-serif; }
-</style>
+{{template config_path="design/email/header"}}
+{{inlinecss file="email-inline.css"}}
 
-<div style="font:11px/1.35em Verdana, Arial, Helvetica, sans-serif;">
-    <table cellspacing="0" cellpadding="0" border="0" width="98%" style="margin-top:10px; font:11px/1.35em Verdana, Arial, Helvetica, sans-serif; margin-bottom:10px;">
-        <tr>
-            <td align="center" valign="top">
-                <!-- [ header starts here] -->
-                <table cellspacing="0" cellpadding="0" border="0" width="650">
-                    <tr>
-                        <td valign="top">
-                            <p><a href="{{store url=""}}" style="color:#1E7EC8;"><img src="{{skin url="images/media/logo_email.gif"}}" alt="Magento" border="0"/></a></p></td>
-                    </tr>
-                </table>
+<table cellpadding="0" cellspacing="0" border="0">
+    <tr>
+        <td class="action-content">
+            <h1>Thank you for subscribing.</h1>
+            <p>To begin receiving the newsletter, you must first confirm your subscription:</p>
+            <table cellspacing="0" cellpadding="0" class="action-button" >
+                <tr>
+                    <td>
+                        <a href="{{var subscriber.getConfirmationLink()}}"><span>Confirm Subscription</span></a>
+                    </td>
+                </tr>
+            </table>
+        </td>
+    </tr>
+</table>
 
-                <!-- [ middle starts here] -->
-                <table cellspacing="0" cellpadding="0" border="0" width="650">
-                    <tr>
-                        <td valign="top">
-                            <p><strong>Dear {{var customer.name}},</strong>,<br/>
-                            Thank you for subscribing to our newsletter.</p>
-                            <p style="border:1px solid #BEBCB7; padding:13px 18px; background:#F8F7F5; ">To begin receiving the newsletter, you must first confirm your subscription by clicking on the following link:<br />
-                            <a href="{{var subscriber.getConfirmationLink()}}" style="color:#1E7EC8;">{{var subscriber.getConfirmationLink()}}</a><p>
-
-                            <p>Thank you again,<br/><strong>Magento Demo Store</strong></p>
-
-
-                        </td>
-                    </tr>
-                </table>
-            </td>
-        </tr>
-    </table>
-</div>
+{{template config_path="design/email/footer"}}

@@ -15,14 +15,15 @@
  * @category   Zend
  * @package    Zend_Db
  * @subpackage Statement
- * @copyright  Copyright (c) 2005-2008 Zend Technologies USA Inc. (http://www.zend.com)
+ * @copyright  Copyright (c) 2005-2015 Zend Technologies USA Inc. (http://www.zend.com)
  * @license    http://framework.zend.com/license/new-bsd     New BSD License
+ * @version    $Id$
  */
 
 /**
  * @see Zend_Db_Exception
  */
-require_once 'Zend/Db/Exception.php';
+#require_once 'Zend/Db/Exception.php';
 
 /**
  * Zend_Db_Statement_Exception
@@ -30,9 +31,26 @@ require_once 'Zend/Db/Exception.php';
  * @category   Zend
  * @package    Zend_Db
  * @subpackage Statement
- * @copyright  Copyright (c) 2005-2008 Zend Technologies USA Inc. (http://www.zend.com)
+ * @copyright  Copyright (c) 2005-2015 Zend Technologies USA Inc. (http://www.zend.com)
  * @license    http://framework.zend.com/license/new-bsd     New BSD License
  */
 class Zend_Db_Statement_Exception extends Zend_Db_Exception
 {
+    /**
+     * Check if this general exception has a specific database driver specific exception nested inside.
+     *
+     * @return bool
+     */
+    public function hasChainedException()
+    {
+        return ($this->getPrevious() !== null);
+    }
+
+    /**
+     * @return Exception|null
+     */
+    public function getChainedException()
+    {
+        return $this->getPrevious();
+    }
 }

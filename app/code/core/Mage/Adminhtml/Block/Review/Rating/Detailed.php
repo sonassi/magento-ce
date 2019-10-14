@@ -10,11 +10,17 @@
  * http://opensource.org/licenses/osl-3.0.php
  * If you did not receive a copy of the license and are unable to
  * obtain it through the world-wide-web, please send an email
- * to license@magentocommerce.com so we can send you a copy immediately.
+ * to license@magento.com so we can send you a copy immediately.
  *
- * @category   Mage
- * @package    Mage_Adminhtml
- * @copyright  Copyright (c) 2004-2007 Irubin Consulting Inc. DBA Varien (http://www.varien.com)
+ * DISCLAIMER
+ *
+ * Do not edit or add to this file if you wish to upgrade Magento to newer
+ * versions in the future. If you wish to customize Magento for your
+ * needs please refer to http://www.magento.com for more information.
+ *
+ * @category    Mage
+ * @package     Mage_Adminhtml
+ * @copyright  Copyright (c) 2006-2017 X.commerce, Inc. and affiliates (http://www.magento.com)
  * @license    http://opensource.org/licenses/osl-3.0.php  Open Software License (OSL 3.0)
  */
 
@@ -23,6 +29,7 @@
  *
  * @category   Mage
  * @package    Mage_Adminhtml
+ * @author      Magento Core Team <core@magentocommerce.com>
  */
 
 class Mage_Adminhtml_Block_Review_Rating_Detailed extends Mage_Adminhtml_Block_Template
@@ -53,8 +60,6 @@ class Mage_Adminhtml_Block_Review_Rating_Detailed extends Mage_Adminhtml_Block_T
                     ->load()
                     ->addOptionToItems();
 
-
-
                 $this->_voteCollection = Mage::getModel('rating/rating_option_vote')
                     ->getResourceCollection()
                     ->setReviewFilter($this->getReviewId())
@@ -66,20 +71,30 @@ class Mage_Adminhtml_Block_Review_Rating_Detailed extends Mage_Adminhtml_Block_T
                 $ratingCollection = Mage::getModel('rating/rating')
                     ->getResourceCollection()
                     ->addEntityFilter('product')
-                    ->setStoreFilter(null)
+                    ->setStoreFilter(Mage::app()->getDefaultStoreView()->getId())
                     ->setPositionOrder()
                     ->load()
                     ->addOptionToItems();
             } else {
-                 $ratingCollection = Mage::getModel('rating/rating')
+                $ratingCollection = Mage::getModel('rating/rating')
                     ->getResourceCollection()
                     ->addEntityFilter('product')
-                    ->setStoreFilter($this->getRequest()->getParam('select_stores') ? $this->getRequest()->getParam('select_stores') : $this->getRequest()->getParam('stores'))
+                    ->setStoreFilter(
+                        $this->getRequest()->getParam('select_stores')
+                            ? $this->getRequest()->getParam('select_stores')
+                            : $this->getRequest()->getParam('stores')
+                    )
                     ->setPositionOrder()
                     ->load()
                     ->addOptionToItems();
-
-
+                if(intval($this->getRequest()->getParam('id'))){
+                    $this->_voteCollection = Mage::getModel('rating/rating_option_vote')
+                        ->getResourceCollection()
+                        ->setReviewFilter(intval($this->getRequest()->getParam('id')))
+                        ->addOptionInfo()
+                        ->load()
+                        ->addRatingOptions();
+                }
             }
             $this->setRatingCollection( ( $ratingCollection->getSize() ) ? $ratingCollection : false );
         }
@@ -99,9 +114,9 @@ class Mage_Adminhtml_Block_Review_Rating_Detailed extends Mage_Adminhtml_Block_T
 
             if(isset($ratings[$option->getRatingId()])) {
                 return $option->getId() == $ratings[$option->getRatingId()];
+            }elseif(!$this->_voteCollection) {
+                return false;
             }
-
-            return false;
         }
 
         if($this->_voteCollection) {

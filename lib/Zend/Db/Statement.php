@@ -15,19 +15,20 @@
  * @category   Zend
  * @package    Zend_Db
  * @subpackage Statement
- * @copyright  Copyright (c) 2005-2008 Zend Technologies USA Inc. (http://www.zend.com)
+ * @copyright  Copyright (c) 2005-2015 Zend Technologies USA Inc. (http://www.zend.com)
  * @license    http://framework.zend.com/license/new-bsd     New BSD License
+ * @version    $Id$
  */
 
 /**
  * @see Zend_Db
  */
-require_once 'Zend/Db.php';
+#require_once 'Zend/Db.php';
 
 /**
  * @see Zend_Db_Statement_Interface
  */
-require_once 'Zend/Db/Statement/Interface.php';
+#require_once 'Zend/Db/Statement/Interface.php';
 
 /**
  * Abstract class to emulate a PDOStatement for native database adapters.
@@ -35,11 +36,16 @@ require_once 'Zend/Db/Statement/Interface.php';
  * @category   Zend
  * @package    Zend_Db
  * @subpackage Statement
- * @copyright  Copyright (c) 2005-2008 Zend Technologies USA Inc. (http://www.zend.com)
+ * @copyright  Copyright (c) 2005-2015 Zend Technologies USA Inc. (http://www.zend.com)
  * @license    http://framework.zend.com/license/new-bsd     New BSD License
  */
 abstract class Zend_Db_Statement implements Zend_Db_Statement_Interface
 {
+
+    /**
+     * @var resource|object The driver level statement object/resource
+     */
+    protected $_stmt = null;
 
     /**
      * @var Zend_Db_Adapter_Abstract
@@ -103,12 +109,23 @@ abstract class Zend_Db_Statement implements Zend_Db_Statement_Interface
     {
         $this->_adapter = $adapter;
         if ($sql instanceof Zend_Db_Select) {
-            $sql = $sql->__toString();
+            $sql = $sql->assemble();
         }
         $this->_parseParameters($sql);
         $this->_prepare($sql);
 
         $this->_queryId = $this->_adapter->getProfiler()->queryStart($sql);
+    }
+
+    /**
+     * Internal method called by abstract statment constructor to setup
+     * the driver level statement
+     *
+     * @return void
+     */
+    protected function _prepare($sql)
+    {
+        return;
     }
 
     /**
@@ -131,7 +148,7 @@ abstract class Zend_Db_Statement implements Zend_Db_Statement_Interface
                     /**
                      * @see Zend_Db_Statement_Exception
                      */
-                    require_once 'Zend/Db/Statement/Exception.php';
+                    #require_once 'Zend/Db/Statement/Exception.php';
                     throw new Zend_Db_Statement_Exception("Invalid bind-variable position '$val'");
                 }
             } else if ($val[0] == ':') {
@@ -139,8 +156,8 @@ abstract class Zend_Db_Statement implements Zend_Db_Statement_Interface
                     /**
                      * @see Zend_Db_Statement_Exception
                      */
-                    require_once 'Zend/Db/Statement/Exception.php';
-                    throw new Zend_Db_Statement_Exception("Invalid bind-variable position '$val'");
+                    #require_once 'Zend/Db/Statement/Exception.php';
+                    throw new Zend_Db_Statement_Exception("Invalid bind-variable name '$val'");
                 }
             }
             $this->_sqlParam[] = $val;
@@ -159,37 +176,40 @@ abstract class Zend_Db_Statement implements Zend_Db_Statement_Interface
      */
     protected function _stripQuoted($sql)
     {
-        // get the character for delimited id quotes,
-        // this is usually " but in MySQL is `
-        $d = $this->_adapter->quoteIdentifier('a');
-        $d = $d[0];
-
-        // get the value used as an escaped delimited id quote,
-        // e.g. \" or "" or \`
-        $de = $this->_adapter->quoteIdentifier($d);
-        $de = substr($de, 1, 2);
-        $de = str_replace('\\', '\\\\', $de);
 
         // get the character for value quoting
         // this should be '
         $q = $this->_adapter->quote('a');
-        $q = $q[0];
-
+        $q = $q[0];        
         // get the value used as an escaped quote,
         // e.g. \' or ''
         $qe = $this->_adapter->quote($q);
-        $qe = substr($q, 1, 2);
-        $qe = str_replace('\\', '\\\\', $qe);
-
+        $qe = substr($qe, 1, 2);
+        $qe = preg_quote($qe);
+        $escapeChar = substr($qe,0,1);
+        // remove 'foo\'bar'
+        if (!empty($q)) {
+            $escapeChar = preg_quote($escapeChar);
+            // this segfaults only after 65,000 characters instead of 9,000
+            $sql = preg_replace("/$q([^$q{$escapeChar}]*|($qe)*)*$q/s", '', $sql);
+        }
+        
         // get a version of the SQL statement with all quoted
         // values and delimited identifiers stripped out
         // remove "foo\"bar"
-        $sql = preg_replace("/$d($de|[^$d])*$d/", '', $sql);
-        // remove 'foo\'bar'
-        if (!empty($q)) {
-            $sql = preg_replace("/$q($qe|[^$q])*$q/", '', $sql);
-        }
+        $sql = preg_replace("/\"(\\\\\"|[^\"])*\"/Us", '', $sql);
 
+        // get the character for delimited id quotes,
+        // this is usually " but in MySQL is `
+        $d = $this->_adapter->quoteIdentifier('a');
+        $d = $d[0];
+        // get the value used as an escaped delimited id quote,
+        // e.g. \" or "" or \`
+        $de = $this->_adapter->quoteIdentifier($d);
+        $de = substr($de, 1, 2);
+        $de = preg_quote($de);
+        // Note: $de and $d where never used..., now they are:
+        $sql = preg_replace("/$d($de|\\\\{2}|[^$d])*$d/Us", '', $sql);
         return $sql;
     }
 
@@ -224,7 +244,7 @@ abstract class Zend_Db_Statement implements Zend_Db_Statement_Interface
             /**
              * @see Zend_Db_Statement_Exception
              */
-            require_once 'Zend/Db/Statement/Exception.php';
+            #require_once 'Zend/Db/Statement/Exception.php';
             throw new Zend_Db_Statement_Exception('Invalid bind-variable position');
         }
 
@@ -246,7 +266,7 @@ abstract class Zend_Db_Statement implements Zend_Db_Statement_Interface
             /**
              * @see Zend_Db_Statement_Exception
              */
-            require_once 'Zend/Db/Statement/Exception.php';
+            #require_once 'Zend/Db/Statement/Exception.php';
             throw new Zend_Db_Statement_Exception("Invalid bind-variable position '$parameter'");
         }
 
@@ -265,7 +285,7 @@ abstract class Zend_Db_Statement implements Zend_Db_Statement_Interface
      */
     public function bindValue($parameter, $value, $type = null)
     {
-        return $this->bindParam($parameter, $value);
+        return $this->bindParam($parameter, $value, $type);
     }
 
     /**
@@ -325,7 +345,7 @@ abstract class Zend_Db_Statement implements Zend_Db_Statement_Interface
                 $data[] = $row;
             }
         } else {
-            while ($val = $this->fetchColumn($col)) {
+            while (false !== ($val = $this->fetchColumn($col))) {
                 $data[] = $val;
             }
         }
@@ -416,7 +436,7 @@ abstract class Zend_Db_Statement implements Zend_Db_Statement_Interface
                 /**
                  * @see Zend_Db_Statement_Exception
                  */
-                require_once 'Zend/Db/Statement/Exception.php';
+                #require_once 'Zend/Db/Statement/Exception.php';
                 throw new Zend_Db_Statement_Exception('invalid fetch mode');
                 break;
         }
@@ -445,4 +465,24 @@ abstract class Zend_Db_Statement implements Zend_Db_Statement_Interface
         return true;
     }
 
+    /**
+     * Gets the Zend_Db_Adapter_Abstract for this
+     * particular Zend_Db_Statement object.
+     *
+     * @return Zend_Db_Adapter_Abstract
+     */
+    public function getAdapter()
+    {
+        return $this->_adapter;
+    }
+
+    /**
+     * Gets the resource or object setup by the
+     * _parse
+     * @return unknown_type
+     */
+    public function getDriverStatement()
+    {
+        return $this->_stmt;
+    }
 }

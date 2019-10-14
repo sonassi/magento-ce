@@ -10,40 +10,57 @@
  * http://opensource.org/licenses/osl-3.0.php
  * If you did not receive a copy of the license and are unable to
  * obtain it through the world-wide-web, please send an email
- * to license@magentocommerce.com so we can send you a copy immediately.
+ * to license@magento.com so we can send you a copy immediately.
  *
- * @category   Mage
- * @package    Mage_Poll
- * @copyright  Copyright (c) 2004-2007 Irubin Consulting Inc. DBA Varien (http://www.varien.com)
+ * DISCLAIMER
+ *
+ * Do not edit or add to this file if you wish to upgrade Magento to newer
+ * versions in the future. If you wish to customize Magento for your
+ * needs please refer to http://www.magento.com for more information.
+ *
+ * @category    Mage
+ * @package     Mage_Poll
+ * @copyright  Copyright (c) 2006-2017 X.commerce, Inc. and affiliates (http://www.magento.com)
  * @license    http://opensource.org/licenses/osl-3.0.php  Open Software License (OSL 3.0)
  */
 
 /**
- * Vote model
+ * Pool vote model
  *
- * @category   Mage
- * @package    Mage_Poll
+ * @method Mage_Poll_Model_Resource_Poll_Vote _getResource()
+ * @method Mage_Poll_Model_Resource_Poll_Vote getResource()
+ * @method int getPollId()
+ * @method Mage_Poll_Model_Poll_Vote setPollId(int $value)
+ * @method int getPollAnswerId()
+ * @method Mage_Poll_Model_Poll_Vote setPollAnswerId(int $value)
+ * @method int getIpAddress()
+ * @method Mage_Poll_Model_Poll_Vote setIpAddress(int $value)
+ * @method int getCustomerId()
+ * @method Mage_Poll_Model_Poll_Vote setCustomerId(int $value)
+ * @method string getVoteTime()
+ * @method Mage_Poll_Model_Poll_Vote setVoteTime(string $value)
+ *
+ * @category    Mage
+ * @package     Mage_Poll
+ * @author      Magento Core Team <core@magentocommerce.com>
  */
-class Mage_Poll_Model_Poll_Vote extends Varien_Object
+class Mage_Poll_Model_Poll_Vote extends Mage_Core_Model_Abstract
 {
-    protected $_pollId;
-    protected $_resource;
-
-    public function getId()
+    protected function _construct()
     {
-        return $this->getPollId();
+        $this->_init('poll/poll_vote');
     }
 
-    public function addVote()
+    /**
+     * Processing object before save data
+     *
+     * @return Mage_Core_Model_Abstract
+     */
+    protected function _beforeSave()
     {
-        $this->_getResource()->add($this);
-    }
-
-    protected function _getResource()
-    {
-        if (!$this->_resource) {
-        	$this->_resource = Mage::getResourceSingleton('poll/poll_answer_vote');
+        if (!$this->getVoteTime()) {
+            $this->setVoteTime(Mage::getSingleton('core/date')->gmtDate());
         }
-        return $this->_resource;
+        return parent::_beforeSave();
     }
 }

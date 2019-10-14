@@ -4,41 +4,37 @@
  *
  * LICENSE
  *
- * This source file is subject to version 1.0 of the Zend Framework
- * license, that is bundled with this package in the file LICENSE.txt, and
- * is available through the world-wide-web at the following URL:
- * http://framework.zend.com/license/new-bsd. If you did not receive
- * a copy of the Zend Framework license and are unable to obtain it
- * through the world-wide-web, please send a note to license@zend.com
- * so we can mail you a copy immediately.
+ * This source file is subject to the new BSD license that is bundled
+ * with this package in the file LICENSE.txt.
+ * It is also available through the world-wide-web at this URL:
+ * http://framework.zend.com/license/new-bsd
+ * If you did not receive a copy of the license and are unable to
+ * obtain it through the world-wide-web, please send an email
+ * to license@zend.com so we can send you a copy immediately.
  *
+ * @category   Zend
  * @package    Zend_Db
  * @subpackage Statement
- * @copyright  Copyright (c) 2005-2008 Zend Technologies USA Inc. (http://www.zend.com)
+ * @copyright  Copyright (c) 2005-2015 Zend Technologies USA Inc. (http://www.zend.com)
  * @license    http://framework.zend.com/license/new-bsd     New BSD License
+ * @version    $Id$
  */
 
 /**
  * @see Zend_Db_Statement
  */
-require_once 'Zend/Db/Statement.php';
+#require_once 'Zend/Db/Statement.php';
 
 /**
  * Extends for DB2 native adapter.
  *
  * @package    Zend_Db
  * @subpackage Statement
- * @copyright  Copyright (c) 2005-2008 Zend Technologies USA Inc. (http://www.zend.com)
+ * @copyright  Copyright (c) 2005-2015 Zend Technologies USA Inc. (http://www.zend.com)
  * @license    http://framework.zend.com/license/new-bsd     New BSD License
- * @author     Joscha Feth <jffeth@de.ibm.com>
- * @author     Salvador Ledezma <ledezma@us.ibm.com>
  */
 class Zend_Db_Statement_Db2 extends Zend_Db_Statement
 {
-    /**
-     * Statement resource handle.
-     */
-    protected $_stmt = null;
 
     /**
      * Column names.
@@ -61,13 +57,15 @@ class Zend_Db_Statement_Db2 extends Zend_Db_Statement
     {
         $connection = $this->_adapter->getConnection();
 
-        $this->_stmt = db2_prepare($connection, $sql);
+        // db2_prepare on i5 emits errors, these need to be
+        // suppressed so that proper exceptions can be thrown
+        $this->_stmt = @db2_prepare($connection, $sql);
 
         if (!$this->_stmt) {
             /**
              * @see Zend_Db_Statement_Db2_Exception
              */
-            require_once 'Zend/Db/Statement/Db2/Exception.php';
+            #require_once 'Zend/Db/Statement/Db2/Exception.php';
             throw new Zend_Db_Statement_Db2_Exception(
                 db2_stmt_errormsg(),
                 db2_stmt_error()
@@ -98,14 +96,14 @@ class Zend_Db_Statement_Db2 extends Zend_Db_Statement
             $datatype = DB2_CHAR;
         }
 
-        if (!db2_bind_param($this->_stmt, $position, "variable", $type, $datatype)) {
+        if (!db2_bind_param($this->_stmt, $parameter, "variable", $type, $datatype)) {
             /**
              * @see Zend_Db_Statement_Db2_Exception
              */
-            require_once 'Zend/Db/Statement/Db2/Exception.php';
+            #require_once 'Zend/Db/Statement/Db2/Exception.php';
             throw new Zend_Db_Statement_Db2_Exception(
-                db2_stmt_errormsg($this->_stmt),
-                db2_stmt_error($this->_stmt)
+                db2_stmt_errormsg(),
+                db2_stmt_error()
             );
         }
 
@@ -151,10 +149,15 @@ class Zend_Db_Statement_Db2 extends Zend_Db_Statement
     public function errorCode()
     {
         if (!$this->_stmt) {
-            return '0000';
+            return false;
         }
 
-        return db2_stmt_error($this->_stmt);
+        $error = db2_stmt_error();
+        if ($error === '') {
+            return false;
+        }
+
+        return $error;
     }
 
     /**
@@ -165,8 +168,9 @@ class Zend_Db_Statement_Db2 extends Zend_Db_Statement
      */
     public function errorInfo()
     {
-        if (!$this->_stmt) {
-            return array(false, 0, '');
+        $error = $this->errorCode();
+        if ($error === false){
+            return false;
         }
 
         /*
@@ -174,9 +178,9 @@ class Zend_Db_Statement_Db2 extends Zend_Db_Statement
          * between SQLCODE and native RDBMS error code, so repeat the SQLCODE.
          */
         return array(
-            db2_stmt_error($this->_stmt),
-            db2_stmt_error($this->_stmt),
-            db2_stmt_errormsg($this->_stmt)
+            $error,
+            $error,
+            db2_stmt_errormsg()
         );
     }
 
@@ -204,10 +208,10 @@ class Zend_Db_Statement_Db2 extends Zend_Db_Statement
             /**
              * @see Zend_Db_Statement_Db2_Exception
              */
-            require_once 'Zend/Db/Statement/Db2/Exception.php';
+            #require_once 'Zend/Db/Statement/Db2/Exception.php';
             throw new Zend_Db_Statement_Db2_Exception(
-                db2_stmt_errormsg($this->_stmt),
-                db2_stmt_error($this->_stmt));
+                db2_stmt_errormsg(),
+                db2_stmt_error());
         }
 
         $this->_keys = array();
@@ -268,7 +272,7 @@ class Zend_Db_Statement_Db2 extends Zend_Db_Statement
                 /**
                  * @see Zend_Db_Statement_Db2_Exception
                  */
-                require_once 'Zend/Db/Statement/Db2/Exception.php';
+                #require_once 'Zend/Db/Statement/Db2/Exception.php';
                 throw new Zend_Db_Statement_Db2_Exception("Invalid fetch mode '$style' specified");
                 break;
         }
@@ -302,7 +306,7 @@ class Zend_Db_Statement_Db2 extends Zend_Db_Statement
         /**
          * @see Zend_Db_Statement_Db2_Exception
          */
-        require_once 'Zend/Db/Statement/Db2/Exception.php';
+        #require_once 'Zend/Db/Statement/Db2/Exception.php';
         throw new Zend_Db_Statement_Db2_Exception(__FUNCTION__ . '() is not implemented');
     }
 

@@ -4,31 +4,37 @@
  *
  * NOTICE OF LICENSE
  *
- * This source file is subject to the Open Software License (OSL 3.0)
- * that is bundled with this package in the file LICENSE.txt.
+ * This source file is subject to the Academic Free License (AFL 3.0)
+ * that is bundled with this package in the file LICENSE_AFL.txt.
  * It is also available through the world-wide-web at this URL:
- * http://opensource.org/licenses/osl-3.0.php
+ * http://opensource.org/licenses/afl-3.0.php
  * If you did not receive a copy of the license and are unable to
  * obtain it through the world-wide-web, please send an email
- * to license@magentocommerce.com so we can send you a copy immediately.
+ * to license@magento.com so we can send you a copy immediately.
  *
- * @category   design_default
- * @package    Mage
- * @copyright  Copyright (c) 2004-2007 Irubin Consulting Inc. DBA Varien (http://www.varien.com)
- * @license    http://opensource.org/licenses/osl-3.0.php  Open Software License (OSL 3.0)
+ * DISCLAIMER
+ *
+ * Do not edit or add to this file if you wish to upgrade Magento to newer
+ * versions in the future. If you wish to customize Magento for your
+ * needs please refer to http://www.magento.com for more information.
+ *
+ * @category    design
+ * @package     default_default
+ * @copyright   Copyright (c) 2006-2017 X.commerce, Inc. and affiliates (http://www.magento.com)
+ * @license     http://opensource.org/licenses/afl-3.0.php  Academic Free License (AFL 3.0)
  */
 ?>
 <div class="content-header">
     <table cellspacing="0">
-    	<tr>
-    		<td style="width:50%;"><h3 class="icon-head head-product-attribute-sets"><?php echo $this->_getHeader() ?></h3></td>
-        	<td class="form-buttons">
+        <tr>
+            <td style="width:50%;"><h3 class="icon-head head-product-attribute-sets"><?php echo $this->escapeHtml($this->_getHeader()) ?></h3></td>
+            <td class="form-buttons">
                 <?php echo $this->getBackButtonHtml() ?>
                 <?php echo $this->getResetButtonHtml() ?>
                 <?php echo $this->getDeleteButtonHtml() ?>
                 <?php echo $this->getSaveButtonHtml() ?>
-        	</td>
-    	</tr>
+            </td>
+        </tr>
     </table>
 </div>
 <table cellspacing="0" width="100%">
@@ -37,7 +43,7 @@
             <?php echo $this->getSetFormHtml() ?>
         </td>
         <td width="320" style="border-right:1px solid #ddd; padding:0 23px 23px 23px;">
-            <div class="content-header">
+            <div class="content-header skip-header">
             <table cellspacing="0">
                     <tbody>
                         <tr>
@@ -46,13 +52,17 @@
                     </tbody>
                 </table>
             </div>
-             <p><?php echo $this->getAddGroupButton() ?>&nbsp;<?php echo $this->getDeleteGroupButton() ?></p>
-            <p class="note-block"><?php echo Mage::helper('catalog')->__('Double click on a group to rename it') ?></p>
+
+            <?php if (!$this->getIsReadOnly()): ?>
+                <p><?php echo $this->getAddGroupButton() ?>&nbsp;<?php echo $this->getDeleteGroupButton() ?></p>
+                <p class="note-block"><?php echo Mage::helper('catalog')->__('Double click on a group to rename it') ?></p>
+            <?php endif; ?>
+
             <?php echo $this->getSetsFilterHtml() ?>
             <?php echo $this->getGroupTreeHtml() ?>
         </td>
         <td style="padding:0 0 23px 23px;">
-            <div class="content-header">
+            <div class="content-header skip-header">
                 <table cellspacing="0">
                     <tbody>
                         <tr>
@@ -62,7 +72,11 @@
                 </table>
             </div>
             <div id="tree-div2" style="height:400px; margin-top:5px;overflow:auto"></div>
-            <script type="text/javascript" language="javascript">
+            <script type="text/javascript">
+            //<![CDATA[
+            var allowDragAndDrop = <?php echo ($this->getIsReadOnly() ? 'false' : 'true'); ?>;
+            var canEditGroups = <?php echo ($this->getIsReadOnly() ? 'false' : 'true'); ?>;
+
             var TreePanels = function() {
                 // shorthand
                 var Tree = Ext.tree;
@@ -74,7 +88,7 @@
                         var tree = new Ext.tree.TreePanel('tree-div1', {
                             animate:false,
                             loader: false,
-                            enableDD:true,
+                            enableDD:allowDragAndDrop,
                             containerScroll: true,
                             rootVisible: false
                         });
@@ -96,7 +110,7 @@
 
                         this.ge = new Ext.tree.TreeEditor(tree, {
                             allowBlank:false,
-                            blankText:'<?php echo Mage::helper('catalog')->__('A name is required') ?>',
+                            blankText:'<?php echo Mage::helper('core')->jsQuoteEscape(Mage::helper('catalog')->__('A name is required')) ?>',
                             selectOnFocus:true,
                             cls:'folder'
                         });
@@ -106,6 +120,7 @@
 
                         //this.ge.addListener('beforerender', editSet.editGroup);
                         this.ge.addListener('beforeshow', editSet.editGroup);
+                        this.ge.addListener('beforecomplete', editSet.beforeRenameGroup);
                         //this.ge.addListener('startedit', editSet.editGroup);
 
                         //-------------------------------------------------------------
@@ -113,7 +128,7 @@
                         var tree2 = new Ext.tree.TreePanel('tree-div2', {
                             animate:false,
                             loader: false,
-                            enableDD:true,
+                            enableDD:allowDragAndDrop,
                             containerScroll: true,
                             rootVisible: false,
                             lines:false
@@ -146,7 +161,7 @@
                         for( i in rootNode.childNodes ) {
                             if(rootNode.childNodes[i].id) {
                                 var group = rootNode.childNodes[i];
-                                editSet.req.groups[gIterator] = new Array(group.id, group.attributes.text, (gIterator+1));
+                                editSet.req.groups[gIterator] = new Array(group.id, group.attributes.text.strip(), (gIterator+1));
                                 var iterator = 0
                                 for( j in group.childNodes ) {
                                     iterator ++;
@@ -177,7 +192,7 @@
 
             function buildCategoryTree(parent, config){
                 if (!config) return null;
-            	if (parent && config && config.length){
+                if (parent && config && config.length){
                     for (var i = 0; i < config.length; i++) {
                         var node = new Ext.tree.TreeNode(config[i]);
                         parent.appendChild(node);
@@ -214,7 +229,12 @@
                         }
 
                         if( editSet.SystemNodesExists(editSet.currentNode) ) {
-                            alert('<?php echo Mage::helper('catalog')->__('This group contains system attributes. Please move system attributes to another group and try again.') ?>');
+                            alert('<?php echo Mage::helper('core')->jsQuoteEscape(Mage::helper('catalog')->__('This group contains system attributes. Please move system attributes to another group and try again.')) ?>');
+                            return;
+                        }
+
+                        if (editSet.ConfigurableNodeExists(editSet.currentNode)) {
+                            alert('<?php echo Mage::helper('core')->jsQuoteEscape(Mage::helper('catalog')->__('This group contains attributes, used in configurable products. Please move these attributes to another group and try again.')) ?>');
                             return;
                         }
 
@@ -246,32 +266,71 @@
                         }
                     },
 
+                    ConfigurableNodeExists : function(currentNode) {
+                        for (var i in currentNode.childNodes ) {
+                            if (currentNode.childNodes[i].id) {
+                                child = editSet.currentNode.childNodes[i];
+                                if (child.attributes.is_configurable) {
+                                    return true;
+                                }
+                            }
+                        }
+                        return false;
+                    },
+
                     rightAppend : function(node) {
                         return;
                     },
 
                     addGroup : function() {
-                        var group_name = prompt("<?php echo Mage::helper('catalog')->__('Please enter a new group name') ?>","");
-
+                        var group_name = prompt("<?php echo Mage::helper('core')->jsQuoteEscape(Mage::helper('catalog')->__('Please enter a new group name')) ?>","");
+                        group_name = group_name.strip();
                         if( group_name == '' ) {
                             this.addGroup();
                         } else if( group_name != false && group_name != null && group_name != '' ) {
+
+                            if (!editSet.validateGroupName(group_name, 0)) {
+                                return;
+                            }
+
                             var newNode = new Ext.tree.TreeNode({
-                                    text : group_name,
+                                    text : group_name.escapeHTML(),
                                     cls : 'folder',
                                     allowDrop : true,
                                     allowDrag : true
                                 });
                             TreePanels.root.appendChild(newNode);
+                            newNode.addListener('beforemove', editSet.groupBeforeMove);
+                            newNode.addListener('beforeinsert', editSet.groupBeforeInsert);
+                            newNode.addListener('beforeappend', editSet.groupBeforeInsert);
                             newNode.addListener('click', editSet.register);
                         }
                     },
 
                     editGroup : function(obj) {
-                        if( obj.editNode.attributes.cls != 'folder' ) {
-                         	TreePanels.ge.cancelEdit();
-                         	return false;
+                        if( obj.editNode.attributes.cls != 'folder' || !canEditGroups) {
+                             TreePanels.ge.cancelEdit();
+                             return false;
                         }
+                    },
+
+                    beforeRenameGroup : function(obj, after, before) {
+                        return editSet.validateGroupName(after, obj.editNode.id);
+                    },
+
+                    validateGroupName : function(name, exceptNodeId) {
+                        name = name.strip();
+                        if (name === '') {
+                            return false;
+                        }
+                        for (var i=0; i < TreePanels.root.childNodes.length; i++) {
+                            if (TreePanels.root.childNodes[i].text.toLowerCase() == name.toLowerCase() && TreePanels.root.childNodes[i].id != exceptNodeId) {
+                                errorText = "<?php echo Mage::helper('core')->jsQuoteEscape(Mage::helper('catalog')->__('Attribute group with the \"/name/\" name already exists')) ?>";
+                                alert(errorText.replace("/name/",name));
+                                return false;
+                            }
+                        }
+                        return true;
                     },
 
                     save : function() {
@@ -282,6 +341,9 @@
                             return;
                         }
                         editSet.req.attribute_set_name = $('attribute_set_name').value;
+                        if (!editSet.req.form_key) {
+                            editSet.req.form_key = FORM_KEY;
+                        }
                         var req = {data : Ext.util.JSON.encode(editSet.req)};
                         var con = new Ext.lib.Ajax.request('POST', '<?php echo $this->getMoveUrl() ?>', {success:editSet.success,failure:editSet.failure}, req);
                     },
@@ -290,6 +352,8 @@
                         var response = Ext.util.JSON.decode(o.responseText);
                         if( response.error ) {
                             $('messages').update(response.message);
+                        } else if( response.ajaxExpired && response.ajaxRedirect ){
+                            setLocation(response.ajaxRedirect);
                         } else if( response.url ){
                             setLocation(response.url);
                         } else if( response.message ) {
@@ -298,7 +362,7 @@
                     },
 
                     failure : function(o) {
-                        alert('<?php echo Mage::helper('catalog')->__('Unable to complete request. Please try again later.') ?>');
+                        alert('<?php echo Mage::helper('core')->jsQuoteEscape(Mage::helper('catalog')->__('Unable to complete this request.')) ?>');
                     },
 
                     groupBeforeMove : function(tree, nodeThis, oldParent, newParent) {
@@ -312,11 +376,16 @@
                     },
 
                     rightBeforeAppend : function(tree, nodeThis, node, newParent) {
-                        if( node.attributes.is_user_defined == 1 ) {
-                            return true;
-                        } else {
-                            alert('<?php echo Mage::helper('catalog')->__('You cannot remove system attribute from this set.') ?>');
+                        if (node.attributes.is_user_defined == 0) {
+                            alert('<?php echo Mage::helper('core')->jsQuoteEscape(Mage::helper('catalog')->__('You cannot remove system attribute from this set.')) ?>');
                             return false;
+                        }
+                        else if (node.attributes.is_configurable == 1) {
+                            alert('<?php echo Mage::helper('core')->jsQuoteEscape(Mage::helper('catalog')->__('This attribute is used in configurable products. You cannot remove it from the attribute set.')) ?>');
+                            return false;
+                        }
+                        else {
+                            return true;
                         }
                     },
 
@@ -326,11 +395,16 @@
                             return false;
                         }
 
-                        if( node.attributes.is_user_defined == 1 ) {
-                            return true;
-                        } else {
-                            alert('<?php echo Mage::helper('catalog')->__('You cannot remove system attribute from this set.') ?>');
+                        if (node.attributes.is_user_defined == 0) {
+                            alert('<?php echo Mage::helper('core')->jsQuoteEscape(Mage::helper('catalog')->__('You cannot remove system attribute from this set.')) ?>');
                             return false;
+                        }
+                        else if (node.attributes.is_configurable == 1) {
+                            alert('<?php echo Mage::helper('core')->jsQuoteEscape(Mage::helper('catalog')->__('This attribute is used in configurable products. You cannot remove it from the attribute set.')) ?>');
+                            return false;
+                        }
+                        else {
+                            return true;
                         }
                     },
 
@@ -350,7 +424,7 @@
                     rightRemove : function(tree, nodeThis, node) {
                         if( nodeThis.firstChild == null && node.id != 'empty' ) {
                             var newNode = new Ext.tree.TreeNode({
-                                    text : '<?php echo Mage::helper('catalog')->__('Empty') ?>',
+                                    text : '<?php echo Mage::helper('core')->jsQuoteEscape(Mage::helper('catalog')->__('Empty')) ?>',
                                     id : 'empty',
                                     cls : 'folder',
                                     is_user_defined : 1,
@@ -380,6 +454,7 @@
 
             initVars();
             Ext.EventManager.onDocumentReady(TreePanels.init, TreePanels, true);
+            //]]>
             </script>
         </td>
     </tr>

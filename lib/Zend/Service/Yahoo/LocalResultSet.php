@@ -16,29 +16,29 @@
  * @category   Zend
  * @package    Zend_Service
  * @subpackage Yahoo
- * @copyright  Copyright (c) 2005-2008 Zend Technologies USA Inc. (http://www.zend.com)
+ * @copyright  Copyright (c) 2005-2015 Zend Technologies USA Inc. (http://www.zend.com)
  * @license    http://framework.zend.com/license/new-bsd     New BSD License
- * @version    $Id: LocalResultSet.php 8064 2008-02-16 10:58:39Z thomas $
+ * @version    $Id$
  */
 
 
 /**
  * @see Zend_Service_Yahoo_ResultSet
  */
-require_once 'Zend/Service/Yahoo/ResultSet.php';
+#require_once 'Zend/Service/Yahoo/ResultSet.php';
 
 
 /**
  * @see Zend_Service_Yahoo_LocalResult
  */
-require_once 'Zend/Service/Yahoo/LocalResult.php';
+#require_once 'Zend/Service/Yahoo/LocalResult.php';
 
 
 /**
  * @category   Zend
  * @package    Zend_Service
  * @subpackage Yahoo
- * @copyright  Copyright (c) 2005-2008 Zend Technologies USA Inc. (http://www.zend.com)
+ * @copyright  Copyright (c) 2005-2015 Zend Technologies USA Inc. (http://www.zend.com)
  * @license    http://framework.zend.com/license/new-bsd     New BSD License
  */
 class Zend_Service_Yahoo_LocalResultSet extends Zend_Service_Yahoo_ResultSet

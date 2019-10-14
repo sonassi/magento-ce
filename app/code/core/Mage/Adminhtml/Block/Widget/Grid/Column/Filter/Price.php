@@ -10,11 +10,17 @@
  * http://opensource.org/licenses/osl-3.0.php
  * If you did not receive a copy of the license and are unable to
  * obtain it through the world-wide-web, please send an email
- * to license@magentocommerce.com so we can send you a copy immediately.
+ * to license@magento.com so we can send you a copy immediately.
  *
- * @category   Mage
- * @package    Mage_Adminhtml
- * @copyright  Copyright (c) 2004-2007 Irubin Consulting Inc. DBA Varien (http://www.varien.com)
+ * DISCLAIMER
+ *
+ * Do not edit or add to this file if you wish to upgrade Magento to newer
+ * versions in the future. If you wish to customize Magento for your
+ * needs please refer to http://www.magento.com for more information.
+ *
+ * @category    Mage
+ * @package     Mage_Adminhtml
+ * @copyright  Copyright (c) 2006-2017 X.commerce, Inc. and affiliates (http://www.magento.com)
  * @license    http://opensource.org/licenses/osl-3.0.php  Open Software License (OSL 3.0)
  */
 
@@ -23,8 +29,10 @@
  *
  * @category   Mage
  * @package    Mage_Adminhtml
+ * @author      Magento Core Team <core@magentocommerce.com>
  */
-class Mage_Adminhtml_Block_Widget_Grid_Column_Filter_Price extends Mage_Adminhtml_Block_Widget_Grid_Column_Filter_Abstract
+class Mage_Adminhtml_Block_Widget_Grid_Column_Filter_Price
+    extends Mage_Adminhtml_Block_Widget_Grid_Column_Filter_Abstract
 {
     protected $_currencyList = null;
     protected $_currencyModel = null;
@@ -77,7 +85,8 @@ class Mage_Adminhtml_Block_Widget_Grid_Column_Filter_Price extends Mage_Adminhtm
         $html  = '';
         $html .= '<select name="'.$this->_getHtmlName().'[currency]" id="'.$this->_getHtmlId().'_currency">';
         foreach ($this->_getCurrencyList() as $currency) {
-            $html .= '<option value="' . $currency . '" '.($currency == $value ? 'selected' : '').'>' . $currency . '</option>';
+            $html .= '<option value="' . $currency . '" '.($currency == $value ? 'selected="selected"' : '').'>'
+                . $currency . '</option>';
         }
         $html .= '</select>';
         return $html;
@@ -97,7 +106,9 @@ class Mage_Adminhtml_Block_Widget_Grid_Column_Filter_Price extends Mage_Adminhtm
             return $this->getData('value', $index);
         }
         $value = $this->getData('value');
-        if ((isset($value['from']) && strlen($value['from']) > 0) || (isset($value['to']) && strlen($value['to']) > 0)) {
+        if ((isset($value['from']) && strlen($value['from']) > 0)
+            || (isset($value['to']) && strlen($value['to']) > 0)
+        ) {
             return $value;
         }
         return null;
@@ -115,11 +126,15 @@ class Mage_Adminhtml_Block_Widget_Grid_Column_Filter_Price extends Mage_Adminhtm
         }
         $rate = $this->_getRate($displayCurrency, $this->getColumn()->getCurrencyCode());
 
-        if (isset($value['from']))
-            $value['from'] *= $rate;
+        if (isset($value['from'])) {
+            $from = $value['from'] * $rate;
+            $value['from'] = sprintf('%F', $from);
+        }
 
-        if (isset($value['to']))
-            $value['to'] *= $rate;
+        if (isset($value['to'])) {
+            $to = $value['to'] * $rate;
+            $value['to'] = sprintf('%F', $to);
+        }
 
         $this->prepareRates($displayCurrency);
         return $value;
@@ -127,7 +142,7 @@ class Mage_Adminhtml_Block_Widget_Grid_Column_Filter_Price extends Mage_Adminhtm
 
     protected function _getRate($from, $to)
     {
-        return Mage::getModel('directory/currency')->load($from)->getRate($to);
+        return Mage::getModel('directory/currency')->load($from)->getAnyRate($to);
     }
 
     public function prepareRates($displayCurrency)

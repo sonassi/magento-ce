@@ -10,11 +10,17 @@
  * http://opensource.org/licenses/osl-3.0.php
  * If you did not receive a copy of the license and are unable to
  * obtain it through the world-wide-web, please send an email
- * to license@magentocommerce.com so we can send you a copy immediately.
+ * to license@magento.com so we can send you a copy immediately.
  *
- * @category   Mage
- * @package    Mage_Adminhtml
- * @copyright  Copyright (c) 2004-2007 Irubin Consulting Inc. DBA Varien (http://www.varien.com)
+ * DISCLAIMER
+ *
+ * Do not edit or add to this file if you wish to upgrade Magento to newer
+ * versions in the future. If you wish to customize Magento for your
+ * needs please refer to http://www.magento.com for more information.
+ *
+ * @category    Mage
+ * @package     Mage_Adminhtml
+ * @copyright  Copyright (c) 2006-2017 X.commerce, Inc. and affiliates (http://www.magento.com)
  * @license    http://opensource.org/licenses/osl-3.0.php  Open Software License (OSL 3.0)
  */
 
@@ -23,8 +29,10 @@
  *
  * @category   Mage
  * @package    Mage_Adminhtml
+ * @author      Magento Core Team <core@magentocommerce.com>
  */
-class Mage_Adminhtml_Block_Sales_Order_Create_Shipping_Method_Form extends Mage_Adminhtml_Block_Sales_Order_Create_Abstract
+class Mage_Adminhtml_Block_Sales_Order_Create_Shipping_Method_Form
+    extends Mage_Adminhtml_Block_Sales_Order_Create_Abstract
 {
     protected $_rates;
 
@@ -32,7 +40,6 @@ class Mage_Adminhtml_Block_Sales_Order_Create_Shipping_Method_Form extends Mage_
     {
         parent::__construct();
         $this->setId('sales_order_create_shipping_method_form');
-        $this->setTemplate('sales/order/create/shipping/method/form.phtml');
     }
 
     /**
@@ -44,7 +51,7 @@ class Mage_Adminhtml_Block_Sales_Order_Create_Shipping_Method_Form extends Mage_
     {
         return $this->getQuote()->getShippingAddress();
     }
-    
+
     /**
      * Retrieve array of shipping rates groups
      *
@@ -54,19 +61,22 @@ class Mage_Adminhtml_Block_Sales_Order_Create_Shipping_Method_Form extends Mage_
     {
         if (empty($this->_rates)) {
             $groups = $this->getAddress()->getGroupedAllShippingRates();
+            /*
             if (!empty($groups)) {
+
                 $ratesFilter = new Varien_Filter_Object_Grid();
                 $ratesFilter->addFilter($this->getStore()->getPriceFilter(), 'price');
 
                 foreach ($groups as $code => $groupItems) {
-                	$groups[$code] = $ratesFilter->filter($groupItems);
+                    $groups[$code] = $ratesFilter->filter($groupItems);
                 }
             }
+            */
             return $this->_rates = $groups;
         }
         return $this->_rates;
     }
-    
+
     /**
      * Rertrieve carrier name from store configuration
      *
@@ -80,7 +90,7 @@ class Mage_Adminhtml_Block_Sales_Order_Create_Shipping_Method_Form extends Mage_
         }
         return $carrierCode;
     }
-    
+
     /**
      * Retrieve current selected shipping method
      *
@@ -90,7 +100,7 @@ class Mage_Adminhtml_Block_Sales_Order_Create_Shipping_Method_Form extends Mage_
     {
         return $this->getAddress()->getShippingMethod();
     }
-    
+
     /**
      * Check activity of method by code
      *
@@ -101,7 +111,7 @@ class Mage_Adminhtml_Block_Sales_Order_Create_Shipping_Method_Form extends Mage_
     {
         return $code===$this->getShippingMethod();
     }
-    
+
     /**
      * Retrieve rate of active shipping method
      *
@@ -112,18 +122,33 @@ class Mage_Adminhtml_Block_Sales_Order_Create_Shipping_Method_Form extends Mage_
         $rates = $this->getShippingRates();
         if (is_array($rates)) {
             foreach ($rates as $group) {
-            	foreach ($group as $code => $rate) {
-            		if ($rate->getCode() == $this->getShippingMethod()) {
-            		    return $rate;
-            		}
-            	}
+                foreach ($group as $code => $rate) {
+                    if ($rate->getCode() == $this->getShippingMethod()) {
+                        return $rate;
+                    }
+                }
             }
         }
         return false;
     }
-    
+
     public function getIsRateRequest()
     {
         return $this->getRequest()->getParam('collect_shipping_rates');
+    }
+
+    public function getShippingPrice($price, $flag)
+    {
+        return $this->getQuote()->getStore()->convertPrice(
+            Mage::helper('tax')->getShippingPrice(
+                $price,
+                $flag,
+                $this->getAddress(),
+                null,
+                //We should send exact quote store to prevent fetching default config for admin store.
+                $this->getAddress()->getQuote()->getStore()
+            ),
+            true
+        );
     }
 }

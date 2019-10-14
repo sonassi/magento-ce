@@ -10,11 +10,17 @@
  * http://opensource.org/licenses/osl-3.0.php
  * If you did not receive a copy of the license and are unable to
  * obtain it through the world-wide-web, please send an email
- * to license@magentocommerce.com so we can send you a copy immediately.
+ * to license@magento.com so we can send you a copy immediately.
  *
- * @category   Mage
- * @package    Mage_CatalogIndex
- * @copyright  Copyright (c) 2004-2007 Irubin Consulting Inc. DBA Varien (http://www.varien.com)
+ * DISCLAIMER
+ *
+ * Do not edit or add to this file if you wish to upgrade Magento to newer
+ * versions in the future. If you wish to customize Magento for your
+ * needs please refer to http://www.magento.com for more information.
+ *
+ * @category    Mage
+ * @package     Mage_CatalogIndex
+ * @copyright  Copyright (c) 2006-2017 X.commerce, Inc. and affiliates (http://www.magento.com)
  * @license    http://opensource.org/licenses/osl-3.0.php  Open Software License (OSL 3.0)
  */
 
@@ -22,6 +28,23 @@
 /**
  * Catalog indexer price processor
  *
+ * @method Mage_CatalogIndex_Model_Resource_Indexer_Minimalprice _getResource()
+ * @method Mage_CatalogIndex_Model_Resource_Indexer_Minimalprice getResource()
+ * @method Mage_CatalogIndex_Model_Indexer_Minimalprice setEntityId(int $value)
+ * @method int getCustomerGroupId()
+ * @method Mage_CatalogIndex_Model_Indexer_Minimalprice setCustomerGroupId(int $value)
+ * @method float getQty()
+ * @method Mage_CatalogIndex_Model_Indexer_Minimalprice setQty(float $value)
+ * @method float getValue()
+ * @method Mage_CatalogIndex_Model_Indexer_Minimalprice setValue(float $value)
+ * @method int getTaxClassId()
+ * @method Mage_CatalogIndex_Model_Indexer_Minimalprice setTaxClassId(int $value)
+ * @method int getWebsiteId()
+ * @method Mage_CatalogIndex_Model_Indexer_Minimalprice setWebsiteId(int $value)
+ *
+ * @category    Mage
+ * @package     Mage_CatalogIndex
+ * @author      Magento Core Team <core@magentocommerce.com>
  */
 class Mage_CatalogIndex_Model_Indexer_Minimalprice extends Mage_CatalogIndex_Model_Indexer_Abstract
 {
@@ -42,7 +65,7 @@ class Mage_CatalogIndex_Model_Indexer_Minimalprice extends Mage_CatalogIndex_Mod
     {
         $data = $this->getData('tier_price_attribute');
         if (is_null($data)) {
-            $data = Mage::getModel('eav/entity_attribute')->loadByCode('catalog_product', 'tier_price');
+            $data = Mage::getModel('eav/entity_attribute')->loadByCode(Mage_Catalog_Model_Product::ENTITY, 'tier_price');
             $this->setData('tier_price_attribute', $data);
         }
         return $data;
@@ -52,23 +75,24 @@ class Mage_CatalogIndex_Model_Indexer_Minimalprice extends Mage_CatalogIndex_Mod
     {
         $data = $this->getData('price_attribute');
         if (is_null($data)) {
-            $data = Mage::getModel('eav/entity_attribute')->loadByCode('catalog_product', 'price');
+            $data = Mage::getModel('eav/entity_attribute')->loadByCode(Mage_Catalog_Model_Product::ENTITY, 'price');
             $this->setData('price_attribute', $data);
         }
         return $data;
     }
 
-    public function createIndexData(Mage_Catalog_Model_Product $object)
+    public function createIndexData(Mage_Catalog_Model_Product $object, Mage_Eav_Model_Entity_Attribute_Abstract $attribute = null)
     {
         $searchEntityId = $object->getId();
         $priceAttributeId = $this->getTierPriceAttribute()->getId();
         if ($object->isGrouped()) {
             $priceAttributeId = $this->getPriceAttribute()->getId();
-            $associated = $object->getTypeInstance()->getAssociatedProducts();
+            $associated = $object->getTypeInstance(true)->getAssociatedProducts($object);
             $searchEntityId = array();
 
-            foreach ($associated as $product)
+            foreach ($associated as $product) {
                 $searchEntityId[] = $product->getId();
+            }
         }
 
         if (!count($searchEntityId)) {

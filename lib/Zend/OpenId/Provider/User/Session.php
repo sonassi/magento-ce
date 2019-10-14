@@ -16,20 +16,20 @@
  * @category   Zend
  * @package    Zend_OpenId
  * @subpackage Zend_OpenId_Provider
- * @copyright  Copyright (c) 2005-2008 Zend Technologies USA Inc. (http://www.zend.com)
+ * @copyright  Copyright (c) 2005-2015 Zend Technologies USA Inc. (http://www.zend.com)
  * @license    http://framework.zend.com/license/new-bsd     New BSD License
- * @version    $Id: Session.php 8064 2008-02-16 10:58:39Z thomas $
+ * @version    $Id$
  */
 
 /**
  * @see Zend_OpenId_Provider_User
  */
-require_once "Zend/OpenId/Provider/User.php";
+#require_once "Zend/OpenId/Provider/User.php";
 
 /**
  * @see Zend_Session_Namespace
  */
-require_once "Zend/Session/Namespace.php";
+#require_once "Zend/Session/Namespace.php";
 
 /**
  * Class to get/store information about logged in user in Web Browser using
@@ -38,7 +38,7 @@ require_once "Zend/Session/Namespace.php";
  * @category   Zend
  * @package    Zend_OpenId
  * @subpackage Zend_OpenId_Provider
- * @copyright  Copyright (c) 2005-2008 Zend Technologies USA Inc. (http://www.zend.com)
+ * @copyright  Copyright (c) 2005-2015 Zend Technologies USA Inc. (http://www.zend.com)
  * @license    http://framework.zend.com/license/new-bsd     New BSD License
  */
 class Zend_OpenId_Provider_User_Session extends Zend_OpenId_Provider_User

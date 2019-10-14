@@ -10,11 +10,17 @@
  * http://opensource.org/licenses/osl-3.0.php
  * If you did not receive a copy of the license and are unable to
  * obtain it through the world-wide-web, please send an email
- * to license@magentocommerce.com so we can send you a copy immediately.
+ * to license@magento.com so we can send you a copy immediately.
  *
- * @category   Mage
- * @package    Mage_Adminhtml
- * @copyright  Copyright (c) 2004-2007 Irubin Consulting Inc. DBA Varien (http://www.varien.com)
+ * DISCLAIMER
+ *
+ * Do not edit or add to this file if you wish to upgrade Magento to newer
+ * versions in the future. If you wish to customize Magento for your
+ * needs please refer to http://www.magento.com for more information.
+ *
+ * @category    Mage
+ * @package     Mage_Adminhtml
+ * @copyright  Copyright (c) 2006-2017 X.commerce, Inc. and affiliates (http://www.magento.com)
  * @license    http://opensource.org/licenses/osl-3.0.php  Open Software License (OSL 3.0)
  */
 
@@ -23,6 +29,7 @@
  *
  * @category   Mage
  * @package    Mage_Adminhtml
+ * @author      Magento Core Team <core@magentocommerce.com>
  */
 class Mage_Adminhtml_Block_Catalog_Product_Edit extends Mage_Adminhtml_Block_Widget
 {
@@ -50,7 +57,8 @@ class Mage_Adminhtml_Block_Catalog_Product_Edit extends Mage_Adminhtml_Block_Wid
                 $this->getLayout()->createBlock('adminhtml/widget_button')
                     ->setData(array(
                         'label'     => Mage::helper('catalog')->__('Back'),
-                        'onclick'   => 'setLocation(\''.$this->getUrl('*/*/', array('store'=>$this->getRequest()->getParam('store', 0))).'\')',
+                        'onclick'   => 'setLocation(\''
+                            . $this->getUrl('*/*/', array('store'=>$this->getRequest()->getParam('store', 0))).'\')',
                         'class' => 'back'
                     ))
             );
@@ -65,52 +73,63 @@ class Mage_Adminhtml_Block_Catalog_Product_Edit extends Mage_Adminhtml_Block_Wid
             );
         }
 
-        $this->setChild('reset_button',
-            $this->getLayout()->createBlock('adminhtml/widget_button')
-                ->setData(array(
-                    'label'     => Mage::helper('catalog')->__('Reset'),
-                    'onclick'   => 'setLocation(\''.$this->getUrl('*/*/*', array('_current'=>true)).'\')'
-                ))
-        );
-
-        $this->setChild('save_button',
-            $this->getLayout()->createBlock('adminhtml/widget_button')
-                ->setData(array(
-                    'label'     => Mage::helper('catalog')->__('Save'),
-                    'onclick'   => 'productForm.submit()',
-                    'class' => 'save'
-                ))
-        );
-
-        if (!$this->getRequest()->getParam('popup')) {
-            $this->setChild('save_and_edit_button',
+        if (!$this->getProduct()->isReadonly()) {
+            $this->setChild('reset_button',
                 $this->getLayout()->createBlock('adminhtml/widget_button')
                     ->setData(array(
-                        'label'     => Mage::helper('catalog')->__('Save And Continue Edit'),
-                        'onclick'   => 'saveAndContinueEdit()',
+                        'label'     => Mage::helper('catalog')->__('Reset'),
+                        'onclick'   => 'setLocation(\''.$this->getUrl('*/*/*', array('_current'=>true)).'\')'
+                    ))
+            );
+
+            $this->setChild('save_button',
+                $this->getLayout()->createBlock('adminhtml/widget_button')
+                    ->setData(array(
+                        'label'     => Mage::helper('catalog')->__('Save'),
+                        'onclick'   => 'productForm.submit()',
                         'class' => 'save'
                     ))
             );
-            $this->setChild('delete_button',
-            $this->getLayout()->createBlock('adminhtml/widget_button')
-                    ->setData(array(
-                        'label'     => Mage::helper('catalog')->__('Delete'),
-                        'onclick'   => 'confirmSetLocation(\''.Mage::helper('catalog')->__('Are you sure?').'\', \''.$this->getDeleteUrl().'\')',
-                        'class'  => 'delete'
-                    ))
-            );
-            $this->setChild('duplicate_button',
-            $this->getLayout()->createBlock('adminhtml/widget_button')
-                ->setData(array(
-                    'label'     => Mage::helper('catalog')->__('Duplicate'),
-                    'onclick'   => 'setLocation(\''.$this->getDuplicateUrl().'\')',
-                    'class'  => 'add'
-                ))
-            );
         }
 
+        if (!$this->getRequest()->getParam('popup')) {
+            if (!$this->getProduct()->isReadonly()) {
+                $this->setChild('save_and_edit_button',
+                    $this->getLayout()->createBlock('adminhtml/widget_button')
+                        ->setData(array(
+                            'label'     => Mage::helper('catalog')->__('Save and Continue Edit'),
+                            'onclick'   => 'saveAndContinueEdit(\''.$this->getSaveAndContinueUrl().'\')',
+                            'class' => 'save'
+                        ))
+                );
+            }
+            if ($this->getProduct()->isDeleteable()) {
 
+                $confirmationMessage = Mage::helper('core')->jsQuoteEscape(
+                    Mage::helper('catalog')->__('Are you sure?')
+                );
+                $this->setChild('delete_button',
+                    $this->getLayout()->createBlock('adminhtml/widget_button')
+                        ->setData(array(
+                            'label'     => Mage::helper('catalog')->__('Delete'),
+                            'onclick'   => 'confirmSetLocation(\'' . $confirmationMessage
+                                . '\', \'' . $this->getDeleteUrl() . '\')',
+                            'class'  => 'delete'
+                        ))
+                );
+            }
 
+            if ($this->getProduct()->isDuplicable()) {
+                $this->setChild('duplicate_button',
+                $this->getLayout()->createBlock('adminhtml/widget_button')
+                    ->setData(array(
+                        'label'     => Mage::helper('catalog')->__('Duplicate'),
+                        'onclick'   => 'setLocation(\'' . $this->getDuplicateUrl() . '\')',
+                        'class'  => 'add'
+                    ))
+                );
+            }
+        }
 
         return parent::_prepareLayout();
     }
@@ -155,6 +174,16 @@ class Mage_Adminhtml_Block_Catalog_Product_Edit extends Mage_Adminhtml_Block_Wid
         return $this->getUrl('*/*/save', array('_current'=>true, 'back'=>null));
     }
 
+    public function getSaveAndContinueUrl()
+    {
+        return $this->getUrl('*/*/save', array(
+            '_current'   => true,
+            'back'       => 'edit',
+            'tab'        => '{{tab_id}}',
+            'active_tab' => null
+        ));
+    }
+
     public function getProductId()
     {
         return $this->getProduct()->getId();
@@ -167,43 +196,6 @@ class Mage_Adminhtml_Block_Catalog_Product_Edit extends Mage_Adminhtml_Block_Wid
             $setId = $this->getRequest()->getParam('set', null);
         }
         return $setId;
-    }
-
-    public function getRelatedProductsJSON()
-    {
-        $result = array();
-        foreach ($this->getProduct()->getRelatedProducts() as $product) {
-            $result[$product->getId()] = $product->toArray(array('qty', 'position'));
-        }
-        return $result ? Zend_Json_Encoder::encode($result) : '{}';
-    }
-
-
-    public function getUpSellProductsJSON()
-    {
-        $result = array();
-        foreach ($this->getProduct()->getUpSellProducts() as $product) {
-            $result[$product->getId()] = $product->toArray(array('qty', 'position'));
-        }
-        return $result ? Zend_Json_Encoder::encode($result) : '{}';
-    }
-
-    public function getCrossSellProductsJSON()
-    {
-        $result = array();
-        foreach ($this->getProduct()->getCrossSellProducts() as $product) {
-            $result[$product->getId()] = $product->toArray(array('qty', 'position'));
-        }
-        return $result ? Zend_Json_Encoder::encode($result) : '{}';
-    }
-
-    public function getSuperGroupProductJSON()
-    {
-        $result = array();
-        foreach ($this->getProduct()->getTypeInstance()->getAssociatedProducts() as $product) {
-            $result[$product->getEntityId()] = $product->toArray(array('qty', 'position'));
-        }
-        return $result ? Zend_Json_Encoder::encode($result) : '{}';
     }
 
     public function getIsGrouped()
@@ -225,7 +217,7 @@ class Mage_Adminhtml_Block_Catalog_Product_Edit extends Mage_Adminhtml_Block_Wid
     {
         $header = '';
         if ($this->getProduct()->getId()) {
-            $header = $this->htmlEscape($this->getProduct()->getName());
+            $header = $this->escapeHtml($this->getProduct()->getName());
         }
         else {
             $header = Mage::helper('catalog')->__('New Product');
@@ -249,7 +241,10 @@ class Mage_Adminhtml_Block_Catalog_Product_Edit extends Mage_Adminhtml_Block_Wid
     public function getIsConfigured()
     {
         if ($this->getProduct()->isConfigurable()
-            && !($superAttributes = $this->getProduct()->getTypeInstance()->getUsedProductAttributeIds())) {
+            && !($superAttributes = $this->getProduct()
+                ->getTypeInstance(true)
+                ->getUsedProductAttributeIds($this->getProduct()))
+        ) {
             $superAttributes = false;
         }
 

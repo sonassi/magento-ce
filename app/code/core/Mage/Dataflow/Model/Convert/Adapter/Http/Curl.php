@@ -10,11 +10,17 @@
  * http://opensource.org/licenses/osl-3.0.php
  * If you did not receive a copy of the license and are unable to
  * obtain it through the world-wide-web, please send an email
- * to license@magentocommerce.com so we can send you a copy immediately.
+ * to license@magento.com so we can send you a copy immediately.
  *
- * @category   Mage
- * @package    Mage_Dataflow
- * @copyright  Copyright (c) 2004-2007 Irubin Consulting Inc. DBA Varien (http://www.varien.com)
+ * DISCLAIMER
+ *
+ * Do not edit or add to this file if you wish to upgrade Magento to newer
+ * versions in the future. If you wish to customize Magento for your
+ * needs please refer to http://www.magento.com for more information.
+ *
+ * @category    Mage
+ * @package     Mage_Dataflow
+ * @copyright  Copyright (c) 2006-2017 X.commerce, Inc. and affiliates (http://www.magento.com)
  * @license    http://opensource.org/licenses/osl-3.0.php  Open Software License (OSL 3.0)
  */
 
@@ -24,6 +30,7 @@
  *
  * @category   Mage
  * @package    Mage_Dataflow
+ * @author      Magento Core Team <core@magentocommerce.com>
  */
 class Mage_Dataflow_Model_Convert_Adapter_Http_Curl extends Mage_Dataflow_Model_Convert_Adapter_Abstract
 {
@@ -40,13 +47,15 @@ class Mage_Dataflow_Model_Convert_Adapter_Http_Curl extends Mage_Dataflow_Model_
         }
 
         // use Varien curl adapter
-        $http = new Varien_Http_Adapter_Curl;
+        $http = new Varien_Http_Adapter_Curl();
 
         // send GET request
         $http->write('GET', $uri);
 
         // read the remote file
         $data = $http->read();
+
+        $http->close();
 
         $data = preg_split('/^\r?$/m', $data, 2);
         $data = trim($data[1]);

@@ -15,19 +15,21 @@
  *
  * @category   Zend
  * @package    Zend_Gdata
- * @copyright  Copyright (c) 2005-2008 Zend Technologies USA Inc. (http://www.zend.com)
+ * @subpackage Spreadsheets
+ * @copyright  Copyright (c) 2005-2015 Zend Technologies USA Inc. (http://www.zend.com)
  * @license    http://framework.zend.com/license/new-bsd     New BSD License
+ * @version    $Id$
  */
 
 /**
  * Zend_Gdata_App_util
  */
-require_once('Zend/Gdata/App/Util.php');
+#require_once('Zend/Gdata/App/Util.php');
 
 /**
  * Zend_Gdata_Query
  */
-require_once('Zend/Gdata/Query.php');
+#require_once('Zend/Gdata/Query.php');
 
 /**
  * Assists in constructing queries for Google Spreadsheets lists
@@ -36,13 +38,14 @@ require_once('Zend/Gdata/Query.php');
  *
  * @category   Zend
  * @package    Zend_Gdata
- * @copyright  Copyright (c) 2005-2008 Zend Technologies USA Inc. (http://www.zend.com)
+ * @subpackage Spreadsheets
+ * @copyright  Copyright (c) 2005-2015 Zend Technologies USA Inc. (http://www.zend.com)
  * @license    http://framework.zend.com/license/new-bsd     New BSD License
  */
 class Zend_Gdata_Spreadsheets_ListQuery extends Zend_Gdata_Query
 {
 
-    const SPREADSHEETS_LIST_FEED_URI = 'http://spreadsheets.google.com/feeds/list';
+    const SPREADSHEETS_LIST_FEED_URI = 'https://spreadsheets.google.com/feeds/list';
 
     protected $_defaultFeedUri = self::SPREADSHEETS_LIST_FEED_URI;
     protected $_visibility = 'private';
@@ -257,28 +260,28 @@ class Zend_Gdata_Spreadsheets_ListQuery extends Zend_Gdata_Query
         if ($this->_spreadsheetKey != null) {
             $uri .= '/'.$this->_spreadsheetKey;
         } else {
-            require_once 'Zend/Gdata/App/Exception.php'; 
+            #require_once 'Zend/Gdata/App/Exception.php';
             throw new Zend_Gdata_App_Exception('A spreadsheet key must be provided for list queries.');
         }
 
         if ($this->_worksheetId != null) {
             $uri .= '/'.$this->_worksheetId;
         } else {
-            require_once 'Zend/Gdata/App/Exception.php'; 
+            #require_once 'Zend/Gdata/App/Exception.php';
             throw new Zend_Gdata_App_Exception('A worksheet id must be provided for list queries.');
         }
 
         if ($this->_visibility != null) {
             $uri .= '/'.$this->_visibility;
         } else {
-            require_once 'Zend/Gdata/App/Exception.php'; 
+            #require_once 'Zend/Gdata/App/Exception.php';
             throw new Zend_Gdata_App_Exception('A visibility must be provided for list queries.');
         }
 
         if ($this->_projection != null) {
             $uri .= '/'.$this->_projection;
         } else {
-            require_once 'Zend/Gdata/App/Exception.php'; 
+            #require_once 'Zend/Gdata/App/Exception.php';
             throw new Zend_Gdata_App_Exception('A projection must be provided for list queries.');
         }
 

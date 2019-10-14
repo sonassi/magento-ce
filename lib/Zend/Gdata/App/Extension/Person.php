@@ -15,36 +15,39 @@
  *
  * @category   Zend
  * @package    Zend_Gdata
- * @copyright  Copyright (c) 2005-2008 Zend Technologies USA Inc. (http://www.zend.com)
+ * @subpackage App
+ * @copyright  Copyright (c) 2005-2015 Zend Technologies USA Inc. (http://www.zend.com)
  * @license    http://framework.zend.com/license/new-bsd     New BSD License
+ * @version    $Id$
  */
 
 /**
  * @see Zend_Gdata_App_Extension
  */
-require_once 'Zend/Gdata/App/Extension.php';
+#require_once 'Zend/Gdata/App/Extension.php';
 
 /**
  * @see Zend_Gdata_App_Extension_Name
  */
-require_once 'Zend/Gdata/App/Extension/Name.php';
+#require_once 'Zend/Gdata/App/Extension/Name.php';
 
 /**
  * @see Zend_Gdata_App_Extension_Email
  */
-require_once 'Zend/Gdata/App/Extension/Email.php';
+#require_once 'Zend/Gdata/App/Extension/Email.php';
 
 /**
  * @see Zend_Gdata_App_Extension_Uri
  */
-require_once 'Zend/Gdata/App/Extension/Uri.php';
+#require_once 'Zend/Gdata/App/Extension/Uri.php';
 
 /**
  * Base class for people (currently used by atom:author, atom:contributor)
  *
  * @category   Zend
  * @package    Zend_Gdata
- * @copyright  Copyright (c) 2005-2008 Zend Technologies USA Inc. (http://www.zend.com)
+ * @subpackage App
+ * @copyright  Copyright (c) 2005-2015 Zend Technologies USA Inc. (http://www.zend.com)
  * @license    http://framework.zend.com/license/new-bsd     New BSD License
  */
 abstract class Zend_Gdata_App_Extension_Person extends Zend_Gdata_App_Extension
@@ -63,9 +66,9 @@ abstract class Zend_Gdata_App_Extension_Person extends Zend_Gdata_App_Extension
         $this->_uri = $uri;
     }
 
-    public function getDOM($doc = null)
+    public function getDOM($doc = null, $majorVersion = 1, $minorVersion = null)
     {
-        $element = parent::getDOM($doc);
+        $element = parent::getDOM($doc, $majorVersion, $minorVersion);
         if ($this->_name != null) {
             $element->appendChild($this->_name->getDOM($element->ownerDocument));
         }

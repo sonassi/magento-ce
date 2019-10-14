@@ -10,11 +10,17 @@
  * http://opensource.org/licenses/osl-3.0.php
  * If you did not receive a copy of the license and are unable to
  * obtain it through the world-wide-web, please send an email
- * to license@magentocommerce.com so we can send you a copy immediately.
+ * to license@magento.com so we can send you a copy immediately.
  *
- * @category   Mage
- * @package    Mage_Adminhtml
- * @copyright  Copyright (c) 2004-2007 Irubin Consulting Inc. DBA Varien (http://www.varien.com)
+ * DISCLAIMER
+ *
+ * Do not edit or add to this file if you wish to upgrade Magento to newer
+ * versions in the future. If you wish to customize Magento for your
+ * needs please refer to http://www.magento.com for more information.
+ *
+ * @category    Mage
+ * @package     Mage_Adminhtml
+ * @copyright  Copyright (c) 2006-2017 X.commerce, Inc. and affiliates (http://www.magento.com)
  * @license    http://opensource.org/licenses/osl-3.0.php  Open Software License (OSL 3.0)
  */
 
@@ -24,18 +30,10 @@ require_once('CreateController.php');
  *
  * @category   Mage
  * @package    Mage_Adminhtml
+ * @author      Magento Core Team <core@magentocommerce.com>
  */
 class Mage_Adminhtml_Sales_Order_EditController extends Mage_Adminhtml_Sales_Order_CreateController
 {
-    /**
-     * Additional initialization
-     *
-     */
-    protected function _construct()
-    {
-        $this->setUsedModuleName('Mage_Sales');
-    }
-
     /**
      * Start edit order initialization
      */
@@ -45,12 +43,44 @@ class Mage_Adminhtml_Sales_Order_EditController extends Mage_Adminhtml_Sales_Ord
         $orderId = $this->getRequest()->getParam('order_id');
         $order = Mage::getModel('sales/order')->load($orderId);
 
-        if ($order->getId()) {
-            $this->_getOrderCreateModel()->initFromOrder($order);
-            $this->_redirect('*/*');
+        try {
+            if ($order->getId()) {
+                $this->_getSession()->setUseOldShippingMethod(true);
+                $this->_getOrderCreateModel()->initFromOrder($order);
+                $this->_redirect('*/*');
+            }
+            else {
+                $this->_redirect('*/sales_order/');
+            }
+        } catch (Mage_Core_Exception $e) {
+            Mage::getSingleton('adminhtml/session')->addError($e->getMessage());
+            $this->_redirect('*/sales_order/view', array('order_id' => $orderId));
+        } catch (Exception $e) {
+            Mage::getSingleton('adminhtml/session')->addException($e, $e->getMessage());
+            $this->_redirect('*/sales_order/view', array('order_id' => $orderId));
         }
-        else {
-            $this->_redirect('*/sales_order/');
-        }
+    }
+
+    /**
+     * Index page
+     */
+    public function indexAction()
+    {
+        $this->_title($this->__('Sales'))->_title($this->__('Orders'))->_title($this->__('Edit Order'));
+        $this->loadLayout();
+
+        $this->_initSession()
+            ->_setActiveMenu('sales/order')
+            ->renderLayout();
+    }
+
+    /**
+     * Acl check for admin
+     *
+     * @return bool
+     */
+    protected function _isAllowed()
+    {
+        return Mage::getSingleton('admin/session')->isAllowed('sales/order/actions/edit');
     }
 }

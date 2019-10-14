@@ -10,11 +10,17 @@
  * http://opensource.org/licenses/osl-3.0.php
  * If you did not receive a copy of the license and are unable to
  * obtain it through the world-wide-web, please send an email
- * to license@magentocommerce.com so we can send you a copy immediately.
+ * to license@magento.com so we can send you a copy immediately.
  *
- * @category   Mage
- * @package    Mage_Adminhtml
- * @copyright  Copyright (c) 2004-2007 Irubin Consulting Inc. DBA Varien (http://www.varien.com)
+ * DISCLAIMER
+ *
+ * Do not edit or add to this file if you wish to upgrade Magento to newer
+ * versions in the future. If you wish to customize Magento for your
+ * needs please refer to http://www.magento.com for more information.
+ *
+ * @category    Mage
+ * @package     Mage_Adminhtml
+ * @copyright  Copyright (c) 2006-2017 X.commerce, Inc. and affiliates (http://www.magento.com)
  * @license    http://opensource.org/licenses/osl-3.0.php  Open Software License (OSL 3.0)
  */
 
@@ -23,27 +29,19 @@
  *
  * @category   Mage
  * @package    Mage_Adminhtml
+ * @author      Magento Core Team <core@magentocommerce.com>
  */
 class Mage_Adminhtml_Block_Sales_Order_Create_Billing_Method_Form extends Mage_Payment_Block_Form_Container
 {
-
-    public function __construct()
-    {
-        parent::__construct();
-        $this->setTemplate('sales/order/create/billing/method/form.phtml');
-    }
-
     /**
      * Check payment method model
      *
+     * @param Mage_Payment_Model_Method_Abstract|null $method
      * @return bool
      */
     protected function _canUseMethod($method)
     {
-        if (!$method->canUseInternal()) {
-            return false;
-        }
-        return parent::_canUseMethod($method);
+        return $method && $method->canUseInternal() && parent::_canUseMethod($method);
     }
 
     /**
@@ -61,15 +59,27 @@ class Mage_Adminhtml_Block_Sales_Order_Create_Billing_Method_Form extends Mage_P
     }
 
     /**
-     * Retrieve code of current payment method
+     * Get current payment method code or the only available, if there is only one method
      *
-     * @return mixed
+     * @return string|false
      */
     public function getSelectedMethodCode()
     {
-        if ($method = $this->getQuote()->getPayment()->getMethod()) {
-            return $method;
+        // One available method. Return this method as selected, because no other variant is possible.
+        $methods = $this->getMethods();
+        if (count($methods) == 1) {
+            foreach ($methods as $method) {
+                return $method->getCode();
+            }
         }
+
+        // Several methods. If user has selected some method - then return it.
+        $currentMethodCode = $this->getQuote()->getPayment()->getMethod();
+        if ($currentMethodCode) {
+            return $currentMethodCode;
+        }
+
+        // Several methods, but no preference for one of them.
         return false;
     }
 
@@ -81,6 +91,19 @@ class Mage_Adminhtml_Block_Sales_Order_Create_Billing_Method_Form extends Mage_P
     public function getQuote()
     {
         return Mage::getSingleton('adminhtml/session_quote')->getQuote();
+    }
+
+    /*
+    * Whether switch/solo card type available
+    */
+    public function hasSsCardType()
+    {
+        $availableTypes = explode(',', $this->getQuote()->getPayment()->getMethod()->getConfigData('cctypes'));
+        $ssPresenations = array_intersect(array('SS', 'SM', 'SO'), $availableTypes);
+        if ($availableTypes && count($ssPresenations) > 0) {
+            return true;
+        }
+        return false;
     }
 
 }

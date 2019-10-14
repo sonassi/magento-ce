@@ -10,11 +10,17 @@
  * http://opensource.org/licenses/osl-3.0.php
  * If you did not receive a copy of the license and are unable to
  * obtain it through the world-wide-web, please send an email
- * to license@magentocommerce.com so we can send you a copy immediately.
+ * to license@magento.com so we can send you a copy immediately.
  *
- * @category   Mage
- * @package    Mage_Adminhtml
- * @copyright  Copyright (c) 2004-2007 Irubin Consulting Inc. DBA Varien (http://www.varien.com)
+ * DISCLAIMER
+ *
+ * Do not edit or add to this file if you wish to upgrade Magento to newer
+ * versions in the future. If you wish to customize Magento for your
+ * needs please refer to http://www.magento.com for more information.
+ *
+ * @category    Mage
+ * @package     Mage_Adminhtml
+ * @copyright  Copyright (c) 2006-2017 X.commerce, Inc. and affiliates (http://www.magento.com)
  * @license    http://opensource.org/licenses/osl-3.0.php  Open Software License (OSL 3.0)
  */
 
@@ -23,6 +29,7 @@
  *
  * @category   Mage
  * @package    Mage_Adminhtml
+ * @author      Magento Core Team <core@magentocommerce.com>
  */
 class Mage_Adminhtml_Block_Report_Product_Grid extends Mage_Adminhtml_Block_Widget_Grid
 {
@@ -31,7 +38,7 @@ class Mage_Adminhtml_Block_Report_Product_Grid extends Mage_Adminhtml_Block_Widg
     {
         parent::__construct();
         $this->setId('productsReportGrid');
-        $this->setDefaultSort('id');
+        $this->setDefaultSort('entity_id');
         $this->setDefaultDir('desc');
     }
 
@@ -43,9 +50,7 @@ class Mage_Adminhtml_Block_Report_Product_Grid extends Mage_Adminhtml_Block_Widg
 
         $this->setCollection($collection);
 
-        parent::_prepareCollection();
-
-        return $this;
+        return parent::_prepareCollection();
     }
 
     protected function _afterLoadCollection()
@@ -56,7 +61,7 @@ class Mage_Adminhtml_Block_Report_Product_Grid extends Mage_Adminhtml_Block_Widg
 
     protected function _prepareColumns()
     {
-        $this->addColumn('id', array(
+        $this->addColumn('entity_id', array(
             'header'    =>Mage::helper('reports')->__('ID'),
             'width'     =>'50px',
             'index'     =>'entity_id',
@@ -111,7 +116,7 @@ class Mage_Adminhtml_Block_Report_Product_Grid extends Mage_Adminhtml_Block_Widg
         $this->setCountTotals(true);
 
         $this->addExportType('*/*/exportProductsCsv', Mage::helper('reports')->__('CSV'));
-        $this->addExportType('*/*/exportProductsExcel', Mage::helper('reports')->__('Excel'));
+        $this->addExportType('*/*/exportProductsExcel', Mage::helper('reports')->__('Excel XML'));
 
         return parent::_prepareColumns();
     }

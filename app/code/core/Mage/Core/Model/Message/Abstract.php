@@ -10,11 +10,17 @@
  * http://opensource.org/licenses/osl-3.0.php
  * If you did not receive a copy of the license and are unable to
  * obtain it through the world-wide-web, please send an email
- * to license@magentocommerce.com so we can send you a copy immediately.
+ * to license@magento.com so we can send you a copy immediately.
  *
- * @category   Mage
- * @package    Mage_Core
- * @copyright  Copyright (c) 2004-2007 Irubin Consulting Inc. DBA Varien (http://www.varien.com)
+ * DISCLAIMER
+ *
+ * Do not edit or add to this file if you wish to upgrade Magento to newer
+ * versions in the future. If you wish to customize Magento for your
+ * needs please refer to http://www.magento.com for more information.
+ *
+ * @category    Mage
+ * @package     Mage_Core
+ * @copyright  Copyright (c) 2006-2017 X.commerce, Inc. and affiliates (http://www.magento.com)
  * @license    http://opensource.org/licenses/osl-3.0.php  Open Software License (OSL 3.0)
  */
 
@@ -23,6 +29,7 @@
  *
  * @category   Mage
  * @package    Mage_Core
+ * @author      Magento Core Team <core@magentocommerce.com>
  */
 abstract class Mage_Core_Model_Message_Abstract
 {
@@ -30,7 +37,9 @@ abstract class Mage_Core_Model_Message_Abstract
     protected $_code;
     protected $_class;
     protected $_method;
-    
+    protected $_identifier;
+    protected $_isSticky = false;
+
     public function __construct($type, $code='')
     {
         $this->_type = $type;
@@ -41,12 +50,12 @@ abstract class Mage_Core_Model_Message_Abstract
     {
         return $this->_code;
     }
-    
+
     public function getText()
     {
         return $this->getCode();
     }
-    
+
     public function getType()
     {
         return $this->_type;
@@ -56,7 +65,7 @@ abstract class Mage_Core_Model_Message_Abstract
     {
         $this->_class = $class;
     }
-    
+
     public function setMethod($method)
     {
         $this->_method = $method;
@@ -66,5 +75,61 @@ abstract class Mage_Core_Model_Message_Abstract
     {
         $out = $this->getType().': '.$this->getText();
         return $out;
+    }
+
+    /**
+     * Set message identifier
+     *
+     * @param string $id
+     * @return Mage_Core_Model_Message_Abstract
+     */
+    public function setIdentifier($id)
+    {
+        $this->_identifier = $id;
+        return $this;
+    }
+
+    /**
+     * Get message identifier
+     *
+     *  @return string
+     */
+    public function getIdentifier()
+    {
+        return $this->_identifier;
+    }
+
+    /**
+     * Set message sticky status
+     *
+     * @param bool $isSticky
+     * @return Mage_Core_Model_Message_Abstract
+     */
+    public function setIsSticky($isSticky = true)
+    {
+        $this->_isSticky = $isSticky;
+        return $this;
+    }
+
+    /**
+     * Get whether message is sticky
+     *
+     * @return bool
+     */
+    public function getIsSticky()
+    {
+        return $this->_isSticky;
+    }
+
+    /**
+     * Set code
+     *
+     * @param string $code
+     * @return Mage_Core_Model_Message_Abstract
+     */
+    public function setCode($code)
+    {
+        $this->_code = $code;
+        return $this;
     }
 }

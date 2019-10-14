@@ -10,11 +10,17 @@
  * http://opensource.org/licenses/osl-3.0.php
  * If you did not receive a copy of the license and are unable to
  * obtain it through the world-wide-web, please send an email
- * to license@magentocommerce.com so we can send you a copy immediately.
+ * to license@magento.com so we can send you a copy immediately.
  *
- * @category   Mage
- * @package    Mage_Adminhtml
- * @copyright  Copyright (c) 2004-2007 Irubin Consulting Inc. DBA Varien (http://www.varien.com)
+ * DISCLAIMER
+ *
+ * Do not edit or add to this file if you wish to upgrade Magento to newer
+ * versions in the future. If you wish to customize Magento for your
+ * needs please refer to http://www.magento.com for more information.
+ *
+ * @category    Mage
+ * @package     Mage_Adminhtml
+ * @copyright  Copyright (c) 2006-2017 X.commerce, Inc. and affiliates (http://www.magento.com)
  * @license    http://opensource.org/licenses/osl-3.0.php  Open Software License (OSL 3.0)
  */
 
@@ -23,54 +29,66 @@
  *
  * @category   Mage
  * @package    Mage_Adminhtml
+ * @author      Magento Core Team <core@magentocommerce.com>
  */
-class Mage_Adminhtml_Block_Catalog_Product extends Mage_Adminhtml_Block_Template
+class Mage_Adminhtml_Block_Catalog_Product extends Mage_Adminhtml_Block_Widget_Container
 {
-
+    /**
+     * Set template
+     */
     public function __construct()
     {
         parent::__construct();
         $this->setTemplate('catalog/product.phtml');
     }
 
+    /**
+     * Prepare button and grid
+     *
+     * @return Mage_Adminhtml_Block_Catalog_Product
+     */
     protected function _prepareLayout()
     {
-        $this->setChild('add_new_button',
-            $this->getLayout()->createBlock('adminhtml/widget_button')
-                ->setData(array(
-                    'label'     => Mage::helper('catalog')->__('Add Product'),
-                    'onclick'   => "setLocation('".$this->getUrl('*/*/new')."')",
-                    'class'   => 'add'
-                    ))
-                );
-        /**
-         * Display store switcher if system has more one store
-         */
-        if (!Mage::app()->isSingleStoreMode()) {
-            $this->setChild('store_switcher',
-                $this->getLayout()->createBlock('adminhtml/store_switcher')
-                    ->setUseConfirm(false)
-                    ->setSwitchUrl($this->getUrl('*/*/*', array('store'=>null)))
-            );
-        }
+        $this->_addButton('add_new', array(
+            'label'   => Mage::helper('catalog')->__('Add Product'),
+            'onclick' => "setLocation('{$this->getUrl('*/*/new')}')",
+            'class'   => 'add'
+        ));
+
         $this->setChild('grid', $this->getLayout()->createBlock('adminhtml/catalog_product_grid', 'product.grid'));
         return parent::_prepareLayout();
     }
 
+    /**
+     * Deprecated since 1.3.2
+     *
+     * @return string
+     */
     public function getAddNewButtonHtml()
     {
         return $this->getChildHtml('add_new_button');
     }
 
+    /**
+     * Render grid
+     *
+     * @return string
+     */
     public function getGridHtml()
     {
         return $this->getChildHtml('grid');
     }
 
-    public function getStoreSwitcherHtml()
+    /**
+     * Check whether it is single store mode
+     *
+     * @return bool
+     */
+    public function isSingleStoreMode()
     {
-        return $this->getChildHtml('store_switcher');
+        if (!Mage::app()->isSingleStoreMode()) {
+               return false;
+        }
+        return true;
     }
-
 }
-

@@ -10,11 +10,17 @@
  * http://opensource.org/licenses/osl-3.0.php
  * If you did not receive a copy of the license and are unable to
  * obtain it through the world-wide-web, please send an email
- * to license@magentocommerce.com so we can send you a copy immediately.
+ * to license@magento.com so we can send you a copy immediately.
  *
- * @category   Mage
- * @package    Mage_Adminhtml
- * @copyright  Copyright (c) 2004-2007 Irubin Consulting Inc. DBA Varien (http://www.varien.com)
+ * DISCLAIMER
+ *
+ * Do not edit or add to this file if you wish to upgrade Magento to newer
+ * versions in the future. If you wish to customize Magento for your
+ * needs please refer to http://www.magento.com for more information.
+ *
+ * @category    Mage
+ * @package     Mage_Adminhtml
+ * @copyright  Copyright (c) 2006-2017 X.commerce, Inc. and affiliates (http://www.magento.com)
  * @license    http://opensource.org/licenses/osl-3.0.php  Open Software License (OSL 3.0)
  */
 
@@ -23,6 +29,7 @@
  *
  * @category   Mage
  * @package    Mage_Adminhtml
+ * @author      Magento Core Team <core@magentocommerce.com>
  */
 class Mage_Adminhtml_Block_Sales_Order_Create_Search_Grid extends Mage_Adminhtml_Block_Widget_Grid
 {
@@ -34,7 +41,7 @@ class Mage_Adminhtml_Block_Sales_Order_Create_Search_Grid extends Mage_Adminhtml
         $this->setRowClickCallback('order.productGridRowClick.bind(order)');
         $this->setCheckboxCheckCallback('order.productGridCheckboxCheck.bind(order)');
         $this->setRowInitCallback('order.productGridRowInit.bind(order)');
-        $this->setDefaultSort('id');
+        $this->setDefaultSort('entity_id');
         $this->setUseAjax(true);
         if ($this->getRequest()->getParam('collapse')) {
             $this->setIsCollapsed(true);
@@ -68,11 +75,11 @@ class Mage_Adminhtml_Block_Sales_Order_Create_Search_Grid extends Mage_Adminhtml
                 $productIds = 0;
             }
             if ($column->getFilter()->getValue()) {
-            	$this->getCollection()->addFieldToFilter('entity_id', array('in'=>$productIds));
+                $this->getCollection()->addFieldToFilter('entity_id', array('in'=>$productIds));
             } else {
                 if($productIds) {
-                	$this->getCollection()->addFieldToFilter('entity_id', array('nin'=>$productIds));
-            	}
+                    $this->getCollection()->addFieldToFilter('entity_id', array('nin'=>$productIds));
+                }
             }
         } else {
             parent::_addColumnFilterToCollection($column);
@@ -80,95 +87,89 @@ class Mage_Adminhtml_Block_Sales_Order_Create_Search_Grid extends Mage_Adminhtml
         return $this;
     }
 
+    /**
+     * Prepare collection to be displayed in the grid
+     *
+     * @return Mage_Adminhtml_Block_Sales_Order_Create_Search_Grid
+     */
     protected function _prepareCollection()
     {
-        $collection = Mage::getModel('catalog/product')->getCollection()
+        $attributes = Mage::getSingleton('catalog/config')->getProductAttributes();
+        /* @var $collection Mage_Catalog_Model_Resource_Product_Collection */
+        $collection = Mage::getModel('catalog/product')->getCollection();
+        $collection
             ->setStore($this->getStore())
-        	->addAttributeToSelect('name')
+            ->addAttributeToSelect($attributes)
             ->addAttributeToSelect('sku')
-            ->addAttributeToSelect('price')
-            ->addAttributeToFilter('type_id', Mage_Catalog_Model_Product_Type::TYPE_SIMPLE)
-            ->addStoreFilter();
-
-        if($this->helper('giftmessage/message')->getIsMessagesAvailable(
-            'main', $this->getQuote(), $this->getStore()
-        )) {
-            $collection->addAttributeToSelect('gift_message_available');
-        }
+            ->addStoreFilter()
+            ->addAttributeToFilter('type_id', array_keys(
+                Mage::getConfig()->getNode('adminhtml/sales/order/create/available_product_types')->asArray()
+            ))
+            ->addAttributeToSelect('gift_message_available');
 
         Mage::getSingleton('catalog/product_status')->addSaleableFilterToCollection($collection);
-        /**
-         * need display all simple products
-         */
-        //Mage::getSingleton('catalog/product_visibility')->addVisibleInCatalogFilterToCollection($collection);
 
         $this->setCollection($collection);
-
         return parent::_prepareCollection();
     }
 
+    /**
+     * Prepare columns
+     *
+     * @return Mage_Adminhtml_Block_Sales_Order_Create_Search_Grid
+     */
     protected function _prepareColumns()
     {
-        $this->addColumn('id', array(
+        $this->addColumn('entity_id', array(
             'header'    => Mage::helper('sales')->__('ID'),
             'sortable'  => true,
-            'width'     => '60px',
+            'width'     => '60',
             'index'     => 'entity_id'
         ));
         $this->addColumn('name', array(
             'header'    => Mage::helper('sales')->__('Product Name'),
+            'renderer'  => 'adminhtml/sales_order_create_search_grid_renderer_product',
             'index'     => 'name'
         ));
         $this->addColumn('sku', array(
             'header'    => Mage::helper('sales')->__('SKU'),
-            'width'     => '80px',
+            'width'     => '80',
             'index'     => 'sku'
         ));
         $this->addColumn('price', array(
             'header'    => Mage::helper('sales')->__('Price'),
+            'column_css_class' => 'price',
             'align'     => 'center',
             'type'      => 'currency',
             'currency_code' => $this->getStore()->getCurrentCurrencyCode(),
             'rate'      => $this->getStore()->getBaseCurrency()->getRate($this->getStore()->getCurrentCurrencyCode()),
-            'index'     => 'price'
+            'index'     => 'price',
+            'renderer'  => 'adminhtml/sales_order_create_search_grid_renderer_price',
         ));
 
         $this->addColumn('in_products', array(
+            'header'    => Mage::helper('sales')->__('Select'),
             'header_css_class' => 'a-center',
             'type'      => 'checkbox',
             'name'      => 'in_products',
             'values'    => $this->_getSelectedProducts(),
             'align'     => 'center',
             'index'     => 'entity_id',
+            'sortable'  => false,
         ));
-
-        if($this->helper('giftmessage/message')->getIsMessagesAvailable(
-            'main', $this->getQuote(), $this->getStore()
-        )) {
-            $this->addColumn('giftmessage', array(
-                'filter'    => false,
-                'sortable'  => false,
-                'header'    => Mage::helper('sales')->__('Gift'),
-                'renderer'  => 'adminhtml/sales_order_create_search_grid_renderer_giftmessage',
-                'field_name'=> 'giftmessage',
-                'inline_css'=> 'input-text',
-                'align'     => 'center',
-                'index'     => 'entity_id',
-                'values'    => $this->_getGiftmessageSaveModel()->getAllowQuoteItemsProducts()
-            ));
-        }
 
         $this->addColumn('qty', array(
             'filter'    => false,
             'sortable'  => false,
             'header'    => Mage::helper('sales')->__('Qty To Add'),
-            'name'    	=> 'qty',
+            'renderer'  => 'adminhtml/sales_order_create_search_grid_renderer_qty',
+            'name'      => 'qty',
             'inline_css'=> 'qty',
-            'align'     => 'right',
+            'align'     => 'center',
             'type'      => 'input',
             'validate_class' => 'validate-number',
             'index'     => 'qty',
-            'width'     => '130px',
+            'width'     => '1',
         ));
 
         return parent::_prepareColumns();
@@ -189,6 +190,7 @@ class Mage_Adminhtml_Block_Sales_Order_Create_Search_Grid extends Mage_Adminhtml
     /**
      * Retrieve gift message save model
      *
+     * @deprecated after 1.4.2.0
      * @return Mage_Adminhtml_Model_Giftmessage_Save
      */
     protected function _getGiftmessageSaveModel()
@@ -196,5 +198,13 @@ class Mage_Adminhtml_Block_Sales_Order_Create_Search_Grid extends Mage_Adminhtml
         return Mage::getSingleton('adminhtml/giftmessage_save');
     }
 
+    /*
+     * Add custom options to product collection
+     *
+     * return Mage_Adminhtml_Block_Widget_Grid
+     */
+    protected function _afterLoadCollection() {
+        $this->getCollection()->addOptionsToResult();
+        return parent::_afterLoadCollection();
+    }
 }
-

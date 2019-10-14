@@ -10,11 +10,17 @@
  * http://opensource.org/licenses/osl-3.0.php
  * If you did not receive a copy of the license and are unable to
  * obtain it through the world-wide-web, please send an email
- * to license@magentocommerce.com so we can send you a copy immediately.
+ * to license@magento.com so we can send you a copy immediately.
  *
- * @category   Varien
- * @package    Varien_Profiler
- * @copyright  Copyright (c) 2004-2007 Irubin Consulting Inc. DBA Varien (http://www.varien.com)
+ * DISCLAIMER
+ *
+ * Do not edit or add to this file if you wish to upgrade Magento to newer
+ * versions in the future. If you wish to customize Magento for your
+ * needs please refer to http://www.magento.com for more information.
+ *
+ * @category    Varien
+ * @package     Varien_Profiler
+ * @copyright  Copyright (c) 2006-2017 X.commerce, Inc. and affiliates (http://www.magento.com)
  * @license    http://opensource.org/licenses/osl-3.0.php  Open Software License (OSL 3.0)
  */
 
@@ -45,11 +51,11 @@ class Varien_Profiler
     public static function reset($timerName)
     {
         self::$_timers[$timerName] = array(
-        	'start'=>false,
-        	'count'=>0,
-        	'sum'=>0,
-        	'realmem'=>0,
-        	'emalloc'=>0,
+            'start'=>false,
+            'count'=>0,
+            'sum'=>0,
+            'realmem'=>0,
+            'emalloc'=>0,
         );
     }
 
@@ -63,8 +69,8 @@ class Varien_Profiler
             self::reset($timerName);
         }
         if (self::$_memory_get_usage) {
-        	self::$_timers[$timerName]['realmem_start'] = memory_get_usage(true);
-        	self::$_timers[$timerName]['emalloc_start'] = memory_get_usage();
+            self::$_timers[$timerName]['realmem_start'] = memory_get_usage(true);
+            self::$_timers[$timerName]['emalloc_start'] = memory_get_usage();
         }
         self::$_timers[$timerName]['start'] = microtime(true);
         self::$_timers[$timerName]['count'] ++;
@@ -81,15 +87,17 @@ class Varien_Profiler
             return;
         }
 
+        $time = microtime(true); // Get current time as quick as possible to make more accurate calculations
+
         if (empty(self::$_timers[$timerName])) {
             self::reset($timerName);
         }
         if (false!==self::$_timers[$timerName]['start']) {
-            self::$_timers[$timerName]['sum'] += microtime(true)-self::$_timers[$timerName]['start'];
+            self::$_timers[$timerName]['sum'] += $time-self::$_timers[$timerName]['start'];
             self::$_timers[$timerName]['start'] = false;
             if (self::$_memory_get_usage) {
-	            self::$_timers[$timerName]['realmem'] += memory_get_usage(true)-self::$_timers[$timerName]['realmem_start'];
-    	        self::$_timers[$timerName]['emalloc'] += memory_get_usage()-self::$_timers[$timerName]['emalloc_start'];
+                self::$_timers[$timerName]['realmem'] += memory_get_usage(true)-self::$_timers[$timerName]['realmem_start'];
+                self::$_timers[$timerName]['emalloc'] += memory_get_usage()-self::$_timers[$timerName]['emalloc_start'];
             }
         }
     }
@@ -119,16 +127,16 @@ class Varien_Profiler
                 return $count;
 
             case 'realmem':
-            	if (!isset(self::$_timers[$timerName]['realmem'])) {
-            		self::$_timers[$timerName]['realmem'] = -1;
-            	}
-            	return self::$_timers[$timerName]['realmem'];
+                if (!isset(self::$_timers[$timerName]['realmem'])) {
+                    self::$_timers[$timerName]['realmem'] = -1;
+                }
+                return self::$_timers[$timerName]['realmem'];
 
             case 'emalloc':
-            	if (!isset(self::$_timers[$timerName]['emalloc'])) {
-            		self::$_timers[$timerName]['emalloc'] = -1;
-            	}
-            	return self::$_timers[$timerName]['emalloc'];
+                if (!isset(self::$_timers[$timerName]['emalloc'])) {
+                    self::$_timers[$timerName]['emalloc'] = -1;
+                }
+                return self::$_timers[$timerName]['emalloc'];
 
             default:
                 if (!empty(self::$_timers[$timerName][$key])) {

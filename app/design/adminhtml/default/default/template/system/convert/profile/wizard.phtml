@@ -4,18 +4,24 @@
  *
  * NOTICE OF LICENSE
  *
- * This source file is subject to the Open Software License (OSL 3.0)
- * that is bundled with this package in the file LICENSE.txt.
+ * This source file is subject to the Academic Free License (AFL 3.0)
+ * that is bundled with this package in the file LICENSE_AFL.txt.
  * It is also available through the world-wide-web at this URL:
- * http://opensource.org/licenses/osl-3.0.php
+ * http://opensource.org/licenses/afl-3.0.php
  * If you did not receive a copy of the license and are unable to
  * obtain it through the world-wide-web, please send an email
- * to license@magentocommerce.com so we can send you a copy immediately.
+ * to license@magento.com so we can send you a copy immediately.
  *
- * @category   design_default
- * @package    Mage
- * @copyright  Copyright (c) 2004-2007 Irubin Consulting Inc. DBA Varien (http://www.varien.com)
- * @license    http://opensource.org/licenses/osl-3.0.php  Open Software License (OSL 3.0)
+ * DISCLAIMER
+ *
+ * Do not edit or add to this file if you wish to upgrade Magento to newer
+ * versions in the future. If you wish to customize Magento for your
+ * needs please refer to http://www.magento.com for more information.
+ *
+ * @category    design
+ * @package     default_default
+ * @copyright   Copyright (c) 2006-2017 X.commerce, Inc. and affiliates (http://www.magento.com)
+ * @license     http://opensource.org/licenses/afl-3.0.php  Academic Free License (AFL 3.0)
  */
 ?>
 <?php
@@ -32,6 +38,8 @@
 ?>
 
 <script type="text/javascript">
+//<![CDATA[
+var profileImportOnly = ['profile_number_of_records', 'profile_decimal_separator'];
 function showOption(select)
 {
     select = $(select);
@@ -46,7 +54,7 @@ function showOption(select)
 function addFieldMapping()
 {
     var entityType = $('profile_entity_type').value;
-    new Insertion.Bottom($('map_container_'+entityType), $('map_template_'+entityType).innerHTML);
+    Element.insert($('map_container_'+entityType), {bottom: $('map_template_'+entityType).innerHTML});
 }
 
 function removeFieldMapping(button)
@@ -85,22 +93,37 @@ function toggleSelectOption(type, source, target, sourceValue, targetValue, targ
         }
         if(!present){
             option = document.createElement("OPTION");
-        	option.text = targetText;
-        	option.value = targetValue;
-        	try {
-        		target.add(option, null); // standards compliant; doesn't work in IE
-        	} catch(ex) {
-        		target.add(option); // IE only
-        	}
+            option.text = targetText;
+            option.value = targetValue;
+            try {
+                target.add(option, null); // standards compliant; doesn't work in IE
+            } catch(ex) {
+                target.add(option); // IE only
+            }
         }
     }
     showOption(target);
 }
 
+function exportUrlField()
+{
+    var urlFieldEl = $('profile_add_url_field').up();
+    var entityType = $('profile_entity_type').value;
+    var direction  = $('profile_direction').value;
+    var storeId    = $('profile_store_id').value;
+
+    if (entityType == 'product' && direction == 'export' && storeId > 0) {
+        urlFieldEl.show();
+    }
+    else {
+        urlFieldEl.hide();
+    }
+}
+
 function changeEntityType()
 {
-    //toggleSelectOption('remove', 'profile_entity_type', 'profile_direction', 'customer', 'import', '<?php echo $this->__('Import') ?>');
-    //toggleSelectOption('remove', 'profile_entity_type', 'profile_store_id', 'customer', '0', '<?php echo $this->__('Default Values') ?>');
+    //toggleSelectOption('remove', 'profile_entity_type', 'profile_direction', 'customer', 'import', '<?php echo Mage::helper('core')->jsQuoteEscape($this->__('Import')) ?>');
+    //toggleSelectOption('remove', 'profile_entity_type', 'profile_store_id', 'customer', '0', '<?php echo Mage::helper('core')->jsQuoteEscape($this->__('Default Values')) ?>');
     //showOption('profile_direction');
     changeDirection();
 }
@@ -108,16 +131,25 @@ function changeEntityType()
 
 function changeDirection()
 {
-    toggleSelectOption('remove', 'profile_direction', 'profile_data_transfer', 'export', 'interactive', '<?php echo $this->__('Interactive') ?>');
+    toggleSelectOption('remove', 'profile_direction', 'profile_data_transfer', 'export', 'interactive', '<?php echo Mage::helper('core')->jsQuoteEscape($this->__('Interactive')) ?>');
     //showOption('profile_data_transfer');
+    if ($('profile_direction').value == 'import') {
+        profileImportOnly.each(function(id){if ($(id))$(id).up(1).show();});
+    }
+    else {
+        profileImportOnly.each(function(id){if ($(id))$(id).up(1).hide();});
+    }
+    exportUrlField();
 }
 
 function updateRun(select)
 {
-    if ($(select).value=='interactive') {
-        $('file_list').show();
-    } else {
-        $('file_list').hide();
+    if ($('file_list') != null){
+        if ($(select).value=='interactive') {
+            $('file_list').show();
+        } else {
+            $('file_list').hide();
+        }
     }
 }
 
@@ -126,6 +158,7 @@ Event.observe(window, 'load', function(){
         updateRun('profile_data_transfer');
     }
 });
+//]]>
 </script>
 
 <div id="profile-generator" class="entry-edit profile-generator">
@@ -154,36 +187,56 @@ Event.observe(window, 'load', function(){
         </span>
         <span class="field-row">
             <label for="profile_store_id"><?php echo $this->__("Store:") ?></label>
-			<span class="with-tip">
-	            <select id="profile_store_id" name="store_id">
-	            <option value="0"><?php echo $this->__('Default (Admin) Values') ?></option>
-	                <?php foreach ($this->getWebsiteCollection() as $_website): ?>
-	                    <?php $_websiteShow=false; ?>
-	                    <?php foreach ($this->getGroupCollection() as $_group): ?>
-	                        <?php if ($_website->getId() != $_group->getWebsiteId()) continue; ?>
-	                        <?php $_groupShow=false; ?>
-	                        <?php foreach ($this->getStoreCollection() as $_store): ?>
-	                            <?php if ($_group->getId() != $_store->getGroupId()) continue; ?>
-	                            <?php if (!$_websiteShow): ?>
-	                                <?php $_websiteShow=true; ?>
-	                                <optgroup label="<?php echo $_website->getName() ?>"></optgroup>
-	                            <?php endif; ?>
-	                            <?php if (!$_groupShow): ?>
-	                                <?php $_groupShow=true; ?>
-	                                <optgroup label="&nbsp;&nbsp;&nbsp;&nbsp;<?php echo $_group->getName() ?>">
-	                            <?php endif; ?>
-	                            <option value="<?php echo $_store->getId() ?>" <?php echo $this->getSelected('store_id', $_store->getId()) ?>>&nbsp;&nbsp;&nbsp;&nbsp;<?php echo $_store->getName() ?></option>
-	                        <?php endforeach; ?>
-	                        <?php if ($_groupShow): ?>
-	                            </optgroup>
-	                        <?php endif; ?>
-	                    <?php endforeach; ?>
-	                <?php endforeach; ?>
-	            </select>
-	            <small class="profile_direction_import profile_entity_type_product">
-	                    <?php echo $this->__("(Products will be added/updated to this store if 'store' column is blank or missing in the import file.)") ?>
-	            </small>
-			</span>
+            <span class="with-tip">
+                <select id="profile_store_id" name="store_id" onchange="exportUrlField();">
+                <option value="0"><?php echo $this->__('Default (Admin) Values') ?></option>
+                    <?php foreach ($this->getWebsiteCollection() as $_website): ?>
+                        <?php $_websiteShow=false; ?>
+                        <?php foreach ($this->getGroupCollection() as $_group): ?>
+                            <?php if ($_website->getId() != $_group->getWebsiteId()) continue; ?>
+                            <?php $_groupShow=false; ?>
+                            <?php foreach ($this->getStoreCollection() as $_store): ?>
+                                <?php if ($_group->getId() != $_store->getGroupId()) continue; ?>
+                                <?php if (!$_websiteShow): ?>
+                                    <?php $_websiteShow=true; ?>
+                                    <optgroup label="<?php echo Mage::helper('core')->quoteEscape($_website->getName()) ?>"></optgroup>
+                                <?php endif; ?>
+                                <?php if (!$_groupShow): ?>
+                                    <?php $_groupShow=true; ?>
+                                    <optgroup label="&nbsp;&nbsp;&nbsp;&nbsp;<?php echo $_group->getName() ?>">
+                                <?php endif; ?>
+                                <option value="<?php echo $_store->getId() ?>" <?php echo $this->getSelected('store_id', $_store->getId()) ?>>&nbsp;&nbsp;&nbsp;&nbsp;<?php echo $_store->getName() ?></option>
+                            <?php endforeach; ?>
+                            <?php if ($_groupShow): ?>
+                                </optgroup>
+                            <?php endif; ?>
+                        <?php endforeach; ?>
+                    <?php endforeach; ?>
+                </select>
+                <small class="profile_direction_import profile_entity_type_product">
+                        <?php echo $this->__("(Products will be added/updated to this store if 'store' column is blank or missing in the import file.)") ?>
+                </small>
+            </span>
+        </span>
+        <span class="field-row">
+            <label for="profile_add_url_field"><?php echo $this->__("Add Field with URL:") ?></label>
+            <select id="profile_add_url_field" name="gui_data[export][add_url_field]" class="option-control">
+                <option value="0"<?php echo $this->getSelected('gui_data/export/add_url_field', 0) ?>><?php echo $this->__("No") ?></option>
+                <option value="1"<?php echo $this->getSelected('gui_data/export/add_url_field', 1) ?>><?php echo $this->__("Yes") ?></option>
+            </select>
+        </span>
+        <span class="field-row">
+            <label for="profile_number_of_records"><?php echo $this->__("Number of records:") ?></label>
+            <span class="with-tip">
+                <input class="required-entry validate-number input-text" id="profile_number_of_records" name="gui_data[import][number_of_records]" value="<?php echo (($numbers = $this->getValue('gui_data/import/number_of_records')) ? $numbers : 1) ?>"/>
+                <small><?php echo $this->__("(You have to increase php memory_limit before changing this value)") ?></small>
+            </span>
+        </span>
+        <span class="field-row">
+            <label for="profile_decimal_separator"><?php echo $this->__("Decimal separator:") ?></label>
+            <span class="with-tip">
+                <input class="required-entry input-text" id="profile_decimal_separator" name="gui_data[import][decimal_separator]" value="<?php echo (($separator = $this->getValue('gui_data/import/decimal_separator')) ? $separator : '.') ?>"/>
+            </span>
         </span>
     </fieldset>
 
@@ -222,12 +275,12 @@ Event.observe(window, 'load', function(){
             </span>
             <span class="field-row">
                 <label for="file_path"><?php echo $this->__("Path:") ?></label>
-				<span class="with-tip">
-	                <input class="input-text" id="file_path" name="gui_data[file][path]" value="<?php echo $this->getValue('gui_data/file/path') ?>"/>
-	                <small class="file_type_file">
-	                    <?php echo $this->__('(Absolute path or Relative to Magento install root, ex. var/export)') ?>
-	                </small>
-				</span>
+                <span class="with-tip">
+                    <input class="input-text" id="file_path" name="gui_data[file][path]" value="<?php echo $this->getValue('gui_data/file/path') ?>"/>
+                    <small class="file_type_file">
+                        <?php echo $this->__('(For Type "Local Server" need to use relative path to Magento install var/export or var/import, e.g. var/export, var/import, var/export/some/dir, var/import/some/dir)') ?>
+                    </small>
+                </span>
             </span>
             <div class="file_type_ftp">
                 <span class="field-row">
@@ -240,7 +293,14 @@ Event.observe(window, 'load', function(){
                 </span>
                 <span class="field-row">
                     <label for="file_password"><?php echo $this->__("Password") ?></label>
-                    <input class="input-text" id="io_password" name="gui_data[file][password]" value="<?php echo $this->getValue('gui_data/file/password') ?>"/>
+                    <input class="input-text" type="password" id="io_password" name="gui_data[file][password]" value="<?php echo $this->getValue('gui_data/file/password') ?>"/>
+                </span>
+                <span class="field-row">
+                    <label for="file_mode"><?php echo $this->__("File mode") ?></label>
+                    <select id="file_mode" name="gui_data[file][file_mode]" onchange="showOption(this)" class="option-control">
+                        <option value="<?php echo FTP_BINARY ?>" <?php echo $this->getSelected('gui_data/file/file_mode', FTP_BINARY) ?>><?php echo $this->__('BINARY') ?></option>
+                        <option value="<?php echo FTP_ASCII ?>" <?php echo $this->getSelected('gui_data/file/file_mode', FTP_ASCII) ?>><?php echo $this->__('ASCII') ?></option>
+                    </select>
                 </span>
                 <span class="field-row">
                     <label for="file_passive"><?php echo $this->__("Passive mode") ?></label>
@@ -268,36 +328,37 @@ Event.observe(window, 'load', function(){
         <div class="parse_type_excel_xml">
             <span class="field-row">
                 <label for="parse_single_sheet"><?php echo $this->__("Spreadsheet Name:") ?></label>
-				<span class="with-tip">
-					<input class="input-text" id="parse_single_sheet" name="gui_data[parse][single_sheet]" value="<?php echo $this->getValue('gui_data/parse/single_sheet') ?>"/>
-					<small><?php echo $this->__("(Leave empty for first spreadsheet)") ?></small>
-				</span>
+                <span class="with-tip">
+                    <input class="input-text" id="parse_single_sheet" name="gui_data[parse][single_sheet]" value="<?php echo $this->getValue('gui_data/parse/single_sheet') ?>"/>
+                    <small><?php echo $this->__("(Leave empty for first spreadsheet)") ?></small>
+                </span>
             </span>
         </div>
         <div class="parse_type_csv">
             <span class="field-row">
                 <label for="parse_delimiter"><?php echo $this->__("Value Delimiter:") ?></label>
                 <input class="input-text" style="width:3em" id="parse_delimiter" name="gui_data[parse][delimiter]" value="<?php echo $this->getValue('gui_data/parse/delimiter', ',') ?>"/>
-				<?php echo $this->__("(\\t for tab)") ?>
+                <small><?php echo $this->__("(\\t for tab)") ?></small>
             </span>
             <span class="field-row">
                 <label for="parse_enclose"><?php echo $this->__("Enclose Values In:") ?></label>
-                <input class="input-text" style="width:3em" id="parse_enclose" name="gui_data[parse][enclose]" value="<?php echo $this->getValue('gui_data/parse/enclose', '"') ?>"/>
+                <input class="input-text" style="width:3em" id="parse_enclose" name="gui_data[parse][enclose]" value="<?php echo $this->getValue('gui_data/parse/enclose', '', '"') ?>"/>
+                <small><?php echo $this->__("Warning! Empty value can cause problems with CSV format.") ?></small>
             </span>
         </div>
         <span class="field-row">
             <label for="parse_fieldnames"><?php echo $this->__("Original Magento attribute names in first row:") ?></label>
-			<span class="with-tip">
-	            <select id="parse_fieldnames" name="gui_data[parse][fieldnames]" onchange="showFeildMapping();showOption(this)" class="option-control">
-	                <option value="" <?php echo $this->getSelected('gui_data/parse/fieldnames', false) ?>><?php echo $this->__("No") ?></option>
-	                <option value="true" <?php echo $this->getSelected('gui_data/parse/fieldnames', true) ?>><?php echo $this->__("Yes") ?></option>
-	            </select>
-				<small class="profile_direction_import">
-					<span class="parse_fieldnames_">
-						<?php echo $this->__("(When 'No', only mapped fields will be imported. When mapping, use 'column1', 'column2', etc.)") ?>
-					</span>
-				</small>
-			</span>
+            <span class="with-tip">
+                <select id="parse_fieldnames" name="gui_data[parse][fieldnames]" onchange="showFeildMapping();showOption(this)" class="option-control">
+                    <option value="" <?php echo $this->getSelected('gui_data/parse/fieldnames', false) ?>><?php echo $this->__("No") ?></option>
+                    <option value="true" <?php echo $this->getSelected('gui_data/parse/fieldnames', true) ?>><?php echo $this->__("Yes") ?></option>
+                </select>
+                <small class="profile_direction_import">
+                    <span class="parse_fieldnames_">
+                        <?php echo $this->__("(When 'No', only mapped fields will be imported. When mapping, use 'column1', 'column2', etc.)") ?>
+                    </span>
+                </small>
+            </span>
         </span>
         <div class="profile_direction_export">
             <span class="field-row">
@@ -321,7 +382,10 @@ Event.observe(window, 'load', function(){
                 <div id="map_template_<?php echo $_entityType ?>" style="display:none">
                     <span class="field-row">
                         <?php echo $this->__("In Database:") ?> <select name="gui_data[map][<?php echo $_entityType ?>][db][]" onchange="setMapFileField(this)">
-                            <?php foreach ($this->getAttributes($_entityType) as $_value=>$_label): ?>
+                            <?php
+                                $fieldMappingInDatabase = $this->getAttributes($_entityType);
+                                asort($fieldMappingInDatabase);
+                                foreach ($fieldMappingInDatabase as $_value=>$_label): ?>
                                 <option value="<?php echo $_value ?>"><?php echo $_label ?></option>
                             <?php endforeach ?>
                         </select>
@@ -464,10 +528,10 @@ Event.observe(window, 'load', function(){
                 <span class="field-row">
                     <label for="customer_filter_created_at_from"><?php echo $this->__("Customer Since:") ?></label>
                     <input class="input-text" style="width:5em" id="customer_filter_created_at_from" name="gui_data[customer][filter][created_at][from]" value="<?php echo $this->getValue('gui_data/customer/filter/created_at/from') ?>"/>
-                    <img src="<?php echo $this->getSkinUrl('images/grid-cal.gif') ?>" alt="" class="v-middle" id="customer_filter_created_at_from_trig" title="<?php echo $this->__('Date selector') ?>" />
+                    <img src="<?php echo $this->getSkinUrl('images/grid-cal.gif') ?>" alt="" class="v-middle" id="customer_filter_created_at_from_trig" title="<?php echo Mage::helper('core')->quoteEscape($this->__('Date selector')) ?>" />
                      <?php echo $this->__('to') ?>
                     <input class="input-text" style="width:5em" id="customer_filter_created_at_to" name="gui_data[customer][filter][created_at][to]" value="<?php echo $this->getValue('gui_data/customer/filter/created_at/to') ?>"/>
-                    <img src="<?php echo $this->getSkinUrl('images/grid-cal.gif') ?>" alt="" class="v-middle" id="customer_filter_created_at_to_trig" title="<?php echo $this->__('Date selector') ?>" />
+                    <img src="<?php echo $this->getSkinUrl('images/grid-cal.gif') ?>" alt="" class="v-middle" id="customer_filter_created_at_to_trig" title="<?php echo Mage::helper('core')->quoteEscape($this->__('Date selector')) ?>" />
 <script type="text/javascript">
     Calendar.setup({
         inputField : "customer_filter_created_at_from",
@@ -492,28 +556,29 @@ Event.observe(window, 'load', function(){
 </div>
 
 <script type="text/javascript">
+//<![CDATA[
     $$('.option-control').each(showOption);
     changeEntityType();
 
     function showFeildMapping() {
-    	var direction = $('profile_direction').options[$('profile_direction').options.selectedIndex].value;
+        var direction = $('profile_direction').options[$('profile_direction').options.selectedIndex].value;
         var value = $('parse_fieldnames').options[$('parse_fieldnames').options.selectedIndex].value;
         var map = $('map_only_specified').options[$('map_only_specified').options.selectedIndex].value;
 
         if (direction == 'export') {
-	    	if (map) {
-	    		Element.show($('__fieldmapping'));
-	    	} else {
-	    		deleteAllAddedMappingFields();
-	    		Element.hide($('__fieldmapping'));
-	    	}
+            if (map) {
+                Element.show($('__fieldmapping'));
+            } else {
+                deleteAllAddedMappingFields();
+                Element.hide($('__fieldmapping'));
+            }
         } else {
-	        if (value) {
-	            Element.hide($('__fieldmapping'));
-	            deleteAllAddedMappingFields();
-	        } else {
-	            Element.show($('__fieldmapping'));
-	        }
+            if (value) {
+                Element.hide($('__fieldmapping'));
+                deleteAllAddedMappingFields();
+            } else {
+                Element.show($('__fieldmapping'));
+            }
         }
 
     }
@@ -529,22 +594,22 @@ Event.observe(window, 'load', function(){
             }
         }
     }
-	var direction = $('profile_direction').options[$('profile_direction').options.selectedIndex].value;
+    var direction = $('profile_direction').options[$('profile_direction').options.selectedIndex].value;
     if (direction == 'import') {
-	    if ($('parse_fieldnames').options[$('parse_fieldnames').options.selectedIndex].value) {
-	        Element.hide($('__fieldmapping'));
-	        deleteAllAddedMappingFields();
-	    } else {
-	        Element.show($('__fieldmapping'));
-	    }
+        if ($('parse_fieldnames').options[$('parse_fieldnames').options.selectedIndex].value) {
+            Element.hide($('__fieldmapping'));
+            deleteAllAddedMappingFields();
+        } else {
+            Element.show($('__fieldmapping'));
+        }
     } else {
-    	var map = $('map_only_specified').options[$('map_only_specified').options.selectedIndex].value;
-    	if (map) {
-    		Element.show($('__fieldmapping'));
-    	} else {
-    		deleteAllAddedMappingFields();
-    		Element.hide($('__fieldmapping'));
-    	}
+        var map = $('map_only_specified').options[$('map_only_specified').options.selectedIndex].value;
+        if (map) {
+            Element.show($('__fieldmapping'));
+        } else {
+            deleteAllAddedMappingFields();
+            Element.hide($('__fieldmapping'));
+        }
     }
-
+//]]>
 </script>

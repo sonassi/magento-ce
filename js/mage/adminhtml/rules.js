@@ -3,79 +3,135 @@
  *
  * NOTICE OF LICENSE
  *
- * This source file is subject to the Open Software License (OSL 3.0)
- * that is bundled with this package in the file LICENSE.txt.
+ * This source file is subject to the Academic Free License (AFL 3.0)
+ * that is bundled with this package in the file LICENSE_AFL.txt.
  * It is also available through the world-wide-web at this URL:
- * http://opensource.org/licenses/osl-3.0.php
+ * http://opensource.org/licenses/afl-3.0.php
  * If you did not receive a copy of the license and are unable to
  * obtain it through the world-wide-web, please send an email
- * to license@magentocommerce.com so we can send you a copy immediately.
+ * to license@magento.com so we can send you a copy immediately.
  *
- * @copyright  Copyright (c) 2004-2007 Irubin Consulting Inc. DBA Varien (http://www.varien.com)
- * @license    http://opensource.org/licenses/osl-3.0.php  Open Software License (OSL 3.0)
+ * DISCLAIMER
+ *
+ * Do not edit or add to this file if you wish to upgrade Magento to newer
+ * versions in the future. If you wish to customize Magento for your
+ * needs please refer to http://www.magento.com for more information.
+ *
+ * @category    Mage
+ * @package     Mage_Adminhtml
+ * @copyright   Copyright (c) 2006-2017 X.commerce, Inc. and affiliates (http://www.magento.com)
+ * @license     http://opensource.org/licenses/afl-3.0.php  Academic Free License (AFL 3.0)
  */
 
 var VarienRulesForm = new Class.create();
 VarienRulesForm.prototype = {
     initialize : function(parent, newChildUrl){
+        this.parent = $(parent);
         this.newChildUrl  = newChildUrl;
         this.shownElement = null;
         this.updateElement = null;
         this.chooserSelectedItems = $H({});
+        this.readOnly = false;
 
-        var elems = $(parent).getElementsByClassName('rule-param');
-
-    	for (var i=0; i<elems.length; i++) {
+        var elems = this.parent.getElementsByClassName('rule-param');
+        for (var i=0; i<elems.length; i++) {
             this.initParam(elems[i]);
         }
     },
 
-    initParam: function (container) {
-    	container.rulesObject = this;
-
-        var label = Element.down(container, '.label');
-        if (label) {
-		    Event.observe(label, 'click', this.showParamInputField.bind(this, container));
+    setReadonly: function (readonly){
+        this.readOnly = readonly;
+        var elems = this.parent.getElementsByClassName('rule-param-remove');
+        for (var i=0; i<elems.length; i++) {
+            var element = elems[i];
+                if (this.readOnly) {
+                    element.hide();
+                } else {
+                    element.show();
+                }
         }
 
-		var elem = Element.down(container, '.element');
-		if (elem) {
-		    var trig = elem.down('.rule-chooser-trigger');
-		    if (trig) {
+        var elems = this.parent.getElementsByClassName('rule-param-new-child');
+        for (var i=0; i<elems.length; i++) {
+            var element = elems[i];
+            if (this.readOnly) {
+                element.hide();
+            } else {
+                element.show();
+            }
+        }
+
+        var elems = this.parent.getElementsByClassName('rule-param');
+        for (var i=0; i<elems.length; i++) {
+            var container = elems[i];
+            var label = Element.down(container, '.label');
+            if (label) {
+                if (this.readOnly) {
+                    label.addClassName('label-disabled');
+                } else {
+                    label.removeClassName('label-disabled');
+                }
+            }
+        }
+    },
+
+    initParam: function (container) {
+        container.rulesObject = this;
+        var label = Element.down(container, '.label');
+        if (label) {
+            Event.observe(label, 'click', this.showParamInputField.bind(this, container));
+        }
+
+        var elem = Element.down(container, '.element');
+        if (elem) {
+            var trig = elem.down('.rule-chooser-trigger');
+            if (trig) {
                 Event.observe(trig, 'click', this.toggleChooser.bind(this, container));
-		    }
+            }
 
-		    var apply = elem.down('.rule-param-apply');
-		    if (apply) {
-		        Event.observe(apply, 'click', this.hideParamInputField.bind(this, container));
-		    } else {
-    		    elem = elem.down();
-    		    Event.observe(elem, 'change', this.hideParamInputField.bind(this, container));
-    		    Event.observe(elem, 'blur', this.hideParamInputField.bind(this, container));
-		    }
-		}
+            var apply = elem.down('.rule-param-apply');
+            if (apply) {
+                Event.observe(apply, 'click', this.hideParamInputField.bind(this, container));
+            } else {
+                elem = elem.down('.element-value-changer');
+                elem.container = container;
+                if (!elem.multiple) {
+                    Event.observe(elem, 'change', this.hideParamInputField.bind(this, container));
+                }
+                Event.observe(elem, 'blur', this.hideParamInputField.bind(this, container));
+            }
+        }
 
-		var remove = Element.down(container, '.rule-param-remove');
-		if (remove) {
-		    Event.observe(remove, 'click', this.removeRuleEntry.bind(this, container));
-		}
+        var remove = Element.down(container, '.rule-param-remove');
+        if (remove) {
+            Event.observe(remove, 'click', this.removeRuleEntry.bind(this, container));
+        }
     },
 
     showChooserElement: function (chooser) {
-	    this.chooserSelectedItems = $H({});
-	    var values = this.updateElement.value.split(','), s='';
-	    for (i=0; i<values.length; i++) {
-	        s = values[i].strip();
-	        if (s!='') {
-	           this.chooserSelectedItems[s] = 1;
-	        }
-	    }
-	    new Ajax.Updater(chooser, chooser.getAttribute('url'), {
+        this.chooserSelectedItems = $H({});
+        if (chooser.hasClassName('no-split')) {
+            this.chooserSelectedItems.set(this.updateElement.value, 1);
+        } else {
+            var values = this.updateElement.value.split(','), s = '';
+            for (i=0; i<values.length; i++) {
+                s = values[i].strip();
+                if (s!='') {
+                   this.chooserSelectedItems.set(s,1);
+                }
+            }
+        }
+        new Ajax.Request(chooser.getAttribute('url'), {
             evalScripts: true,
-            parameters: { 'selected[]':this.chooserSelectedItems.keys() },
-            onSuccess: this._processSuccess.bind(this) && this.showChooserLoaded.bind(this, chooser),
+            parameters: {'form_key': FORM_KEY, 'selected[]':this.chooserSelectedItems.keys() },
+            onSuccess: function(transport) {
+                if (this._processSuccess(transport)) {
+                    $(chooser).update(transport.responseText);
+                    this.showChooserLoaded(chooser, transport);
+                }
+            }.bind(this),
             onFailure: this._processFailure.bind(this)
-	    });
+        });
     },
 
     showChooserLoaded: function(chooser, transport) {
@@ -83,155 +139,188 @@ VarienRulesForm.prototype = {
     },
 
     showChooser: function (container, event) {
-    	var chooser = container.up('li').down('.rule-chooser');
-    	if (!chooser) {
-    	    return;
-    	}
-
+        var chooser = container.up('li');
+        if (!chooser) {
+            return;
+        }
+        chooser = chooser.down('.rule-chooser');
+        if (!chooser) {
+            return;
+        }
         this.showChooserElement(chooser);
     },
 
     hideChooser: function (container, event) {
-    	var chooser = container.up('li').down('.rule-chooser');
-    	if (!chooser) {
-    	    return;
-    	}
+        var chooser = container.up('li');
+        if (!chooser) {
+            return;
+        }
+        chooser = chooser.down('.rule-chooser');
+        if (!chooser) {
+            return;
+        }
         chooser.style.display = 'none';
     },
 
     toggleChooser: function (container, event) {
-    	var chooser = container.up('li').down('.rule-chooser');
-    	if (!chooser) {
-    	    return;
-    	}
-    	if (chooser.style.display=='block') {
-    	    chooser.style.display = 'none';
-    	    this.cleanChooser(container, event);
-    	} else {
-    	    this.showChooserElement(chooser);
-    	}
+        if (this.readOnly) {
+            return false;
+        }
+
+        var chooser = container.up('li').down('.rule-chooser');
+        if (!chooser) {
+            return;
+        }
+        if (chooser.style.display=='block') {
+            chooser.style.display = 'none';
+            this.cleanChooser(container, event);
+        } else {
+            this.showChooserElement(chooser);
+        }
     },
 
     cleanChooser: function (container, event) {
-    	var chooser = container.up('li').down('.rule-chooser');
-    	if (!chooser) {
-    	    return;
-    	}
-    	chooser.innerHTML = '';
+        var chooser = container.up('li').down('.rule-chooser');
+        if (!chooser) {
+            return;
+        }
+        chooser.innerHTML = '';
     },
 
     showParamInputField: function (container, event) {
+        if (this.readOnly) {
+            return false;
+        }
+
         if (this.shownElement) {
             this.hideParamInputField(this.shownElement, event);
         }
 
-    	Element.addClassName(container, 'rule-param-edit');
-    	var elemContainer = Element.down(container, '.element');
+        Element.addClassName(container, 'rule-param-edit');
+        var elemContainer = Element.down(container, '.element');
 
-    	var elem = Element.down(elemContainer, 'input.input-text');
-    	if (elem) {
-    	    elem.focus();
-        	if (elem && elem.id && elem.id.match(/:value$/)) {
-        	    this.updateElement = elem;
+        var elem = Element.down(elemContainer, 'input.input-text');
+        if (elem) {
+            elem.focus();
+            if (elem && elem.id && elem.id.match(/__value$/)) {
+                this.updateElement = elem;
                 //this.showChooser(container, event);
-        	}
+            }
 
-    	}
+        }
 
-    	var elem = Element.down(elemContainer, 'select');
-    	if (elem) {
-    	   elem.focus();
-    	   // trying to emulate enter to open dropdown
-//    	   if (document.createEventObject) {
-//        	   var event = document.createEventObject();
-//        	   event.altKey = true;
-//    	       event.keyCode = 40;
-//    	       elem.fireEvent("onkeydown", evt);
-//    	   } else {
-//    	       var event = document.createEvent("Events");
-//    	       event.altKey = true;
-//    	       event.keyCode = 40;
-//    	       elem.dispatchEvent(event);
-//    	   }
-    	}
+        var elem = Element.down(elemContainer, '.element-value-changer');
+        if (elem) {
+           elem.focus();
+           // trying to emulate enter to open dropdown
+//         if (document.createEventObject) {
+//             var event = document.createEventObject();
+//             event.altKey = true;
+//             event.keyCode = 40;
+//             elem.fireEvent("onkeydown", evt);
+//         } else {
+//             var event = document.createEvent("Events");
+//             event.altKey = true;
+//             event.keyCode = 40;
+//             elem.dispatchEvent(event);
+//         }
+        }
 
-    	this.shownElement = container;
+        this.shownElement = container;
     },
 
     hideParamInputField: function (container, event) {
-    	Element.removeClassName(container, 'rule-param-edit');
-    	var label = Element.down(container, '.label'), elem;
+        Element.removeClassName(container, 'rule-param-edit');
+        var label = Element.down(container, '.label'), elem;
 
-    	if (!container.hasClassName('rule-param-new-child')) {
-        	elem = Element.down(container, 'select');
-        	if (elem && elem.selectedIndex>=0) {
-        	    var str = elem.options[elem.selectedIndex].text;
-        		label.innerHTML = str!='' ? str : '...';
-        	}
+        if (!container.hasClassName('rule-param-new-child')) {
+            elem = Element.down(container, '.element-value-changer');
+            if (elem && elem.options) {
+                var selectedOptions = [];
+                for (i=0; i<elem.options.length; i++) {
+                    if (elem.options[i].selected) {
+                        selectedOptions.push(elem.options[i].text);
+                    }
+                }
 
-        	elem = Element.down(container, 'input.input-text');
-        	if (elem) {
-        	    var str = elem.value.replace(/(^\s+|\s+$)/g, '');
-        	    elem.value = str;
-        	    if (str=='') {
-        	        str = '...';
-        	    } else if (str.length>30) {
-        	        str = str.substr(0, 30)+'...';
-        	    }
-        		label.innerHTML = str;
-        	}
-    	} else {
-    	    elem = Element.down(container, 'select');
+                var str = selectedOptions.join(', ');
+                label.innerHTML = str!='' ? str : '...';
+//              if (elem && elem.selectedIndex>=0) {
+//                  var str = elem.options[elem.selectedIndex].text;
+//                  label.innerHTML = str!='' ? str : '...';
+//              }
+            }
 
-    	    if (elem.value) {
-    	        this.addRuleNewChild(elem);
-    	    }
+            elem = Element.down(container, 'input.input-text');
+            if (elem) {
+                var str = elem.value.replace(/(^\s+|\s+$)/g, '');
+                elem.value = str;
+                if (str=='') {
+                    str = '...';
+                } else if (str.length>30) {
+                    str = str.substr(0, 30)+'...';
+                }
+                label.innerHTML = str.escapeHTML();
+            }
+        } else {
+            elem = Element.down(container, '.element-value-changer');
+            if (elem.value) {
+                this.addRuleNewChild(elem);
+            }
+            elem.value = '';
+        }
 
-        	elem.value = '';
-    	}
-
-    	if (elem && elem.id && elem.id.match(/:value$/)) {
+        if (elem && elem.id && elem.id.match(/__value$/)) {
             this.hideChooser(container, event);
             this.updateElement = null;
-    	}
+        }
 
-    	this.shownElement = null;
+        this.shownElement = null;
     },
 
     addRuleNewChild: function (elem) {
-        var parent_id = elem.id.replace(/^.*:(.*):.*$/, '$1');
-        var children_ul = $(elem.id.replace(/[^:]*$/, 'children'));
+        var parent_id = elem.id.replace(/^.*__(.*)__.*$/, '$1');
+        var children_ul = $(elem.id.replace(/__/g, ':').replace(/[^:]*$/, 'children').replace(/:/g, '__'));
         var max_id = 0, i;
-        var children_inputs = Selector.findChildElements(children_ul, $A(['input[type=hidden]']));
+        var children_inputs = Selector.findChildElements(children_ul, $A(['input.hidden']));
         if (children_inputs.length) {
             children_inputs.each(function(el){
-                if (el.id.match(/:type$/)) {
-                    i = 1*el.id.replace(/^.*:.*([0-9]+):.*$/, '$1');
+                if (el.id.match(/__type$/)) {
+                    i = 1 * el.id.replace(/^.*__.*?([0-9]+)__.*$/, '$1');
                     max_id = i > max_id ? i : max_id;
                 }
             });
         }
-        var new_id = parent_id+'.'+(max_id+1);
+        var new_id = parent_id + '--' + (max_id + 1);
         var new_type = elem.value;
         var new_elem = document.createElement('LI');
         new_elem.className = 'rule-param-wait';
         new_elem.innerHTML = Translator.translate('Please wait, loading...');
         children_ul.insertBefore(new_elem, $(elem).up('li'));
 
-        new Ajax.Updater(new_elem, this.newChildUrl, {
+        new Ajax.Request(this.newChildUrl, {
             evalScripts: true,
-            parameters: { type:new_type.replace('/','-'), id:new_id },
+            parameters: {form_key: FORM_KEY, type:new_type.replace('/','-'), id:new_id },
             onComplete: this.onAddNewChildComplete.bind(this, new_elem),
-            onSuccess: this._processSuccess.bind(this),
+            onSuccess: function(transport) {
+                if(this._processSuccess(transport)) {
+                    $(new_elem).update(transport.responseText);
+                }
+            }.bind(this),
             onFailure: this._processFailure.bind(this)
         });
     },
 
     _processSuccess : function(transport) {
-        var response = transport.responseText.evalJSON();
-        if (response.ajaxExpired && response.ajaxRedirect) {
-            alert(Translator.translate('Your session has been expired, you will be relogged in now.'));
-            location.href = response.ajaxRedirect;
+        if (transport.responseText.isJSON()) {
+            var response = transport.responseText.evalJSON();
+            if (response.error) {
+                alert(response.message);
+            }
+            if(response.ajaxExpired && response.ajaxRedirect) {
+                setLocation(response.ajaxRedirect);
+            }
+            return false;
         }
         return true;
     },
@@ -241,6 +330,10 @@ VarienRulesForm.prototype = {
     },
 
     onAddNewChildComplete: function (new_elem) {
+        if (this.readOnly) {
+            return false;
+        }
+
         $(new_elem).removeClassName('rule-param-wait');
         var elems = new_elem.getElementsByClassName('rule-param');
         for (var i=0; i<elems.length; i++) {
@@ -267,7 +360,7 @@ VarienRulesForm.prototype = {
         var trElement = Event.findElement(event, 'tr');
         var isInput = Event.element(event).tagName == 'INPUT';
         if (trElement) {
-            var checkbox = Element.getElementsBySelector(trElement, 'input');
+            var checkbox = Element.select(trElement, 'input');
             if (checkbox[0]) {
                 var checked = isInput ? checkbox[0].checked : !checkbox[0].checked;
                 grid.setCheckboxChecked(checkbox[0], checked);
@@ -279,12 +372,12 @@ VarienRulesForm.prototype = {
     chooserGridCheckboxCheck: function (grid, element, checked) {
         if (checked) {
             if (!element.up('th')) {
-                this.chooserSelectedItems[element.value]=1;
+                this.chooserSelectedItems.set(element.value,1);
             }
         } else {
-            this.chooserSelectedItems.remove(element.value);
+            this.chooserSelectedItems.unset(element.value);
         }
         grid.reloadParams = {'selected[]':this.chooserSelectedItems.keys()};
         this.updateElement.value = this.chooserSelectedItems.keys().join(', ');
     }
-}
+};

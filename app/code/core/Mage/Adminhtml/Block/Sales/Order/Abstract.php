@@ -10,11 +10,17 @@
  * http://opensource.org/licenses/osl-3.0.php
  * If you did not receive a copy of the license and are unable to
  * obtain it through the world-wide-web, please send an email
- * to license@magentocommerce.com so we can send you a copy immediately.
+ * to license@magento.com so we can send you a copy immediately.
  *
- * @category   Mage
- * @package    Mage_Adminhtml
- * @copyright  Copyright (c) 2004-2007 Irubin Consulting Inc. DBA Varien (http://www.varien.com)
+ * DISCLAIMER
+ *
+ * Do not edit or add to this file if you wish to upgrade Magento to newer
+ * versions in the future. If you wish to customize Magento for your
+ * needs please refer to http://www.magento.com for more information.
+ *
+ * @category    Mage
+ * @package     Mage_Adminhtml
+ * @copyright  Copyright (c) 2006-2017 X.commerce, Inc. and affiliates (http://www.magento.com)
  * @license    http://opensource.org/licenses/osl-3.0.php  Open Software License (OSL 3.0)
  */
 
@@ -23,6 +29,7 @@
  *
  * @category   Mage
  * @package    Mage_Adminhtml
+ * @author      Magento Core Team <core@magentocommerce.com>
  */
 class Mage_Adminhtml_Block_Sales_Order_Abstract extends Mage_Adminhtml_Block_Widget
 {
@@ -42,7 +49,7 @@ class Mage_Adminhtml_Block_Sales_Order_Abstract extends Mage_Adminhtml_Block_Wid
         if (Mage::registry('order')) {
             return Mage::registry('order');
         }
-        Mage::throwException(Mage::helper('sales')->__('Can\'t get order instance'));
+        Mage::throwException(Mage::helper('sales')->__('Cannot get order instance'));
     }
 
     public function getPriceDataObject()
@@ -56,28 +63,50 @@ class Mage_Adminhtml_Block_Sales_Order_Abstract extends Mage_Adminhtml_Block_Wid
 
     public function displayPriceAttribute($code, $strong = false, $separator = '<br/>')
     {
-        return $this->displayPrices(
-            $this->getPriceDataObject()->getData('base_'.$code),
-            $this->getPriceDataObject()->getData($code),
-            $strong,
-            $separator
-        );
+        return $this->helper('adminhtml/sales')->displayPriceAttribute($this->getPriceDataObject(), $code, $strong, $separator);
     }
 
     public function displayPrices($basePrice, $price, $strong = false, $separator = '<br/>')
     {
-        if ($this->getOrder()->isCurrencyDifferent()) {
-            $res = '<strong>';
-            $res.= $this->getOrder()->formatBasePrice($basePrice);
-            $res.= '</strong>'.$separator;
-            $res.= '['.$this->getOrder()->formatPrice($price).']';
+        return $this->helper('adminhtml/sales')->displayPrices($this->getPriceDataObject(), $basePrice, $price, $strong, $separator);
+    }
+
+    /**
+     * Retrieve order totals block settings
+     *
+     * @return array
+     */
+    public function getOrderTotalData()
+    {
+        return array();
+    }
+
+    /**
+     * Retrieve order info block settings
+     *
+     * @return array
+     */
+    public function getOrderInfoData()
+    {
+        return array();
+    }
+
+
+    /**
+     * Retrieve subtotal price include tax html formated content
+     *
+     * @param Varien_Object $item
+     * @return string
+     */
+    public function displayShippingPriceInclTax($order)
+    {
+        $shipping = $order->getShippingInclTax();
+        if ($shipping) {
+            $baseShipping = $order->getBaseShippingInclTax();
+        } else {
+            $shipping       = $order->getShippingAmount()+$order->getShippingTaxAmount();
+            $baseShipping   = $order->getBaseShippingAmount()+$order->getBaseShippingTaxAmount();
         }
-        else {
-            $res = $this->getOrder()->formatPrice($price);
-            if ($strong) {
-                $res = '<strong>'.$res.'</strong>';
-            }
-        }
-        return $res;
+        return $this->displayPrices($baseShipping, $shipping, false, ' ');
     }
 }

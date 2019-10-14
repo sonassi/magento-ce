@@ -10,11 +10,17 @@
  * http://opensource.org/licenses/osl-3.0.php
  * If you did not receive a copy of the license and are unable to
  * obtain it through the world-wide-web, please send an email
- * to license@magentocommerce.com so we can send you a copy immediately.
+ * to license@magento.com so we can send you a copy immediately.
  *
- * @category   Mage
- * @package    Mage_Catalog
- * @copyright  Copyright (c) 2004-2007 Irubin Consulting Inc. DBA Varien (http://www.varien.com)
+ * DISCLAIMER
+ *
+ * Do not edit or add to this file if you wish to upgrade Magento to newer
+ * versions in the future. If you wish to customize Magento for your
+ * needs please refer to http://www.magento.com for more information.
+ *
+ * @category    Mage
+ * @package     Mage_Catalog
+ * @copyright  Copyright (c) 2006-2017 X.commerce, Inc. and affiliates (http://www.magento.com)
  * @license    http://opensource.org/licenses/osl-3.0.php  Open Software License (OSL 3.0)
  */
 
@@ -30,7 +36,7 @@ CREATE TABLE {$this->getTable('catalog_product_website')} (
   CONSTRAINT `FK_CATALOG_PRODUCT_WEBSITE_WEBSITE` FOREIGN KEY `FK_CATALOG_PRODUCT_WEBSITE_WEBSITE` (`website_id`)
     REFERENCES `{$this->getTable('core_website')}` (`website_id`) ON DELETE CASCADE ON UPDATE CASCADE,
   CONSTRAINT `FK_CATALOG_WEBSITE_PRODUCT_PRODUCT` FOREIGN KEY `FK_CATALOG_WEBSITE_PRODUCT_PRODUCT` (`product_id`)
-    REFERENCES `{$this->getTable('catalog_product_entity')}` (`entity_id`) ON DELETE CASCADE
+    REFERENCES `{$this->getTable('catalog/product')}` (`entity_id`) ON DELETE CASCADE
 );
 
 DROP TABLE IF EXISTS {$this->getTable('catalog_product_status')};
@@ -43,24 +49,28 @@ $installer->getConnection()->dropColumn($productTable, 'parent_id');
 $installer->getConnection()->dropColumn($productTable, 'store_id');
 $installer->getConnection()->dropColumn($productTable, 'is_active');
 
-$installer->run("
-INSERT INTO {$this->getTable('catalog_product_website')}
-    SELECT DISTINCT ps.product_id, cs.website_id
-    FROM {$this->getTable('catalog_product_store')} ps, {$this->getTable('core_store')} cs
-    WHERE cs.store_id=ps.store_id AND ps.store_id>0;
-DROP TABLE IF EXISTS {$this->getTable('catalog_product_store')};
-");
-
-
-$categoryTable = $this->getTable('catalog_category_entity');
-$installer->getConnection()->dropForeignKey($categoryTable, 'FK_CATALOG_CATEGORY_ENTITY_TREE_NODE');
-
 try {
-	$this->run("ALTER TABLE `{$this->getTable('catalog/category_entity')}` ADD `path` VARCHAR( 255 ) NOT NULL, ADD `position` INT NOT NULL;");
+    $installer->run("
+    INSERT INTO {$this->getTable('catalog_product_website')}
+        SELECT DISTINCT ps.product_id, cs.website_id
+        FROM {$this->getTable('catalog_product_store')} ps, {$this->getTable('core_store')} cs
+        WHERE cs.store_id=ps.store_id AND ps.store_id>0;
+    DROP TABLE IF EXISTS {$this->getTable('catalog_product_store')};
+    ");
 } catch (Exception $e) {
 }
 
-$this->run("DROP TABLE IF EXISTS `{$this->getTable('catalog/category_tree')}`;");
+$categoryTable = $this->getTable('catalog/category');
+$installer->getConnection()->dropForeignKey($categoryTable, 'FK_CATALOG_CATEGORY_ENTITY_TREE_NODE');
+
+try {
+    $this->run("ALTER TABLE `{$this->getTable('catalog/category')}` ADD `path` VARCHAR( 255 ) NOT NULL, ADD `position` INT NOT NULL;");
+} catch (Exception $e) {
+}
+try {
+    $this->run("DROP TABLE IF EXISTS `{$this->getTable('catalog/category_tree')}`;");
+} catch (Exception $e) {
+}
 
 $installer->getConnection()->dropKey($categoryTable, 'FK_catalog_category_ENTITY_ENTITY_TYPE');
 $installer->getConnection()->dropKey($categoryTable, 'FK_catalog_category_ENTITY_STORE');

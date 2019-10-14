@@ -13,15 +13,15 @@
  * to license@zend.com so we can send you a copy immediately.
  *
  * @category   Zend
- * @package    Zend_Controller
- * @copyright  Copyright (c) 2005-2008 Zend Technologies USA Inc. (http://www.zend.com)
+ * @package    Zend_Server
+ * @copyright  Copyright (c) 2005-2015 Zend Technologies USA Inc. (http://www.zend.com)
  * @license    http://framework.zend.com/license/new-bsd     New BSD License
  */
 
 /**
  * Zend_Server_Reflection_Function_Abstract
  */
-require_once 'Zend/Server/Reflection/Function/Abstract.php';
+#require_once 'Zend/Server/Reflection/Function/Abstract.php';
 
 /**
  * Method Reflection
@@ -30,9 +30,9 @@ require_once 'Zend/Server/Reflection/Function/Abstract.php';
  * @category   Zend
  * @package    Zend_Server
  * @subpackage Reflection
- * @copyright  Copyright (c) 2005-2008 Zend Technologies USA Inc. (http://www.zend.com)
+ * @copyright  Copyright (c) 2005-2015 Zend Technologies USA Inc. (http://www.zend.com)
  * @license    http://framework.zend.com/license/new-bsd     New BSD License
- * @version $Id: Method.php 8064 2008-02-16 10:58:39Z thomas $
+ * @version $Id$
  */
 class Zend_Server_Reflection_Method extends Zend_Server_Reflection_Function_Abstract
 {

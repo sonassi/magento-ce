@@ -15,12 +15,12 @@
  * @category   Zend
  * @package    Zend_Form
  * @subpackage Decorator
- * @copyright  Copyright (c) 2005-2008 Zend Technologies USA Inc. (http://www.zend.com)
+ * @copyright  Copyright (c) 2005-2015 Zend Technologies USA Inc. (http://www.zend.com)
  * @license    http://framework.zend.com/license/new-bsd     New BSD License
  */
 
 /** Zend_Form_Decorator_Abstract */
-require_once 'Zend/Form/Decorator/Abstract.php';
+#require_once 'Zend/Form/Decorator/Abstract.php';
 
 /**
  * Zend_Form_Decorator_Image
@@ -31,13 +31,13 @@ require_once 'Zend/Form/Decorator/Abstract.php';
  * - tag: if set, used to wrap the label in an additional HTML tag
  *
  * Any other options passed will be used as HTML attributes of the image tag.
- * 
+ *
  * @category   Zend
  * @package    Zend_Form
  * @subpackage Decorator
- * @copyright  Copyright (c) 2005-2008 Zend Technologies USA Inc. (http://www.zend.com)
+ * @copyright  Copyright (c) 2005-2015 Zend Technologies USA Inc. (http://www.zend.com)
  * @license    http://framework.zend.com/license/new-bsd     New BSD License
- * @version    $Id: Image.php 8680 2008-03-07 22:25:35Z matthew $
+ * @version    $Id$
  */
 class Zend_Form_Decorator_Image extends Zend_Form_Decorator_Abstract
 {
@@ -61,8 +61,8 @@ class Zend_Form_Decorator_Image extends Zend_Form_Decorator_Abstract
 
     /**
      * Set HTML tag with which to surround label
-     * 
-     * @param  string $tag 
+     *
+     * @param  string $tag
      * @return Zend_Form_Decorator_Image
      */
     public function setTag($tag)
@@ -73,7 +73,7 @@ class Zend_Form_Decorator_Image extends Zend_Form_Decorator_Abstract
 
     /**
      * Get HTML tag, if any, with which to surround label
-     * 
+     *
      * @return void
      */
     public function getTag()
@@ -92,7 +92,7 @@ class Zend_Form_Decorator_Image extends Zend_Form_Decorator_Abstract
 
     /**
      * Get attributes to pass to image helper
-     * 
+     *
      * @return array
      */
     public function getAttribs()
@@ -115,8 +115,8 @@ class Zend_Form_Decorator_Image extends Zend_Form_Decorator_Abstract
 
     /**
      * Render a form image
-     * 
-     * @param  string $content 
+     *
+     * @param  string $content
      * @return string
      */
     public function render($content)
@@ -127,14 +127,17 @@ class Zend_Form_Decorator_Image extends Zend_Form_Decorator_Abstract
             return $content;
         }
 
-        $tag       = $this->getTag();
-        $placement = $this->getPlacement();
-        $separator = $this->getSeparator();
+        $tag           = $this->getTag();
+        $placement     = $this->getPlacement();
+        $separator     = $this->getSeparator();
+        $name          = $element->getFullyQualifiedName();
+        $attribs       = $this->getAttribs();
+        $attribs['id'] = $element->getId();
 
-        $image = $view->formImage($element->getName(), $element->getImageValue(), $this->getAttribs()); 
+        $image = $view->formImage($name, $element->getImageValue(), $attribs);
 
         if (null !== $tag) {
-            require_once 'Zend/Form/Decorator/HtmlTag.php';
+            #require_once 'Zend/Form/Decorator/HtmlTag.php';
             $decorator = new Zend_Form_Decorator_HtmlTag();
             $decorator->setOptions(array('tag' => $tag));
             $image = $decorator->render($image);

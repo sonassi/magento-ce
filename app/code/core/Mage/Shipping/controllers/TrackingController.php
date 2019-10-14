@@ -10,11 +10,17 @@
  * http://opensource.org/licenses/osl-3.0.php
  * If you did not receive a copy of the license and are unable to
  * obtain it through the world-wide-web, please send an email
- * to license@magentocommerce.com so we can send you a copy immediately.
+ * to license@magento.com so we can send you a copy immediately.
  *
- * @category   Mage
- * @package    Mage_Sales
- * @copyright  Copyright (c) 2004-2007 Irubin Consulting Inc. DBA Varien (http://www.varien.com)
+ * DISCLAIMER
+ *
+ * Do not edit or add to this file if you wish to upgrade Magento to newer
+ * versions in the future. If you wish to customize Magento for your
+ * needs please refer to http://www.magento.com for more information.
+ *
+ * @category    Mage
+ * @package     Mage_Shipping
+ * @copyright  Copyright (c) 2006-2017 X.commerce, Inc. and affiliates (http://www.magento.com)
  * @license    http://opensource.org/licenses/osl-3.0.php  Open Software License (OSL 3.0)
  */
 
@@ -23,10 +29,15 @@
  *
  * @category   Mage
  * @package    Mage_Sales
+ * @author      Magento Core Team <core@magentocommerce.com>
  */
 
 class Mage_Shipping_TrackingController extends Mage_Core_Controller_Front_Action
 {
+    /**
+     * Ajax action
+     *
+     */
     public function ajaxAction()
     {
         if ($order = $this->_initOrder()) {
@@ -49,8 +60,18 @@ class Mage_Shipping_TrackingController extends Mage_Core_Controller_Front_Action
         }
     }
 
+    /**
+     * Popup action
+     * Shows tracking info if it's present, otherwise redirects to 404
+     */
     public function popupAction()
     {
+        $shippingInfoModel = Mage::getModel('shipping/info')->loadByHash($this->getRequest()->getParam('hash'));
+        Mage::register('current_shipping_info', $shippingInfoModel);
+        if (count($shippingInfoModel->getTrackingInfo()) == 0) {
+            $this->norouteAction();
+            return;
+        }
         $this->loadLayout();
         $this->renderLayout();
     }
@@ -66,8 +87,9 @@ class Mage_Shipping_TrackingController extends Mage_Core_Controller_Front_Action
         $id = $this->getRequest()->getParam('order_id');
 
         $order = Mage::getModel('sales/order')->load($id);
+        $customerId = Mage::getSingleton('customer/session')->getCustomerId();
 
-        if (!$order->getId() || !$order->belongsToCurrentCustomer()) {
+        if (!$order->getId() || !$customerId || $order->getCustomerId() != $customerId) {
             return false;
         }
         return $order;

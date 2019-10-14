@@ -10,57 +10,28 @@
  * http://opensource.org/licenses/osl-3.0.php
  * If you did not receive a copy of the license and are unable to
  * obtain it through the world-wide-web, please send an email
- * to license@magentocommerce.com so we can send you a copy immediately.
+ * to license@magento.com so we can send you a copy immediately.
  *
- * @category   Mage
- * @package    Mage_Customer
- * @copyright  Copyright (c) 2004-2007 Irubin Consulting Inc. DBA Varien (http://www.varien.com)
+ * DISCLAIMER
+ *
+ * Do not edit or add to this file if you wish to upgrade Magento to newer
+ * versions in the future. If you wish to customize Magento for your
+ * needs please refer to http://www.magento.com for more information.
+ *
+ * @category    Mage
+ * @package     Mage_Customer
+ * @copyright  Copyright (c) 2006-2017 X.commerce, Inc. and affiliates (http://www.magento.com)
  * @license    http://opensource.org/licenses/osl-3.0.php  Open Software License (OSL 3.0)
  */
+
 
 /**
  * Customer address entity resource model
  *
- * @category   Mage
- * @package    Mage_Customer
+ * @category    Mage
+ * @package     Mage_Customer
+ * @author      Magento Core Team <core@magentocommerce.com>
  */
-class Mage_Customer_Model_Entity_Address extends Mage_Eav_Model_Entity_Abstract
+class Mage_Customer_Model_Entity_Address extends Mage_Customer_Model_Resource_Address
 {
-    public function __construct()
-    {
-        $resource = Mage::getSingleton('core/resource');
-        $this->setType('customer_address')->setConnection(
-            $resource->getConnection('customer_read'),
-            $resource->getConnection('customer_write')
-        );
-    }
-
-    protected function _afterSave(Varien_Object $address)
-    {
-        if ($address->getId() && ($address->getIsDefaultBilling() || $address->getIsDefaultShipping())) {
-            $customer = Mage::getModel('customer/customer')
-                ->load($address->getCustomerId());
-
-            if ($address->getIsDefaultBilling()) {
-                $customer->setDefaultBilling($address->getId());
-            }
-            if ($address->getIsDefaultShipping()) {
-                $customer->setDefaultShipping($address->getId());
-            }
-            $customer->save();
-        }
-        return $this;
-    }
-
-    public function getCustomerId($object)
-    {
-        return $object->getData('customer_id') ? $object->getData('customer_id') :$object->getParentId();
-    }
-
-    public function setCustomerId($object, $id)
-    {
-        $object->setParentId($id);
-        $object->setData('customer_id', $id);
-        return $object;
-    }
 }

@@ -4,21 +4,48 @@
  *
  * NOTICE OF LICENSE
  *
- * This source file is subject to the Open Software License (OSL 3.0)
- * that is bundled with this package in the file LICENSE.txt.
+ * This source file is subject to the Academic Free License (AFL 3.0)
+ * that is bundled with this package in the file LICENSE_AFL.txt.
  * It is also available through the world-wide-web at this URL:
- * http://opensource.org/licenses/osl-3.0.php
+ * http://opensource.org/licenses/afl-3.0.php
  * If you did not receive a copy of the license and are unable to
  * obtain it through the world-wide-web, please send an email
- * to license@magentocommerce.com so we can send you a copy immediately.
+ * to license@magento.com so we can send you a copy immediately.
  *
- * @category   design_default
- * @package    Mage
- * @copyright  Copyright (c) 2004-2007 Irubin Consulting Inc. DBA Varien (http://www.varien.com)
- * @license    http://opensource.org/licenses/osl-3.0.php  Open Software License (OSL 3.0)
+ * DISCLAIMER
+ *
+ * Do not edit or add to this file if you wish to upgrade Magento to newer
+ * versions in the future. If you wish to customize Magento for your
+ * needs please refer to http://www.magento.com for more information.
+ *
+ * @category    design
+ * @package     default_default
+ * @copyright   Copyright (c) 2006-2017 X.commerce, Inc. and affiliates (http://www.magento.com)
+ * @license     http://opensource.org/licenses/afl-3.0.php  Academic Free License (AFL 3.0)
  */
 ?>
 <script type="text/javascript">
+//<![CDATA[
+function saveAndContinueEdit(){
+    disableElements('save');
+    var activeTab = product_attribute_tabsJsTabs.activeTab.id;
+    if (editForm.submit($('edit_form').action+'back/edit/tab/' + activeTab) == false) {
+        enableElements('save');
+     }
+    varienGlobalEvents.attachEventHandler('formValidateAjaxComplete', function (){
+        enableElements('save');
+    });
+}
+
+function saveAttribute(){
+    disableElements('save');
+    if (editForm.submit() == false){
+        enableElements('save');
+    }
+    varienGlobalEvents.attachEventHandler('formValidateAjaxComplete', function (){
+        enableElements('save');
+    });
+}
 
 function toggleApplyVisibility(select) {
     if ($(select).value == 1) {
@@ -53,8 +80,11 @@ function bindAttributeInputType()
     switchDefaultValueField();
     checkIsConfigurableVisibility();
     if($('frontend_input') && ($('frontend_input').value=='select' || $('frontend_input').value=='multiselect' || $('frontend_input').value=='price')){
-        if($('is_filterable')){
+        if($('is_filterable') && !$('is_filterable').getAttribute('readonly')){
             $('is_filterable').disabled = false;
+        }
+        if($('is_filterable_in_search') && !$('is_filterable_in_search').getAttribute('readonly')){
+            $('is_filterable_in_search').disabled = false;
         }
         if($('backend_type') && $('backend_type').options){
             for(var i=0;i<$('backend_type').options.length;i++){
@@ -67,7 +97,55 @@ function bindAttributeInputType()
             $('is_filterable').selectedIndex=0;
             $('is_filterable').disabled = true;
         }
+        if($('is_filterable_in_search')){
+            $('is_filterable_in_search').disabled = true;
+        }
     }
+
+    if ($('frontend_input') && ($('frontend_input').value=='multiselect'
+        || $('frontend_input').value=='gallery'
+        || $('frontend_input').value=='textarea')) {
+        if ($('used_for_sort_by')) {
+            $('used_for_sort_by').disabled = true;
+        }
+    }
+    else {
+        if ($('used_for_sort_by') && !$('used_for_sort_by').getAttribute('readonly')) {
+            $('used_for_sort_by').disabled = false;
+        }
+    }
+
+    setRowVisibility('is_wysiwyg_enabled', false);
+    setRowVisibility('is_html_allowed_on_front', false);
+
+    switch ($('frontend_input').value) {
+        case 'textarea':
+            setRowVisibility('is_wysiwyg_enabled', true);
+            if($('is_wysiwyg_enabled').value == '0'){
+                setRowVisibility('is_html_allowed_on_front', true);
+                $('is_html_allowed_on_front').disabled = false;
+            }
+            $('frontend_class').value = '';
+            $('frontend_class').disabled = true;
+            break;
+        case 'text':
+            setRowVisibility('is_html_allowed_on_front', true);
+            $('is_html_allowed_on_front').disabled = false;
+
+            if (!$('frontend_class').getAttribute('readonly')) {
+                $('frontend_class').disabled = false;
+            }
+            break;
+        case 'select':
+        case 'multiselect':
+            setRowVisibility('is_html_allowed_on_front', true);
+            $('is_html_allowed_on_front').disabled = false;
+            break;
+        default:
+            $('frontend_class').value = '';
+            $('frontend_class').disabled = true;
+    }
+
     switchIsFilterable();
 }
 
@@ -77,7 +155,20 @@ function switchIsFilterable()
         if ($('is_filterable').selectedIndex == 0) {
             $('position').disabled = true;
         } else {
-            $('position').disabled = false;
+            if (!$('position').getAttribute('readonly')){
+                $('position').disabled = false;
+            }
+        }
+    }
+}
+
+function disableApplyToValue(value)
+{
+    var applyToSelect = $('apply_to');
+    for (i=0;i<applyToSelect.options.length;i++) {
+        if (value == applyToSelect.options[i].value) {
+            applyToSelect.options[i].disabled = true;
+            applyToSelect.options[i].selected = false;
         }
     }
 }
@@ -127,26 +218,67 @@ function switchDefaultValueField()
             break;
     }
 
+    var applyToSelect = $('apply_to');
+    switch (currentValue) {
+        <?php foreach (Mage::helper('catalog')->getAttributeDisabledTypes() as $type=>$disabled): ?>
+            case '<?php echo $type; ?>':
+            <?php foreach ($disabled as $one): ?>
+                disableApplyToValue('<?php echo $one; ?>');
+            <?php endforeach; ?>
+            break;
+        <?php endforeach; ?>
+        default:
+        for (i=0;i<applyToSelect.options.length;i++) {
+            applyToSelect.options[i].disabled = false;
+        }
+        break;
+    }
+
+    switch (currentValue) {
+        case 'media_image':
+            $('front_fieldset').previous().hide();
+            $('front_fieldset').hide();
+
+            setRowVisibility('is_required', false);
+            setRowVisibility('is_unique', false);
+            setRowVisibility('frontend_class', false);
+        break;
+
+        <?php foreach (Mage::helper('catalog')->getAttributeHiddenFields() as $type=>$fields): ?>
+            case '<?php echo $type; ?>':
+                <?php foreach ($fields as $one): ?>
+                    <?php if ($one == '_front_fieldset'): ?>
+                        $('front_fieldset').previous().hide();
+                        $('front_fieldset').hide();
+                    <?php elseif ($one == '_default_value'): ?>
+                        defaultValueTextVisibility =
+                        defaultValueTextareaVisibility =
+                        defaultValueDateVisibility =
+                        defaultValueYesnoVisibility = false;
+                    <?php elseif ($one == '_scope'): ?>
+                        scopeVisibility = false;
+                    <?php else: ?>
+                        setRowVisibility('<?php echo $one; ?>', false);
+                    <?php endif; ?>
+                <?php endforeach; ?>
+            break;
+        <?php endforeach; ?>
+
+        default:
+            $('front_fieldset').previous().show();
+            $('front_fieldset').show();
+            setRowVisibility('is_required', true);
+            setRowVisibility('is_unique', true);
+            setRowVisibility('frontend_class', true);
+            setRowVisibility('is_configurable', true);
+        break;
+    }
+
     setRowVisibility('default_value_text', defaultValueTextVisibility);
     setRowVisibility('default_value_textarea', defaultValueTextareaVisibility);
     setRowVisibility('default_value_date', defaultValueDateVisibility);
     setRowVisibility('default_value_yesno', defaultValueYesnoVisibility);
     setRowVisibility('is_global', scopeVisibility);
-
-    if(currentValue == 'media_image') {
-        $('front_fieldset').previous().hide();
-        $('front_fieldset').hide();
-
-        setRowVisibility('is_required', false);
-        setRowVisibility('is_unique', false);
-        setRowVisibility('frontend_class', false);
-    } else {
-        $('front_fieldset').previous().show();
-        $('front_fieldset').show();
-        setRowVisibility('is_required', true);
-        setRowVisibility('is_unique', true);
-        setRowVisibility('frontend_class', true);
-    }
 
     var elems = document.getElementsByName('default[]');
     for (var i = 0; i < elems.length; i++) {
@@ -181,13 +313,11 @@ function checkIsConfigurableVisibility()
 
 function updateRequriedOptions()
 {
-<?php if ($this->getIsPopup()):?>
     if ($F('frontend_input')=='select' && $F('is_required')==1) {
         $('option-count-check').addClassName('required-options-count');
     } else {
         $('option-count-check').removeClassName('required-options-count');
     }
-<?php endif;?>
 }
 
 if($('frontend_input')){
@@ -204,5 +334,5 @@ if ($('is_required')) {
     Event.observe($('is_required'), 'change', updateRequriedOptions);
 }
 bindAttributeInputType();
-
+//]]>
 </script>

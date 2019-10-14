@@ -10,189 +10,92 @@
  * http://opensource.org/licenses/osl-3.0.php
  * If you did not receive a copy of the license and are unable to
  * obtain it through the world-wide-web, please send an email
- * to license@magentocommerce.com so we can send you a copy immediately.
+ * to license@magento.com so we can send you a copy immediately.
  *
- * @category   Mage
- * @package    Mage_PaypalUk
- * @copyright  Copyright (c) 2004-2007 Irubin Consulting Inc. DBA Varien (http://www.varien.com)
+ * DISCLAIMER
+ *
+ * Do not edit or add to this file if you wish to upgrade Magento to newer
+ * versions in the future. If you wish to customize Magento for your
+ * needs please refer to http://www.magento.com for more information.
+ *
+ * @category    Mage
+ * @package     Mage_PaypalUk
+ * @copyright  Copyright (c) 2006-2017 X.commerce, Inc. and affiliates (http://www.magento.com)
  * @license    http://opensource.org/licenses/osl-3.0.php  Open Software License (OSL 3.0)
  */
 
 /**
- *
  * PayPalUk Direct Module
- *
  */
-class Mage_PaypalUk_Model_Direct extends Mage_Payment_Model_Method_Cc
+class Mage_PaypalUk_Model_Direct extends Mage_Paypal_Model_Direct
 {
-    protected $_code  = 'paypaluk_direct';
-    protected $_formBlockType = 'paypaluk/direct_form';
-    protected $_infoBlockType = 'paypaluk/direct_info';
-    protected $_canSaveCc = false;
+    protected $_code  = Mage_Paypal_Model_Config::METHOD_WPP_PE_DIRECT;
 
-    /*
-    * overwrites the method of Mage_Payment_Model_Method_Cc
-    * for switch or solo card
-    */
-    public function OtherCcType($type)
+    /**
+     * Transaction info fetching is not implemented in PayPal Uk
+     */
+    protected $_canFetchTransactionInfo = false;
+
+    /**
+     * Website Payments Pro instance type
+     *
+     * @var string
+     */
+    protected $_proType = 'paypaluk/pro';
+
+    /**
+     * Return available CC types for gateway based on merchant country
+     *
+     * @return string
+     */
+    public function getAllowedCcTypes()
     {
-        return (parent::OtherCcType($type) || $type=='SS');
+        return $this->_pro->getConfig()->cctypes;
     }
 
     /**
-     * overwrites the method of Mage_Payment_Model_Method_Cc
-     * Assign data to info model instance
+     * Merchant country limitation for 3d secure feature, rewrite for parent implementation
      *
-     * @param   mixed $data
-     * @return  Mage_Payment_Model_Info
+     * @return bool
      */
-    public function assignData($data)
+    public function getIsCentinelValidationEnabled()
     {
-
-        if (!($data instanceof Varien_Object)) {
-            $data = new Varien_Object($data);
+        if (!parent::getIsCentinelValidationEnabled()) {
+            return false;
         }
-        parent::assignData($data);
-        $info = $this->getInfoInstance();
-        $info->setCcSsIssue($data->getCcSsIssue())
-            ->setCcSsStartMonth($data->getCcSsStartMonth())
-            ->setCcSsStartYear($data->getCcSsStartYear())
-        ;
-        return $this;
+        // available only for US and UK merchants
+        if (in_array($this->_pro->getConfig()->getMerchantCountry(), array('US', 'GB'))) {
+            return true;
+        }
+        return false;
     }
 
     /**
-     * Get Paypal API Model
+     * Import direct payment results to payment
      *
-     * @return Mage_PaypalUk_Model_Api_Pro
+     * @param Mage_Paypal_Model_Api_Nvp
+     * @param Mage_Sales_Model_Order_Payment
      */
-    public function getApi()
+    protected function _importResultToPayment($api, $payment)
     {
-        return Mage::getSingleton('paypalUk/api_pro');
+        $payment->setTransactionId($api->getPaypalTransactionId())->setIsTransactionClosed(0)
+            ->setIsTransactionPending($api->getIsPaymentPending())
+            ->setTransactionAdditionalInfo(Mage_PaypalUk_Model_Pro::TRANSPORT_PAYFLOW_TXN_ID, $api->getTransactionId())
+            ;
+        $payment->setPreparedMessage(Mage::helper('paypaluk')->__('Payflow PNREF: #%s.', $api->getTransactionId()));
+        $this->_pro->importPaymentInfo($api, $payment);
     }
 
-    public function authorize(Varien_Object $payment, $amount)
+    /**
+     * Format credit card expiration date based on month and year values
+     * Format: mmyy
+     *
+     * @param string|int $month
+     * @param string|int $year
+     * @return string
+     */
+    protected function _getFormattedCcExpirationDate($month, $year)
     {
-        $api = $this->getApi()
-            ->setTrxtype(Mage_PaypalUk_Model_Api_Pro::TRXTYPE_AUTH_ONLY)
-            ->setAmount($amount)
-            ->setBillingAddress($payment->getOrder()->getBillingAddress())
-            ->setShippingAddress($payment->getOrder()->getShippingAddress())
-            ->setPayment($payment);
-
-         if($api->callDoDirectPayment()!==false) {
-               $payment
-                ->setStatus('APPROVED')
-                ->setPaymentStatus('AUTHORIZE')
-                ->setCcTransId($api->getTransactionId())
-                ->setCcAvsStatus($api->getAvsCode())
-                ->setCcCidStatus($api->getCvv2Match());
-         }else{
-            $e = $api->getError();
-            Mage::throwException($e['message']?$e['message']:Mage::helper('paypalUk')->__('There has been an error processing your payment. Please try later or contact us for help.'));
-         }
-
+        return sprintf('%02d', $month) . sprintf('%02d', substr($year, -2, 2));
     }
-
-    public function capture(Varien_Object $payment, $amount)
-    {
-       if ($payment->getCcTransId()) {
-           $trxType=Mage_PaypalUk_Model_Api_Pro::TRXTYPE_DELAYED_CAPTURE;
-        } else {
-           //when there is no transaction id, we do sales trxtype
-           $trxType=Mage_PaypalUk_Model_Api_Pro::TRXTYPE_SALE;
-        }
-
-        $api = $this->getApi()
-            ->setTrxtype($trxType)
-            ->setAmount($amount)
-            ->setTransactionId($payment->getCcTransId())
-            ->setBillingAddress($payment->getOrder()->getBillingAddress())
-            ->setShippingAddress($payment->getOrder()->getShippingAddress())
-            ->setPayment($payment);
-
-         if ($api->callDoDirectPayment()!==false) {
-               $payment
-                ->setStatus('APPROVED')
-                ->setPaymentStatus('CAPTURE')
-                ->setCcTransId($api->getTransactionId())
-                ->setCcAvsStatus($api->getAvsCode())
-                ->setCcCidStatus($api->getCvv2Match());
-         } else {
-            $e = $api->getError();
-            Mage::throwException($e['message']?$e['message']:Mage::helper('paypalUk')->__('There has been an error processing your payment. Please try later or contact us for help.'));
-         }
-
-         return $this;
-    }
-
-    public function canVoid(Varien_Object $payment)
-    {
-        if ($payment->getCcTransId()) {
-         $api = $this->getApi()
-            ->setTransactionId($payment->getCcTransId())
-            ->setPayment($payment);
-         if ($api->canVoid()!==false) {
-             $payment->setStatus(self::STATUS_VOID);
-         } else {
-             $e = $api->getError();
-             $payment->setStatus(self::STATUS_ERROR);
-             $payment->setStatusDescription($e['message']);
-         }
-        } else {
-            $payment->setStatus(self::STATUS_ERROR);
-            $payment->setStatusDescription(Mage::helper('paypalUk')->__('Invalid transaction id'));
-        }
-        return $this;
-    }
-
-    public function void(Varien_Object $payment)
-    {
-        $error = false;
-        if ($payment->getCcTransId()) {
-             $api = $this->getApi()
-                ->setTransactionId($payment->getCcTransId())
-                ->setPayment($payment);
-
-             if ($api->void()!==false) {
-                 $payment->setCcTransId($api->getTransactionId());
-                 $payment->setStatus(self::STATUS_VOID);
-             } else {
-                 $e = $api->getError();
-                 $error = $e['message'];
-             }
-        } else {
-            $error = Mage::helper('paypalUk')->__('Invalid transaction id');
-        }
-        if ($error !== false) {
-            Mage::throwException($error);
-        }
-        return $this;
-    }
-
-    public function refund(Varien_Object $payment, $amount)
-    {
-        $error = false;
-        if (($payment->getRefundTransactionId() && $amount>0)) {
-         $api = $this->getApi()
-            ->setTransactionId($payment->getRefundTransactionId())
-            ->setPayment($payment)
-            ->setAmount($amount);
-
-         if ($api->refund()!==false) {
-             $payment->setCcTransId($api->getTransactionId());
-             $payment->setStatus(self::STATUS_SUCCESS);
-         } else {
-             $e = $api->getError();
-             $error = $e['message'];
-         }
-        } else {
-            $error = Mage::helper('paypalUk')->__('Error in refunding the payment');
-        }
-        if ($error !== false) {
-            Mage::throwException($error);
-        }
-        return $this;
-    }
-
 }

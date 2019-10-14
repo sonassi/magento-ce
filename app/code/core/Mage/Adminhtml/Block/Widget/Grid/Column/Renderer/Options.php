@@ -10,11 +10,17 @@
  * http://opensource.org/licenses/osl-3.0.php
  * If you did not receive a copy of the license and are unable to
  * obtain it through the world-wide-web, please send an email
- * to license@magentocommerce.com so we can send you a copy immediately.
+ * to license@magento.com so we can send you a copy immediately.
  *
- * @category   Mage
- * @package    Mage_Adminhtml
- * @copyright  Copyright (c) 2004-2007 Irubin Consulting Inc. DBA Varien (http://www.varien.com)
+ * DISCLAIMER
+ *
+ * Do not edit or add to this file if you wish to upgrade Magento to newer
+ * versions in the future. If you wish to customize Magento for your
+ * needs please refer to http://www.magento.com for more information.
+ *
+ * @category    Mage
+ * @package     Mage_Adminhtml
+ * @copyright  Copyright (c) 2006-2017 X.commerce, Inc. and affiliates (http://www.magento.com)
  * @license    http://opensource.org/licenses/osl-3.0.php  Open Software License (OSL 3.0)
  */
 
@@ -23,25 +29,39 @@
  *
  * @category   Mage
  * @package    Mage_Adminhtml
+ * @author     Magento Core Team <core@magentocommerce.com>
  */
-class Mage_Adminhtml_Block_Widget_Grid_Column_Renderer_Options extends Mage_Adminhtml_Block_Widget_Grid_Column_Renderer_Text
+class Mage_Adminhtml_Block_Widget_Grid_Column_Renderer_Options
+    extends Mage_Adminhtml_Block_Widget_Grid_Column_Renderer_Text
 {
+    /**
+     * Render a grid cell as options
+     *
+     * @param Varien_Object $row
+     * @return string
+     */
     public function render(Varien_Object $row)
     {
         $options = $this->getColumn()->getOptions();
+        $showMissingOptionValues = (bool)$this->getColumn()->getShowMissingOptionValues();
         if (!empty($options) && is_array($options)) {
             $value = $row->getData($this->getColumn()->getIndex());
             if (is_array($value)) {
                 $res = array();
                 foreach ($value as $item) {
-                    $res[] = isset($options[$item]) ? $options[$item] : $item;
+                    if (isset($options[$item])) {
+                        $res[] = $this->escapeHtml($options[$item]);
+                    }
+                    elseif ($showMissingOptionValues) {
+                        $res[] = $this->escapeHtml($item);
+                    }
                 }
                 return implode(', ', $res);
+            } elseif (isset($options[$value])) {
+                return $this->escapeHtml($options[$value]);
+            } elseif (in_array($value, $options)) {
+                return $this->escapeHtml($value);
             }
-            elseif (isset($options[$value])) {
-                return $options[$value];
-            }
-            return '';
         }
     }
 }

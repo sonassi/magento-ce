@@ -3,16 +3,24 @@
  *
  * NOTICE OF LICENSE
  *
- * This source file is subject to the Open Software License (OSL 3.0)
- * that is bundled with this package in the file LICENSE.txt.
+ * This source file is subject to the Academic Free License (AFL 3.0)
+ * that is bundled with this package in the file LICENSE_AFL.txt.
  * It is also available through the world-wide-web at this URL:
- * http://opensource.org/licenses/osl-3.0.php
+ * http://opensource.org/licenses/afl-3.0.php
  * If you did not receive a copy of the license and are unable to
  * obtain it through the world-wide-web, please send an email
- * to license@magentocommerce.com so we can send you a copy immediately.
+ * to license@magento.com so we can send you a copy immediately.
  *
- * @copyright  Copyright (c) 2004-2007 Irubin Consulting Inc. DBA Varien (http://www.varien.com)
- * @license    http://opensource.org/licenses/osl-3.0.php  Open Software License (OSL 3.0)
+ * DISCLAIMER
+ *
+ * Do not edit or add to this file if you wish to upgrade Magento to newer
+ * versions in the future. If you wish to customize Magento for your
+ * needs please refer to http://www.magento.com for more information.
+ *
+ * @category    Varien
+ * @package     js
+ * @copyright   Copyright (c) 2006-2017 X.commerce, Inc. and affiliates (http://www.magento.com)
+ * @license     http://opensource.org/licenses/afl-3.0.php  Academic Free License (AFL 3.0)
  */
 Accordion = Class.create();
 Accordion.prototype = {
@@ -27,12 +35,12 @@ Accordion.prototype = {
             Event.observe(header,'click',this.sectionClicked.bindAsEventListener(this));
         }.bind(this));
     },
-    
+
     sectionClicked: function(event) {
         this.openSection($(Event.element(event)).up('.section'));
         Event.stop(event);
     },
-    
+
     openSection: function(section) {
         var section = $(section);
 
@@ -45,15 +53,15 @@ Accordion.prototype = {
             this.closeExistingSection();
             this.currentSection = section.id;
             $(this.currentSection).addClassName('active');
-            var contents = document.getElementsByClassName('a-item',section);
+            var contents = Element.select(section, '.a-item');
             contents[0].show();
             //Effect.SlideDown(contents[0], {duration:.2});
-            
+
             if (this.disallowAccessToNextSections) {
                 var pastCurrentSection = false;
                 for (var i=0; i<this.sections.length; i++) {
                     if (pastCurrentSection) {
-                        Element.removeClassName(this.sections[i], 'allow')
+                        Element.removeClassName(this.sections[i], 'allow');
                     }
                     if (this.sections[i].id==section.id) {
                         pastCurrentSection = true;
@@ -62,43 +70,43 @@ Accordion.prototype = {
             }
         }
     },
-    
+
     closeSection: function(section) {
         $(section).removeClassName('active');
-        var contents = document.getElementsByClassName('a-item',section);
+        var contents = Element.select(section, '.a-item');
         contents[0].hide();
         //Effect.SlideUp(contents[0]);
     },
-    
+
     openNextSection: function(setAllow){
         for (section in this.sections) {
             var nextIndex = parseInt(section)+1;
             if (this.sections[section].id == this.currentSection && this.sections[nextIndex]){
                 if (setAllow) {
-                    Element.addClassName(this.sections[nextIndex], 'allow')
+                    Element.addClassName(this.sections[nextIndex], 'allow');
                 }
                 this.openSection(this.sections[nextIndex]);
                 return;
             }
         }
     },
-    
+
     openPrevSection: function(setAllow){
         for (section in this.sections) {
             var prevIndex = parseInt(section)-1;
             if (this.sections[section].id == this.currentSection && this.sections[prevIndex]){
                 if (setAllow) {
-                    Element.addClassName(this.sections[prevIndex], 'allow')
+                    Element.addClassName(this.sections[prevIndex], 'allow');
                 }
                 this.openSection(this.sections[prevIndex]);
                 return;
             }
         }
     },
-    
+
     closeExistingSection: function() {
         if(this.currentSection) {
             this.closeSection(this.currentSection);
         }
     }
-}
+};

@@ -10,11 +10,17 @@
  * http://opensource.org/licenses/osl-3.0.php
  * If you did not receive a copy of the license and are unable to
  * obtain it through the world-wide-web, please send an email
- * to license@magentocommerce.com so we can send you a copy immediately.
+ * to license@magento.com so we can send you a copy immediately.
  *
- * @category   Mage
- * @package    Mage_Payment
- * @copyright  Copyright (c) 2004-2007 Irubin Consulting Inc. DBA Varien (http://www.varien.com)
+ * DISCLAIMER
+ *
+ * Do not edit or add to this file if you wish to upgrade Magento to newer
+ * versions in the future. If you wish to customize Magento for your
+ * needs please refer to http://www.magento.com for more information.
+ *
+ * @category    Mage
+ * @package     Mage_Payment
+ * @copyright  Copyright (c) 2006-2017 X.commerce, Inc. and affiliates (http://www.magento.com)
  * @license    http://opensource.org/licenses/osl-3.0.php  Open Software License (OSL 3.0)
  */
 
@@ -24,29 +30,49 @@
  *
  * @category   Mage
  * @package    Mage_Payment
+ * @author     Magento Core Team <core@magentocommerce.com>
  */
 class Mage_Payment_Model_Method_Free extends Mage_Payment_Model_Method_Abstract
 {
+    /**
+     * XML Paths for configuration constants
+     */
+    const XML_PATH_PAYMENT_FREE_ACTIVE = 'payment/free/active';
+    const XML_PATH_PAYMENT_FREE_ORDER_STATUS = 'payment/free/order_status';
+    const XML_PATH_PAYMENT_FREE_PAYMENT_ACTION = 'payment/free/payment_action';
+
+    /**
+     * Payment Method features
+     * @var bool
+     */
+    protected $_canAuthorize = true;
+
+    /**
+     * Payment code name
+     *
+     * @var string
+     */
     protected $_code = 'free';
 
-    public function isAvailable($quote=null)
+    /**
+     * Check whether method is available
+     *
+     * @param Mage_Sales_Model_Quote|null $quote
+     * @return bool
+     */
+    public function isAvailable($quote = null)
     {
-        if (is_null($quote)) {
-           return false;
-        }
+        return parent::isAvailable($quote) && !empty($quote)
+            && Mage::app()->getStore()->roundPrice($quote->getGrandTotal()) == 0;
+    }
 
-        /* @var $quote Mage_Sales_Model_Quote */
-        $totals = $quote->getTotals();
-
-        if( !isset($totals['grand_total']) ) {
-            return false;
-        }
-        $grandTotal = $totals['grand_total'];
-
-        if( $grandTotal->getValue() == 0 ) {
-            return true;
-        }
-
-        return false;
+    /**
+     * Get config payment action, do nothing if status is pending
+     *
+     * @return string|null
+     */
+    public function getConfigPaymentAction()
+    {
+        return $this->getConfigData('order_status') == 'pending' ? null : parent::getConfigPaymentAction();
     }
 }

@@ -10,11 +10,17 @@
  * http://opensource.org/licenses/osl-3.0.php
  * If you did not receive a copy of the license and are unable to
  * obtain it through the world-wide-web, please send an email
- * to license@magentocommerce.com so we can send you a copy immediately.
+ * to license@magento.com so we can send you a copy immediately.
  *
- * @category   Mage
- * @package    Mage_Adminhtml
- * @copyright  Copyright (c) 2004-2007 Irubin Consulting Inc. DBA Varien (http://www.varien.com)
+ * DISCLAIMER
+ *
+ * Do not edit or add to this file if you wish to upgrade Magento to newer
+ * versions in the future. If you wish to customize Magento for your
+ * needs please refer to http://www.magento.com for more information.
+ *
+ * @category    Mage
+ * @package     Mage_Adminhtml
+ * @copyright  Copyright (c) 2006-2017 X.commerce, Inc. and affiliates (http://www.magento.com)
  * @license    http://opensource.org/licenses/osl-3.0.php  Open Software License (OSL 3.0)
  */
 
@@ -23,12 +29,30 @@
  *
  * @category   Mage
  * @package    Mage_Adminhtml
+ * @author      Magento Core Team <core@magentocommerce.com>
  */
 
 class Mage_Adminhtml_Catalog_Product_ReviewController extends Mage_Adminhtml_Controller_Action
 {
-	public function indexAction()
+    /**
+     * Array of actions which can be processed without secret key validation
+     *
+     * @var array
+     */
+    protected $_publicActions = array('edit');
+
+    public function indexAction()
     {
+        $this->_title($this->__('Catalog'))
+             ->_title($this->__('Reviews and Ratings'))
+             ->_title($this->__('Customer Reviews'));
+
+        $this->_title($this->__('All Reviews'));
+
+        if ($this->getRequest()->getParam('ajax')) {
+            return $this->_forward('reviewGrid');
+        }
+
         $this->loadLayout();
         $this->_setActiveMenu('catalog/review');
 
@@ -39,6 +63,17 @@ class Mage_Adminhtml_Catalog_Product_ReviewController extends Mage_Adminhtml_Con
 
     public function pendingAction()
     {
+        $this->_title($this->__('Catalog'))
+             ->_title($this->__('Reviews and Ratings'))
+             ->_title($this->__('Customer Reviews'));
+
+        $this->_title($this->__('Pending Reviews'));
+
+        if ($this->getRequest()->getParam('ajax')) {
+            Mage::register('usePendingFilter', true);
+            return $this->_forward('reviewGrid');
+        }
+
         $this->loadLayout();
         $this->_setActiveMenu('catalog/review');
 
@@ -50,6 +85,12 @@ class Mage_Adminhtml_Catalog_Product_ReviewController extends Mage_Adminhtml_Con
 
     public function editAction()
     {
+        $this->_title($this->__('Catalog'))
+             ->_title($this->__('Reviews and Ratings'))
+             ->_title($this->__('Customer Reviews'));
+
+        $this->_title($this->__('Edit Review'));
+
         $this->loadLayout();
         $this->_setActiveMenu('catalog/review');
 
@@ -60,6 +101,12 @@ class Mage_Adminhtml_Catalog_Product_ReviewController extends Mage_Adminhtml_Con
 
     public function newAction()
     {
+        $this->_title($this->__('Catalog'))
+             ->_title($this->__('Reviews and Ratings'))
+             ->_title($this->__('Customer Reviews'));
+
+        $this->_title($this->__('New Review'));
+
         $this->loadLayout();
         $this->_setActiveMenu('catalog/review');
 
@@ -73,78 +120,84 @@ class Mage_Adminhtml_Catalog_Product_ReviewController extends Mage_Adminhtml_Con
 
     public function saveAction()
     {
-        $reviewId = $this->getRequest()->getParam('id', false);
-        if ($data = $this->getRequest()->getPost()) {
-            $review = Mage::getModel('review/review')->load($reviewId)->addData($data);
-            try {
-                $review->setId($reviewId)
-                    ->save();
+        if (($data = $this->getRequest()->getPost()) && ($reviewId = $this->getRequest()->getParam('id'))) {
+            $review = Mage::getModel('review/review')->load($reviewId);
+            $session = Mage::getSingleton('adminhtml/session');
+            if (! $review->getId()) {
+                $session->addError(Mage::helper('catalog')->__('The review was removed by another user or does not exist.'));
+            } else {
+                try {
+                    $review->addData($data)->save();
 
-                $arrRatingId = $this->getRequest()->getParam('ratings', array());
-                $votes =  Mage::getModel('rating/rating_option_vote')
-                    ->getResourceCollection()
-                    ->setReviewFilter($reviewId)
-                    ->addOptionInfo()
-                    ->load()
-                    ->addRatingOptions();
-                foreach ($arrRatingId as $ratingId=>$optionId) {
-                    if($vote = $votes->getItemByColumnValue('rating_id', $ratingId)) {
-                        Mage::getModel('rating/rating')
-                            ->setVoteId($vote->getId())
-                            ->setReviewId($review->getId())
-                            ->updateOptionVote($optionId);
-                    } else {
-                        Mage::getModel('rating/rating')
-                            ->setRatingId($ratingId)
-                            ->setReviewId($review->getId())
-                            ->addOptionVote($optionId, $review->getEntityPkValue());
+                    $arrRatingId = $this->getRequest()->getParam('ratings', array());
+                    $votes = Mage::getModel('rating/rating_option_vote')
+                        ->getResourceCollection()
+                        ->setReviewFilter($reviewId)
+                        ->addOptionInfo()
+                        ->load()
+                        ->addRatingOptions();
+                    foreach ($arrRatingId as $ratingId=>$optionId) {
+                        if($vote = $votes->getItemByColumnValue('rating_id', $ratingId)) {
+                            Mage::getModel('rating/rating')
+                                ->setVoteId($vote->getId())
+                                ->setReviewId($review->getId())
+                                ->updateOptionVote($optionId);
+                        } else {
+                            Mage::getModel('rating/rating')
+                                ->setRatingId($ratingId)
+                                ->setReviewId($review->getId())
+                                ->addOptionVote($optionId, $review->getEntityPkValue());
+                        }
                     }
-                }
 
-                $review->aggregate();
+                    $review->aggregate();
 
-                Mage::getSingleton('adminhtml/session')->addSuccess(Mage::helper('catalog')->__('Review was saved successfully'));
-                if( $this->getRequest()->getParam('ret') == 'pending' ) {
-                    $this->getResponse()->setRedirect($this->getUrl('*/*/pending'));
-                } else {
-                    $this->getResponse()->setRedirect($this->getUrl('*/*/'));
+                    $session->addSuccess(Mage::helper('catalog')->__('The review has been saved.'));
+                } catch (Mage_Core_Exception $e) {
+                    $session->addError($e->getMessage());
+                } catch (Exception $e){
+                    $session->addException($e, Mage::helper('catalog')->__('An error occurred while saving this review.'));
                 }
-                return;
-            } catch (Exception $e){
-                Mage::getSingleton('adminhtml/session')->addError($e->getMessage());
             }
+
+            return $this->getResponse()->setRedirect($this->getUrl($this->getRequest()->getParam('ret') == 'pending' ? '*/*/pending' : '*/*/'));
         }
-        $this->_redirectReferer();
+        $this->_redirect('*/*/');
     }
 
     public function deleteAction()
     {
-        $reviewId = $this->getRequest()->getParam('id', false);
+        $reviewId   = $this->getRequest()->getParam('id', false);
+        $session    = Mage::getSingleton('adminhtml/session');
 
         try {
             Mage::getModel('review/review')->setId($reviewId)
                 ->aggregate()
                 ->delete();
 
-            Mage::getSingleton('adminhtml/session')->addSuccess(Mage::helper('catalog')->__('Review successfully deleted'));
+            $session->addSuccess(Mage::helper('catalog')->__('The review has been deleted'));
             if( $this->getRequest()->getParam('ret') == 'pending' ) {
                 $this->getResponse()->setRedirect($this->getUrl('*/*/pending'));
             } else {
                 $this->getResponse()->setRedirect($this->getUrl('*/*/'));
             }
             return;
+        } catch (Mage_Core_Exception $e) {
+            $session->addError($e->getMessage());
         } catch (Exception $e){
-            Mage::getSingleton('adminhtml/session')->addError($e->getMessage());
+            $session->addException($e, Mage::helper('catalog')->__('An error occurred while deleting this review.'));
         }
 
-        $this->_redirectReferer();
+        $this->_redirect('*/*/edit/',array('id'=>$reviewId));
     }
 
     public function massDeleteAction()
     {
         $reviewsIds = $this->getRequest()->getParam('reviews');
+        $session    = Mage::getSingleton('adminhtml/session');
+
         if(!is_array($reviewsIds)) {
-             Mage::getSingleton('adminhtml/session')->addError(Mage::helper('adminhtml')->__('Please select review(s)'));
+             $session->addError(Mage::helper('adminhtml')->__('Please select review(s).'));
         } else {
             try {
                 foreach ($reviewsIds as $reviewId) {
@@ -152,23 +205,26 @@ class Mage_Adminhtml_Catalog_Product_ReviewController extends Mage_Adminhtml_Con
                     $model->delete();
                 }
                 Mage::getSingleton('adminhtml/session')->addSuccess(
-                    Mage::helper('adminhtml')->__('Total of %d record(s) were successfully deleted', count($reviewsIds))
+                    Mage::helper('adminhtml')->__('Total of %d record(s) have been deleted.', count($reviewsIds))
                 );
-            } catch (Exception $e) {
-                Mage::getSingleton('adminhtml/session')->addError($e->getMessage());
+            } catch (Mage_Core_Exception $e) {
+                $session->addError($e->getMessage());
+            } catch (Exception $e){
+                $session->addException($e, Mage::helper('adminhtml')->__('An error occurred while deleting record(s).'));
             }
         }
 
-        $this->_redirect('*/*/pending');
+        $this->_redirect('*/*/' . $this->getRequest()->getParam('ret', 'index'));
     }
 
     public function massUpdateStatusAction()
     {
         $reviewsIds = $this->getRequest()->getParam('reviews');
+        $session    = Mage::getSingleton('adminhtml/session');
+
         if(!is_array($reviewsIds)) {
-             Mage::getSingleton('adminhtml/session')->addError(Mage::helper('adminhtml')->__('Please select review(s)'));
+             $session->addError(Mage::helper('adminhtml')->__('Please select review(s).'));
         } else {
-            $session = Mage::getSingleton('adminhtml/session');
             /* @var $session Mage_Adminhtml_Model_Session */
             try {
                 $status = $this->getRequest()->getParam('status');
@@ -179,25 +235,25 @@ class Mage_Adminhtml_Catalog_Product_ReviewController extends Mage_Adminhtml_Con
                         ->aggregate();
                 }
                 $session->addSuccess(
-                    Mage::helper('adminhtml')->__('Total of %d record(s) were successfully updated', count($reviewsIds))
+                    Mage::helper('adminhtml')->__('Total of %d record(s) have been updated.', count($reviewsIds))
                 );
-            }
-            catch (Mage_Core_Exception $e) {
-                $session->addException($e->getMessage());
-            }
-            catch (Exception $e) {
-                $session->addError(Mage::helper('adminhtml')->__('Error while updating selected review(s). Please try again later.'));
+            } catch (Mage_Core_Exception $e) {
+                $session->addError($e->getMessage());
+            } catch (Exception $e) {
+                $session->addException($e, Mage::helper('adminhtml')->__('An error occurred while updating the selected review(s).'));
             }
         }
 
-        $this->_redirect('*/*/pending');
+        $this->_redirect('*/*/' . $this->getRequest()->getParam('ret', 'index'));
     }
 
     public function massVisibleInAction()
     {
         $reviewsIds = $this->getRequest()->getParam('reviews');
+        $session    = Mage::getSingleton('adminhtml/session');
+
         if(!is_array($reviewsIds)) {
-             Mage::getSingleton('adminhtml/session')->addError(Mage::helper('adminhtml')->__('Please select review(s)'));
+             $session->addError(Mage::helper('adminhtml')->__('Please select review(s).'));
         } else {
             $session = Mage::getSingleton('adminhtml/session');
             /* @var $session Mage_Adminhtml_Model_Session */
@@ -209,14 +265,12 @@ class Mage_Adminhtml_Catalog_Product_ReviewController extends Mage_Adminhtml_Con
                     $model->save();
                 }
                 $session->addSuccess(
-                    Mage::helper('adminhtml')->__('Total of %d record(s) were successfully updated', count($reviewsIds))
+                    Mage::helper('adminhtml')->__('Total of %d record(s) have been updated.', count($reviewsIds))
                 );
-            }
-            catch (Mage_Core_Exception $e) {
-                $session->addException($e->getMessage());
-            }
-            catch (Exception $e) {
-                $session->addError(Mage::helper('adminhtml')->__('Error while updating selected review(s). Please try again later.'));
+            } catch (Mage_Core_Exception $e) {
+                $session->addError($e->getMessage());
+            } catch (Exception $e) {
+                $session->addException($e, Mage::helper('adminhtml')->__('An error occurred while updating the selected review(s).'));
             }
         }
 
@@ -246,16 +300,20 @@ class Mage_Adminhtml_Catalog_Product_ReviewController extends Mage_Adminhtml_Con
             $response->setError(0);
         } else {
             $response->setError(1);
-            $response->setMessage(Mage::helper('catalog')->__('Unable to get product id.'));
+            $response->setMessage(Mage::helper('catalog')->__('Unable to get the product ID.'));
         }
         $this->getResponse()->setBody($response->toJSON());
     }
 
     public function postAction()
     {
-        $productId = $this->getRequest()->getParam('product_id', false);
+        $productId  = $this->getRequest()->getParam('product_id', false);
+        $session    = Mage::getSingleton('adminhtml/session');
+
         if ($data = $this->getRequest()->getPost()) {
-            if(isset($data['select_stores'])) {
+            if (Mage::app()->isSingleStoreMode()) {
+                $data['stores'] = array(Mage::app()->getStore(true)->getId());
+            } else  if (isset($data['select_stores'])) {
                 $data['stores'] = $data['select_stores'];
             }
 
@@ -269,20 +327,20 @@ class Mage_Adminhtml_Catalog_Product_ReviewController extends Mage_Adminhtml_Con
                     ->setEntityPkValue($productId)
                     ->setStoreId($product->getStoreId())
                     ->setStatusId($data['status_id'])
-                    ->setCustomerId(0)//0 is for administrator only
+                    ->setCustomerId(null)//null is for administrator only
                     ->save();
 
                 $arrRatingId = $this->getRequest()->getParam('ratings', array());
                 foreach ($arrRatingId as $ratingId=>$optionId) {
-                	Mage::getModel('rating/rating')
-                	   ->setRatingId($ratingId)
-                	   ->setReviewId($review->getId())
-                	   ->addOptionVote($optionId, $productId);
+                    Mage::getModel('rating/rating')
+                       ->setRatingId($ratingId)
+                       ->setReviewId($review->getId())
+                       ->addOptionVote($optionId, $productId);
                 }
 
                 $review->aggregate();
 
-                Mage::getSingleton('adminhtml/session')->addSuccess(Mage::helper('catalog')->__('Review was successfully saved'));
+                $session->addSuccess(Mage::helper('catalog')->__('The review has been saved.'));
                 if( $this->getRequest()->getParam('ret') == 'pending' ) {
                     $this->getResponse()->setRedirect($this->getUrl('*/*/pending'));
                 } else {
@@ -290,9 +348,10 @@ class Mage_Adminhtml_Catalog_Product_ReviewController extends Mage_Adminhtml_Con
                 }
 
                 return;
-            } catch (Exception $e){
-                die($e->getMessage());
-                Mage::getSingleton('adminhtml/session')->addError($e->getMessage());
+            } catch (Mage_Core_Exception $e) {
+                $session->addError($e->getMessage());
+            } catch (Exception $e) {
+                $session->addException($e, Mage::helper('adminhtml')->__('An error occurred while saving review.'));
             }
         }
         $this->getResponse()->setRedirect($this->getUrl('*/*/'));
@@ -301,18 +360,21 @@ class Mage_Adminhtml_Catalog_Product_ReviewController extends Mage_Adminhtml_Con
 
     public function ratingItemsAction()
     {
-        $this->getResponse()->setBody($this->getLayout()->createBlock('adminhtml/review_rating_detailed')->setIndependentMode()->toHtml());
+        $this->getResponse()->setBody(
+            $this->getLayout()->createBlock('adminhtml/review_rating_detailed')->setIndependentMode()->toHtml()
+        );
     }
 
     protected function _isAllowed()
     {
-    	switch ($this->getRequest()->getActionName()) {
+        $action = strtolower($this->getRequest()->getActionName());
+        switch ($action) {
             case 'pending':
                 return Mage::getSingleton('admin/session')->isAllowed('catalog/reviews_ratings/reviews/pending');
                 break;
             default:
                 return Mage::getSingleton('admin/session')->isAllowed('catalog/reviews_ratings/reviews/all');
                 break;
-    	}
+        }
     }
 }

@@ -10,11 +10,17 @@
  * http://opensource.org/licenses/osl-3.0.php
  * If you did not receive a copy of the license and are unable to
  * obtain it through the world-wide-web, please send an email
- * to license@magentocommerce.com so we can send you a copy immediately.
+ * to license@magento.com so we can send you a copy immediately.
  *
- * @category   Mage
- * @package    Mage_Adminhtml
- * @copyright  Copyright (c) 2004-2007 Irubin Consulting Inc. DBA Varien (http://www.varien.com)
+ * DISCLAIMER
+ *
+ * Do not edit or add to this file if you wish to upgrade Magento to newer
+ * versions in the future. If you wish to customize Magento for your
+ * needs please refer to http://www.magento.com for more information.
+ *
+ * @category    Mage
+ * @package     Mage_Adminhtml
+ * @copyright  Copyright (c) 2006-2017 X.commerce, Inc. and affiliates (http://www.magento.com)
  * @license    http://opensource.org/licenses/osl-3.0.php  Open Software License (OSL 3.0)
  */
 
@@ -24,6 +30,7 @@
  *
  * @category   Mage
  * @package    Mage_Adminhtml
+ * @author      Magento Core Team <core@magentocommerce.com>
  */
 class Mage_Adminhtml_Catalog_Product_Action_AttributeController extends Mage_Adminhtml_Controller_Action
 {
@@ -36,81 +43,147 @@ class Mage_Adminhtml_Catalog_Product_Action_AttributeController extends Mage_Adm
 
     public function editAction()
     {
-        if(!$this->_validateProducts()) {
+        if (!$this->_validateProducts()) {
             return;
         }
-        /* OLD FUNCTINALITY
-        if($countNotInStore = count($this->_getHelper()->getProductsNotInStoreIds())) {
-            // If we have selected products, that not exists in selected store we'll show warning
-            $this->_getSession()->addWarning(
-                $this->__('There is %d product(s) that will be not updated for selected store', $countNotInStore)
-            );
-        } */
 
         $this->loadLayout();
-
-        // Store switcher
-        $this->_addLeft(
-                $this->getLayout()->createBlock('adminhtml/store_switcher')
-                    ->setDefaultStoreName($this->__('Default Values'))
-                    ->setSwitchUrl($this->getUrl('*/*/*', array('_current'=>true, 'store'=>null)))
-        );
-
-        $this->_addLeft(
-            $this->getLayout()->createBlock(
-                'adminhtml/catalog_product_edit_action_attribute_tabs',
-                'attributes_tabs'
-            )
-        );
-
-        $this->_addContent(
-            $this->getLayout()->createBlock('adminhtml/catalog_product_edit_action_attribute')
-        );
-
         $this->renderLayout();
     }
 
+    /**
+     * Update product attributes
+     */
     public function saveAction()
     {
-        if(!$this->_validateProducts()) {
+        if (!$this->_validateProducts()) {
             return;
         }
 
-        // Attributes values for massupdate
-        $data = $this->getRequest()->getParam('attributes');
+        /* Collect Data */
+        $inventoryData      = $this->getRequest()->getParam('inventory', array());
+        $attributesData     = $this->getRequest()->getParam('attributes', array());
+        $websiteRemoveData  = $this->getRequest()->getParam('remove_website_ids', array());
+        $websiteAddData     = $this->getRequest()->getParam('add_website_ids', array());
 
-        if(!is_array($data)) {
-            $data = array();
+        /* Prepare inventory data item options (use config settings) */
+        foreach (Mage::helper('cataloginventory')->getConfigItemOptions() as $option) {
+            if (isset($inventoryData[$option]) && !isset($inventoryData['use_config_' . $option])) {
+                $inventoryData['use_config_' . $option] = 0;
+            }
         }
 
-        $productsNotInStore = $this->_getHelper()->getProductsNotInStoreIds();
         try {
-            foreach ($this->_getHelper()->getProducts() as $product) {
-                if(in_array($product->getId(), $productsNotInStore)) {
-                    // If product not available in selected store
-                    continue;
+            if ($attributesData) {
+                $dateFormat = Mage::app()->getLocale()->getDateFormat(Mage_Core_Model_Locale::FORMAT_TYPE_SHORT);
+                $storeId    = $this->_getHelper()->getSelectedStoreId();
+
+                foreach ($attributesData as $attributeCode => $value) {
+                    $attribute = Mage::getSingleton('eav/config')
+                        ->getAttribute(Mage_Catalog_Model_Product::ENTITY, $attributeCode);
+                    if (!$attribute->getAttributeId()) {
+                        unset($attributesData[$attributeCode]);
+                        continue;
+                    }
+                    if ($attribute->getBackendType() == 'datetime') {
+                        if (!empty($value)) {
+                            $filterInput    = new Zend_Filter_LocalizedToNormalized(array(
+                                'date_format' => $dateFormat
+                            ));
+                            $filterInternal = new Zend_Filter_NormalizedToLocalized(array(
+                                'date_format' => Varien_Date::DATE_INTERNAL_FORMAT
+                            ));
+                            $value = $filterInternal->filter($filterInput->filter($value));
+                        } else {
+                            $value = null;
+                        }
+                        $attributesData[$attributeCode] = $value;
+                    } elseif ($attribute->getFrontendInput() == 'multiselect') {
+                        // Check if 'Change' checkbox has been checked by admin for this attribute
+                        $isChanged = (bool)$this->getRequest()->getPost($attributeCode . '_checkbox');
+                        if (!$isChanged) {
+                            unset($attributesData[$attributeCode]);
+                            continue;
+                        }
+                        if (is_array($value)) {
+                            $value = implode(',', $value);
+                        }
+                        $attributesData[$attributeCode] = $value;
+                    }
                 }
 
-                $product->setStoreId($this->_getHelper()->getSelectedStoreId())
-                    ->load($product->getId())
-                    ->addData($data);
+                Mage::getSingleton('catalog/product_action')
+                    ->updateAttributes($this->_getHelper()->getProductIds(), $attributesData, $storeId);
+            }
+            if ($inventoryData) {
+                /** @var $stockItem Mage_CatalogInventory_Model_Stock_Item */
+                $stockItem = Mage::getModel('cataloginventory/stock_item');
+                $stockItem->setProcessIndexEvents(false);
+                $stockItemSaved = false;
+                $changedProductIds = array();
 
+                foreach ($this->_getHelper()->getProductIds() as $productId) {
+                    $stockItem->setData(array());
+                    $stockItem->loadByProduct($productId)
+                        ->setProductId($productId);
 
-                $product->save();
+                    $stockDataChanged = false;
+                    foreach ($inventoryData as $k => $v) {
+                        $stockItem->setDataUsingMethod($k, $v);
+                        if ($stockItem->dataHasChangedFor($k)) {
+                            $stockDataChanged = true;
+                        }
+                    }
+                    if ($stockDataChanged) {
+                        $stockItem->save();
+                        $stockItemSaved = true;
+                        $changedProductIds[] = $productId;
+                    }
+                }
+
+                if ($stockItemSaved) {
+                    Mage::getSingleton('index/indexer')->indexEvents(
+                        Mage_CatalogInventory_Model_Stock_Item::ENTITY,
+                        Mage_Index_Model_Event::TYPE_SAVE
+                    );
+
+                    Mage::dispatchEvent('catalog_product_stock_item_mass_change', array(
+                        'products' => $changedProductIds,
+                    ));
+                }
+            }
+
+            if ($websiteAddData || $websiteRemoveData) {
+                /* @var $actionModel Mage_Catalog_Model_Product_Action */
+                $actionModel = Mage::getSingleton('catalog/product_action');
+                $productIds  = $this->_getHelper()->getProductIds();
+
+                if ($websiteRemoveData) {
+                    $actionModel->updateWebsites($productIds, $websiteRemoveData, 'remove');
+                }
+                if ($websiteAddData) {
+                    $actionModel->updateWebsites($productIds, $websiteAddData, 'add');
+                }
+
+                Mage::dispatchEvent('catalog_product_to_website_change', array(
+                    'products' => $productIds
+                ));
+
+                $notice = Mage::getConfig()->getNode('adminhtml/messages/website_chnaged_indexers/label');
+                if ($notice) {
+                    $this->_getSession()->addNotice($this->__((string)$notice, $this->getUrl('adminhtml/process/list')));
+                }
             }
 
             $this->_getSession()->addSuccess(
-                $this->__('Total of %d record(s) were successfully updated',
-                count($this->_getHelper()->getProducts()))
+                $this->__('Total of %d record(s) were updated', count($this->_getHelper()->getProductIds()))
             );
         }
         catch (Mage_Core_Exception $e) {
             $this->_getSession()->addError($e->getMessage());
         }
         catch (Exception $e) {
-            $this->_getSession()->addError(
-                $this->__('There was an error while updating product(s) attributes')
-            );
+            $this->_getSession()->addException($e, $this->__('An error occurred while updating the product(s) attributes.'));
         }
 
         $this->_redirect('*/catalog_product/', array('store'=>$this->_getHelper()->getSelectedStoreId()));
@@ -123,13 +196,20 @@ class Mage_Adminhtml_Catalog_Product_Action_AttributeController extends Mage_Adm
      */
     protected function _validateProducts()
     {
-        if(!is_array($this->_getHelper()->getProductIds())) {
-            $this->_getSession()->addError($this->__('Please select products for attributes update'));
-            $this->_redirect('*/catalog_product/', array('_current'=>true));
-            return false;
+        $error = false;
+        $productIds = $this->_getHelper()->getProductIds();
+        if (!is_array($productIds)) {
+            $error = $this->__('Please select products for attributes update');
+        } else if (!Mage::getModel('catalog/product')->isProductsHasSku($productIds)) {
+            $error = $this->__('Some of the processed products have no SKU value defined. Please fill it prior to performing operations on these products.');
         }
 
-        return true;
+        if ($error) {
+            $this->_getSession()->addError($error);
+            $this->_redirect('*/catalog_product/', array('_current'=>true));
+        }
+
+        return !$error;
     }
 
     /**
@@ -141,9 +221,53 @@ class Mage_Adminhtml_Catalog_Product_Action_AttributeController extends Mage_Adm
     {
         return Mage::helper('adminhtml/catalog_product_edit_action_attribute');
     }
-    
+
     protected function _isAllowed()
     {
-        return Mage::getSingleton('admin/session')->isAllowed('catalog/attributes/attributes');
+        return Mage::getSingleton('admin/session')->isAllowed('catalog/update_attributes');
+    }
+
+    /**
+     * Attributes validation action
+     *
+     */
+    public function validateAction()
+    {
+        $response = new Varien_Object();
+        $response->setError(false);
+        $attributesData = $this->getRequest()->getParam('attributes', array());
+        $data = new Varien_Object();
+
+        try {
+            if ($attributesData) {
+                $dateFormat = Mage::app()->getLocale()->getDateFormat(Mage_Core_Model_Locale::FORMAT_TYPE_SHORT);
+                $storeId    = $this->_getHelper()->getSelectedStoreId();
+
+                foreach ($attributesData as $attributeCode => $value) {
+                    $attribute = Mage::getSingleton('eav/config')
+                        ->getAttribute('catalog_product', $attributeCode);
+                    if (!$attribute->getAttributeId()) {
+                        unset($attributesData[$attributeCode]);
+                        continue;
+                    }
+                    $data->setData($attributeCode, $value);
+                    $attribute->getBackend()->validate($data);
+                }
+            }
+        } catch (Mage_Eav_Model_Entity_Attribute_Exception $e) {
+            $response->setError(true);
+            $response->setAttribute($e->getAttributeCode());
+            $response->setMessage($e->getMessage());
+        } catch (Mage_Core_Exception $e) {
+            $response->setError(true);
+            $response->setMessage($e->getMessage());
+        } catch (Exception $e) {
+            $this->_getSession()->addException($e, $this->__('An error occurred while updating the product(s) attributes.'));
+            $this->_initLayoutMessages('adminhtml/session');
+            $response->setError(true);
+            $response->setMessage($this->getLayout()->getMessagesBlock()->getGroupedHtml());
+        }
+
+        $this->getResponse()->setBody($response->toJson());
     }
 }

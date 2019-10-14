@@ -15,31 +15,31 @@
  * @category   Zend
  * @package    Zend_Form
  * @subpackage Decorator
- * @copyright  Copyright (c) 2005-2008 Zend Technologies USA Inc. (http://www.zend.com)
+ * @copyright  Copyright (c) 2005-2015 Zend Technologies USA Inc. (http://www.zend.com)
  * @license    http://framework.zend.com/license/new-bsd     New BSD License
  */
 
 /** Zend_Form_Decorator_Abstract */
-require_once 'Zend/Form/Decorator/Abstract.php';
+#require_once 'Zend/Form/Decorator/Abstract.php';
 
 /**
  * Zend_Form_Decorator_Errors
  *
  * Any options passed will be used as HTML attributes of the ul tag for the errors.
- * 
+ *
  * @category   Zend
  * @package    Zend_Form
  * @subpackage Decorator
- * @copyright  Copyright (c) 2005-2008 Zend Technologies USA Inc. (http://www.zend.com)
+ * @copyright  Copyright (c) 2005-2015 Zend Technologies USA Inc. (http://www.zend.com)
  * @license    http://framework.zend.com/license/new-bsd     New BSD License
- * @version    $Id: Errors.php 8064 2008-02-16 10:58:39Z thomas $
+ * @version    $Id$
  */
 class Zend_Form_Decorator_Errors extends Zend_Form_Decorator_Abstract
 {
     /**
      * Render errors
-     * 
-     * @param  string $content 
+     *
+     * @param  string $content
      * @return string
      */
     public function render($content)
@@ -50,14 +50,22 @@ class Zend_Form_Decorator_Errors extends Zend_Form_Decorator_Abstract
             return $content;
         }
 
-        $errors = $element->getMessages();
+        // Get error messages
+        if ($element instanceof Zend_Form
+            && null !== $element->getElementsBelongTo()
+        ) {
+            $errors = $element->getMessages(null, true);
+        } else {
+            $errors = $element->getMessages();
+        }
+
         if (empty($errors)) {
             return $content;
         }
 
         $separator = $this->getSeparator();
         $placement = $this->getPlacement();
-        $errors    = $view->formErrors($errors, $this->getOptions()); 
+        $errors    = $view->formErrors($errors, $this->getOptions());
 
         switch ($placement) {
             case self::APPEND:

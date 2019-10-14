@@ -10,115 +10,131 @@
  * http://opensource.org/licenses/osl-3.0.php
  * If you did not receive a copy of the license and are unable to
  * obtain it through the world-wide-web, please send an email
- * to license@magentocommerce.com so we can send you a copy immediately.
+ * to license@magento.com so we can send you a copy immediately.
  *
- * @category   Mage
- * @package    Mage_GoogleCheckout
- * @copyright  Copyright (c) 2004-2007 Irubin Consulting Inc. DBA Varien (http://www.varien.com)
+ * DISCLAIMER
+ *
+ * Do not edit or add to this file if you wish to upgrade Magento to newer
+ * versions in the future. If you wish to customize Magento for your
+ * needs please refer to http://www.magento.com for more information.
+ *
+ * @category    Mage
+ * @package     Mage_GoogleCheckout
+ * @copyright  Copyright (c) 2006-2017 X.commerce, Inc. and affiliates (http://www.magento.com)
  * @license    http://opensource.org/licenses/osl-3.0.php  Open Software License (OSL 3.0)
  */
 
+/**
+ * @deprecated after 1.13.1.0
+ */
 class Mage_GoogleCheckout_Model_Payment extends Mage_Payment_Model_Method_Abstract
 {
-    const ACTION_AUTHORIZE = 0;
-    const ACTION_AUTHORIZE_CAPTURE = 1;
-
+    /**
+     * @var string
+     */
     protected $_code  = 'googlecheckout';
 
     /**
-     * Availability options
+     * Can be edit order (renew order)
+     *
+     * @return bool
      */
-    protected $_isGateway               = false;
-    protected $_canAuthorize            = true;
-    protected $_canCapture              = true;
-    protected $_canCapturePartial       = true;
-    protected $_canRefund               = true;
-    protected $_canVoid                 = true;
-    protected $_canUseInternal          = false;
-    protected $_canUseCheckout          = false;
-    protected $_canUseForMultishipping  = false;
+    public function canEdit()
+    {
+        return false;
+    }
+
+    /**
+     *  Return Order Place Redirect URL
+     *
+     *  @return string
+     */
+    public function getOrderPlaceRedirectUrl()
+    {
+        return '';
+    }
 
     /**
      * Authorize
      *
-     * @param   Varien_Object $orderPayment
-     * @return  Mage_GoogleCheckout_Model_Payment
+     * @param Varien_Object $payment
+     * @param float $amount
+     * @return Mage_GoogleCheckout_Model_Payment
      */
     public function authorize(Varien_Object $payment, $amount)
     {
-        $api = Mage::getModel('googlecheckout/api');
-        $api->authorize($payment->getOrder()->getExtOrderId());
-
-        return $this;
+        Mage::throwException(Mage::helper('payment')->__('Google Checkout has been deprecated.'));
     }
 
     /**
      * Capture payment
      *
-     * @param   Varien_Object $orderPayment
-     * @return  Mage_GoogleCheckout_Model_Payment
+     * @param Varien_Object $payment
+     * @param float $amount
+     * @throws Exception
+     * @return void
      */
     public function capture(Varien_Object $payment, $amount)
     {
-        try {
-            $this->authorize($payment, $amount);
-        } catch (Exception $e) {
-            // authorization is not expired yet
-        }
-
-        $api = Mage::getModel('googlecheckout/api');
-        $api->charge($payment->getOrder()->getExtOrderId(), $amount);
-
-        return $this;
+        Mage::throwException(Mage::helper('payment')->__('Google Checkout has been deprecated.'));
     }
 
     /**
      * Refund money
      *
-     * @param   Varien_Object $invoicePayment
-     * @return  Mage_GoogleCheckout_Model_Payment
+     * @param Varien_Object $payment
+     * @param float $amount
+     * @throws Exception
+     * @return void
      */
-    //public function refund(Varien_Object $payment, $amount)
     public function refund(Varien_Object $payment, $amount)
     {
-        $hlp = Mage::helper('googlecheckout');
-
-//        foreach ($payment->getCreditMemo()->getCommentsCollection() as $comment) {
-//            $this->setReason($hlp->__('See Comments'));
-//            $this->setComment($comment->getComment());
-//        }
-
-        $reason = $this->getReason() ? $this->getReason() : $hlp->__('No Reason');
-        $comment = $this->getComment() ? $this->getComment() : $hlp->__('No Comment');
-
-        $api = Mage::getModel('googlecheckout/api');
-        $api->refund($payment->getOrder()->getExtOrderId(), $amount, $reason, $comment);
-
-        return $this;
+        Mage::throwException(Mage::helper('payment')->__('Google Checkout has been deprecated.'));
     }
 
+    /**
+     * @param Varien_Object $payment
+     * @throws Exception
+     * @return void
+     */
     public function void(Varien_Object $payment)
     {
-        $this->cancel($payment);
-
-        return $this;
+        Mage::throwException(Mage::helper('payment')->__('Google Checkout has been deprecated.'));
     }
 
     /**
      * Void payment
      *
-     * @param   Varien_Object $invoicePayment
-     * @return  Mage_GoogleCheckout_Model_Payment
+     * @param Varien_Object $payment
+     * @throws Exception
+     * @return void
      */
     public function cancel(Varien_Object $payment)
     {
-        $hlp = Mage::helper('googlecheckout');
-        $reason = $this->getReason() ? $this->getReason() : $hlp->__('Unknown Reason');
-        $comment = $this->getComment() ? $this->getComment() : $hlp->__('No Comment');
+        Mage::throwException(Mage::helper('payment')->__('Google Checkout has been deprecated.'));
+    }
 
-        $api = Mage::getModel('googlecheckout/api');
-        #$api->cancel($payment->getOrder()->getExtOrderId(), $reason, $comment);
+    /**
+     * Retrieve information from payment configuration
+     *
+     * @param string $field
+     * @param int|string|null|Mage_Core_Model_Store $storeId
+     *
+     * @return  null
+     */
+    public function getConfigData($field, $storeId = null)
+    {
+        return null;
+    }
 
-        return $this;
+    /**
+     * Check void availability
+     *
+     * @param   Varien_Object $payment
+     * @return  bool
+     */
+    public function canVoid(Varien_Object $payment)
+    {
+        return false;
     }
 }

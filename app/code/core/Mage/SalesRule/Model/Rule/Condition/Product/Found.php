@@ -10,16 +10,23 @@
  * http://opensource.org/licenses/osl-3.0.php
  * If you did not receive a copy of the license and are unable to
  * obtain it through the world-wide-web, please send an email
- * to license@magentocommerce.com so we can send you a copy immediately.
+ * to license@magento.com so we can send you a copy immediately.
  *
- * @category   Mage
- * @package    Mage_SalesRule
- * @copyright  Copyright (c) 2004-2007 Irubin Consulting Inc. DBA Varien (http://www.varien.com)
+ * DISCLAIMER
+ *
+ * Do not edit or add to this file if you wish to upgrade Magento to newer
+ * versions in the future. If you wish to customize Magento for your
+ * needs please refer to http://www.magento.com for more information.
+ *
+ * @category    Mage
+ * @package     Mage_SalesRule
+ * @copyright  Copyright (c) 2006-2017 X.commerce, Inc. and affiliates (http://www.magento.com)
  * @license    http://opensource.org/licenses/osl-3.0.php  Open Software License (OSL 3.0)
  */
 
 
-class Mage_SalesRule_Model_Rule_Condition_Product_Found extends Mage_Rule_Model_Condition_Combine
+class Mage_SalesRule_Model_Rule_Condition_Product_Found
+    extends Mage_SalesRule_Model_Rule_Condition_Product_Combine
 {
     public function __construct()
     {
@@ -27,47 +34,27 @@ class Mage_SalesRule_Model_Rule_Condition_Product_Found extends Mage_Rule_Model_
         $this->setType('salesrule/rule_condition_product_found');
     }
 
-    public function loadOperatorOptions()
+    /**
+     * Load value options
+     *
+     * @return Mage_SalesRule_Model_Rule_Condition_Product_Found
+     */
+    public function loadValueOptions()
     {
-    	$this->setOperatorOption(array(
-    		1=>'FOUND',
-    		0=>'NOT FOUND',
-    	));
-    	return $this;
-    }
-
-    public function getNewChildSelectOptions()
-    {
-        $productCondition = Mage::getModel('salesrule/rule_condition_product');
-        $productAttributes = $productCondition->loadAttributeOptions()->getAttributeOption();
-        $pAttributes = array();
-        $iAttributes = array();
-        foreach ($productAttributes as $code=>$label) {
-            if (strpos($code, 'quote_item_')===0) {
-                $iAttributes[] = array('value'=>'salesrule/rule_condition_product|'.$code, 'label'=>$label);
-            } else {
-                $pAttributes[] = array('value'=>'salesrule/rule_condition_product|'.$code, 'label'=>$label);
-            }
-        }
-
-        $conditions = parent::getNewChildSelectOptions();
-        $conditions = array_merge_recursive($conditions, array(
-            array('value'=>'salesrule/rule_condition_product_combine', 'label'=>Mage::helper('salesrule')->__('Conditions Combination')),
-            array('label'=>Mage::helper('catalog')->__('Cart Item Attribute'), 'value'=>$iAttributes),
-            array('label'=>Mage::helper('catalog')->__('Product Attribute'), 'value'=>$pAttributes),
+        $this->setValueOption(array(
+            1 => Mage::helper('salesrule')->__('FOUND'),
+            0 => Mage::helper('salesrule')->__('NOT FOUND')
         ));
-        return $conditions;
+        return $this;
     }
 
     public function asHtml()
     {
-    	$html = $this->getTypeElement()->getHtml().
-    	    Mage::helper('salesrule')->__("If an item is %s in the cart with %s of these conditions true:",
-    		$this->getOperatorElement()->getHtml(), $this->getAttributeElement()->getHtml());
-       	if ($this->getId()!='1') {
-       	    $html.= $this->getRemoveLinkHtml();
-       	}
-    	return $html;
+        $html = $this->getTypeElement()->getHtml() . Mage::helper('salesrule')->__("If an item is %s in the cart with %s of these conditions true:", $this->getValueElement()->getHtml(), $this->getAggregatorElement()->getHtml());
+        if ($this->getId() != '1') {
+            $html.= $this->getRemoveLinkHtml();
+        }
+        return $html;
     }
 
     /**
@@ -78,39 +65,30 @@ class Mage_SalesRule_Model_Rule_Condition_Product_Found extends Mage_Rule_Model_
      */
     public function validate(Varien_Object $object)
     {
-        $all = $this->getAttribute()==='all';
+        $all = $this->getAggregator()==='all';
+        $true = (bool)$this->getValue();
         $found = false;
         foreach ($object->getAllItems() as $item) {
-            $found = $all ? true : false;
+            $found = $all;
             foreach ($this->getConditions() as $cond) {
-                if ($all && !$cond->validate($item)) {
-                    $found = false;
+                $validated = $cond->validate($item);
+                if (($all && !$validated) || (!$all && $validated)) {
+                    $found = $validated;
                     break;
-                } elseif (!$all && $cond->validate($item)) {
-                    $found = true;
-                    break 2;
                 }
             }
-            if ($found && (bool)$this->getOperator()) {
+            if (($found && $true) || (!$true && $found)) {
                 break;
             }
         }
-        if ($found && (bool)$this->getOperator()) {
-            // found an item and we're looking for existing one
-
+        // found an item and we're looking for existing one
+        if ($found && $true) {
             return true;
-        } elseif (!$found && !(bool)$this->getOperator()) {
-            // not found and we're making sure it doesn't exist
+        }
+        // not found and we're making sure it doesn't exist
+        elseif (!$found && !$true) {
             return true;
         }
         return false;
-    }
-
-    public function collectValidatedAttributes($productCollection)
-    {
-        foreach ($this->getConditions() as $condition) {
-            $condition->collectValidatedAttributes($productCollection);
-        }
-        return $this;
     }
 }

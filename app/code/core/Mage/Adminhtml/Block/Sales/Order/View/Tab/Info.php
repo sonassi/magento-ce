@@ -10,11 +10,17 @@
  * http://opensource.org/licenses/osl-3.0.php
  * If you did not receive a copy of the license and are unable to
  * obtain it through the world-wide-web, please send an email
- * to license@magentocommerce.com so we can send you a copy immediately.
+ * to license@magento.com so we can send you a copy immediately.
  *
- * @category   Mage
- * @package    Mage_Adminhtml
- * @copyright  Copyright (c) 2004-2007 Irubin Consulting Inc. DBA Varien (http://www.varien.com)
+ * DISCLAIMER
+ *
+ * Do not edit or add to this file if you wish to upgrade Magento to newer
+ * versions in the future. If you wish to customize Magento for your
+ * needs please refer to http://www.magento.com for more information.
+ *
+ * @category    Mage
+ * @package     Mage_Adminhtml
+ * @copyright  Copyright (c) 2006-2017 X.commerce, Inc. and affiliates (http://www.magento.com)
  * @license    http://opensource.org/licenses/osl-3.0.php  Open Software License (OSL 3.0)
  */
 
@@ -23,15 +29,12 @@
  *
  * @category   Mage
  * @package    Mage_Adminhtml
+ * @author      Magento Core Team <core@magentocommerce.com>
  */
-class Mage_Adminhtml_Block_Sales_Order_View_Tab_Info extends Mage_Adminhtml_Block_Sales_Order_Abstract
+class Mage_Adminhtml_Block_Sales_Order_View_Tab_Info
+    extends Mage_Adminhtml_Block_Sales_Order_Abstract
+    implements Mage_Adminhtml_Block_Widget_Tab_Interface
 {
-    protected function _construct()
-    {
-        parent::_construct();
-        $this->setTemplate('sales/order/view/tab/info.phtml');
-    }
-
     /**
      * Retrieve order model instance
      *
@@ -42,76 +45,98 @@ class Mage_Adminhtml_Block_Sales_Order_View_Tab_Info extends Mage_Adminhtml_Bloc
         return Mage::registry('current_order');
     }
 
-    protected function _prepareLayout()
+    /**
+     * Retrieve source model instance
+     *
+     * @return Mage_Sales_Model_Order
+     */
+    public function getSource()
     {
-        $this->setChild(
-            'messages',
-            $this->getLayout()->createBlock('adminhtml/sales_order_view_messages')
+        return $this->getOrder();
+    }
+
+    /**
+     * Retrieve order totals block settings
+     *
+     * @return array
+     */
+    public function getOrderTotalData()
+    {
+        return array(
+            'can_display_total_due'      => true,
+            'can_display_total_paid'     => true,
+            'can_display_total_refunded' => true,
         );
+    }
 
-        $infoBlock = $this->getLayout()->createBlock('adminhtml/sales_order_view_info')
-            ->setOrder($this->getOrder())
-            ->setNoUseOrderLink(true);
-        $this->setChild('info', $infoBlock);
-
-        $this->setChild(
-            'items',
-            $this->getLayout()->createBlock('adminhtml/sales_order_view_items')
+    public function getOrderInfoData()
+    {
+        return array(
+            'no_use_order_link' => true,
         );
-
-        $paymentInfoBlock = $this->getLayout()->createBlock('adminhtml/sales_order_payment')
-            ->setPayment($this->getOrder()->getPayment());
-        $this->setChild('payment_info', $paymentInfoBlock);
-
-        $this->setChild(
-            'history',
-            $this->getLayout()->createBlock('adminhtml/sales_order_view_history')
-        );
-
-        $this->setChild(
-            'giftmessage',
-            $this->getLayout()->createBlock('adminhtml/sales_order_view_giftmessage')
-                ->setEntity($this->getOrder())
-        );
-
-        $totalsBlock = $this->getLayout()->createBlock('adminhtml/sales_order_totals')
-            ->setSource($this->getOrder())
-            ->setCurrency($this->getOrder()->getOrderCurrency())
-            ->setCanDisplayTotalDue(true)
-            ->setCanDisplayTotalPaid(true)
-            ->setCanDisplayTotalRefunded(true);
-
-        $this->setChild('totals', $totalsBlock);
-        return parent::_prepareLayout();
     }
 
     public function getTrackingHtml()
     {
-        return $this->getChildHtml('tracking');
+        return $this->getChildHtml('order_tracking');
     }
 
     public function getItemsHtml()
     {
-        return $this->getChildHtml('items');
+        return $this->getChildHtml('order_items');
     }
 
     /**
-     * Retrive giftmessage block html
+     * Retrieve giftmessage block html
      *
+     * @deprecated after 1.4.2.0, use self::getGiftOptionsHtml() instead
      * @return string
      */
     public function getGiftmessageHtml()
     {
-        return $this->getChildHtml('giftmessage');
+        return $this->getChildHtml('order_giftmessage');
+    }
+
+    /**
+     * Retrieve gift options container block html
+     *
+     * @return string
+     */
+    public function getGiftOptionsHtml()
+    {
+        return $this->getChildHtml('gift_options');
     }
 
     public function getPaymentHtml()
     {
-        return $this->getChildHtml('payment_info');
+        return $this->getChildHtml('order_payment');
     }
 
     public function getViewUrl($orderId)
     {
         return $this->getUrl('*/*/*', array('order_id'=>$orderId));
+    }
+
+    /**
+     * ######################## TAB settings #################################
+     */
+    public function getTabLabel()
+    {
+        return Mage::helper('sales')->__('Information');
+    }
+
+    public function getTabTitle()
+    {
+        return Mage::helper('sales')->__('Order Information');
+    }
+
+    public function canShowTab()
+    {
+        return true;
+    }
+
+    public function isHidden()
+    {
+        return false;
     }
 }

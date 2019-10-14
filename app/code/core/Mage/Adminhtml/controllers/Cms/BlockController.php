@@ -10,11 +10,17 @@
  * http://opensource.org/licenses/osl-3.0.php
  * If you did not receive a copy of the license and are unable to
  * obtain it through the world-wide-web, please send an email
- * to license@magentocommerce.com so we can send you a copy immediately.
+ * to license@magento.com so we can send you a copy immediately.
  *
- * @category   Mage
- * @package    Mage_Adminhtml
- * @copyright  Copyright (c) 2004-2007 Irubin Consulting Inc. DBA Varien (http://www.varien.com)
+ * DISCLAIMER
+ *
+ * Do not edit or add to this file if you wish to upgrade Magento to newer
+ * versions in the future. If you wish to customize Magento for your
+ * needs please refer to http://www.magento.com for more information.
+ *
+ * @category    Mage
+ * @package     Mage_Adminhtml
+ * @copyright  Copyright (c) 2006-2017 X.commerce, Inc. and affiliates (http://www.magento.com)
  * @license    http://opensource.org/licenses/osl-3.0.php  Open Software License (OSL 3.0)
  */
 
@@ -24,6 +30,7 @@
  *
  * @category   Mage
  * @package    Mage_Adminhtml
+ * @author      Magento Core Team <core@magentocommerce.com>
  */
 class Mage_Adminhtml_Cms_BlockController extends Mage_Adminhtml_Controller_Action
 {
@@ -38,7 +45,7 @@ class Mage_Adminhtml_Cms_BlockController extends Mage_Adminhtml_Controller_Actio
         $this->loadLayout()
             ->_setActiveMenu('cms/block')
             ->_addBreadcrumb(Mage::helper('cms')->__('CMS'), Mage::helper('cms')->__('CMS'))
-            ->_addBreadcrumb(Mage::helper('cms')->__('Manage Blocks'), Mage::helper('cms')->__('Manage Blocks'))
+            ->_addBreadcrumb(Mage::helper('cms')->__('Static Blocks'), Mage::helper('cms')->__('Static Blocks'))
         ;
         return $this;
     }
@@ -48,9 +55,10 @@ class Mage_Adminhtml_Cms_BlockController extends Mage_Adminhtml_Controller_Actio
      */
     public function indexAction()
     {
-        $this->_initAction()
-            ->_addContent($this->getLayout()->createBlock('adminhtml/cms_block'))
-            ->renderLayout();
+        $this->_title($this->__('CMS'))->_title($this->__('Static Blocks'));
+
+        $this->_initAction();
+        $this->renderLayout();
     }
 
     /**
@@ -67,6 +75,8 @@ class Mage_Adminhtml_Cms_BlockController extends Mage_Adminhtml_Controller_Actio
      */
     public function editAction()
     {
+        $this->_title($this->__('CMS'))->_title($this->__('Static Blocks'));
+
         // 1. Get ID and create model
         $id = $this->getRequest()->getParam('block_id');
         $model = Mage::getModel('cms/block');
@@ -75,11 +85,13 @@ class Mage_Adminhtml_Cms_BlockController extends Mage_Adminhtml_Controller_Actio
         if ($id) {
             $model->load($id);
             if (! $model->getId()) {
-                Mage::getSingleton('adminhtml/session')->addError(Mage::helper('cms')->__('This block no longer exists'));
+                Mage::getSingleton('adminhtml/session')->addError(Mage::helper('cms')->__('This block no longer exists.'));
                 $this->_redirect('*/*/');
                 return;
             }
         }
+
+        $this->_title($model->getId() ? $model->getTitle() : $this->__('New Block'));
 
         // 3. Set entered data if was error when we do save
         $data = Mage::getSingleton('adminhtml/session')->getFormData(true);
@@ -93,7 +105,6 @@ class Mage_Adminhtml_Cms_BlockController extends Mage_Adminhtml_Controller_Actio
         // 5. Build edit form
         $this->_initAction()
             ->_addBreadcrumb($id ? Mage::helper('cms')->__('Edit Block') : Mage::helper('cms')->__('New Block'), $id ? Mage::helper('cms')->__('Edit Block') : Mage::helper('cms')->__('New Block'))
-            ->_addContent($this->getLayout()->createBlock('adminhtml/cms_block_edit')->setData('action', $this->getUrl('*/cms_block/save')))
             ->renderLayout();
     }
 
@@ -104,8 +115,17 @@ class Mage_Adminhtml_Cms_BlockController extends Mage_Adminhtml_Controller_Actio
     {
         // check if data sent
         if ($data = $this->getRequest()->getPost()) {
+
+            $id = $this->getRequest()->getParam('block_id');
+            $model = Mage::getModel('cms/block')->load($id);
+            if (!$model->getId() && $id) {
+                Mage::getSingleton('adminhtml/session')->addError(Mage::helper('cms')->__('This block no longer exists.'));
+                $this->_redirect('*/*/');
+                return;
+            }
+
             // init model and set data
-            $model = Mage::getModel('cms/block');
+
             $model->setData($data);
 
             // try to save it
@@ -113,7 +133,7 @@ class Mage_Adminhtml_Cms_BlockController extends Mage_Adminhtml_Controller_Actio
                 // save the data
                 $model->save();
                 // display success message
-                Mage::getSingleton('adminhtml/session')->addSuccess(Mage::helper('cms')->__('Block was successfully saved'));
+                Mage::getSingleton('adminhtml/session')->addSuccess(Mage::helper('cms')->__('The block has been saved.'));
                 // clear previously saved data from session
                 Mage::getSingleton('adminhtml/session')->setFormData(false);
 
@@ -146,13 +166,15 @@ class Mage_Adminhtml_Cms_BlockController extends Mage_Adminhtml_Controller_Actio
     {
         // check if we know what should be deleted
         if ($id = $this->getRequest()->getParam('block_id')) {
+            $title = "";
             try {
                 // init model and delete
                 $model = Mage::getModel('cms/block');
-                $model->setId($id);
+                $model->load($id);
+                $title = $model->getTitle();
                 $model->delete();
                 // display success message
-                Mage::getSingleton('adminhtml/session')->addSuccess(Mage::helper('cms')->__('Block was successfully deleted'));
+                Mage::getSingleton('adminhtml/session')->addSuccess(Mage::helper('cms')->__('The block has been deleted.'));
                 // go to grid
                 $this->_redirect('*/*/');
                 return;
@@ -166,7 +188,7 @@ class Mage_Adminhtml_Cms_BlockController extends Mage_Adminhtml_Controller_Actio
             }
         }
         // display error message
-        Mage::getSingleton('adminhtml/session')->addError(Mage::helper('cms')->__('Unable to find a block to delete'));
+        Mage::getSingleton('adminhtml/session')->addError(Mage::helper('cms')->__('Unable to find a block to delete.'));
         // go to grid
         $this->_redirect('*/*/');
     }

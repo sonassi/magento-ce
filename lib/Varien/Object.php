@@ -10,11 +10,17 @@
  * http://opensource.org/licenses/osl-3.0.php
  * If you did not receive a copy of the license and are unable to
  * obtain it through the world-wide-web, please send an email
- * to license@magentocommerce.com so we can send you a copy immediately.
+ * to license@magento.com so we can send you a copy immediately.
  *
- * @category   Varien
- * @package    Varien_Object
- * @copyright  Copyright (c) 2004-2007 Irubin Consulting Inc. DBA Varien (http://www.varien.com)
+ * DISCLAIMER
+ *
+ * Do not edit or add to this file if you wish to upgrade Magento to newer
+ * versions in the future. If you wish to customize Magento for your
+ * needs please refer to http://www.magento.com for more information.
+ *
+ * @category    Varien
+ * @package     Varien_Object
+ * @copyright  Copyright (c) 2006-2017 X.commerce, Inc. and affiliates (http://www.magento.com)
  * @license    http://opensource.org/licenses/osl-3.0.php  Open Software License (OSL 3.0)
  */
 
@@ -24,8 +30,9 @@
  *
  * @category   Varien
  * @package    Varien_Object
+ * @author      Magento Core Team <core@magentocommerce.com>
  */
-class Varien_Object
+class Varien_Object implements ArrayAccess
 {
 
     /**
@@ -34,6 +41,12 @@ class Varien_Object
      * @var array
      */
     protected $_data = array();
+
+    /**
+     * Data changes flag (true after setData|unsetData call)
+     * @var $_hasDataChange bool
+     */
+    protected $_hasDataChanges = false;
 
     /**
     * Original data that was loaded
@@ -57,11 +70,23 @@ class Varien_Object
     protected static $_underscoreCache = array();
 
     /**
-     * Enter description here...
+     * Object delete flag
      *
      * @var boolean
      */
     protected $_isDeleted = false;
+
+    /**
+     * Map short fields names to its full names
+     *
+     * @var array
+     */
+    protected $_oldFieldsMap = array();
+
+    /**
+     * Map of fields to sync to other fields upon changing their data
+     */
+    protected $_syncFieldsMap = array();
 
     /**
      * Constructor
@@ -72,26 +97,66 @@ class Varien_Object
      */
     public function __construct()
     {
+        $this->_initOldFieldsMap();
+        if ($this->_oldFieldsMap) {
+            $this->_prepareSyncFieldsMap();
+        }
+
         $args = func_get_args();
         if (empty($args[0])) {
             $args[0] = array();
         }
         $this->_data = $args[0];
+        $this->_addFullNames();
 
         $this->_construct();
     }
 
+    protected function _addFullNames()
+    {
+        $existedShortKeys = array_intersect($this->_syncFieldsMap, array_keys($this->_data));
+        if (!empty($existedShortKeys)) {
+            foreach ($existedShortKeys as $key) {
+                $fullFieldName = array_search($key, $this->_syncFieldsMap);
+                $this->_data[$fullFieldName] = $this->_data[$key];
+            }
+        }
+    }
+
     /**
-     * Enter description here...
+     * Inits mapping array of object's previously used fields to new fields.
+     * Must be overloaded by descendants to set concrete fields map.
      *
+     * @return Varien_Object
      */
-    protected function _construct()
+    protected function _initOldFieldsMap()
     {
 
     }
 
     /**
-     * Enter description here...
+     * Called after old fields are inited. Forms synchronization map to sync old fields and new fields
+     * between each other.
+     *
+     * @return Varien_Object
+     */
+    protected function _prepareSyncFieldsMap()
+    {
+        $old2New = $this->_oldFieldsMap;
+        $new2Old = array_flip($this->_oldFieldsMap);
+        $this->_syncFieldsMap = array_merge($old2New, $new2Old);
+        return $this;
+    }
+
+    /**
+     * Internal constructor not depended on params. Can be used for object initialization
+     */
+    protected function _construct()
+    {
+    }
+
+    /**
+     * Set _isDeleted flag value (if $isDeleted param is defined) and return current flag value
      *
      * @param boolean $isDeleted
      * @return boolean
@@ -103,6 +168,16 @@ class Varien_Object
             $this->_isDeleted = $isDeleted;
         }
         return $result;
+    }
+
+    /**
+     * Get data change status
+     *
+     * @return bool
+     */
+    public function hasDataChanges()
+    {
+        return $this->_hasDataChanges;
     }
 
     /**
@@ -136,9 +211,9 @@ class Varien_Object
     public function getId()
     {
         if ($this->getIdFieldName()) {
-            return $this->getData($this->getIdFieldName());
+            return $this->_getData($this->getIdFieldName());
         }
-        return $this->getData('id');
+        return $this->_getData('id');
     }
 
     /**
@@ -151,8 +226,7 @@ class Varien_Object
     {
         if ($this->getIdFieldName()) {
             $this->setData($this->getIdFieldName(), $value);
-        }
-        else {
+        } else {
             $this->setData('id', $value);
         }
         return $this;
@@ -182,19 +256,22 @@ class Varien_Object
      *
      * If $key is an array, it will overwrite all the data in the object.
      *
-     * $isChanged will specify if the object needs to be saved after an update.
-     *
      * @param string|array $key
      * @param mixed $value
-     * @param boolean $isChanged
      * @return Varien_Object
      */
     public function setData($key, $value=null)
     {
+        $this->_hasDataChanges = true;
         if(is_array($key)) {
             $this->_data = $key;
+            $this->_addFullNames();
         } else {
             $this->_data[$key] = $value;
+            if (isset($this->_syncFieldsMap[$key])) {
+                $fullFieldName = $this->_syncFieldsMap[$key];
+                $this->_data[$fullFieldName] = $value;
+            }
         }
         return $this;
     }
@@ -204,16 +281,38 @@ class Varien_Object
      *
      * $key can be a string only. Array will be ignored.
      *
-     * $isChanged will specify if the object needs to be saved after an update.
-     *
      * @param string $key
-     * @param boolean $isChanged
      * @return Varien_Object
      */
     public function unsetData($key=null)
     {
+        $this->_hasDataChanges = true;
         if (is_null($key)) {
             $this->_data = array();
+        } else {
+            unset($this->_data[$key]);
+            if (isset($this->_syncFieldsMap[$key])) {
+                $fullFieldName = $this->_syncFieldsMap[$key];
+                unset($this->_data[$fullFieldName]);
+            }
+        }
+        return $this;
+    }
+
+    /**
+     * Unset old fields data from the object.
+     *
+     * $key can be a string only. Array will be ignored.
+     *
+     * @param string $key
+     * @return Varien_Object
+     */
+    public function unsetOldData($key=null)
+    {
+        if (is_null($key)) {
+            foreach ($this->_oldFieldsMap as $key => $newFieldName) {
+                unset($this->_data[$key]);
+            }
         } else {
             unset($this->_data[$key]);
         }
@@ -239,23 +338,25 @@ class Varien_Object
             return $this->_data;
         }
 
+        $default = null;
+
         // accept a/b/c as ['a']['b']['c']
         if (strpos($key,'/')) {
             $keyArr = explode('/', $key);
             $data = $this->_data;
             foreach ($keyArr as $i=>$k) {
                 if ($k==='') {
-                    return null;
+                    return $default;
                 }
                 if (is_array($data)) {
                     if (!isset($data[$k])) {
-                        return null;
+                        return $default;
                     }
                     $data = $data[$k];
                 } elseif ($data instanceof Varien_Object) {
                     $data = $data->getData($k);
                 } else {
-                    return null;
+                    return $default;
                 }
             }
             return $data;
@@ -279,13 +380,67 @@ class Varien_Object
                 return null;
             } elseif (is_string($value)) {
                 $arr = explode("\n", $value);
-                return (isset($arr[$index]) && (!empty($arr[$index]) || strlen($arr[$index]) > 0)) ? $arr[$index] : null;
+                return (isset($arr[$index]) && (!empty($arr[$index]) || strlen($arr[$index]) > 0))
+                    ? $arr[$index] : null;
             } elseif ($value instanceof Varien_Object) {
                 return $value->getData($index);
             }
-            return null;
+            return $default;
         }
-        return null;
+        return $default;
+    }
+
+    /**
+     * Get value from _data array without parse key
+     *
+     * @param   string $key
+     * @return  mixed
+     */
+    protected function _getData($key)
+    {
+        return isset($this->_data[$key]) ? $this->_data[$key] : null;
+    }
+
+    /**
+     * Set object data with calling setter method
+     *
+     * @param string $key
+     * @param mixed $args
+     * @return Varien_Object
+     */
+    public function setDataUsingMethod($key, $args=array())
+    {
+        $method = 'set'.$this->_camelize($key);
+        $this->$method($args);
+        return $this;
+    }
+
+    /**
+     * Get object data by key with calling getter method
+     *
+     * @param string $key
+     * @param mixed $args
+     * @return mixed
+     */
+    public function getDataUsingMethod($key, $args=null)
+    {
+        $method = 'get'.$this->_camelize($key);
+        return $this->$method($args);
+    }
+
+    /**
+     * Fast get data or set default if value is not available
+     *
+     * @param string $key
+     * @param mixed $default
+     * @return mixed
+     */
+    public function getDataSetDefault($key, $default)
+    {
+        if (!isset($this->_data[$key])) {
+            $this->_data[$key] = $default;
+        }
+        return $this->_data[$key];
     }
 
     /**
@@ -368,7 +523,9 @@ class Varien_Object
         if ($addOpenTag) {
             $xml.= '<?xml version="1.0" encoding="UTF-8"?>'."\n";
         }
-        $xml.= '<'.$rootName.'>'."\n";
+        if (!empty($rootName)) {
+            $xml.= '<'.$rootName.'>'."\n";
+        }
         $xmlModel = new Varien_Simplexml_Element('<node></node>');
         $arrData = $this->toArray($arrAttributes);
         foreach ($arrData as $fieldName => $fieldValue) {
@@ -379,7 +536,9 @@ class Varien_Object
             }
             $xml.= "<$fieldName>$fieldValue</$fieldName>"."\n";
         }
-        $xml.= '</'.$rootName.'>'."\n";
+        if (!empty($rootName)) {
+            $xml.= '</'.$rootName.'>'."\n";
+        }
         return $xml;
     }
 
@@ -426,11 +585,11 @@ class Varien_Object
      * @param  string $valueSeparator
      * @return string
      */
-    public function __toString(array $arrAttributes = array(), $valueSeparator=',')
-    {
-        $arrData = $this->toArray($arrAttributes);
-        return implode($valueSeparator, $arrData);
-    }
+//    public function __toString(array $arrAttributes = array(), $valueSeparator=',')
+//    {
+//        $arrData = $this->toArray($arrAttributes);
+//        return implode($valueSeparator, $arrData);
+//    }
 
     /**
      * Public wrapper for __toString
@@ -465,30 +624,30 @@ class Varien_Object
     {
         switch (substr($method, 0, 3)) {
             case 'get' :
-//                Varien_Profiler::start('GETTER: '.get_class($this).'::'.$method);
+                //Varien_Profiler::start('GETTER: '.get_class($this).'::'.$method);
                 $key = $this->_underscore(substr($method,3));
                 $data = $this->getData($key, isset($args[0]) ? $args[0] : null);
-//                Varien_Profiler::stop('GETTER: '.get_class($this).'::'.$method);
+                //Varien_Profiler::stop('GETTER: '.get_class($this).'::'.$method);
                 return $data;
 
             case 'set' :
-//                Varien_Profiler::start('SETTER: '.get_class($this).'::'.$method);
+                //Varien_Profiler::start('SETTER: '.get_class($this).'::'.$method);
                 $key = $this->_underscore(substr($method,3));
                 $result = $this->setData($key, isset($args[0]) ? $args[0] : null);
-//                Varien_Profiler::stop('SETTER: '.get_class($this).'::'.$method);
+                //Varien_Profiler::stop('SETTER: '.get_class($this).'::'.$method);
                 return $result;
 
             case 'uns' :
-//                Varien_Profiler::start('UNS: '.get_class($this).'::'.$method);
+                //Varien_Profiler::start('UNS: '.get_class($this).'::'.$method);
                 $key = $this->_underscore(substr($method,3));
                 $result = $this->unsetData($key);
-//                Varien_Profiler::stop('UNS: '.get_class($this).'::'.$method);
+                //Varien_Profiler::stop('UNS: '.get_class($this).'::'.$method);
                 return $result;
 
             case 'has' :
-//                Varien_Profiler::start('HAS: '.get_class($this).'::'.$method);
+                //Varien_Profiler::start('HAS: '.get_class($this).'::'.$method);
                 $key = $this->_underscore(substr($method,3));
-//                Varien_Profiler::stop('HAS: '.get_class($this).'::'.$method);
+                //Varien_Profiler::stop('HAS: '.get_class($this).'::'.$method);
                 return isset($this->_data[$key]);
         }
         throw new Varien_Exception("Invalid method ".get_class($this)."::".$method."(".print_r($args,1).")");
@@ -515,7 +674,6 @@ class Varien_Object
      */
     public function __set($var, $value)
     {
-        $this->_isChanged = true;
         $var = $this->_underscore($var);
         $this->setData($var, $value);
     }
@@ -527,7 +685,7 @@ class Varien_Object
      */
     public function isEmpty()
     {
-        if(empty($this->_data)) {
+        if (empty($this->_data)) {
             return true;
         }
         return false;
@@ -554,6 +712,11 @@ class Varien_Object
         return $result;
     }
 
+    protected function _camelize($name)
+    {
+        return uc_words($name, '');
+    }
+
     /**
      * serialize object attributes
      *
@@ -573,7 +736,7 @@ class Varien_Object
 
         foreach ($this->_data as $key => $value) {
             if (in_array($key, $attributes)) {
-                $data[] = $key.$valueSeparator.$quote.$value.$quote;
+                $data[] = $key . $valueSeparator . $quote . $value . $quote;
             }
         }
         $res = implode($fieldSeparator, $data);
@@ -581,7 +744,7 @@ class Varien_Object
     }
 
     /**
-     * Enter description here...
+     * Get object loaded data (original data)
      *
      * @param string $key
      * @return mixed
@@ -595,7 +758,7 @@ class Varien_Object
     }
 
     /**
-     * Enter description here...
+     * Initialize object original data
      *
      * @param string $key
      * @param mixed $data
@@ -612,7 +775,7 @@ class Varien_Object
     }
 
     /**
-     * Enter description here...
+     * Compare object data with original data
      *
      * @param string $field
      * @return boolean
@@ -623,6 +786,96 @@ class Varien_Object
         $origData = $this->getOrigData($field);
         return $newData!=$origData;
     }
+
+    /**
+     * Clears data changes status
+     *
+     * @param boolean $value
+     * @return Varien_Object
+     */
+    public function setDataChanges($value)
+    {
+        $this->_hasDataChanges = (bool)$value;
+        return $this;
+    }
+
+    /**
+     * Present object data as string in debug mode
+     *
+     * @param mixed $data
+     * @param array $objects
+     * @return string
+     */
+    public function debug($data=null, &$objects=array())
+    {
+        if (is_null($data)) {
+            $hash = spl_object_hash($this);
+            if (!empty($objects[$hash])) {
+                return '*** RECURSION ***';
+            }
+            $objects[$hash] = true;
+            $data = $this->getData();
+        }
+        $debug = array();
+        foreach ($data as $key=>$value) {
+            if (is_scalar($value)) {
+                $debug[$key] = $value;
+            } elseif (is_array($value)) {
+                $debug[$key] = $this->debug($value, $objects);
+            } elseif ($value instanceof Varien_Object) {
+                $debug[$key.' ('.get_class($value).')'] = $value->debug(null, $objects);
+            }
+        }
+        return $debug;
+    }
+
+    /**
+     * Implementation of ArrayAccess::offsetSet()
+     *
+     * @link http://www.php.net/manual/en/arrayaccess.offsetset.php
+     * @param string $offset
+     * @param mixed $value
+     */
+    public function offsetSet($offset, $value)
+    {
+        $this->_data[$offset] = $value;
+    }
+
+    /**
+     * Implementation of ArrayAccess::offsetExists()
+     *
+     * @link http://www.php.net/manual/en/arrayaccess.offsetexists.php
+     * @param string $offset
+     * @return boolean
+     */
+    public function offsetExists($offset)
+    {
+        return isset($this->_data[$offset]);
+    }
+
+    /**
+     * Implementation of ArrayAccess::offsetUnset()
+     *
+     * @link http://www.php.net/manual/en/arrayaccess.offsetunset.php
+     * @param string $offset
+     */
+    public function offsetUnset($offset)
+    {
+        unset($this->_data[$offset]);
+    }
+
+    /**
+     * Implementation of ArrayAccess::offsetGet()
+     *
+     * @link http://www.php.net/manual/en/arrayaccess.offsetget.php
+     * @param string $offset
+     * @return mixed
+     */
+    public function offsetGet($offset)
+    {
+        return isset($this->_data[$offset]) ? $this->_data[$offset] : null;
+    }
+
 
     /**
      * Enter description here...
@@ -662,38 +915,5 @@ class Varien_Object
             }
         }
         return $this;
-    }
-/*
-    public function __sleep()
-    {
-        return array('_data', '_idFieldName');
-    }
-
-    public function __wakeup()
-    {
-        $this->_construct();
-    }
-*/
-    public function debug($data=null, &$objects=array())
-    {
-        if (is_null($data)) {
-            $hash = spl_object_hash($this);
-            if (!empty($objects[$hash])) {
-                return '*** RECURSION ***';
-            }
-            $objects[$hash] = true;
-            $data = $this->getData();
-        }
-        $debug = array();
-        foreach ($data as $key=>$value) {
-            if (is_scalar($value)) {
-                $debug[$key] = $value;
-            } elseif (is_array($value)) {
-                $debug[$key] = $this->debug($value, $objects);
-            } elseif ($value instanceof Varien_Object) {
-                $debug[$key.' ('.get_class($value).')'] = $value->debug(null, $objects);
-            }
-        }
-        return $debug;
     }
 }

@@ -10,20 +10,24 @@
  * http://opensource.org/licenses/osl-3.0.php
  * If you did not receive a copy of the license and are unable to
  * obtain it through the world-wide-web, please send an email
- * to license@magentocommerce.com so we can send you a copy immediately.
+ * to license@magento.com so we can send you a copy immediately.
  *
- * @category   Mage
- * @package    Mage_Checkout
- * @copyright  Copyright (c) 2004-2007 Irubin Consulting Inc. DBA Varien (http://www.varien.com)
+ * DISCLAIMER
+ *
+ * Do not edit or add to this file if you wish to upgrade Magento to newer
+ * versions in the future. If you wish to customize Magento for your
+ * needs please refer to http://www.magento.com for more information.
+ *
+ * @category    Mage
+ * @package     Mage_Checkout
+ * @copyright  Copyright (c) 2006-2017 X.commerce, Inc. and affiliates (http://www.magento.com)
  * @license    http://opensource.org/licenses/osl-3.0.php  Open Software License (OSL 3.0)
  */
 
 /**
  * One page common functionality block
  *
- * @category   Mage
- * @category   Mage
- * @package    Mage_Checkout
+ * @author      Magento Core Team <core@magentocommerce.com>
  */
 abstract class Mage_Checkout_Block_Onepage_Abstract extends Mage_Core_Block_Template
 {
@@ -47,6 +51,11 @@ abstract class Mage_Checkout_Block_Onepage_Abstract extends Mage_Core_Block_Temp
         return $this->_customer;
     }
 
+    /**
+     * Retrieve checkout session model
+     *
+     * @return Mage_Checkout_Model_Session
+     */
     public function getCheckout()
     {
         if (empty($this->_checkout)) {
@@ -55,6 +64,11 @@ abstract class Mage_Checkout_Block_Onepage_Abstract extends Mage_Core_Block_Temp
         return $this->_checkout;
     }
 
+    /**
+     * Retrieve sales quote model
+     *
+     * @return Mage_Sales_Model_Quote
+     */
     public function getQuote()
     {
         if (empty($this->_quote)) {
@@ -71,7 +85,7 @@ abstract class Mage_Checkout_Block_Onepage_Abstract extends Mage_Core_Block_Temp
     public function getCountryCollection()
     {
         if (!$this->_countryCollection) {
-            $this->_countryCollection = Mage::getModel('directory/country')->getResourceCollection()
+            $this->_countryCollection = Mage::getSingleton('directory/country')->getResourceCollection()
                 ->loadByStore();
         }
         return $this->_countryCollection;
@@ -99,12 +113,12 @@ abstract class Mage_Checkout_Block_Onepage_Abstract extends Mage_Core_Block_Temp
             $options = array();
             foreach ($this->getCustomer()->getAddresses() as $address) {
                 $options[] = array(
-                    'value'=>$address->getId(),
-                    'label'=>$address->format('oneline')
+                    'value' => $address->getId(),
+                    'label' => $address->format('oneline')
                 );
             }
 
-            $addressId = $this->getAddress()->getId();
+            $addressId = $this->getAddress()->getCustomerAddressId();
             if (empty($addressId)) {
                 if ($type=='billing') {
                     $address = $this->getCustomer()->getPrimaryBillingAddress();
@@ -135,7 +149,7 @@ abstract class Mage_Checkout_Block_Onepage_Abstract extends Mage_Core_Block_Temp
     {
         $countryId = $this->getAddress()->getCountryId();
         if (is_null($countryId)) {
-            $countryId = Mage::getStoreConfig('general/country/default');
+            $countryId = Mage::helper('core')->getDefaultCountry();
         }
         $select = $this->getLayout()->createBlock('core/html_select')
             ->setName($type.'[country_id]')
@@ -143,9 +157,9 @@ abstract class Mage_Checkout_Block_Onepage_Abstract extends Mage_Core_Block_Temp
             ->setTitle(Mage::helper('checkout')->__('Country'))
             ->setClass('validate-select')
             ->setValue($countryId)
-            ->setOptions($this->getCountryCollection()->toOptionArray());
-        if ($type==='shipping') {
-            $select->setExtraParams('onchange="shipping.setSameAsBilling(false);"');
+            ->setOptions($this->getCountryOptions());
+        if ($type === 'shipping') {
+            $select->setExtraParams('onchange="if(window.shipping)shipping.setSameAsBilling(false);"');
         }
 
         return $select->getHtml();
@@ -163,6 +177,48 @@ abstract class Mage_Checkout_Block_Onepage_Abstract extends Mage_Core_Block_Temp
             ->setOptions($this->getRegionCollection()->toOptionArray());
 
         return $select->getHtml();
+    }
+
+    public function getCountryOptions()
+    {
+        $options    = false;
+        $useCache   = Mage::app()->useCache('config');
+        if ($useCache) {
+            $cacheId    = 'DIRECTORY_COUNTRY_SELECT_STORE_' . Mage::app()->getStore()->getCode();
+            $cacheTags  = array('config');
+            if ($optionsCache = Mage::app()->loadCache($cacheId)) {
+                $options = unserialize($optionsCache);
+            }
+        }
+
+        if ($options == false) {
+            $options = $this->getCountryCollection()->toOptionArray();
+            if ($useCache) {
+                Mage::app()->saveCache(serialize($options), $cacheId, $cacheTags);
+            }
+        }
+        return $options;
+    }
+
+    /**
+     * Get checkout steps codes
+     *
+     * @return array
+     */
+    protected function _getStepCodes()
+    {
+        return array('login', 'billing', 'shipping', 'shipping_method', 'payment', 'review');
+    }
+
+
+    /**
+     * Retrieve is allow and show block
+     *
+     * @return bool
+     */
+    public function isShow()
+    {
+        return true;
     }
 /* */
 }

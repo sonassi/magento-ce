@@ -10,16 +10,23 @@
  * http://opensource.org/licenses/osl-3.0.php
  * If you did not receive a copy of the license and are unable to
  * obtain it through the world-wide-web, please send an email
- * to license@magentocommerce.com so we can send you a copy immediately.
+ * to license@magento.com so we can send you a copy immediately.
  *
- * @category   Varien
- * @package    Varien_Image
- * @copyright  Copyright (c) 2004-2007 Irubin Consulting Inc. DBA Varien (http://www.varien.com)
+ * DISCLAIMER
+ *
+ * Do not edit or add to this file if you wish to upgrade Magento to newer
+ * versions in the future. If you wish to customize Magento for your
+ * needs please refer to http://www.magento.com for more information.
+ *
+ * @category    Varien
+ * @package     Varien_Image
+ * @copyright  Copyright (c) 2006-2017 X.commerce, Inc. and affiliates (http://www.magento.com)
  * @license    http://opensource.org/licenses/osl-3.0.php  Open Software License (OSL 3.0)
  */
 
 /**
  * @file        Abstract.php
+ * @author      Magento Core Team <core@magentocommerce.com>
  */
 
 abstract class Varien_Image_Adapter_Abstract
@@ -33,8 +40,10 @@ abstract class Varien_Image_Adapter_Abstract
     const POSITION_BOTTOM_RIGHT = 'bottom-right';
     const POSITION_STRETCH = 'stretch';
     const POSITION_TILE = 'tile';
+    const POSITION_CENTER = 'center';
 
     protected $_fileType = null;
+    protected $_fileName = null;
     protected $_fileMimeType = null;
     protected $_fileSrcName = null;
     protected $_fileSrcPath = null;
@@ -45,7 +54,14 @@ abstract class Varien_Image_Adapter_Abstract
     protected $_watermarkPosition = null;
     protected $_watermarkWidth = null;
     protected $_watermarkHeigth = null;
-    protected $_keepProportion = false;
+    protected $_watermarkImageOpacity = null;
+    protected $_quality = null;
+
+    protected $_keepAspectRatio;
+    protected $_keepFrame;
+    protected $_keepTransparency;
+    protected $_backgroundColor;
+    protected $_constrainOnly;
 
     abstract public function open($fileName);
 
@@ -74,6 +90,28 @@ abstract class Varien_Image_Adapter_Abstract
         }
     }
 
+    /**
+     * Retrieve Original Image Width
+     *
+     * @return int|null
+     */
+    public function getOriginalWidth()
+    {
+        $this->getMimeType();
+        return $this->_imageSrcWidth;
+    }
+
+    /**
+     * Retrieve Original Image Height
+     *
+     * @return int|null
+     */
+    public function getOriginalHeight()
+    {
+        $this->getMimeType();
+        return $this->_imageSrcHeight;
+    }
+
     public function setWatermarkPosition($position)
     {
         $this->_watermarkPosition = $position;
@@ -83,6 +121,17 @@ abstract class Varien_Image_Adapter_Abstract
     public function getWatermarkPosition()
     {
         return $this->_watermarkPosition;
+    }
+
+    public function setWatermarkImageOpacity($imageOpacity)
+    {
+        $this->_watermarkImageOpacity = $imageOpacity;
+        return $this;
+    }
+
+    public function getWatermarkImageOpacity()
+    {
+        return $this->_watermarkImageOpacity;
     }
 
     public function setWatermarkWidth($width)
@@ -107,15 +156,97 @@ abstract class Varien_Image_Adapter_Abstract
         return $this->_watermarkHeigth;
     }
 
-    public function setKeepProportion($flag)
+
+    /**
+     * Get/set keepAspectRatio
+     *
+     * @param bool $value
+     * @return bool|Varien_Image_Adapter_Abstract
+     */
+    public function keepAspectRatio($value = null)
     {
-        $this->_keepProportion = $flag;
-        return $this;
+        if (null !== $value) {
+            $this->_keepAspectRatio = (bool)$value;
+        }
+        return $this->_keepAspectRatio;
     }
 
-    public function keepProportion()
+    /**
+     * Get/set keepFrame
+     *
+     * @param bool $value
+     * @return bool
+     */
+    public function keepFrame($value = null)
     {
-        return $this->_keepProportion;
+        if (null !== $value) {
+            $this->_keepFrame = (bool)$value;
+        }
+        return $this->_keepFrame;
+    }
+
+    /**
+     * Get/set keepTransparency
+     *
+     * @param bool $value
+     * @return bool
+     */
+    public function keepTransparency($value = null)
+    {
+        if (null !== $value) {
+            $this->_keepTransparency = (bool)$value;
+        }
+        return $this->_keepTransparency;
+    }
+
+    /**
+     * Get/set constrainOnly
+     *
+     * @param bool $value
+     * @return bool
+     */
+    public function constrainOnly($value = null)
+    {
+        if (null !== $value) {
+            $this->_constrainOnly = (bool)$value;
+        }
+        return $this->_constrainOnly;
+    }
+
+    /**
+     * Get/set quality, values in percentage from 0 to 100
+     *
+     * @param int $value
+     * @return int
+     */
+    public function quality($value = null)
+    {
+        if (null !== $value) {
+            $this->_quality = (int)$value;
+        }
+        return $this->_quality;
+    }
+
+    /**
+     * Get/set keepBackgroundColor
+     *
+     * @param array $value
+     * @return array
+     */
+    public function backgroundColor($value = null)
+    {
+        if (null !== $value) {
+            if ((!is_array($value)) || (3 !== count($value))) {
+                return;
+            }
+            foreach ($value as $color) {
+                if ((!is_integer($color)) || ($color < 0) || ($color > 255)) {
+                    return;
+                }
+            }
+        }
+        $this->_backgroundColor = $value;
+        return $this->_backgroundColor;
     }
 
     protected function _getFileAttributes()
@@ -125,5 +256,4 @@ abstract class Varien_Image_Adapter_Abstract
         $this->_fileSrcPath = $pathinfo['dirname'];
         $this->_fileSrcName = $pathinfo['basename'];
     }
-
 }

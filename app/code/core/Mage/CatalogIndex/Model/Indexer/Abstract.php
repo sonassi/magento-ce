@@ -10,11 +10,17 @@
  * http://opensource.org/licenses/osl-3.0.php
  * If you did not receive a copy of the license and are unable to
  * obtain it through the world-wide-web, please send an email
- * to license@magentocommerce.com so we can send you a copy immediately.
+ * to license@magento.com so we can send you a copy immediately.
  *
- * @category   Mage
- * @package    Mage_CatalogIndex
- * @copyright  Copyright (c) 2004-2007 Irubin Consulting Inc. DBA Varien (http://www.varien.com)
+ * DISCLAIMER
+ *
+ * Do not edit or add to this file if you wish to upgrade Magento to newer
+ * versions in the future. If you wish to customize Magento for your
+ * needs please refer to http://www.magento.com for more information.
+ *
+ * @category    Mage
+ * @package     Mage_CatalogIndex
+ * @copyright  Copyright (c) 2006-2017 X.commerce, Inc. and affiliates (http://www.magento.com)
  * @license    http://opensource.org/licenses/osl-3.0.php  Open Software License (OSL 3.0)
  */
 
@@ -22,8 +28,11 @@
 /**
  * Catalog indexer abstract class
  *
+ * @author      Magento Core Team <core@magentocommerce.com>
  */
-class Mage_CatalogIndex_Model_Indexer_Abstract extends Mage_Core_Model_Abstract
+abstract class Mage_CatalogIndex_Model_Indexer_Abstract
+    extends Mage_Core_Model_Abstract
+    implements Mage_CatalogIndex_Model_Indexer_Interface
 {
     protected $_processChildren = true;
     protected $_processChildrenForConfigurable = true;
@@ -34,11 +43,11 @@ class Mage_CatalogIndex_Model_Indexer_Abstract extends Mage_Core_Model_Abstract
         $associated = array();
         switch ($object->getTypeId()) {
             case Mage_Catalog_Model_Product_Type::TYPE_GROUPED:
-                $associated = $object->getTypeInstance()->getAssociatedProducts();
+                $associated = $object->getTypeInstance(true)->getAssociatedProducts($object);
                 break;
 
             case Mage_Catalog_Model_Product_Type::TYPE_CONFIGURABLE:
-                $associated = $object->getTypeInstance()->getUsedProducts();
+                $associated = $object->getTypeInstance(true)->getUsedProducts(null, $object);
                 break;
         }
 

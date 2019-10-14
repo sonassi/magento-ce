@@ -10,11 +10,17 @@
  * http://opensource.org/licenses/osl-3.0.php
  * If you did not receive a copy of the license and are unable to
  * obtain it through the world-wide-web, please send an email
- * to license@magentocommerce.com so we can send you a copy immediately.
+ * to license@magento.com so we can send you a copy immediately.
  *
- * @category   Mage
- * @package    Mage_Adminhtml
- * @copyright  Copyright (c) 2004-2007 Irubin Consulting Inc. DBA Varien (http://www.varien.com)
+ * DISCLAIMER
+ *
+ * Do not edit or add to this file if you wish to upgrade Magento to newer
+ * versions in the future. If you wish to customize Magento for your
+ * needs please refer to http://www.magento.com for more information.
+ *
+ * @category    Mage
+ * @package     Mage_Adminhtml
+ * @copyright  Copyright (c) 2006-2017 X.commerce, Inc. and affiliates (http://www.magento.com)
  * @license    http://opensource.org/licenses/osl-3.0.php  Open Software License (OSL 3.0)
  */
 
@@ -23,6 +29,7 @@
  *
  * @category   Mage
  * @package    Mage_Adminhtml
+ * @author      Magento Core Team <core@magentocommerce.com>
  */
 class Mage_Adminhtml_Block_Customer_Grid extends Mage_Adminhtml_Block_Widget_Grid
 {
@@ -32,24 +39,21 @@ class Mage_Adminhtml_Block_Customer_Grid extends Mage_Adminhtml_Block_Widget_Gri
         parent::__construct();
         $this->setId('customerGrid');
         $this->setUseAjax(true);
-        $this->setDefaultSort('id');
+        $this->setDefaultSort('entity_id');
+        $this->setSaveParametersInSession(true);
     }
 
     protected function _prepareCollection()
     {
         $collection = Mage::getResourceModel('customer/customer_collection')
-            ->addAttributeToSelect('firstname')
-            ->addAttributeToSelect('lastname')
-            ->addExpressionAttributeToSelect('name',
-                'CONCAT({{firstname}}, " ", {{lastname}})',
-                array('firstname', 'lastname'))
+            ->addNameToSelect()
             ->addAttributeToSelect('email')
             ->addAttributeToSelect('created_at')
             ->addAttributeToSelect('group_id')
             ->joinAttribute('billing_postcode', 'customer_address/postcode', 'default_billing', null, 'left')
             ->joinAttribute('billing_city', 'customer_address/city', 'default_billing', null, 'left')
             ->joinAttribute('billing_telephone', 'customer_address/telephone', 'default_billing', null, 'left')
-            ->joinAttribute('billing_regione', 'customer_address/region', 'default_billing', null, 'left')
+            ->joinAttribute('billing_region', 'customer_address/region', 'default_billing', null, 'left')
             ->joinAttribute('billing_country_id', 'customer_address/country_id', 'default_billing', null, 'left');
 
         $this->setCollection($collection);
@@ -59,10 +63,11 @@ class Mage_Adminhtml_Block_Customer_Grid extends Mage_Adminhtml_Block_Widget_Gri
 
     protected function _prepareColumns()
     {
-        $this->addColumn('id', array(
+        $this->addColumn('entity_id', array(
             'header'    => Mage::helper('customer')->__('ID'),
             'width'     => '50px',
-            'index'     => 'entity_id'
+            'index'     => 'entity_id',
+            'type'  => 'number',
         ));
         /*$this->addColumn('firstname', array(
             'header'    => Mage::helper('customer')->__('First Name'),
@@ -114,32 +119,27 @@ class Mage_Adminhtml_Block_Customer_Grid extends Mage_Adminhtml_Block_Widget_Gri
             'index'     => 'billing_country_id',
         ));
 
-        $this->addColumn('billing_regione', array(
+        $this->addColumn('billing_region', array(
             'header'    => Mage::helper('customer')->__('State/Province'),
             'width'     => '100',
-            'index'     => 'billing_regione',
+            'index'     => 'billing_region',
         ));
 
         $this->addColumn('customer_since', array(
             'header'    => Mage::helper('customer')->__('Customer Since'),
-            'type'      => 'date',
+            'type'      => 'datetime',
             'align'     => 'center',
             'index'     => 'created_at',
             'gmtoffset' => true
         ));
 
         if (!Mage::app()->isSingleStoreMode()) {
-            $websites = Mage::getModel('core/website')->getCollection()
-                ->setLoadDefault(true)
-                ->load()
-                ->toOptionHash(true);
-
             $this->addColumn('website_id', array(
                 'header'    => Mage::helper('customer')->__('Website'),
                 'align'     => 'center',
                 'width'     => '80px',
                 'type'      => 'options',
-                'options'   => $websites,
+                'options'   => Mage::getSingleton('adminhtml/system_store')->getWebsiteOptionHash(true),
                 'index'     => 'website_id',
             ));
         }
@@ -164,7 +164,7 @@ class Mage_Adminhtml_Block_Customer_Grid extends Mage_Adminhtml_Block_Widget_Gri
         ));
 
         $this->addExportType('*/*/exportCsv', Mage::helper('customer')->__('CSV'));
-        $this->addExportType('*/*/exportXml', Mage::helper('customer')->__('XML'));
+        $this->addExportType('*/*/exportXml', Mage::helper('customer')->__('Excel XML'));
         return parent::_prepareColumns();
     }
 
@@ -180,12 +180,12 @@ class Mage_Adminhtml_Block_Customer_Grid extends Mage_Adminhtml_Block_Widget_Gri
         ));
 
         $this->getMassactionBlock()->addItem('newsletter_subscribe', array(
-             'label'    => Mage::helper('customer')->__('Subscribe to newsletter'),
+             'label'    => Mage::helper('customer')->__('Subscribe to Newsletter'),
              'url'      => $this->getUrl('*/*/massSubscribe')
         ));
 
         $this->getMassactionBlock()->addItem('newsletter_unsubscribe', array(
-             'label'    => Mage::helper('customer')->__('Unsubscribe from newsletter'),
+             'label'    => Mage::helper('customer')->__('Unsubscribe from Newsletter'),
              'url'      => $this->getUrl('*/*/massUnsubscribe')
         ));
 
@@ -193,7 +193,7 @@ class Mage_Adminhtml_Block_Customer_Grid extends Mage_Adminhtml_Block_Widget_Gri
 
         array_unshift($groups, array('label'=> '', 'value'=> ''));
         $this->getMassactionBlock()->addItem('assign_group', array(
-             'label'        => Mage::helper('customer')->__('Assign a customer group'),
+             'label'        => Mage::helper('customer')->__('Assign a Customer Group'),
              'url'          => $this->getUrl('*/*/massAssignGroup'),
              'additional'   => array(
                 'visibility'    => array(

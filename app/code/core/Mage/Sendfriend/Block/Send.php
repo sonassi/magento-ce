@@ -10,58 +10,176 @@
  * http://opensource.org/licenses/osl-3.0.php
  * If you did not receive a copy of the license and are unable to
  * obtain it through the world-wide-web, please send an email
- * to license@magentocommerce.com so we can send you a copy immediately.
+ * to license@magento.com so we can send you a copy immediately.
  *
- * @category   Mage
- * @package    Mage_Sendfriend
- * @copyright  Copyright (c) 2004-2007 Irubin Consulting Inc. DBA Varien (http://www.varien.com)
+ * DISCLAIMER
+ *
+ * Do not edit or add to this file if you wish to upgrade Magento to newer
+ * versions in the future. If you wish to customize Magento for your
+ * needs please refer to http://www.magento.com for more information.
+ *
+ * @category    Mage
+ * @package     Mage_Sendfriend
+ * @copyright  Copyright (c) 2006-2017 X.commerce, Inc. and affiliates (http://www.magento.com)
  * @license    http://opensource.org/licenses/osl-3.0.php  Open Software License (OSL 3.0)
  */
 
 
+/**
+ * Email to a Friend Block
+ *
+ * @category    Mage
+ * @package     Mage_Sendfriend
+ * @author      Magento Core Team <core@magentocommerce.com>
+ */
 class Mage_Sendfriend_Block_Send extends Mage_Core_Block_Template
 {
-	/**
+    /**
      * Retrieve username for form field
      *
      * @return string
      */
     public function getUserName()
     {
-        if ($name = $this->getFormData()->getData('sender/name')) {
-            return $name;
+        $name = $this->getFormData()->getData('sender/name');
+        if (!empty($name)) {
+            return trim($name);
         }
-    	$firstName =(string)Mage::getSingleton('customer/session')->getCustomer()->getFirstname();
-    	$lastName = (string)Mage::getSingleton('customer/session')->getCustomer()->getLastname();
-        return $firstName.' '.$lastName;
+
+        /* @var $session Mage_Customer_Model_Session */
+        $session = Mage::getSingleton('customer/session');
+
+        if ($session->isLoggedIn()) {
+            return $session->getCustomer()->getName();
+        }
+
+        return '';
     }
 
+    /**
+     * Retrieve sender email address
+     *
+     * @return string
+     */
     public function getEmail()
     {
-        if ($email = $this->getFormData()->getData('sender/email')) {
-            return $email;
+        $email = $this->getFormData()->getData('sender/email');
+        if (!empty($email)) {
+            return trim($email);
         }
-    	return (string) Mage::getSingleton('customer/session')->getCustomer()->getEmail();
+
+        /* @var $session Mage_Customer_Model_Session */
+        $session = Mage::getSingleton('customer/session');
+
+        if ($session->isLoggedIn()) {
+            return $session->getCustomer()->getEmail();
+        }
+
+        return '';
     }
 
+    /**
+     * Retrieve Message text
+     *
+     * @return string
+     */
+    public function getMessage()
+    {
+        return $this->getFormData()->getData('sender/message');
+    }
+
+    /**
+     * Retrieve Form data or empty Varien_Object
+     *
+     * @return Varien_Object
+     */
     public function getFormData()
     {
         $data = $this->getData('form_data');
-        if (is_null($data)) {
-            $data = new Varien_Object(Mage::getSingleton('catalog/session')->getFormData(true));
-            $this->setFormData($data);
+        if (!$data instanceof Varien_Object) {
+            $data = new Varien_Object();
+            $this->setData('form_data', $data);
         }
+
         return $data;
     }
 
-    public function getProductId()
+    /**
+     * Set Form data array
+     *
+     * @param array $data
+     * @return Mage_Sendfriend_Block_Send
+     */
+    public function setFormData($data)
     {
-        return $this->getRequest()->getParam('id');
+        if (is_array($data)) {
+            $this->setData('form_data', new Varien_Object($data));
+        }
+
+        return $this;
     }
 
-	public function getMaxRecipients()
-	{
-	    $sendToFriendModel = Mage::registry('send_to_friend_model');
-	    return $sendToFriendModel->getMaxRecipients();
-	}
+    /**
+     * Retrieve Current Product Id
+     *
+     * @return int
+     */
+    public function getProductId()
+    {
+        return $this->getRequest()->getParam('id', null);
+    }
+
+    /**
+     * Retrieve current category id for product
+     *
+     * @return int
+     */
+    public function getCategoryId()
+    {
+        return $this->getRequest()->getParam('cat_id', null);
+    }
+
+    /**
+     * Retrieve Max Recipients
+     *
+     * @return int
+     */
+    public function getMaxRecipients()
+    {
+        return Mage::helper('sendfriend')->getMaxRecipients();
+    }
+
+    /**
+     * Retrieve Send URL for Form Action
+     *
+     * @return string
+     */
+    public function getSendUrl()
+    {
+        return Mage::getUrl('*/*/sendmail', array(
+            'id'     => $this->getProductId(),
+            'cat_id' => $this->getCategoryId(),
+            '_secure' => $this->_isSecure()
+        ));
+    }
+
+    /**
+     * Return send friend model
+     *
+     * @return Mage_Sendfriend_Model_Sendfriend
+     */
+    protected function _getSendfriendModel()
+    {
+        return Mage::registry('send_to_friend_model');
+    }
+
+    /**
+     * Check if user is allowed to send
+     *
+     * @return boolean
+     */
+    public function canSend()
+    {
+        return !$this->_getSendfriendModel()->isExceedLimit();
+    }
 }

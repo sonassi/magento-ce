@@ -10,11 +10,17 @@
  * http://opensource.org/licenses/osl-3.0.php
  * If you did not receive a copy of the license and are unable to
  * obtain it through the world-wide-web, please send an email
- * to license@magentocommerce.com so we can send you a copy immediately.
+ * to license@magento.com so we can send you a copy immediately.
  *
- * @category   Varien
- * @package    Varien_Convert
- * @copyright  Copyright (c) 2004-2007 Irubin Consulting Inc. DBA Varien (http://www.varien.com)
+ * DISCLAIMER
+ *
+ * Do not edit or add to this file if you wish to upgrade Magento to newer
+ * versions in the future. If you wish to customize Magento for your
+ * needs please refer to http://www.magento.com for more information.
+ *
+ * @category    Varien
+ * @package     Varien_Convert
+ * @copyright  Copyright (c) 2006-2017 X.commerce, Inc. and affiliates (http://www.magento.com)
  * @license    http://opensource.org/licenses/osl-3.0.php  Open Software License (OSL 3.0)
  */
 
@@ -24,6 +30,7 @@
  *
  * @category   Varien
  * @package    Varien_Convert
+ * @author      Magento Core Team <core@magentocommerce.com>
  */
 abstract class Varien_Convert_Container_Abstract implements Varien_Convert_Container_Interface
 {
@@ -114,7 +121,7 @@ abstract class Varien_Convert_Container_Abstract implements Varien_Convert_Conta
             if (count($data)==0) {
                 return true;
             }
-        	$this->addException("Invalid data type, expecting 2D grid array.", Varien_Convert_Exception::FATAL);
+            $this->addException("Invalid data type, expecting 2D grid array.", Varien_Convert_Exception::FATAL);
         }
         return true;
     }

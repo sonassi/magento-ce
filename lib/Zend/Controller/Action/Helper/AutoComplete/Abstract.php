@@ -4,26 +4,26 @@
  *
  * LICENSE
  *
- * This source file is subject to version 1.0 of the Zend Framework
- * license, that is bundled with this package in the file LICENSE.txt, and
- * is available through the world-wide-web at the following URL:
- * http://framework.zend.com/license/new-bsd. If you did not receive
- * a copy of the Zend Framework license and are unable to obtain it
- * through the world-wide-web, please send a note to license@zend.com
- * so we can mail you a copy immediately.
+ * This source file is subject to the new BSD license that is bundled
+ * with this package in the file LICENSE.txt.
+ * It is also available through the world-wide-web at this URL:
+ * http://framework.zend.com/license/new-bsd
+ * If you did not receive a copy of the license and are unable to
+ * obtain it through the world-wide-web, please send an email
+ * to license@zend.com so we can send you a copy immediately.
  *
  * @category   Zend
  * @package    Zend_Controller
  * @subpackage Zend_Controller_Action_Helper
- * @copyright  Copyright (c) 2005-2008 Zend Technologies USA Inc. (http://www.zend.com)
- * @version    $Id: Abstract.php 8892 2008-03-18 19:47:46Z thomas $
+ * @copyright  Copyright (c) 2005-2015 Zend Technologies USA Inc. (http://www.zend.com)
  * @license    http://framework.zend.com/license/new-bsd     New BSD License
+ * @version    $Id$
  */
 
 /**
  * @see Zend_Controller_Action_Helper_Abstract
  */
-require_once 'Zend/Controller/Action/Helper/Abstract.php';
+#require_once 'Zend/Controller/Action/Helper/Abstract.php';
 
 /**
  * Create and send autocompletion lists
@@ -32,7 +32,7 @@ require_once 'Zend/Controller/Action/Helper/Abstract.php';
  * @category   Zend
  * @package    Zend_Controller
  * @subpackage Zend_Controller_Action_Helper
- * @copyright  Copyright (c) 2005-2008 Zend Technologies USA Inc. (http://www.zend.com)
+ * @copyright  Copyright (c) 2005-2015 Zend Technologies USA Inc. (http://www.zend.com)
  * @license    http://framework.zend.com/license/new-bsd     New BSD License
  */
 abstract class Zend_Controller_Action_Helper_AutoComplete_Abstract extends Zend_Controller_Action_Helper_Abstract
@@ -46,7 +46,7 @@ abstract class Zend_Controller_Action_Helper_AutoComplete_Abstract extends Zend_
 
     /**
      * Validate autocompletion data
-     * 
+     *
      * @param  mixed $data
      * @return boolean
      */
@@ -54,16 +54,16 @@ abstract class Zend_Controller_Action_Helper_AutoComplete_Abstract extends Zend_
 
     /**
      * Prepare autocompletion data
-     * 
-     * @param  mixed   $data 
-     * @param  boolean $keepLayouts 
+     *
+     * @param  mixed   $data
+     * @param  boolean $keepLayouts
      * @return mixed
      */
     abstract public function prepareAutoCompletion($data, $keepLayouts = false);
 
     /**
      * Disable layouts and view renderer
-     * 
+     *
      * @return Zend_Controller_Action_Helper_AutoComplete_Abstract Provides a fluent interface
      */
     public function disableLayouts()
@@ -71,7 +71,7 @@ abstract class Zend_Controller_Action_Helper_AutoComplete_Abstract extends Zend_
         /**
          * @see Zend_Layout
          */
-        require_once 'Zend/Layout.php';
+        #require_once 'Zend/Layout.php';
         if (null !== ($layout = Zend_Layout::getMvcInstance())) {
             $layout->disableLayout();
         }
@@ -83,9 +83,9 @@ abstract class Zend_Controller_Action_Helper_AutoComplete_Abstract extends Zend_
 
     /**
      * Encode data to JSON
-     * 
-     * @param  mixed $data 
-     * @param  bool  $keepLayouts 
+     *
+     * @param  mixed $data
+     * @param  bool  $keepLayouts
      * @throws Zend_Controller_Action_Exception
      * @return string
      */
@@ -98,18 +98,18 @@ abstract class Zend_Controller_Action_Helper_AutoComplete_Abstract extends Zend_
         /**
          * @see Zend_Controller_Action_Exception
          */
-        require_once 'Zend/Controller/Action/Exception.php';
+        #require_once 'Zend/Controller/Action/Exception.php';
         throw new Zend_Controller_Action_Exception('Invalid data passed for autocompletion');
     }
 
     /**
      * Send autocompletion data
      *
-     * Calls prepareAutoCompletion, populates response body with this 
+     * Calls prepareAutoCompletion, populates response body with this
      * information, and sends response.
-     * 
-     * @param  mixed $data 
-     * @param  bool  $keepLayouts 
+     *
+     * @param  mixed $data
+     * @param  bool  $keepLayouts
      * @return string|void
      */
     public function sendAutoCompletion($data, $keepLayouts = false)
@@ -130,12 +130,12 @@ abstract class Zend_Controller_Action_Helper_AutoComplete_Abstract extends Zend_
     /**
      * Strategy pattern: allow calling helper as broker method
      *
-     * Prepares autocompletion data and, if $sendNow is true, immediately sends 
+     * Prepares autocompletion data and, if $sendNow is true, immediately sends
      * response.
-     * 
-     * @param  mixed $data 
-     * @param  bool  $sendNow 
-     * @param  bool  $keepLayouts 
+     *
+     * @param  mixed $data
+     * @param  bool  $sendNow
+     * @param  bool  $keepLayouts
      * @return string|void
      */
     public function direct($data, $sendNow = true, $keepLayouts = false)

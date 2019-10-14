@@ -10,11 +10,17 @@
  * http://opensource.org/licenses/osl-3.0.php
  * If you did not receive a copy of the license and are unable to
  * obtain it through the world-wide-web, please send an email
- * to license@magentocommerce.com so we can send you a copy immediately.
+ * to license@magento.com so we can send you a copy immediately.
  *
- * @category   Mage
- * @package    Mage_Adminhtml
- * @copyright  Copyright (c) 2004-2007 Irubin Consulting Inc. DBA Varien (http://www.varien.com)
+ * DISCLAIMER
+ *
+ * Do not edit or add to this file if you wish to upgrade Magento to newer
+ * versions in the future. If you wish to customize Magento for your
+ * needs please refer to http://www.magento.com for more information.
+ *
+ * @category    Mage
+ * @package     Mage_Adminhtml
+ * @copyright  Copyright (c) 2006-2017 X.commerce, Inc. and affiliates (http://www.magento.com)
  * @license    http://opensource.org/licenses/osl-3.0.php  Open Software License (OSL 3.0)
  */
 
@@ -22,8 +28,10 @@
 /**
  * Media library js helper
  *
+ * @deprecated since 1.7.0.0
  * @category   Mage
  * @package    Mage_Adminhtml
+ * @author     Magento Core Team <core@magentocommerce.com>
  */
 class Mage_Adminhtml_Helper_Media_Js extends Mage_Core_Helper_Js
 {
@@ -36,7 +44,7 @@ class Mage_Adminhtml_Helper_Media_Js extends Mage_Core_Helper_Js
             'Upload Security Error' => $this->__('Upload Security Error'),
             'Upload HTTP Error'     => $this->__('Upload HTTP Error'),
             'Upload I/O Error'     => $this->__('Upload I/O Error'),
-            'SSL Error: Invalid or self-signed sertificate'     => $this->__('SSL Error: Invalid or self-signed sertificate'),
+            'SSL Error: Invalid or self-signed certificate'     => $this->__('SSL Error: Invalid or self-signed certificate'),
             'Tb' => $this->__('Tb'),
             'Gb' => $this->__('Gb'),
             'Mb' => $this->__('Mb'),
@@ -52,7 +60,7 @@ class Mage_Adminhtml_Helper_Media_Js extends Mage_Core_Helper_Js
      */
     public function getTranslatorScript()
     {
-        $script = 'if (!window.Translator) {'
+        $script = 'if (typeof(Translator) == \'undefined\') {'
                 . '    var Translator = new Translate('.$this->getTranslateJson().');'
                 . '} else {'
                 . '    Translator.add('.$this->getTranslateJson().');'

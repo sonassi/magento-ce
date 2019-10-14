@@ -10,25 +10,52 @@
  * http://opensource.org/licenses/osl-3.0.php
  * If you did not receive a copy of the license and are unable to
  * obtain it through the world-wide-web, please send an email
- * to license@magentocommerce.com so we can send you a copy immediately.
+ * to license@magento.com so we can send you a copy immediately.
  *
- * @category   Mage
- * @package    Mage_Core
- * @copyright  Copyright (c) 2004-2007 Irubin Consulting Inc. DBA Varien (http://www.varien.com)
+ * DISCLAIMER
+ *
+ * Do not edit or add to this file if you wish to upgrade Magento to newer
+ * versions in the future. If you wish to customize Magento for your
+ * needs please refer to http://www.magento.com for more information.
+ *
+ * @category    Mage
+ * @package     Mage_Core
+ * @copyright  Copyright (c) 2006-2017 X.commerce, Inc. and affiliates (http://www.magento.com)
  * @license    http://opensource.org/licenses/osl-3.0.php  Open Software License (OSL 3.0)
  */
 
 /**
  * Store group model
  *
- * @category   Mage
- * @package    Mage_Core
+ * @method Mage_Core_Model_Resource_Store_Group _getResource()
+ * @method Mage_Core_Model_Resource_Store_Group getResource()
+ * @method Mage_Core_Model_Store_Group setWebsiteId(int $value)
+ * @method string getName()
+ * @method Mage_Core_Model_Store_Group setName(string $value)
+ * @method Mage_Core_Model_Store_Group setRootCategoryId(int $value)
+ * @method Mage_Core_Model_Store_Group setDefaultStoreId(int $value)
+ *
+ * @category    Mage
+ * @package     Mage_Core
+ * @author      Magento Core Team <core@magentocommerce.com>
  */
 
 class Mage_Core_Model_Store_Group extends Mage_Core_Model_Abstract
 {
+    const ENTITY         = 'store_group';
     const CACHE_TAG      = 'store_group';
+
     protected $_cacheTag = true;
+
+    /**
+     * @var string
+     */
+    protected $_eventPrefix = 'store_group';
+
+    /**
+     * @var string
+     */
+    protected $_eventObject = 'store_group';
 
     /**
      * Group Store collection array
@@ -71,6 +98,11 @@ class Mage_Core_Model_Store_Group extends Mage_Core_Model_Abstract
      * @var Mage_Core_Model_Website
      */
     protected $_website;
+
+    /**
+     * @var bool
+     */
+    private $_isReadOnly = false;
 
     /**
      * init model
@@ -186,13 +218,53 @@ class Mage_Core_Model_Store_Group extends Mage_Core_Model_Abstract
      */
     public function getDefaultStore()
     {
-        if (!$this->getDefaultStoreId()) {
+        if (!$this->hasDefaultStoreId()) {
             return false;
         }
         if (is_null($this->_stores)) {
             $this->_loadStores();
         }
         return $this->_defaultStore;
+    }
+
+    /**
+     * Get most suitable store by locale
+     * If no store with given locale is found - default store is returned
+     * If group has no stores - null is returned
+     *
+     * @param string $locale
+     * @return Mage_Core_Model_Store|null
+     */
+    public function getDefaultStoreByLocale($locale)
+    {
+        if ($this->getDefaultStore() && $this->getDefaultStore()->getLocaleCode() == $locale) {
+            return $this->getDefaultStore();
+        } else {
+            $stores = $this->getStoresByLocale($locale);
+            if (count($stores)) {
+                return $stores[0];
+            } else {
+                return $this->getDefaultStore() ? $this->getDefaultStore() : null;
+            }
+        }
+    }
+
+    /**
+     * Retrieve list of stores with given locale
+     *
+     * @param $locale
+     * @return array
+     */
+    public function getStoresByLocale($locale)
+    {
+        $stores = array();
+        foreach ($this->getStores() as $store) {
+            /* @var $store Mage_Core_Model_Store */
+            if ($store->getLocaleCode() == $locale) {
+                array_push($stores, $store);
+            }
+        }
+        return $stores;
     }
 
     /**
@@ -233,5 +305,40 @@ class Mage_Core_Model_Store_Group extends Mage_Core_Model_Abstract
         }
 
         return $this->getWebsite()->getDefaultGroupId() != $this->getId();
+    }
+
+    public function getDefaultStoreId()
+    {
+        return $this->_getData('default_store_id');
+    }
+
+    public function getRootCategoryId()
+    {
+        return $this->_getData('root_category_id');
+    }
+
+    public function getWebsiteId()
+    {
+        return $this->_getData('website_id');
+    }
+
+    protected function _beforeDelete()
+    {
+        $this->_protectFromNonAdmin();
+        return parent::_beforeDelete();
+    }
+
+    /**
+     * Get/Set isReadOnly flag
+     *
+     * @param bool $value
+     * @return bool
+     */
+    public function isReadOnly($value = null)
+    {
+        if (null !== $value) {
+            $this->_isReadOnly = (bool)$value;
+        }
+        return $this->_isReadOnly;
     }
 }

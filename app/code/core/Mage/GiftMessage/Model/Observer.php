@@ -10,11 +10,17 @@
  * http://opensource.org/licenses/osl-3.0.php
  * If you did not receive a copy of the license and are unable to
  * obtain it through the world-wide-web, please send an email
- * to license@magentocommerce.com so we can send you a copy immediately.
+ * to license@magento.com so we can send you a copy immediately.
  *
- * @category   Mage
- * @package    Mage_GiftMessage
- * @copyright  Copyright (c) 2004-2007 Irubin Consulting Inc. DBA Varien (http://www.varien.com)
+ * DISCLAIMER
+ *
+ * Do not edit or add to this file if you wish to upgrade Magento to newer
+ * versions in the future. If you wish to customize Magento for your
+ * needs please refer to http://www.magento.com for more information.
+ *
+ * @category    Mage
+ * @package     Mage_GiftMessage
+ * @copyright  Copyright (c) 2006-2017 X.commerce, Inc. and affiliates (http://www.magento.com)
  * @license    http://opensource.org/licenses/osl-3.0.php  Open Software License (OSL 3.0)
  */
 
@@ -24,6 +30,7 @@
  *
  * @category   Mage
  * @package    Mage_GiftMessage
+ * @author      Magento Core Team <core@magentocommerce.com>
  */
 class Mage_GiftMessage_Model_Observer extends Varien_Object
 {
@@ -36,9 +43,17 @@ class Mage_GiftMessage_Model_Observer extends Varien_Object
      */
     public function salesEventConvertQuoteItemToOrderItem($observer)
     {
-        $observer->getEvent()->getOrderItem()
-            ->setGiftMessageId($observer->getEvent()->getItem()->getGiftMessageId())
-            ->setGiftMessageAvailable($this->_getAvailable($observer->getEvent()->getItem()->getProductId()));
+        $orderItem = $observer->getEvent()->getOrderItem();
+        $quoteItem = $observer->getEvent()->getItem();
+
+        $isAvailable = Mage::helper('giftmessage/message')->getIsMessagesAvailable(
+            'item',
+            $quoteItem,
+            $quoteItem->getStoreId()
+        );
+
+        $orderItem->setGiftMessageId($quoteItem->getGiftMessageId())
+            ->setGiftMessageAvailable($isAvailable);
         return $this;
     }
 
@@ -73,6 +88,7 @@ class Mage_GiftMessage_Model_Observer extends Varien_Object
     /**
      * Geter for available gift messages value from product
      *
+     * @deprecated after 1.5.0.0
      * @param Mage_Catalog_Model_Product|integer $product
      * @return integer|null
      */
@@ -93,17 +109,30 @@ class Mage_GiftMessage_Model_Observer extends Varien_Object
     public function checkoutEventCreateGiftMessage($observer)
     {
         $giftMessages = $observer->getEvent()->getRequest()->getParam('giftmessage');
+        $quote = $observer->getEvent()->getQuote();
+        /* @var $quote Mage_Sales_Model_Quote */
         if(is_array($giftMessages)) {
             foreach ($giftMessages as $entityId=>$message) {
 
                 $giftMessage = Mage::getModel('giftmessage/message');
-                $entity = $giftMessage->getEntityModelByType($message['type']);
 
-                if ($message['type']=='quote') {
-                    $entity->setStoreId(Mage::app()->getStore()->getId());
+                switch ($message['type']) {
+                    case 'quote':
+                        $entity = $quote;
+                        break;
+                    case 'quote_item':
+                        $entity = $quote->getItemById($entityId);
+                        break;
+                    case 'quote_address':
+                        $entity = $quote->getAddressById($entityId);
+                        break;
+                    case 'quote_address_item':
+                        $entity = $quote->getAddressById($message['address'])->getItemById($entityId);
+                        break;
+                    default:
+                        $entity = $quote;
+                        break;
                 }
-
-                $entity->load($entityId);
 
                 if($entity->getGiftMessageId()) {
                     $giftMessage->load($entity->getGiftMessageId());
@@ -141,29 +170,34 @@ class Mage_GiftMessage_Model_Observer extends Varien_Object
      * Set giftmessage available default value to product
      * on catalog products collection load
      *
+     * @deprecated after 1.4.2.0-beta1
      * @param Varien_Object $observer
      * @return Mage_GiftMessage_Model_Observer
      */
     public function catalogEventProductCollectionAfterLoad($observer)
     {
-        $collection = $observer->getEvent()->getCollection();
-        foreach ($collection as $item) {
-            if($item->getGiftMessageAvailable()===null) {
-                $item->setGiftMessageAvailable(2);
-            }
-        }
         return $this;
     }
 
     /**
-     * Duplicates giftmessage from order to quote on import
+     * Duplicates giftmessage from order to quote on import or reorder
      *
-     * @param Varien_Object $observer
+     * @param Varien_Event_Observer $observer
      * @return Mage_GiftMessage_Model_Observer
      */
     public function salesEventOrderToQuote($observer)
     {
-        if($giftMessageId = $observer->getEvent()->getOrder()->getGiftMessageId()) {
+        $order = $observer->getEvent()->getOrder();
+        // Do not import giftmessage data if order is reordered
+        if ($order->getReordered()) {
+            return $this;
+        }
+
+        if (!Mage::helper('giftmessage/message')->isMessagesAvailable('order', $order, $order->getStore())){
+            return $this;
+        }
+        $giftMessageId = $order->getGiftMessageId();
+        if($giftMessageId) {
             $giftMessage = Mage::getModel('giftmessage/message')->load($giftMessageId)
                 ->setId(null)
                 ->save();
@@ -173,4 +207,39 @@ class Mage_GiftMessage_Model_Observer extends Varien_Object
         return $this;
     }
 
+    /**
+     * Duplicates giftmessage from order item to quote item on import or reorder
+     *
+     * @param Varien_Event_Observer $observer
+     * @return Mage_GiftMessage_Model_Observer
+     */
+    public function salesEventOrderItemToQuoteItem($observer)
+    {
+        /** @var $orderItem Mage_Sales_Model_Order_Item */
+        $orderItem = $observer->getEvent()->getOrderItem();
+        // Do not import giftmessage data if order is reordered
+        $order = $orderItem->getOrder();
+        if ($order && $order->getReordered()) {
+            return $this;
+        }
+
+        $isAvailable = Mage::helper('giftmessage/message')->isMessagesAvailable(
+            'order_item',
+            $orderItem,
+            $orderItem->getStoreId()
+        );
+        if (!$isAvailable) {
+            return $this;
+        }
+
+        /** @var $quoteItem Mage_Sales_Model_Quote_Item */
+        $quoteItem = $observer->getEvent()->getQuoteItem();
+        if ($giftMessageId = $orderItem->getGiftMessageId()) {
+            $giftMessage = Mage::getModel('giftmessage/message')->load($giftMessageId)
+                ->setId(null)
+                ->save();
+            $quoteItem->setGiftMessageId($giftMessage->getId());
+        }
+        return $this;
+    }
 }

@@ -10,11 +10,17 @@
  * http://opensource.org/licenses/osl-3.0.php
  * If you did not receive a copy of the license and are unable to
  * obtain it through the world-wide-web, please send an email
- * to license@magentocommerce.com so we can send you a copy immediately.
+ * to license@magento.com so we can send you a copy immediately.
  *
- * @category   Varien
- * @package    Varien_Data
- * @copyright  Copyright (c) 2004-2007 Irubin Consulting Inc. DBA Varien (http://www.varien.com)
+ * DISCLAIMER
+ *
+ * Do not edit or add to this file if you wish to upgrade Magento to newer
+ * versions in the future. If you wish to customize Magento for your
+ * needs please refer to http://www.magento.com for more information.
+ *
+ * @category    Varien
+ * @package     Varien_Data
+ * @copyright  Copyright (c) 2006-2017 X.commerce, Inc. and affiliates (http://www.magento.com)
  * @license    http://opensource.org/licenses/osl-3.0.php  Open Software License (OSL 3.0)
  */
 
@@ -24,6 +30,7 @@
  *
  * @category   Varien
  * @package    Varien_Data
+ * @author      Magento Core Team <core@magentocommerce.com>
  */
 class Varien_Data_Form_Abstract extends Varien_Object
 {
@@ -79,12 +86,36 @@ class Varien_Data_Form_Abstract extends Varien_Object
     }
 
     /**
+     * Disable elements
+     *
+     * @param boolean $readonly
+     * @param boolean $useDisabled
+     * @return Varien_Data_Form_Abstract
+     */
+    public function setReadonly($readonly, $useDisabled = false)
+    {
+        if ($useDisabled) {
+            $this->setDisabled($readonly);
+            $this->setData('readonly_disabled', $readonly);
+        } else {
+            $this->setData('readonly', $readonly);
+        }
+        foreach ($this->getElements() as $element) {
+            $element->setReadonly($readonly, $useDisabled);
+        }
+
+        return $this;
+    }
+
+    /**
      * Add form element
      *
-     * @param   Varien_Data_Form_Element_Abstract $element
-     * @return  Varien_Data_Form
+     * @param Varien_Data_Form_Element_Abstract $element
+     * @param bool|string|null $after
+     *
+     * @return Varien_Data_Form
      */
-    public function addElement(Varien_Data_Form_Element_Abstract $element, $after=null)
+    public function addElement(Varien_Data_Form_Element_Abstract $element, $after = null)
     {
         $element->setForm($this);
         $this->getElements()->add($element, $after);
@@ -114,9 +145,6 @@ class Varien_Data_Form_Abstract extends Varien_Object
         }
         $element = new $className($config);
         $element->setId($elementId);
-        if ($element->getRequired()) {
-            $element->addClass('required-entry');
-        }
         $this->addElement($element, $after);
         return $element;
     }
@@ -137,11 +165,12 @@ class Varien_Data_Form_Abstract extends Varien_Object
      * Enter description here...
      *
      * @param string $elementId
-     * @param unknown_type $config
-     * @param unknown_type $after
+     * @param array $config
+     * @param bool|string|null $after
+     *
      * @return Varien_Data_Form_Element_Fieldset
      */
-    public function addFieldset($elementId, $config, $after=false)
+    public function addFieldset($elementId, $config, $after = false)
     {
         $element = new Varien_Data_Form_Element_Fieldset($config);
         $element->setId($elementId);

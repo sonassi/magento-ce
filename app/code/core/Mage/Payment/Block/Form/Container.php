@@ -10,19 +10,28 @@
  * http://opensource.org/licenses/osl-3.0.php
  * If you did not receive a copy of the license and are unable to
  * obtain it through the world-wide-web, please send an email
- * to license@magentocommerce.com so we can send you a copy immediately.
+ * to license@magento.com so we can send you a copy immediately.
  *
- * @category   Mage
- * @package    Mage_Payment
- * @copyright  Copyright (c) 2004-2007 Irubin Consulting Inc. DBA Varien (http://www.varien.com)
+ * DISCLAIMER
+ *
+ * Do not edit or add to this file if you wish to upgrade Magento to newer
+ * versions in the future. If you wish to customize Magento for your
+ * needs please refer to http://www.magento.com for more information.
+ *
+ * @category    Mage
+ * @package     Mage_Payment
+ * @copyright  Copyright (c) 2006-2017 X.commerce, Inc. and affiliates (http://www.magento.com)
  * @license    http://opensource.org/licenses/osl-3.0.php  Open Software License (OSL 3.0)
  */
 
 /**
  * Base container block for payment methods forms
  *
+ * @method Mage_Sales_Model_Quote getQuote()
+ *
  * @category   Mage
  * @package    Mage_Payment
+ * @author      Magento Core Team <core@magentocommerce.com>
  */
 class Mage_Payment_Block_Form_Container extends Mage_Core_Block_Template
 {
@@ -35,32 +44,27 @@ class Mage_Payment_Block_Form_Container extends Mage_Core_Block_Template
          * Create child blocks for payment methods forms
          */
         foreach ($this->getMethods() as $method) {
-        	$this->setChild(
-        	   'payment.method.'.$method->getCode(),
-        	   $this->helper('payment')->getMethodFormBlock($method)
+            $this->setChild(
+               'payment.method.'.$method->getCode(),
+               $this->helper('payment')->getMethodFormBlock($method)
             );
         }
 
         return parent::_prepareLayout();
     }
 
+    /**
+     * Check payment method model
+     *
+     * @param Mage_Payment_Model_Method_Abstract $method
+     * @return bool
+     */
     protected function _canUseMethod($method)
     {
-        if (!$method->canUseForCountry($this->getQuote()->getBillingAddress()->getCountry())) {
-            return false;
-        }
-
-        /**
-         * Checking for min/max order total for assigned payment method
-         */
-        $total = $this->getQuote()->getBaseGrandTotal();
-        $minTotal = $method->getConfigData('min_order_total');
-        $maxTotal = $method->getConfigData('max_order_total');
-
-        if((!empty($minTotal) && ($total < $minTotal)) || (!empty($maxTotal) && ($total > $maxTotal))) {
-            return false;
-        }
-        return true;
+        return $method->isApplicableToQuote($this->getQuote(), Mage_Payment_Model_Method_Abstract::CHECK_USE_FOR_COUNTRY
+            | Mage_Payment_Model_Method_Abstract::CHECK_USE_FOR_CURRENCY
+            | Mage_Payment_Model_Method_Abstract::CHECK_ORDER_TOTAL_MIN_MAX
+        );
     }
 
     /**
@@ -68,6 +72,7 @@ class Mage_Payment_Block_Form_Container extends Mage_Core_Block_Template
      *
      * Redeclare this method in child classes for declaring method info instance
      *
+     * @param Mage_Payment_Model_Method_Abstract $method
      * @return bool
      */
     protected function _assignMethod($method)
@@ -94,22 +99,24 @@ class Mage_Payment_Block_Form_Container extends Mage_Core_Block_Template
     }
 
     /**
-     * Retrieve availale payment methods
+     * Retrieve available payment methods
      *
      * @return array
      */
     public function getMethods()
     {
         $methods = $this->getData('methods');
-        if (is_null($methods)) {
-            $store = $this->getQuote() ? $this->getQuote()->getStoreId() : null;
-            $methods = $this->helper('payment')->getStoreMethods($store, $this->getQuote());
-            foreach ($methods as $key => $method) {
-                if ($this->_canUseMethod($method)) {
+        if ($methods === null) {
+            $quote = $this->getQuote();
+            $store = $quote ? $quote->getStoreId() : null;
+            $methods = array();
+            foreach ($this->helper('payment')->getStoreMethods($store, $quote) as $method) {
+                if ($this->_canUseMethod($method) && $method->isApplicableToQuote(
+                    $quote,
+                    Mage_Payment_Model_Method_Abstract::CHECK_ZERO_TOTAL
+                )) {
                     $this->_assignMethod($method);
-                }
-                else {
-                    unset($methods[$key]);
+                    $methods[] = $method;
                 }
             }
             $this->setData('methods', $methods);

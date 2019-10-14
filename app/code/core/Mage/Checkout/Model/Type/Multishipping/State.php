@@ -10,11 +10,17 @@
  * http://opensource.org/licenses/osl-3.0.php
  * If you did not receive a copy of the license and are unable to
  * obtain it through the world-wide-web, please send an email
- * to license@magentocommerce.com so we can send you a copy immediately.
+ * to license@magento.com so we can send you a copy immediately.
  *
- * @category   Mage
- * @package    Mage_Checkout
- * @copyright  Copyright (c) 2004-2007 Irubin Consulting Inc. DBA Varien (http://www.varien.com)
+ * DISCLAIMER
+ *
+ * Do not edit or add to this file if you wish to upgrade Magento to newer
+ * versions in the future. If you wish to customize Magento for your
+ * needs please refer to http://www.magento.com for more information.
+ *
+ * @category    Mage
+ * @package     Mage_Checkout
+ * @copyright  Copyright (c) 2006-2017 X.commerce, Inc. and affiliates (http://www.magento.com)
  * @license    http://opensource.org/licenses/osl-3.0.php  Open Software License (OSL 3.0)
  */
 
@@ -23,6 +29,7 @@
  *
  * @category   Mage
  * @package    Mage_Checkout
+ * @author      Magento Core Team <core@magentocommerce.com>
  */
 class Mage_Checkout_Model_Type_Multishipping_State extends Varien_Object
 {
@@ -32,9 +39,24 @@ class Mage_Checkout_Model_Type_Multishipping_State extends Varien_Object
     const STEP_OVERVIEW         = 'multishipping_overview';
     const STEP_SUCCESS          = 'multishipping_success';
 
+    /**
+     * Allow steps array
+     *
+     * @var array
+     */
     protected $_steps;
+
+    /**
+     * Checkout model
+     *
+     * @var Mage_Checkout_Model_Type_Multishipping
+     */
     protected $_checkout;
 
+    /**
+     * Init model, steps
+     *
+     */
     public function __construct()
     {
         parent::__construct();
@@ -56,10 +78,19 @@ class Mage_Checkout_Model_Type_Multishipping_State extends Varien_Object
             )),
         );
 
+        foreach ($this->_steps as $step) {
+            $step->setIsComplete(false);
+        }
+
         $this->_checkout = Mage::getSingleton('checkout/type_multishipping');
         $this->_steps[$this->getActiveStep()]->setIsActive(true);
     }
 
+    /**
+     * Retrieve checkout model
+     *
+     * @return Mage_Checkout_Model_Type_Multishipping
+     */
     public function getCheckout()
     {
         return $this->_checkout;
@@ -104,6 +135,48 @@ class Mage_Checkout_Model_Type_Multishipping_State extends Varien_Object
                 $stepObject->unsIsActive();
             }
             $this->_steps[$step]->setIsActive(true);
+        }
+        return $this;
+    }
+
+    /**
+     * Mark step as completed
+     *
+     * @param string $step
+     * @return Mage_Checkout_Model_Type_Multishipping_State
+     */
+    public function setCompleteStep($step)
+    {
+        if (isset($this->_steps[$step])) {
+            $this->getCheckoutSession()->setStepData($step, 'is_complete', true);
+        }
+        return $this;
+    }
+
+    /**
+     * Retrieve step complete status
+     *
+     * @param string $step
+     * @return bool
+     */
+    public function getCompleteStep($step)
+    {
+        if (isset($this->_steps[$step])) {
+            return $this->getCheckoutSession()->getStepData($step, 'is_complete');
+        }
+        return false;
+    }
+
+    /**
+     * Unset complete status from step
+     *
+     * @param string $step
+     * @return Mage_Checkout_Model_Type_Multishipping_State
+     */
+    public function unsCompleteStep($step)
+    {
+        if (isset($this->_steps[$step])) {
+            $this->getCheckoutSession()->setStepData($step, 'is_complete', false);
         }
         return $this;
     }

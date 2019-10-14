@@ -5,58 +5,78 @@
  *
  * NOTICE OF LICENSE
  *
- * This source file is subject to the Open Software License (OSL 3.0)
- * that is bundled with this package in the file LICENSE.txt.
+ * This source file is subject to the Academic Free License (AFL 3.0)
+ * that is bundled with this package in the file LICENSE_AFL.txt.
  * It is also available through the world-wide-web at this URL:
- * http://opensource.org/licenses/osl-3.0.php
+ * http://opensource.org/licenses/afl-3.0.php
  * If you did not receive a copy of the license and are unable to
  * obtain it through the world-wide-web, please send an email
- * to license@magentocommerce.com so we can send you a copy immediately.
+ * to license@magento.com so we can send you a copy immediately.
  *
- * @category   Mage
- * @package    Mage_Install
- * @copyright  Copyright (c) 2004-2007 Irubin Consulting Inc. DBA Varien (http://www.varien.com)
- * @license    http://opensource.org/licenses/osl-3.0.php  Open Software License (OSL 3.0)
+ * DISCLAIMER
+ *
+ * Do not edit or add to this file if you wish to upgrade Magento to newer
+ * versions in the future. If you wish to customize Magento for your
+ * needs please refer to http://www.magento.com for more information.
+ *
+ * @category    Mage
+ * @package     Mage_Install
+ * @copyright   Copyright (c) 2006-2017 X.commerce, Inc. and affiliates (http://www.magento.com)
+ * @license     http://opensource.org/licenses/afl-3.0.php  Academic Free License (AFL 3.0)
  */
 -->
 <config>
     <modules>
         <Mage_Install>
             <version>0.7.0</version>
-            <depends>
-                <Mage_Core />
-            </depends>
         </Mage_Install>
     </modules>
     <global>
         <models>
             <install>
                 <class>Mage_Install_Model</class>
-                <resourceModel>install_mysql4</resourceModel>
+                <resourceModel>install_resource</resourceModel>
             </install>
-            <install_mysql4>
-                <class>Mage_Install_Model_Mysql4</class>
-            </install_mysql4>
+            <install_resource>
+                <class>Mage_Install_Model_Resource</class>
+                <deprecatedNode>install_mysql4</deprecatedNode>
+            </install_resource>
         </models>
-        <resources>
-            <install_write>
-                <connection><use>core_write</use></connection>
-            </install_write>
-            <install_read>
-                <connection><use>core_read</use></connection>
-            </install_read>
-        </resources>
         <blocks>
-            <install><class>Mage_Install_Block</class></install>
+            <install>
+                <class>Mage_Install_Block</class>
+            </install>
         </blocks>
     </global>
+    <default>
+        <web>
+            <routers>
+                <install>
+                    <area>frontend</area>
+                    <class>Mage_Install_Controller_Router_Install</class>
+                </install>
+            </routers>
+        </web>
+    </default>
+    <stores>
+        <default>
+            <web>
+                <routers>
+                    <install>
+                        <area>frontend</area>
+                        <class>Mage_Install_Controller_Router_Install</class>
+                    </install>
+                </routers>
+            </web>
+        </default>
+    </stores>
     <frontend>
         <secure_url>
             <install>/install/wizard/checkSecureHost</install>
         </secure_url>
         <routers>
             <install>
-                <use>standard</use>
+                <use>install</use>
                 <args>
                     <module>Mage_Install</module>
                     <frontName>install</frontName>
@@ -65,16 +85,27 @@
         </routers>
     </frontend>
     <install>
+        <databases>
+            <mysql4>
+                <type>pdo_mysql</type>
+                <initStatements>SET NAMES utf8</initStatements>
+                <min_version>4.1.20</min_version>
+                <extensions>
+                    <pdo_mysql>1</pdo_mysql>
+                </extensions>
+            </mysql4>
+        </databases>
         <layout>
             <updates>
-                <main><file>main.xml</file></main>
+                <main>
+                    <file>main.xml</file>
+                </main>
             </updates>
         </layout>
         <events>
             <controller_action_predispatch>
                 <observers>
                     <checkConnection>
-                        <type>singleton</type>
                         <class>core/resource</class>
                         <method>checkDbConnection</method>
                     </checkConnection>
@@ -83,7 +114,6 @@
             <mage_run_exception>
                 <observers>
                     <install_failure>
-                        <type>singleton</type>
                         <class>install/observer</class>
                         <method>installFailure</method>
                     </install_failure>
@@ -92,7 +122,6 @@
             <core_locale_set_locale>
                 <observers>
                     <bind_locale>
-                        <type>singleton</type>
                         <class>install/observer</class>
                         <method>bindLocale</method>
                     </bind_locale>
@@ -115,5 +144,6 @@
                 </install>
             </updates>
         </layout>
+        <eula_file>LICENSE.html</eula_file>
     </install>
 </config>

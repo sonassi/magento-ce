@@ -14,14 +14,15 @@
  *
  * @category   Zend
  * @package    Zend_Cache
- * @copyright  Copyright (c) 2005-2008 Zend Technologies USA Inc. (http://www.zend.com)
+ * @copyright  Copyright (c) 2005-2015 Zend Technologies USA Inc. (http://www.zend.com)
  * @license    http://framework.zend.com/license/new-bsd     New BSD License
+ * @version    $Id$
  */
 
 
 /**
  * @package    Zend_Cache
- * @copyright  Copyright (c) 2005-2008 Zend Technologies USA Inc. (http://www.zend.com)
+ * @copyright  Copyright (c) 2005-2015 Zend Technologies USA Inc. (http://www.zend.com)
  * @license    http://framework.zend.com/license/new-bsd     New BSD License
  */
 abstract class Zend_Cache
@@ -33,28 +34,38 @@ abstract class Zend_Cache
      * @var array
      */
     public static $standardFrontends = array('Core', 'Output', 'Class', 'File', 'Function', 'Page');
-    
+
     /**
      * Standard backends
      *
      * @var array
      */
-    public static $standardBackends = array('File', 'Sqlite', 'Memcached', 'Apc', 'ZendPlatform');
-    
+    public static $standardBackends = array('File', 'Sqlite', 'Memcached', 'Libmemcached', 'Apc', 'ZendPlatform',
+                                            'Xcache', 'TwoLevels', 'WinCache', 'ZendServer_Disk', 'ZendServer_ShMem');
+
     /**
-     * Only for backward compatibily (will be removed in 1.2.0)
+     * Standard backends which implement the ExtendedInterface
      *
      * @var array
+     */
+    public static $standardExtendedBackends = array('File', 'Apc', 'TwoLevels', 'Memcached', 'Libmemcached', 'Sqlite', 'WinCache');
+
+    /**
+     * Only for backward compatibility (may be removed in next major release)
+     *
+     * @var array
+     * @deprecated
      */
     public static $availableFrontends = array('Core', 'Output', 'Class', 'File', 'Function', 'Page');
-    
+
     /**
-     * Only for backward compatibily (will be removed in 1.2.0)
+     * Only for backward compatibility (may be removed in next major release)
      *
      * @var array
+     * @deprecated
      */
-    public static $availableBackends = array('File', 'Sqlite', 'Memcached', 'Apc', 'ZendPlatform');
-     
+    public static $availableBackends = array('File', 'Sqlite', 'Memcached', 'Libmemcached', 'Apc', 'ZendPlatform', 'Xcache', 'WinCache', 'TwoLevels');
+
     /**
      * Consts for clean() method
      */
@@ -62,69 +73,126 @@ abstract class Zend_Cache
     const CLEANING_MODE_OLD              = 'old';
     const CLEANING_MODE_MATCHING_TAG     = 'matchingTag';
     const CLEANING_MODE_NOT_MATCHING_TAG = 'notMatchingTag';
+    const CLEANING_MODE_MATCHING_ANY_TAG = 'matchingAnyTag';
 
     /**
      * Factory
      *
-     * @param string $frontend        frontend name
-     * @param string $backend         backend name
+     * @param mixed  $frontend        frontend name (string) or Zend_Cache_Frontend_ object
+     * @param mixed  $backend         backend name (string) or Zend_Cache_Backend_ object
      * @param array  $frontendOptions associative array of options for the corresponding frontend constructor
      * @param array  $backendOptions  associative array of options for the corresponding backend constructor
+     * @param boolean $customFrontendNaming if true, the frontend argument is used as a complete class name ; if false, the frontend argument is used as the end of "Zend_Cache_Frontend_[...]" class name
+     * @param boolean $customBackendNaming if true, the backend argument is used as a complete class name ; if false, the backend argument is used as the end of "Zend_Cache_Backend_[...]" class name
+     * @param boolean $autoload if true, there will no #require_once for backend and frontend (useful only for custom backends/frontends)
      * @throws Zend_Cache_Exception
-     * @return Zend_Cache_Frontend
+     * @return Zend_Cache_Core|Zend_Cache_Frontend
      */
-    public static function factory($frontend, $backend, $frontendOptions = array(), $backendOptions = array())
+    public static function factory($frontend, $backend, $frontendOptions = array(), $backendOptions = array(), $customFrontendNaming = false, $customBackendNaming = false, $autoload = false)
     {
+        if (is_string($backend)) {
+            $backendObject = self::_makeBackend($backend, $backendOptions, $customBackendNaming, $autoload);
+        } else {
+            if ((is_object($backend)) && (in_array('Zend_Cache_Backend_Interface', class_implements($backend)))) {
+                $backendObject = $backend;
+            } else {
+                self::throwException('backend must be a backend name (string) or an object which implements Zend_Cache_Backend_Interface');
+            }
+        }
+        if (is_string($frontend)) {
+            $frontendObject = self::_makeFrontend($frontend, $frontendOptions, $customFrontendNaming, $autoload);
+        } else {
+            if (is_object($frontend)) {
+                $frontendObject = $frontend;
+            } else {
+                self::throwException('frontend must be a frontend name (string) or an object');
+            }
+        }
+        $frontendObject->setBackend($backendObject);
+        return $frontendObject;
+    }
 
-        // because lowercase will fail
-        $frontend = self::_normalizeName($frontend);
-        $backend  = self::_normalizeName($backend);
+    /**
+     * Backend Constructor
+     *
+     * @param string  $backend
+     * @param array   $backendOptions
+     * @param boolean $customBackendNaming
+     * @param boolean $autoload
+     * @return Zend_Cache_Backend
+     */
+    public static function _makeBackend($backend, $backendOptions, $customBackendNaming = false, $autoload = false)
+    {
+        if (!$customBackendNaming) {
+            $backend  = self::_normalizeName($backend);
+        }
+        if (in_array($backend, Zend_Cache::$standardBackends)) {
+            // we use a standard backend
+            $backendClass = 'Zend_Cache_Backend_' . $backend;
+            // security controls are explicit
+            #require_once str_replace('_', DIRECTORY_SEPARATOR, $backendClass) . '.php';
+        } else {
+            // we use a custom backend
+            if (!preg_match('~^[\w\\\\]+$~D', $backend)) {
+                Zend_Cache::throwException("Invalid backend name [$backend]");
+            }
+            if (!$customBackendNaming) {
+                // we use this boolean to avoid an API break
+                $backendClass = 'Zend_Cache_Backend_' . $backend;
+            } else {
+                $backendClass = $backend;
+            }
+            if (!$autoload) {
+                $file = str_replace('_', DIRECTORY_SEPARATOR, $backendClass) . '.php';
+                if (!(self::_isReadable($file))) {
+                    self::throwException("file $file not found in include_path");
+                }
+                #require_once $file;
+            }
+        }
+        return new $backendClass($backendOptions);
+    }
 
-        // working on the frontend
-        if (in_array($frontend, self::$availableFrontends)) {
+    /**
+     * Frontend Constructor
+     *
+     * @param string  $frontend
+     * @param array   $frontendOptions
+     * @param boolean $customFrontendNaming
+     * @param boolean $autoload
+     * @return Zend_Cache_Core|Zend_Cache_Frontend
+     */
+    public static function _makeFrontend($frontend, $frontendOptions = array(), $customFrontendNaming = false, $autoload = false)
+    {
+        if (!$customFrontendNaming) {
+            $frontend = self::_normalizeName($frontend);
+        }
+        if (in_array($frontend, self::$standardFrontends)) {
             // we use a standard frontend
             // For perfs reasons, with frontend == 'Core', we can interact with the Core itself
             $frontendClass = 'Zend_Cache_' . ($frontend != 'Core' ? 'Frontend_' : '') . $frontend;
-            // For perfs reasons, we do not use the Zend_Loader::loadClass() method
-            // (security controls are explicit)
-            require_once str_replace('_', DIRECTORY_SEPARATOR, $frontendClass) . '.php';
+            // security controls are explicit
+            #require_once str_replace('_', DIRECTORY_SEPARATOR, $frontendClass) . '.php';
         } else {
             // we use a custom frontend
-            $frontendClass = 'Zend_Cache_Frontend_' . $frontend;
-            // To avoid security problems in this case, we use Zend_Loader to load the custom class
-            require_once 'Zend/Loader.php';
-            $file = str_replace('_', DIRECTORY_SEPARATOR, $frontendClass) . '.php';
-            if (!(Zend_Loader::isReadable($file))) {
-                self::throwException("file $file not found in include_path");
+            if (!preg_match('~^[\w\\\\]+$~D', $frontend)) {
+                Zend_Cache::throwException("Invalid frontend name [$frontend]");
             }
-            Zend_Loader::loadClass($frontendClass);
-        }
-        
-        // working on the backend
-        if (in_array($backend, Zend_Cache::$availableBackends)) {
-            // we use a standard backend
-            $backendClass = 'Zend_Cache_Backend_' . $backend;
-            // For perfs reasons, we do not use the Zend_Loader::loadClass() method
-            // (security controls are explicit)
-            require_once str_replace('_', DIRECTORY_SEPARATOR, $backendClass) . '.php';
-        } else {
-            // we use a custom backend
-            $backendClass = 'Zend_Cache_Backend_' . $backend;
-            // To avoid security problems in this case, we use Zend_Loader to load the custom class
-            require_once 'Zend/Loader.php';
-            $file = str_replace('_', DIRECTORY_SEPARATOR, $backendClass) . '.php';
-            if (!(Zend_Loader::isReadable($file))) {
-                self::throwException("file $file not found in include_path");
+            if (!$customFrontendNaming) {
+                // we use this boolean to avoid an API break
+                $frontendClass = 'Zend_Cache_Frontend_' . $frontend;
+            } else {
+                $frontendClass = $frontend;
             }
-            Zend_Loader::loadClass($backendClass);
+            if (!$autoload) {
+                $file = str_replace('_', DIRECTORY_SEPARATOR, $frontendClass) . '.php';
+                if (!(self::_isReadable($file))) {
+                    self::throwException("file $file not found in include_path");
+                }
+                #require_once $file;
+            }
         }
-        
-        // Making objects
-        $frontendObject = new $frontendClass($frontendOptions);
-        $backendObject = new $backendClass($backendOptions);
-        $frontendObject->setBackend($backendObject);
-        return $frontendObject;
-
+        return new $frontendClass($frontendOptions);
     }
 
     /**
@@ -134,11 +202,11 @@ abstract class Zend_Cache
      * @param  string $msg  Message for the exception
      * @throws Zend_Cache_Exception
      */
-    public static function throwException($msg)
+    public static function throwException($msg, Exception $e = null)
     {
         // For perfs reasons, we use this dynamic inclusion
-        require_once 'Zend/Cache/Exception.php';
-        throw new Zend_Cache_Exception($msg);
+        #require_once 'Zend/Cache/Exception.php';
+        throw new Zend_Cache_Exception($msg, 0, $e);
     }
 
     /**
@@ -153,7 +221,30 @@ abstract class Zend_Cache
         $name = str_replace(array('-', '_', '.'), ' ', $name);
         $name = ucwords($name);
         $name = str_replace(' ', '', $name);
+        if (stripos($name, 'ZendServer') === 0) {
+            $name = 'ZendServer_' . substr($name, strlen('ZendServer'));
+        }
+
         return $name;
+    }
+
+    /**
+     * Returns TRUE if the $filename is readable, or FALSE otherwise.
+     * This function uses the PHP include_path, where PHP's is_readable()
+     * does not.
+     *
+     * Note : this method comes from Zend_Loader (see #ZF-2891 for details)
+     *
+     * @param string   $filename
+     * @return boolean
+     */
+    private static function _isReadable($filename)
+    {
+        if (!$fh = @fopen($filename, 'r', true)) {
+            return false;
+        }
+        @fclose($fh);
+        return true;
     }
 
 }

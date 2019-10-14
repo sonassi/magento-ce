@@ -4,22 +4,28 @@
  *
  * NOTICE OF LICENSE
  *
- * This source file is subject to the Open Software License (OSL 3.0)
- * that is bundled with this package in the file LICENSE.txt.
+ * This source file is subject to the Academic Free License (AFL 3.0)
+ * that is bundled with this package in the file LICENSE_AFL.txt.
  * It is also available through the world-wide-web at this URL:
- * http://opensource.org/licenses/osl-3.0.php
+ * http://opensource.org/licenses/afl-3.0.php
  * If you did not receive a copy of the license and are unable to
  * obtain it through the world-wide-web, please send an email
- * to license@magentocommerce.com so we can send you a copy immediately.
+ * to license@magento.com so we can send you a copy immediately.
  *
- * @category   design_default
- * @package    Mage
- * @copyright  Copyright (c) 2004-2007 Irubin Consulting Inc. DBA Varien (http://www.varien.com)
- * @license    http://opensource.org/licenses/osl-3.0.php  Open Software License (OSL 3.0)
+ * DISCLAIMER
+ *
+ * Do not edit or add to this file if you wish to upgrade Magento to newer
+ * versions in the future. If you wish to customize Magento for your
+ * needs please refer to http://www.magento.com for more information.
+ *
+ * @category    design
+ * @package     default_default
+ * @copyright   Copyright (c) 2006-2017 X.commerce, Inc. and affiliates (http://www.magento.com)
+ * @license     http://opensource.org/licenses/afl-3.0.php  Academic Free License (AFL 3.0)
  */
 ?>
 <div class="entry-edit">
-	<div class="entry-edit-head"><h4 class="icon-head head-customer-sales-statistics"><?php echo Mage::helper('customer')->__('Sales Statistics') ?></h4></div>
+    <div class="entry-edit-head"><h4 class="icon-head head-customer-sales-statistics"><?php echo Mage::helper('customer')->__('Sales Statistics') ?></h4></div>
     <div class="grid">
         <table cellspacing="0" class="data">
             <thead>
@@ -34,8 +40,8 @@
             <tfoot>
                 <tr>
                     <td colspan="3" class="label"><strong><big><?php echo Mage::helper('customer')->__('All Store Views') ?></big></strong></td>
-                    <td class="emph"><strong><big><?php echo $this->getPriceFormatted($this->getTotals()->getLifetime()) ?></big></strong></td>
-                    <td class="emph"><strong><big><?php echo $this->getPriceFormatted($this->getTotals()->getAvgsale()) ?></big></strong></td>
+                    <td class="emph"><strong><big><?php echo $this->formatCurrency($this->getTotals()->getBaseLifetime()) ?></big></strong></td>
+                    <td class="emph"><strong><big><?php echo $this->formatCurrency($this->getTotals()->getAvgsale()) ?></big></strong></td>
                 </tr>
             </tfoot>
             <?php if ($this->getRows()): ?>
@@ -49,7 +55,7 @@
                         <?php if ($_row->getStoreId() == 0): ?>
                         <td colspan="3" class="label"><?php echo $_row->getStoreName() ?></td>
                         <?php else: ?>
-                <tr <?php echo ($_i++ % 2 ? 'class="even"' : '') ?>>
+                <tr<?php echo ($_i++ % 2 ? ' class="even"' : '') ?>>
                         <?php if (!$_websiteRow): ?>
                     <td rowspan="<?php echo $this->getWebsiteCount($_websiteId) ?>"><?php echo $_row->getWebsiteName() ?></td>
                             <?php $_websiteRow = true; ?>
@@ -60,34 +66,20 @@
                         <?php endif; ?>
                     <td class="label"><?php echo $_row->getStoreName() ?></td>
                         <?php endif; ?>
-                    <td><?php echo $this->getPriceFormatted($_row->getLifetime()) ?></td>
-                    <td><?php echo $this->getPriceFormatted($_row->getAvgsale()) ?></td>
+                    <td><?php echo $this->formatCurrency($_row->getLifetime(), $_row->getWebsiteId()) ?></td>
+                    <td><?php echo $this->formatCurrency($_row->getAvgsale(), $_row->getWebsiteId()) ?></td>
                 </tr>
                         <?php endforeach; ?>
                     <?php endforeach; ?>
                 <?php endforeach; ?>
             </tbody>
+            <?php else: ?>
+            <tbody>
+                <tr class="no-display"><td colspan="5"></td></tr>
+            </tbody>
             <?php endif; ?>
         </table>
     </div>
 </div>
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
+<div class="clear"></div>
+<br/>

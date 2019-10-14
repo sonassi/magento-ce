@@ -1,5 +1,4 @@
 <?php
-
 /**
  * Zend Framework
  *
@@ -16,38 +15,38 @@
  * @category   Zend
  * @package    Zend_Db
  * @subpackage Adapter
- * @copyright  Copyright (c) 2005-2008 Zend Technologies USA Inc. (http://www.zend.com)
+ * @copyright  Copyright (c) 2005-2015 Zend Technologies USA Inc. (http://www.zend.com)
  * @license    http://framework.zend.com/license/new-bsd     New BSD License
- * @version    $Id: Mysqli.php 8857 2008-03-16 12:04:03Z thomas $
+ * @version    $Id$
  */
 
 
 /**
  * @see Zend_Db_Adapter_Abstract
  */
-require_once 'Zend/Db/Adapter/Abstract.php';
+#require_once 'Zend/Db/Adapter/Abstract.php';
 
 /**
  * @see Zend_Db_Profiler
  */
-require_once 'Zend/Db/Profiler.php';
+#require_once 'Zend/Db/Profiler.php';
 
 /**
  * @see Zend_Db_Select
  */
-require_once 'Zend/Db/Select.php';
+#require_once 'Zend/Db/Select.php';
 
 /**
  * @see Zend_Db_Statement_Mysqli
  */
-require_once 'Zend/Db/Statement/Mysqli.php';
+#require_once 'Zend/Db/Statement/Mysqli.php';
 
 
 /**
  * @category   Zend
  * @package    Zend_Db
  * @subpackage Adapter
- * @copyright  Copyright (c) 2005-2008 Zend Technologies USA Inc. (http://www.zend.com)
+ * @copyright  Copyright (c) 2005-2015 Zend Technologies USA Inc. (http://www.zend.com)
  * @license    http://framework.zend.com/license/new-bsd     New BSD License
  */
 class Zend_Db_Adapter_Mysqli extends Zend_Db_Adapter_Abstract
@@ -89,9 +88,17 @@ class Zend_Db_Adapter_Mysqli extends Zend_Db_Adapter_Abstract
     protected $_stmt = null;
 
     /**
+     * Default class name for a DB statement.
+     *
+     * @var string
+     */
+    protected $_defaultStmtClass = 'Zend_Db_Statement_Mysqli';
+
+    /**
      * Quote a raw string.
      *
-     * @param string $value     Raw string
+     * @param mixed $value Raw string
+     *
      * @return string           Quoted string
      */
     protected function _quote($value)
@@ -133,7 +140,7 @@ class Zend_Db_Adapter_Mysqli extends Zend_Db_Adapter_Abstract
             /**
              * @see Zend_Db_Adapter_Mysqli_Exception
              */
-            require_once 'Zend/Db/Adapter/Mysqli/Exception.php';
+            #require_once 'Zend/Db/Adapter/Mysqli/Exception.php';
             throw new Zend_Db_Adapter_Mysqli_Exception($this->getConnection()->error);
         }
         return $result;
@@ -193,7 +200,7 @@ class Zend_Db_Adapter_Mysqli extends Zend_Db_Adapter_Abstract
             /**
              * @see Zend_Db_Adapter_Mysqli_Exception
              */
-            require_once 'Zend/Db/Adapter/Mysqli/Exception.php';
+            #require_once 'Zend/Db/Adapter/Mysqli/Exception.php';
             throw new Zend_Db_Adapter_Mysqli_Exception($this->getConnection()->error);
         }
 
@@ -220,6 +227,10 @@ class Zend_Db_Adapter_Mysqli extends Zend_Db_Adapter_Abstract
                 $row['Length'] = $matches[2];
             } else if (preg_match('/^decimal\((\d+),(\d+)\)/', $row['Type'], $matches)) {
                 $row['Type'] = 'decimal';
+                $row['Precision'] = $matches[1];
+                $row['Scale'] = $matches[2];
+            } else if (preg_match('/^float\((\d+),(\d+)\)/', $row['Type'], $matches)) {
+                $row['Type'] = 'float';
                 $row['Precision'] = $matches[1];
                 $row['Scale'] = $matches[2];
             } else if (preg_match('/^((?:big|medium|small|tiny)?int)\((\d+)\)/', $row['Type'], $matches)) {
@@ -276,7 +287,7 @@ class Zend_Db_Adapter_Mysqli extends Zend_Db_Adapter_Abstract
             /**
              * @see Zend_Db_Adapter_Mysqli_Exception
              */
-            require_once 'Zend/Db/Adapter/Mysqli/Exception.php';
+            #require_once 'Zend/Db/Adapter/Mysqli/Exception.php';
             throw new Zend_Db_Adapter_Mysqli_Exception('The Mysqli extension is required for this adapter but the extension is not loaded');
         }
 
@@ -286,22 +297,62 @@ class Zend_Db_Adapter_Mysqli extends Zend_Db_Adapter_Abstract
             $port = null;
         }
 
+        if (isset($this->_config['socket'])) {
+            $socket = $this->_config['socket'];
+        } else {
+            $socket = null;
+        }
+
+        $this->_connection = mysqli_init();
+
+        if(!empty($this->_config['driver_options'])) {
+            foreach($this->_config['driver_options'] as $option=>$value) {
+                if(is_string($option)) {
+                    // Suppress warnings here
+                    // Ignore it if it's not a valid constant
+                    $option = @constant(strtoupper($option));
+                    if($option === null)
+                        continue;
+                }
+                mysqli_options($this->_connection, $option, $value);
+            }
+        }
+
         // Suppress connection warnings here.
         // Throw an exception instead.
-        @$this->_connection = new mysqli(
+        $_isConnected = @mysqli_real_connect(
+            $this->_connection,
             $this->_config['host'],
             $this->_config['username'],
             $this->_config['password'],
             $this->_config['dbname'],
-            $port
+            $port,
+            $socket
         );
-        if ($this->_connection === false || mysqli_connect_errno()) {
+
+        if ($_isConnected === false || mysqli_connect_errno()) {
+
+            $this->closeConnection();
             /**
              * @see Zend_Db_Adapter_Mysqli_Exception
              */
-            require_once 'Zend/Db/Adapter/Mysqli/Exception.php';
+            #require_once 'Zend/Db/Adapter/Mysqli/Exception.php';
             throw new Zend_Db_Adapter_Mysqli_Exception(mysqli_connect_error());
         }
+
+        if (!empty($this->_config['charset'])) {
+            mysqli_set_charset($this->_connection, $this->_config['charset']);
+        }
+    }
+
+    /**
+     * Test if a connection is active
+     *
+     * @return boolean
+     */
+    public function isConnected()
+    {
+        return ((bool) ($this->_connection instanceof mysqli));
     }
 
     /**
@@ -311,7 +362,9 @@ class Zend_Db_Adapter_Mysqli extends Zend_Db_Adapter_Abstract
      */
     public function closeConnection()
     {
-        $this->_connection->close();
+        if ($this->isConnected()) {
+            $this->_connection->close();
+        }
         $this->_connection = null;
     }
 
@@ -327,7 +380,12 @@ class Zend_Db_Adapter_Mysqli extends Zend_Db_Adapter_Abstract
         if ($this->_stmt) {
             $this->_stmt->close();
         }
-        $stmt = new Zend_Db_Statement_Mysqli($this, $sql);
+        $stmtClass = $this->_defaultStmtClass;
+        if (!class_exists($stmtClass)) {
+            #require_once 'Zend/Loader.php';
+            Zend_Loader::loadClass($stmtClass);
+        }
+        $stmt = new $stmtClass($this, $sql);
         if ($stmt === false) {
             return false;
         }
@@ -351,6 +409,7 @@ class Zend_Db_Adapter_Mysqli extends Zend_Db_Adapter_Abstract
      * @param string $tableName   OPTIONAL Name of table.
      * @param string $primaryKey  OPTIONAL Name of primary key column.
      * @return string
+     * @todo Return value should be int?
      */
     public function lastInsertId($tableName = null, $primaryKey = null)
     {
@@ -415,14 +474,14 @@ class Zend_Db_Adapter_Mysqli extends Zend_Db_Adapter_Abstract
                 /**
                  * @see Zend_Db_Adapter_Mysqli_Exception
                  */
-                require_once 'Zend/Db/Adapter/Mysqli/Exception.php';
+                #require_once 'Zend/Db/Adapter/Mysqli/Exception.php';
                 throw new Zend_Db_Adapter_Mysqli_Exception('FETCH_BOUND is not supported yet');
                 break;
             default:
                 /**
                  * @see Zend_Db_Adapter_Mysqli_Exception
                  */
-                require_once 'Zend/Db/Adapter/Mysqli/Exception.php';
+                #require_once 'Zend/Db/Adapter/Mysqli/Exception.php';
                 throw new Zend_Db_Adapter_Mysqli_Exception("Invalid fetch mode '$mode' specified");
         }
     }
@@ -442,7 +501,7 @@ class Zend_Db_Adapter_Mysqli extends Zend_Db_Adapter_Abstract
             /**
              * @see Zend_Db_Adapter_Mysqli_Exception
              */
-            require_once 'Zend/Db/Adapter/Mysqli/Exception.php';
+            #require_once 'Zend/Db/Adapter/Mysqli/Exception.php';
             throw new Zend_Db_Adapter_Mysqli_Exception("LIMIT argument count=$count is not valid");
         }
 
@@ -451,7 +510,7 @@ class Zend_Db_Adapter_Mysqli extends Zend_Db_Adapter_Abstract
             /**
              * @see Zend_Db_Adapter_Mysqli_Exception
              */
-            require_once 'Zend/Db/Adapter/Mysqli/Exception.php';
+            #require_once 'Zend/Db/Adapter/Mysqli/Exception.php';
             throw new Zend_Db_Adapter_Mysqli_Exception("LIMIT argument offset=$offset is not valid");
         }
 
@@ -480,4 +539,18 @@ class Zend_Db_Adapter_Mysqli extends Zend_Db_Adapter_Abstract
         }
     }
 
+    /**
+     * Retrieve server version in PHP style
+     *
+     *@return string
+     */
+    public function getServerVersion()
+    {
+        $this->_connect();
+        $version = $this->_connection->server_version;
+        $major = (int) ($version / 10000);
+        $minor = (int) ($version % 10000 / 100);
+        $revision = (int) ($version % 100);
+        return $major . '.' . $minor . '.' . $revision;
+    }
 }

@@ -10,21 +10,30 @@
  * http://opensource.org/licenses/osl-3.0.php
  * If you did not receive a copy of the license and are unable to
  * obtain it through the world-wide-web, please send an email
- * to license@magentocommerce.com so we can send you a copy immediately.
+ * to license@magento.com so we can send you a copy immediately.
  *
- * @category   Mage
- * @package    Mage_Core
- * @copyright  Copyright (c) 2004-2007 Irubin Consulting Inc. DBA Varien (http://www.varien.com)
+ * DISCLAIMER
+ *
+ * Do not edit or add to this file if you wish to upgrade Magento to newer
+ * versions in the future. If you wish to customize Magento for your
+ * needs please refer to http://www.magento.com for more information.
+ *
+ * @category    Mage
+ * @package     Mage_Core
+ * @copyright  Copyright (c) 2006-2017 X.commerce, Inc. and affiliates (http://www.magento.com)
  * @license    http://opensource.org/licenses/osl-3.0.php  Open Software License (OSL 3.0)
  */
 
 
 class Mage_Core_Controller_Varien_Router_Admin extends Mage_Core_Controller_Varien_Router_Standard
 {
+    /**
+     * Fetch default path
+     */
     public function fetchDefault()
     {
-    	// set defaults
-        $d = explode('/', Mage::getStoreConfig('web/default/admin'));
+        // set defaults
+        $d = explode('/', $this->_getDefaultPath());
         $this->getFront()->setDefault(array(
             'module'     => !empty($d[0]) ? $d[0] : '',
             'controller' => !empty($d[1]) ? $d[1] : 'index',
@@ -32,114 +41,126 @@ class Mage_Core_Controller_Varien_Router_Admin extends Mage_Core_Controller_Vari
         ));
     }
 
-    public function match(Zend_Controller_Request_Http $request)
+    /**
+     * Get router default request path
+     * @return string
+     */
+    protected function _getDefaultPath()
     {
-        $this->fetchDefault();
+        return (string)Mage::getConfig()->getNode('default/web/default/admin');
+    }
 
-        $front = $this->getFront();
+    /**
+     * dummy call to pass through checking
+     *
+     * @return unknown
+     */
+    protected function _beforeModuleMatch()
+    {
+        return true;
+    }
 
-        $p = explode('/', trim($request->getPathInfo(), '/'));
-
-        // get module name
-        if ($request->getModuleName()) {
-            $module = $request->getModuleName();
-        } else {
-            $p = explode('/', trim($request->getPathInfo(), '/'));
-            $module = !empty($p[0]) ? $p[0] : $this->getFront()->getDefault('module');
-        }
-        if (!$module) {
-            return false;
-        }
-        $realModule = $this->getModuleByFrontName($module);
-        if (!$realModule) {
-            if ($moduleFrontName = array_search($module, $this->_modules)) {
-                $realModule = $module;
-                $module = $moduleFrontName;
-            } else {
-                return false;
-            }
-        }
-
-        if (!Mage::app()->isInstalled()) {
+    /**
+     * checking if we installed or not and doing redirect
+     *
+     * @return bool
+     */
+    protected function _afterModuleMatch()
+    {
+        if (!Mage::isInstalled()) {
             Mage::app()->getFrontController()->getResponse()
                 ->setRedirect(Mage::getUrl('install'))
                 ->sendResponse();
             exit;
         }
+        return true;
+    }
 
-        if (Mage::app()->isInstalled() && !$request->isPost()) {
-            $shouldBeSecure = substr(Mage::getStoreConfig('web/unsecure/base_url'),0,5)==='https'
-                || Mage::getStoreConfigFlag('web/secure/use_in_adminhtml')
-                && substr(Mage::getStoreConfig('web/secure/base_url'),0,5)==='https';
+    /**
+     * We need to have noroute action in this router
+     * not to pass dispatching to next routers
+     *
+     * @return bool
+     */
+    protected function _noRouteShouldBeApplied()
+    {
+        return true;
+    }
 
-            if ($shouldBeSecure && !Mage::app()->getStore()->isCurrentlySecure()) {
-                $url = Mage::getBaseUrl('link', true).ltrim($request->getPathInfo(), '/');
+    /**
+     * Check whether URL for corresponding path should use https protocol
+     *
+     * @param string $path
+     * @return bool
+     */
+    protected function _shouldBeSecure($path)
+    {
+        return substr((string)Mage::getConfig()->getNode('default/web/unsecure/base_url'), 0, 5) === 'https'
+            || Mage::getStoreConfigFlag('web/secure/use_in_adminhtml', Mage_Core_Model_App::ADMIN_STORE_ID)
+                && substr((string)Mage::getConfig()->getNode('default/web/secure/base_url'), 0, 5) === 'https';
+    }
 
-                Mage::app()->getFrontController()->getResponse()
-                    ->setRedirect($url)
-                    ->sendResponse();
-                exit;
+    /**
+     * Retrieve current secure url
+     *
+     * @param Mage_Core_Controller_Request_Http $request
+     * @return string
+     */
+    protected function _getCurrentSecureUrl($request)
+    {
+        return Mage::app()->getStore(Mage_Core_Model_App::ADMIN_STORE_ID)
+            ->getBaseUrl('link', true) . ltrim($request->getPathInfo(), '/');
+    }
+
+    /**
+     * Emulate custom admin url
+     *
+     * @param string $configArea
+     * @param bool $useRouterName
+     */
+    public function collectRoutes($configArea, $useRouterName)
+    {
+        if ((string)Mage::getConfig()->getNode(Mage_Adminhtml_Helper_Data::XML_PATH_USE_CUSTOM_ADMIN_PATH)) {
+            $customUrl = (string)Mage::getConfig()->getNode(Mage_Adminhtml_Helper_Data::XML_PATH_CUSTOM_ADMIN_PATH);
+            $xmlPath = Mage_Adminhtml_Helper_Data::XML_PATH_ADMINHTML_ROUTER_FRONTNAME;
+            if ((string)Mage::getConfig()->getNode($xmlPath) != $customUrl) {
+                Mage::getConfig()->setNode($xmlPath, $customUrl, true);
             }
         }
+        parent::collectRoutes($configArea, $useRouterName);
+    }
 
-        // get controller name
-        if ($request->getControllerName()) {
-            $controller = $request->getControllerName();
+    /**
+     * Add module definition to routes.
+     *
+     * @param string $frontName
+     * @param mixed $moduleName
+     * @param string $routeName
+     * @return $this
+     */
+    public function addModule($frontName, $moduleName, $routeName)
+    {
+        $isExtensionsCompatibilityMode = (bool)(string)Mage::getConfig()->getNode(
+            'default/admin/security/extensions_compatibility_mode'
+        );
+        $configRouterFrontName = (string)Mage::getConfig()->getNode(
+            Mage_Adminhtml_Helper_Data::XML_PATH_ADMINHTML_ROUTER_FRONTNAME
+        );
+        if ($isExtensionsCompatibilityMode || ($frontName == $configRouterFrontName)) {
+            return parent::addModule($frontName, $moduleName, $routeName);
         } else {
-            $controller = !empty($p[1]) ? $p[1] : $front->getDefault('controller');
+            return $this;
         }
-        $controllerFileName = $this->getControllerFileName($realModule, $controller);
-        if (!$this->validateControllerFileName($controllerFileName)) {
-            $controller = 'index';
-            $action = 'noroute';
-            $controllerFileName = $this->getControllerFileName($realModule, $controller);
-        }
+    }
 
-        $controllerClassName = $this->getControllerClassName($realModule, $controller);
-        if (!$controllerClassName) {
-            $controller = 'index';
-            $action = 'noroute';
-            $controllerFileName = $this->getControllerFileName($realModule, $controller);
-        }
-
-        // get action name
-        if (empty($action)) {
-            if ($request->getActionName()) {
-                $action = $request->getActionName();
-            } else {
-                $action = !empty($p[2]) ? $p[2] : $front->getDefault('action');
-            }
-        }
-
-        // include controller file if needed
-        if (!class_exists($controllerClassName, false)) {
-            include $controllerFileName;
-
-            if (!class_exists($controllerClassName, false)) {
-                throw Mage::exception('Mage_Core', Mage::helper('core')->__('Controller file was loaded but class does not exist'));
-            }
-        }
-        // instantiate controller class
-        $controllerInstance = new $controllerClassName($request, $front->getResponse());
-
-        if (!$controllerInstance->hasAction($action)) {
-            return false;
-        }
-
-        // set values only after all the checks are done
-        $request->setModuleName($module);
-        $request->setControllerName($controller);
-        $request->setActionName($action);
-
-        // set parameters from pathinfo
-        for ($i=3, $l=sizeof($p); $i<$l; $i+=2) {
-            $request->setParam($p[$i], isset($p[$i+1]) ? $p[$i+1] : '');
-        }
-
-        // dispatch action
-        $request->setDispatched(true);
-        $controllerInstance->dispatch($action);
-
-        return true;#$request->isDispatched();
+    /**
+     * Check if current controller instance is allowed in current router.
+     *
+     * @param Mage_Core_Controller_Varien_Action $controllerInstance
+     * @return boolean
+     */
+    protected function _validateControllerInstance($controllerInstance)
+    {
+        return true;
     }
 }

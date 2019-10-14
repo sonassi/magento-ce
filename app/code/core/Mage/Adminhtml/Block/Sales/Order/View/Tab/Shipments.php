@@ -10,11 +10,17 @@
  * http://opensource.org/licenses/osl-3.0.php
  * If you did not receive a copy of the license and are unable to
  * obtain it through the world-wide-web, please send an email
- * to license@magentocommerce.com so we can send you a copy immediately.
+ * to license@magento.com so we can send you a copy immediately.
  *
- * @category   Mage
- * @package    Mage_Adminhtml
- * @copyright  Copyright (c) 2004-2007 Irubin Consulting Inc. DBA Varien (http://www.varien.com)
+ * DISCLAIMER
+ *
+ * Do not edit or add to this file if you wish to upgrade Magento to newer
+ * versions in the future. If you wish to customize Magento for your
+ * needs please refer to http://www.magento.com for more information.
+ *
+ * @category    Mage
+ * @package     Mage_Adminhtml
+ * @copyright  Copyright (c) 2006-2017 X.commerce, Inc. and affiliates (http://www.magento.com)
  * @license    http://opensource.org/licenses/osl-3.0.php  Open Software License (OSL 3.0)
  */
 
@@ -23,27 +29,37 @@
  *
  * @category   Mage
  * @package    Mage_Adminhtml
+ * @author      Magento Core Team <core@magentocommerce.com>
  */
-class Mage_Adminhtml_Block_Sales_Order_View_Tab_Shipments extends Mage_Adminhtml_Block_Widget_Grid
+class Mage_Adminhtml_Block_Sales_Order_View_Tab_Shipments
+    extends Mage_Adminhtml_Block_Widget_Grid
+    implements Mage_Adminhtml_Block_Widget_Tab_Interface
 {
     public function __construct()
     {
         parent::__construct();
-        $this->setId('order_shipments_grid');
+        $this->setId('order_shipments');
         $this->setUseAjax(true);
+    }
+
+    /**
+     * Retrieve collection class
+     *
+     * @return string
+     */
+    protected function _getCollectionClass()
+    {
+        return 'sales/order_shipment_grid_collection';
     }
 
     protected function _prepareCollection()
     {
-        $collection = Mage::getResourceModel('sales/order_shipment_collection')
-            ->addAttributeToSelect('increment_id')
-            ->addAttributeToSelect('created_at')
-            ->addAttributeToSelect('total_qty')
-            ->joinAttribute('shipping_firstname', 'order_address/firstname', 'shipping_address_id', null, 'left')
-            ->joinAttribute('shipping_lastname', 'order_address/lastname', 'shipping_address_id', null, 'left')
-            ->addExpressionAttributeToSelect('shipping_name',
-                'CONCAT({{shipping_firstname}}, " ", {{shipping_lastname}})',
-                array('shipping_firstname', 'shipping_lastname'))
+        $collection = Mage::getResourceModel($this->_getCollectionClass())
+            ->addFieldToSelect('entity_id')
+            ->addFieldToSelect('created_at')
+            ->addFieldToSelect('increment_id')
+            ->addFieldToSelect('total_qty')
+            ->addFieldToSelect('shipping_name')
             ->setOrderFilter($this->getOrder())
         ;
         $this->setCollection($collection);
@@ -58,7 +74,7 @@ class Mage_Adminhtml_Block_Sales_Order_View_Tab_Shipments extends Mage_Adminhtml
         ));
 
         $this->addColumn('shipping_name', array(
-            'header' => Mage::helper('sales')->__('Ship to First Name'),
+            'header' => Mage::helper('sales')->__('Ship to Name'),
             'index' => 'shipping_name',
         ));
 
@@ -100,5 +116,31 @@ class Mage_Adminhtml_Block_Sales_Order_View_Tab_Shipments extends Mage_Adminhtml
     public function getGridUrl()
     {
         return $this->getUrl('*/*/shipments', array('_current' => true));
+    }
+
+    /**
+     * ######################## TAB settings #################################
+     */
+    public function getTabLabel()
+    {
+        return Mage::helper('sales')->__('Shipments');
+    }
+
+    public function getTabTitle()
+    {
+        return Mage::helper('sales')->__('Order Shipments');
+    }
+
+    public function canShowTab()
+    {
+        if ($this->getOrder()->getIsVirtual()) {
+            return false;
+        }
+        return true;
+    }
+
+    public function isHidden()
+    {
+        return false;
     }
 }

@@ -10,11 +10,17 @@
  * http://opensource.org/licenses/osl-3.0.php
  * If you did not receive a copy of the license and are unable to
  * obtain it through the world-wide-web, please send an email
- * to license@magentocommerce.com so we can send you a copy immediately.
+ * to license@magento.com so we can send you a copy immediately.
  *
- * @category   Mage
- * @package    Mage_Adminhtml
- * @copyright  Copyright (c) 2004-2007 Irubin Consulting Inc. DBA Varien (http://www.varien.com)
+ * DISCLAIMER
+ *
+ * Do not edit or add to this file if you wish to upgrade Magento to newer
+ * versions in the future. If you wish to customize Magento for your
+ * needs please refer to http://www.magento.com for more information.
+ *
+ * @category    Mage
+ * @package     Mage_Adminhtml
+ * @copyright  Copyright (c) 2006-2017 X.commerce, Inc. and affiliates (http://www.magento.com)
  * @license    http://opensource.org/licenses/osl-3.0.php  Open Software License (OSL 3.0)
  */
 
@@ -24,6 +30,7 @@
  *
  * @category   Mage
  * @package    Mage_Adminhtml
+ * @author      Magento Core Team <core@magentocommerce.com>
  */
 class Mage_Adminhtml_Block_System_Config_Tabs extends Mage_Adminhtml_Block_Widget
 {
@@ -74,6 +81,7 @@ class Mage_Adminhtml_Block_System_Config_Tabs extends Mage_Adminhtml_Block_Widge
         $sections = $configFields->getSections($current);
         $tabs     = (array)$configFields->getTabs()->children();
 
+
         $sections = (array)$sections;
 
         usort($sections, array($this, '_sort'));
@@ -91,7 +99,7 @@ class Mage_Adminhtml_Block_System_Config_Tabs extends Mage_Adminhtml_Block_Widge
 
 
         foreach ($sections as $section) {
-
+            Mage::dispatchEvent('adminhtml_block_system_config_init_tab_sections_before', array('section' => $section));
             $hasChildren = $configFields->hasChildren($section, $websiteCode, $storeCode);
 
             //$code = $section->getPath();
@@ -139,7 +147,7 @@ class Mage_Adminhtml_Block_System_Config_Tabs extends Mage_Adminhtml_Block_Widge
             }
         }
 
-        Mage::helper('adminhtml')->addPageHelpUrl($current.'/');
+        Mage::helper('adminhtml')->addPageHelpUrl('/section/' . $current);
 
         return $this;
     }
@@ -207,7 +215,7 @@ class Mage_Adminhtml_Block_System_Config_Tabs extends Mage_Adminhtml_Block_Widge
             'label'    => Mage::helper('adminhtml')->__('Default Config'),
             'url'      => $url->getUrl('*/*/*', array('section'=>$section)),
             'selected' => !$curWebsite && !$curStore,
-            'style'    => 'background:#CCC; font-weight:bold;',
+            'style'    => 'background:#ccc; font-weight:bold;',
         );
 
         foreach ($storeModel->getWebsiteCollection() as $website) {

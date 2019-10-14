@@ -10,17 +10,24 @@
  * http://opensource.org/licenses/osl-3.0.php
  * If you did not receive a copy of the license and are unable to
  * obtain it through the world-wide-web, please send an email
- * to license@magentocommerce.com so we can send you a copy immediately.
+ * to license@magento.com so we can send you a copy immediately.
  *
- * @category   Mage
- * @package    Mage_Directory
- * @copyright  Copyright (c) 2004-2007 Irubin Consulting Inc. DBA Varien (http://www.varien.com)
+ * DISCLAIMER
+ *
+ * Do not edit or add to this file if you wish to upgrade Magento to newer
+ * versions in the future. If you wish to customize Magento for your
+ * needs please refer to http://www.magento.com for more information.
+ *
+ * @category    Mage
+ * @package     Mage_Directory
+ * @copyright  Copyright (c) 2006-2017 X.commerce, Inc. and affiliates (http://www.magento.com)
  * @license    http://opensource.org/licenses/osl-3.0.php  Open Software License (OSL 3.0)
  */
 
 /**
  * Abstract model for import currency
  *
+ * @author      Magento Core Team <core@magentocommerce.com>
  */
 abstract class Mage_Directory_Model_Currency_Import_Abstract
 {
@@ -62,7 +69,7 @@ abstract class Mage_Directory_Model_Currency_Import_Abstract
     protected function _saveRates($rates)
     {
         foreach ($rates as $currencyCode => $currencyRates) {
-        	Mage::getModel('directory/currency')
+            Mage::getModel('directory/currency')
                 ->setId($currencyCode)
                 ->setRates($currencyRates)
                 ->save();
@@ -87,21 +94,21 @@ abstract class Mage_Directory_Model_Currency_Import_Abstract
         $data = array();
         $currencies = $this->_getCurrencyCodes();
         $defaultCurrencies = $this->_getDefaultCurrencyCodes();
-        set_time_limit(0);
+        @set_time_limit(0);
         foreach ($defaultCurrencies as $currencyFrom) {
             if (!isset($data[$currencyFrom])) {
                 $data[$currencyFrom] = array();
             }
 
-        	foreach ($currencies as $currencyTo) {
-        	    if ($currencyFrom == $currencyTo) {
-        	        $data[$currencyFrom][$currencyTo] = $this->_numberFormat(1);
-        	    }
-        		else {
-        		    $data[$currencyFrom][$currencyTo] = $this->_numberFormat($this->_convert($currencyFrom, $currencyTo));
-        		}
-        	}
-        	ksort($data[$currencyFrom]);
+            foreach ($currencies as $currencyTo) {
+                if ($currencyFrom == $currencyTo) {
+                    $data[$currencyFrom][$currencyTo] = $this->_numberFormat(1);
+                }
+                else {
+                    $data[$currencyFrom][$currencyTo] = $this->_numberFormat($this->_convert($currencyFrom, $currencyTo));
+                }
+            }
+            ksort($data[$currencyFrom]);
         }
 
         return $data;

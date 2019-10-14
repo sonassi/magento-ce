@@ -10,11 +10,17 @@
  * http://opensource.org/licenses/osl-3.0.php
  * If you did not receive a copy of the license and are unable to
  * obtain it through the world-wide-web, please send an email
- * to license@magentocommerce.com so we can send you a copy immediately.
+ * to license@magento.com so we can send you a copy immediately.
  *
- * @category   Mage
- * @package    Mage_Adminhtml
- * @copyright  Copyright (c) 2004-2007 Irubin Consulting Inc. DBA Varien (http://www.varien.com)
+ * DISCLAIMER
+ *
+ * Do not edit or add to this file if you wish to upgrade Magento to newer
+ * versions in the future. If you wish to customize Magento for your
+ * needs please refer to http://www.magento.com for more information.
+ *
+ * @category    Mage
+ * @package     Mage_Adminhtml
+ * @copyright  Copyright (c) 2006-2017 X.commerce, Inc. and affiliates (http://www.magento.com)
  * @license    http://opensource.org/licenses/osl-3.0.php  Open Software License (OSL 3.0)
  */
 
@@ -23,14 +29,16 @@
  *
  * @category   Mage
  * @package    Mage_Adminhtml
+ * @author     Magento Core Team <core@magentocommerce.com>
  */
-
-class Mage_Adminhtml_Block_Widget_Grid_Column_Renderer_Price extends Mage_Adminhtml_Block_Widget_Grid_Column_Renderer_Abstract
+class Mage_Adminhtml_Block_Widget_Grid_Column_Renderer_Price
+    extends Mage_Adminhtml_Block_Widget_Grid_Column_Renderer_Abstract
 {
-	/**
-	 * Currency objects cache
-	 */
-	protected static $_currencies = array();
+    protected $_defaultWidth = 100;
+    /**
+     * Currency objects cache
+     */
+    protected static $_currencies = array();
 
     /**
      * Renders grid column
@@ -41,20 +49,26 @@ class Mage_Adminhtml_Block_Widget_Grid_Column_Renderer_Price extends Mage_Adminh
     public function render(Varien_Object $row)
     {
         if ($data = $row->getData($this->getColumn()->getIndex())) {
-        	$currency_code = $this->_getCurrencyCode($row);
+            $currency_code = $this->_getCurrencyCode($row);
 
-        	if (!$currency_code) {
-        	    return $data;
-        	}
+            if (!$currency_code) {
+                return $data;
+            }
 
-        	$data = floatval($data) * $this->_getRate($row);
-        	$data = sprintf("%f", $data);
-        	$data = Mage::app()->getLocale()->currency($currency_code)->toCurrency($data);
-        	return $data;
+            $data = floatval($data) * $this->_getRate($row);
+            $data = sprintf("%F", $data);
+            $data = Mage::app()->getLocale()->currency($currency_code)->toCurrency($data);
+            return $data;
         }
         return $this->getColumn()->getDefault();
     }
 
+    /**
+     * Returns currency code for the row, false on error
+     *
+     * @param Varien_Object $row
+     * @return string|bool
+     */
     protected function _getCurrencyCode($row)
     {
         if ($code = $this->getColumn()->getCurrencyCode()) {
@@ -66,6 +80,12 @@ class Mage_Adminhtml_Block_Widget_Grid_Column_Renderer_Price extends Mage_Adminh
         return false;
     }
 
+    /**
+     * Returns rate for the row, 1 by default
+     *
+     * @param Varien_Object $row
+     * @return float|int
+     */
     protected function _getRate($row)
     {
         if ($rate = $this->getColumn()->getRate()) {
@@ -77,15 +97,11 @@ class Mage_Adminhtml_Block_Widget_Grid_Column_Renderer_Price extends Mage_Adminh
         return 1;
     }
 
-    public function renderProperty()
-    {
-        $out = parent::renderProperty();
-        if (!$this->getColumn()->getWidth()) {
-            $out.= ' width="100" ';
-        }
-        return $out;
-    }
-
+    /**
+     * Renders CSS
+     *
+     * @return string
+     */
     public function renderCss()
     {
         return parent::renderCss() . ' a-right';

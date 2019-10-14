@@ -12,14 +12,16 @@
  * obtain it through the world-wide-web, please send an email
  * to license@zend.com so we can send you a copy immediately.
  *
+ * @category   Zend
  * @package    Zend_Pdf
  * @subpackage Fonts
- * @copyright  Copyright (c) 2005-2008 Zend Technologies USA Inc. (http://www.zend.com)
+ * @copyright  Copyright (c) 2005-2015 Zend Technologies USA Inc. (http://www.zend.com)
  * @license    http://framework.zend.com/license/new-bsd     New BSD License
+ * @version    $Id$
  */
 
 /** Zend_Pdf_Cmap_ByteEncoding */
-require_once 'Zend/Pdf/Cmap/ByteEncoding.php';
+#require_once 'Zend/Pdf/Cmap/ByteEncoding.php';
 
 
 /**
@@ -30,7 +32,7 @@ require_once 'Zend/Pdf/Cmap/ByteEncoding.php';
  *
  * @package    Zend_Pdf
  * @subpackage Fonts
- * @copyright  Copyright (c) 2005-2008 Zend Technologies USA Inc. (http://www.zend.com)
+ * @copyright  Copyright (c) 2005-2015 Zend Technologies USA Inc. (http://www.zend.com)
  * @license    http://framework.zend.com/license/new-bsd     New BSD License
  */
 class Zend_Pdf_Cmap_ByteEncoding_Static extends Zend_Pdf_Cmap_ByteEncoding
@@ -50,6 +52,7 @@ class Zend_Pdf_Cmap_ByteEncoding_Static extends Zend_Pdf_Cmap_ByteEncoding
     public function __construct($cmapData)
     {
         if (! is_array($cmapData)) {
+            #require_once 'Zend/Pdf/Exception.php';
             throw new Zend_Pdf_Exception('Constructor parameter must be an array',
                                          Zend_Pdf_Exception::BAD_PARAMETER_TYPE);
         }

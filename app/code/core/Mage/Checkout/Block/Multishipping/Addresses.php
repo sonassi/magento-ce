@@ -10,11 +10,17 @@
  * http://opensource.org/licenses/osl-3.0.php
  * If you did not receive a copy of the license and are unable to
  * obtain it through the world-wide-web, please send an email
- * to license@magentocommerce.com so we can send you a copy immediately.
+ * to license@magento.com so we can send you a copy immediately.
  *
- * @category   Mage
- * @package    Mage_Checkout
- * @copyright  Copyright (c) 2004-2007 Irubin Consulting Inc. DBA Varien (http://www.varien.com)
+ * DISCLAIMER
+ *
+ * Do not edit or add to this file if you wish to upgrade Magento to newer
+ * versions in the future. If you wish to customize Magento for your
+ * needs please refer to http://www.magento.com for more information.
+ *
+ * @category    Mage
+ * @package     Mage_Checkout
+ * @copyright  Copyright (c) 2006-2017 X.commerce, Inc. and affiliates (http://www.magento.com)
  * @license    http://opensource.org/licenses/osl-3.0.php  Open Software License (OSL 3.0)
  */
 
@@ -23,9 +29,20 @@
  *
  * @category   Mage
  * @package    Mage_Checkout
+ * @author      Magento Core Team <core@magentocommerce.com>
  */
-class Mage_Checkout_Block_Multishipping_Addresses extends Mage_Checkout_Block_Multishipping_Abstract
+class Mage_Checkout_Block_Multishipping_Addresses extends Mage_Sales_Block_Items_Abstract
 {
+    /**
+     * Retrieve multishipping checkout model
+     *
+     * @return Mage_Checkout_Model_Type_Multishipping
+     */
+    public function getCheckout()
+    {
+        return Mage::getSingleton('checkout/type_multishipping');
+    }
+
     protected function _prepareLayout()
     {
         if ($headBlock = $this->getLayout()->getBlock('head')) {
@@ -71,12 +88,13 @@ class Mage_Checkout_Block_Multishipping_Addresses extends Mage_Checkout_Block_Mu
             $options = array();
             foreach ($this->getCustomer()->getAddresses() as $address) {
                 $options[] = array(
-                    'value'=>$address->getId(),
-                    'label'=>$address->format('oneline')
+                    'value' => $address->getId(),
+                    'label' => $address->format('oneline')
                 );
             }
             $this->setData('address_options', $options);
         }
+
         return $options;
     }
 
@@ -92,7 +110,7 @@ class Mage_Checkout_Block_Multishipping_Addresses extends Mage_Checkout_Block_Mu
 
     public function getItemDeleteUrl($item)
     {
-        return $this->getUrl('*/*/removeItem', array('address'=>$item->getParentId(), 'id'=>$item->getId()));
+        return $this->getUrl('*/*/removeItem', array('address'=>$item->getQuoteAddressId(), 'id'=>$item->getId()));
     }
 
     public function getPostActionUrl()
@@ -108,5 +126,10 @@ class Mage_Checkout_Block_Multishipping_Addresses extends Mage_Checkout_Block_Mu
     public function getBackUrl()
     {
         return Mage::getUrl('*/cart/');
+    }
+
+    public function isContinueDisabled()
+    {
+        return !$this->getCheckout()->validateMinimumAmount();
     }
 }

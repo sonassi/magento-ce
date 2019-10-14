@@ -14,21 +14,21 @@
  *
  * @category   Zend
  * @package    Zend_Form
- * @copyright  Copyright (c) 2005-2008 Zend Technologies USA Inc. (http://www.zend.com)
+ * @copyright  Copyright (c) 2005-2015 Zend Technologies USA Inc. (http://www.zend.com)
  * @license    http://framework.zend.com/license/new-bsd     New BSD License
  */
 
 /** Zend_Form */
-require_once 'Zend/Form.php';
+#require_once 'Zend/Form.php';
 
 /**
  * Zend_Form_SubForm
- * 
+ *
  * @category   Zend
  * @package    Zend_Form
- * @copyright  Copyright (c) 2005-2008 Zend Technologies USA Inc. (http://www.zend.com)
+ * @copyright  Copyright (c) 2005-2015 Zend Technologies USA Inc. (http://www.zend.com)
  * @license    http://framework.zend.com/license/new-bsd     New BSD License
- * @version    $Id: SubForm.php 8585 2008-03-06 19:32:34Z matthew $
+ * @version    $Id$
  */
 class Zend_Form_SubForm extends Zend_Form
 {
@@ -40,13 +40,13 @@ class Zend_Form_SubForm extends Zend_Form
 
     /**
      * Load the default decorators
-     * 
-     * @return void
+     *
+     * @return Zend_Form_SubForm
      */
     public function loadDefaultDecorators()
     {
         if ($this->loadDefaultDecoratorsIsDisabled()) {
-            return;
+            return $this;
         }
 
         $decorators = $this->getDecorators();
@@ -56,5 +56,6 @@ class Zend_Form_SubForm extends Zend_Form
                  ->addDecorator('Fieldset')
                  ->addDecorator('DtDdWrapper');
         }
+        return $this;
     }
 }

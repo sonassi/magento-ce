@@ -10,11 +10,17 @@
  * http://opensource.org/licenses/osl-3.0.php
  * If you did not receive a copy of the license and are unable to
  * obtain it through the world-wide-web, please send an email
- * to license@magentocommerce.com so we can send you a copy immediately.
+ * to license@magento.com so we can send you a copy immediately.
  *
- * @category   Mage
- * @package    Mage_Adminhtml
- * @copyright  Copyright (c) 2004-2007 Irubin Consulting Inc. DBA Varien (http://www.varien.com)
+ * DISCLAIMER
+ *
+ * Do not edit or add to this file if you wish to upgrade Magento to newer
+ * versions in the future. If you wish to customize Magento for your
+ * needs please refer to http://www.magento.com for more information.
+ *
+ * @category    Mage
+ * @package     Mage_Adminhtml
+ * @copyright  Copyright (c) 2006-2017 X.commerce, Inc. and affiliates (http://www.magento.com)
  * @license    http://opensource.org/licenses/osl-3.0.php  Open Software License (OSL 3.0)
  */
 
@@ -23,127 +29,22 @@
  *
  * @category   Mage
  * @package    Mage_Adminhtml
+ * @author      Magento Core Team <core@magentocommerce.com>
  */
-class Mage_Adminhtml_Block_Media_Uploader extends Mage_Adminhtml_Block_Widget
+
+/**
+ * @deprecated
+ * Class Mage_Adminhtml_Block_Media_Uploader
+ */
+class Mage_Adminhtml_Block_Media_Uploader extends Mage_Uploader_Block_Multiple
 {
-
-    protected $_config;
-
+    /**
+     * Constructor for uploader block
+     */
     public function __construct()
     {
         parent::__construct();
-        $this->setId($this->getId() . '_Uploader');
-        $this->setTemplate('media/uploader.phtml');
-        $this->getConfig()->setUrl(Mage::getModel('adminhtml/url')->addSessionParam()->getUrl('*/*/upload'));
-        $this->getConfig()->setParams();
-        $this->getConfig()->setFileField('file');
-        $this->getConfig()->setFilters(array(
-            'images' => array(
-                'label' => Mage::helper('adminhtml')->__('Images (.gif, .jpg, .png)'),
-                'files' => array('*.gif', '*.jpg', '*.png')
-            ),
-            'media' => array(
-                'label' => Mage::helper('adminhtml')->__('Media (.avi, .flv, .swf)'),
-                'files' => array('*.avi', '*.flv', '*.swf')
-            ),
-            'all'    => array(
-                'label' => Mage::helper('adminhtml')->__('All Files'),
-                'files' => array('*.*')
-            )
-        ));
+        $this->getUploaderConfig()->setTarget(Mage::getModel('adminhtml/url')->addSessionParam()->getUrl('*/*/upload'));
+        $this->getUploaderConfig()->setFileParameterName('file');
     }
-
-    protected function _prepareLayout()
-    {
-        $this->setChild(
-            'browse_button',
-            $this->getLayout()->createBlock('adminhtml/widget_button')
-                ->addData(array(
-                    'id'      => $this->_getButtonId('browse'),
-                    'label'   => Mage::helper('adminhtml')->__('Browse Files...'),
-                    'type'    => 'button',
-                    'onclick' => $this->getJsObjectName() . '.browse()'
-                ))
-        );
-
-        $this->setChild(
-            'upload_button',
-            $this->getLayout()->createBlock('adminhtml/widget_button')
-                ->addData(array(
-                    'id'      => $this->_getButtonId('upload'),
-                    'label'   => Mage::helper('adminhtml')->__('Upload Files'),
-                    'type'    => 'button',
-                    'onclick' => $this->getJsObjectName() . '.upload()'
-                ))
-        );
-
-        $this->setChild(
-            'delete_button',
-            $this->getLayout()->createBlock('adminhtml/widget_button')
-                ->addData(array(
-                    'id'      => '{{id}}-delete',
-                    'class'   => 'delete',
-                    'type'    => 'button',
-                    'label'   => Mage::helper('adminhtml')->__('Remove'),
-                    'onclick' => $this->getJsObjectName() . '.removeFile(\'{{fileId}}\')'
-                ))
-        );
-
-        return parent::_prepareLayout();
-    }
-
-    protected function _getButtonId($buttonName)
-    {
-        return $this->getHtmlId() . '-' . $buttonName;
-    }
-
-    public function getBrowseButtonHtml()
-    {
-        return $this->getChildHtml('browse_button');
-    }
-
-    public function getUploadButtonHtml()
-    {
-        return $this->getChildHtml('upload_button');
-    }
-
-    public function getDeleteButtonHtml()
-    {
-        return $this->getChildHtml('delete_button');
-    }
-
-    /**
-     * Retrive uploader js object name
-     *
-     * @return string
-     */
-    public function getJsObjectName()
-    {
-        return $this->getHtmlId() . 'JsObject';
-    }
-
-    /**
-     * Retrive config json
-     *
-     * @return string
-     */
-    public function getConfigJson()
-    {
-        return Zend_Json::encode($this->getConfig()->getData());
-    }
-
-    /**
-     * Retrive config object
-     *
-     * @return Varien_Config
-     */
-    public function getConfig()
-    {
-        if(is_null($this->_config)) {
-            $this->_config = new Varien_Object();
-        }
-
-        return $this->_config;
-    }
-
 }

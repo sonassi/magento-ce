@@ -5,24 +5,30 @@
  *
  * NOTICE OF LICENSE
  *
- * This source file is subject to the Open Software License (OSL 3.0)
- * that is bundled with this package in the file LICENSE.txt.
+ * This source file is subject to the Academic Free License (AFL 3.0)
+ * that is bundled with this package in the file LICENSE_AFL.txt.
  * It is also available through the world-wide-web at this URL:
- * http://opensource.org/licenses/osl-3.0.php
+ * http://opensource.org/licenses/afl-3.0.php
  * If you did not receive a copy of the license and are unable to
  * obtain it through the world-wide-web, please send an email
- * to license@magentocommerce.com so we can send you a copy immediately.
+ * to license@magento.com so we can send you a copy immediately.
  *
- * @category   Mage
- * @package    Mage_CatalogRule
- * @copyright  Copyright (c) 2004-2007 Irubin Consulting Inc. DBA Varien (http://www.varien.com)
- * @license    http://opensource.org/licenses/osl-3.0.php  Open Software License (OSL 3.0)
+ * DISCLAIMER
+ *
+ * Do not edit or add to this file if you wish to upgrade Magento to newer
+ * versions in the future. If you wish to customize Magento for your
+ * needs please refer to http://www.magento.com for more information.
+ *
+ * @category    Mage
+ * @package     Mage_CatalogRule
+ * @copyright   Copyright (c) 2006-2017 X.commerce, Inc. and affiliates (http://www.magento.com)
+ * @license     http://opensource.org/licenses/afl-3.0.php  Academic Free License (AFL 3.0)
  */
 -->
 <config>
     <modules>
         <Mage_CatalogRule>
-            <version>0.7.3</version>
+            <version>1.6.0.3</version>
         </Mage_CatalogRule>
     </modules>
     <global>
@@ -34,10 +40,11 @@
         <models>
             <catalogrule>
                 <class>Mage_CatalogRule_Model</class>
-                <resourceModel>catalogrule_mysql4</resourceModel>
+                <resourceModel>catalogrule_resource</resourceModel>
             </catalogrule>
-            <catalogrule_mysql4>
-                <class>Mage_CatalogRule_Model_Mysql4</class>
+            <catalogrule_resource>
+                <class>Mage_CatalogRule_Model_Resource</class>
+                <deprecatedNode>catalogrule_mysql4</deprecatedNode>
                 <entities>
                     <rule>
                         <table>catalogrule</table>
@@ -45,44 +52,84 @@
                     <rule_product>
                         <table>catalogrule_product</table>
                     </rule_product>
+                    <rule_product_price_tmp>
+                        <table>catalogrule_product_price_tmp</table>
+                    </rule_product_price_tmp>
                     <rule_product_price>
                         <table>catalogrule_product_price</table>
                     </rule_product_price>
+                    <affected_product>
+                        <table>catalogrule_affected_product</table>
+                    </affected_product>
+                    <rule_group_website>
+                        <table>catalogrule_group_website</table>
+                    </rule_group_website>
+                    <website>
+                        <table>catalogrule_website</table>
+                    </website>
+                    <customer_group>
+                        <table>catalogrule_customer_group</table>
+                    </customer_group>
                 </entities>
-            </catalogrule_mysql4>
+            </catalogrule_resource>
         </models>
         <resources>
             <catalogrule_setup>
                 <setup>
                     <module>Mage_CatalogRule</module>
                 </setup>
-                <connection>
-                    <use>core_setup</use>
-                </connection>
             </catalogrule_setup>
-            <catalogrule_write>
-                <connection>
-                    <use>core_write</use>
-                </connection>
-            </catalogrule_write>
-            <catalogrule_read>
-                <connection>
-                    <use>core_read</use>
-                </connection>
-            </catalogrule_read>
         </resources>
+        <events>
+            <prepare_catalog_product_price_index_table>
+                <observers>
+                    <catalogrule>
+                        <class>catalogrule/observer</class>
+                        <method>prepareCatalogProductPriceIndexTable</method>
+                    </catalogrule>
+                </observers>
+            </prepare_catalog_product_price_index_table>
+            <catalog_product_type_configurable_price>
+                <observers>
+                    <catalogrule>
+                        <class>catalogrule/observer</class>
+                        <method>catalogProductTypeConfigurablePrice</method>
+                    </catalogrule>
+                </observers>
+            </catalog_product_type_configurable_price>
+        </events>
+        <catalogrule>
+            <related_cache_types>
+                <block_html/>
+            </related_cache_types>
+        </catalogrule>
     </global>
     <frontend>
         <events>
+            <sales_quote_collect_totals_before>
+                <observers>
+                    <preload_price_rules>
+                        <class>catalogrule/observer</class>
+                        <method>preloadPriceRules</method>
+                    </preload_price_rules>
+                </observers>
+            </sales_quote_collect_totals_before>
             <catalog_product_get_final_price>
                 <observers>
                     <catalogrule>
-                        <type>singleton</type>
                         <class>catalogrule/observer</class>
                         <method>processFrontFinalPrice</method>
                     </catalogrule>
                 </observers>
             </catalog_product_get_final_price>
+            <prepare_catalog_product_collection_prices>
+                <observers>
+                    <catalogrule>
+                        <class>catalogrule/observer</class>
+                        <method>prepareCatalogProductCollectionPrices</method>
+                    </catalogrule>
+                </observers>
+            </prepare_catalog_product_collection_prices>
         </events>
         <translate>
             <modules>
@@ -94,7 +141,6 @@
             </modules>
         </translate>
     </frontend>
-
     <adminhtml>
         <translate>
             <modules>
@@ -109,70 +155,78 @@
             <catalog_product_get_final_price>
                 <observers>
                     <catalogrule>
-                        <type>singleton</type>
                         <class>catalogrule/observer</class>
                         <method>processAdminFinalPrice</method>
                     </catalogrule>
                 </observers>
             </catalog_product_get_final_price>
-            <catalog_product_save_after>
+            <catalog_product_save_before>
                 <observers>
                     <catalogrule>
-                        <type>singleton</type>
+                        <class>catalogrule/observer</class>
+                        <method>loadProductRules</method>
+                    </catalogrule>
+                </observers>
+            </catalog_product_save_before>
+            <catalog_product_save_commit_after>
+                <observers>
+                    <catalogrule>
                         <class>catalogrule/observer</class>
                         <method>applyAllRulesOnProduct</method>
                     </catalogrule>
                 </observers>
-            </catalog_product_save_after>
-        </events>
-        <menu>
-             <promo translate="title" module="catalogrule">
-                <title>Promotions</title>
-                <sort_order>50</sort_order>
-                <children>
-                    <catalog translate="title" module="catalogrule">
-                        <title>Catalog Price Rules</title>
-                        <action>adminhtml/promo_catalog/</action>
-                        <resource>promo/catalog</resource>
-                        <depends><module>Mage_Catalog</module></depends>
-                    </catalog>
-                </children>
-             </promo>
-         </menu>
-         <acl>
-            <resources>
-                <admin>
-                    <children>
-                        <promo>
-                            <title>Promotions</title>
-                            <sort_order>50</sort_order>
-                            <children>
-                                <catalog>
-                                    <title>Catalog Price Rules</title>
-                                </catalog>
-                                <quote>
-                                    <title>Shopping Cart Price Rules</title>
-                                </quote>
-                            </children>
-                        </promo>
-                    </children>
-                </admin>
-            </resources>
-         </acl>
-    </adminhtml>
+            </catalog_product_save_commit_after>
 
+            <catalog_product_import_finish_before>
+                <observers>
+                    <catalogrule>
+                        <class>catalogrule/observer</class>
+                        <method>createCatalogRulesRelations</method>
+                    </catalogrule>
+                </observers>
+            </catalog_product_import_finish_before>
+
+            <catalog_product_import_after>
+                <observers>
+                    <catalogrule>
+                        <class>catalogrule/observer</class>
+                        <method>applyAllRules</method>
+                    </catalogrule>
+                </observers>
+            </catalog_product_import_after>
+            <catalog_entity_attribute_delete_after>
+                <observers>
+                    <catalogrule>
+                        <class>catalogrule/observer</class>
+                        <method>catalogAttributeDeleteAfter</method>
+                    </catalogrule>
+                </observers>
+            </catalog_entity_attribute_delete_after>
+            <catalog_entity_attribute_save_after>
+                <observers>
+                    <catalogrule>
+                        <class>catalogrule/observer</class>
+                        <method>catalogAttributeSaveAfter</method>
+                    </catalogrule>
+                </observers>
+            </catalog_entity_attribute_save_after>
+        </events>
+    </adminhtml>
     <crontab>
         <jobs>
             <catalogrule_apply_all>
-                <schedule><cron_expr>0 1 * * *</cron_expr></schedule>
-                <run><model>catalogrule/observer::dailyCatalogUpdate</model></run>
+                <schedule>
+                    <cron_expr>0 1 * * *</cron_expr>
+                </schedule>
+                <run>
+                    <model>catalogrule/observer::dailyCatalogUpdate</model>
+                </run>
             </catalogrule_apply_all>
         </jobs>
         <events>
             <catalog_product_get_final_price>
                 <observers>
                     <catalogrule>
-                        <type>singleton</type>
                         <class>catalogrule/observer</class>
                         <method>processAdminFinalPrice</method>
                     </catalogrule>

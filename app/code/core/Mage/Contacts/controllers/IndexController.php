@@ -10,11 +10,17 @@
  * http://opensource.org/licenses/osl-3.0.php
  * If you did not receive a copy of the license and are unable to
  * obtain it through the world-wide-web, please send an email
- * to license@magentocommerce.com so we can send you a copy immediately.
+ * to license@magento.com so we can send you a copy immediately.
  *
- * @category   Mage
- * @package    Mage_Contacts
- * @copyright  Copyright (c) 2004-2007 Irubin Consulting Inc. DBA Varien (http://www.varien.com)
+ * DISCLAIMER
+ *
+ * Do not edit or add to this file if you wish to upgrade Magento to newer
+ * versions in the future. If you wish to customize Magento for your
+ * needs please refer to http://www.magento.com for more information.
+ *
+ * @category    Mage
+ * @package     Mage_Contacts
+ * @copyright  Copyright (c) 2006-2017 X.commerce, Inc. and affiliates (http://www.magento.com)
  * @license    http://opensource.org/licenses/osl-3.0.php  Open Software License (OSL 3.0)
  */
 
@@ -23,6 +29,7 @@
  *
  * @category   Mage
  * @package    Mage_Contacts
+ * @author      Magento Core Team <core@magentocommerce.com>
  */
 class Mage_Contacts_IndexController extends Mage_Core_Controller_Front_Action
 {
@@ -45,9 +52,10 @@ class Mage_Contacts_IndexController extends Mage_Core_Controller_Front_Action
     {
         $this->loadLayout();
         $this->getLayout()->getBlock('contactForm')
-            ->setFormAction( Mage::getUrl('*/*/post') );
+            ->setFormAction( Mage::getUrl('*/*/post', array('_secure' => $this->getRequest()->isSecure())) );
 
         $this->_initLayoutMessages('customer/session');
+        $this->_initLayoutMessages('catalog/session');
         $this->renderLayout();
     }
 
@@ -55,13 +63,38 @@ class Mage_Contacts_IndexController extends Mage_Core_Controller_Front_Action
     {
         $post = $this->getRequest()->getPost();
         if ( $post ) {
+            $translate = Mage::getSingleton('core/translate');
+            /* @var $translate Mage_Core_Model_Translate */
+            $translate->setTranslateInline(false);
             try {
                 $postObject = new Varien_Object();
                 $postObject->setData($post);
 
+                $error = false;
+
+                if (!Zend_Validate::is(trim($post['name']) , 'NotEmpty')) {
+                    $error = true;
+                }
+
+                if (!Zend_Validate::is(trim($post['comment']) , 'NotEmpty')) {
+                    $error = true;
+                }
+
+                if (!Zend_Validate::is(trim($post['email']), 'EmailAddress')) {
+                    $error = true;
+                }
+
+                if (Zend_Validate::is(trim($post['hideit']), 'NotEmpty')) {
+                    $error = true;
+                }
+
+                if ($error) {
+                    throw new Exception();
+                }
                 $mailTemplate = Mage::getModel('core/email_template');
                 /* @var $mailTemplate Mage_Core_Model_Email_Template */
                 $mailTemplate->setDesignConfig(array('area' => 'frontend'))
+                    ->setReplyTo($post['email'])
                     ->sendTransactional(
                         Mage::getStoreConfig(self::XML_PATH_EMAIL_TEMPLATE),
                         Mage::getStoreConfig(self::XML_PATH_EMAIL_SENDER),
@@ -70,14 +103,24 @@ class Mage_Contacts_IndexController extends Mage_Core_Controller_Front_Action
                         array('data' => $postObject)
                     );
 
-                Mage::getSingleton('customer/session')->addSuccess(Mage::helper('contacts')->__('Your inquiry was submitted and will be responded as soon as possible. Thank you for contacting us.'));
+                if (!$mailTemplate->getSentSuccess()) {
+                    throw new Exception();
+                }
+
+                $translate->setTranslateInline(true);
+
+                Mage::getSingleton('customer/session')->addSuccess(Mage::helper('contacts')->__('Your inquiry was submitted and will be responded to as soon as possible. Thank you for contacting us.'));
                 $this->_redirect('*/*/');
+
                 return;
             } catch (Exception $e) {
+                $translate->setTranslateInline(true);
+
                 Mage::getSingleton('customer/session')->addError(Mage::helper('contacts')->__('Unable to submit your request. Please, try again later'));
                 $this->_redirect('*/*/');
                 return;
             }
+
         } else {
             $this->_redirect('*/*/');
         }

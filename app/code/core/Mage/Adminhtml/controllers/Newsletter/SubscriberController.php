@@ -10,61 +10,71 @@
  * http://opensource.org/licenses/osl-3.0.php
  * If you did not receive a copy of the license and are unable to
  * obtain it through the world-wide-web, please send an email
- * to license@magentocommerce.com so we can send you a copy immediately.
+ * to license@magento.com so we can send you a copy immediately.
  *
- * @category   Mage
- * @package    Mage_Adminhtml
- * @copyright  Copyright (c) 2004-2007 Irubin Consulting Inc. DBA Varien (http://www.varien.com)
+ * DISCLAIMER
+ *
+ * Do not edit or add to this file if you wish to upgrade Magento to newer
+ * versions in the future. If you wish to customize Magento for your
+ * needs please refer to http://www.magento.com for more information.
+ *
+ * @category    Mage
+ * @package     Mage_Adminhtml
+ * @copyright  Copyright (c) 2006-2017 X.commerce, Inc. and affiliates (http://www.magento.com)
  * @license    http://opensource.org/licenses/osl-3.0.php  Open Software License (OSL 3.0)
  */
 
 /**
  * Adminhtml newsletter subscribers controller
  *
- * @category   Mage
- * @package    Mage_Adminhtml
+ * @category    Mage
+ * @package     Mage_Adminhtml
+ * @author      Magento Core Team <core@magentocommerce.com>
  */
-
 class Mage_Adminhtml_Newsletter_SubscriberController extends Mage_Adminhtml_Controller_Action
 {
-	public function indexAction()
-	{
-	    if ($this->getRequest()->getParam('ajax')) {
-	        $this->_forward('grid');
-	        return;
-	    }
 
-	    $this->loadLayout();
+    public function indexAction()
+    {
+        $this->_title($this->__('Newsletter'))->_title($this->__('Newsletter Subscribers'));
 
-		$this->_setActiveMenu('newsletter/subscriber');
+        if ($this->getRequest()->getParam('ajax')) {
+            $this->_forward('grid');
+            return;
+        }
 
-		$this->_addBreadcrumb(Mage::helper('newsletter')->__('Newsletter'), Mage::helper('newsletter')->__('Newsletter'));
-		$this->_addBreadcrumb(Mage::helper('newsletter')->__('Subscribers'), Mage::helper('newsletter')->__('Subscribers'));
+        $this->loadLayout();
 
-		$this->_addContent(
-			$this->getLayout()->createBlock('adminhtml/newsletter_subscriber','subscriber')
-		);
+        $this->_setActiveMenu('newsletter/subscriber');
 
-		$this->renderLayout();
-	}
+        $this->_addBreadcrumb(Mage::helper('newsletter')->__('Newsletter'), Mage::helper('newsletter')->__('Newsletter'));
+        $this->_addBreadcrumb(Mage::helper('newsletter')->__('Subscribers'), Mage::helper('newsletter')->__('Subscribers'));
 
-	public function gridAction()
-	{
-	    $this->getResponse()->setBody(
-	        $this->getLayout()->createBlock('adminhtml/newsletter_subscriber_grid')->toHtml()
-	    );
-	}
+        $this->_addContent(
+            $this->getLayout()->createBlock('adminhtml/newsletter_subscriber','subscriber')
+        );
 
-	/**
+        $this->renderLayout();
+    }
+
+    public function gridAction()
+    {
+        $this->loadLayout();
+        $this->getResponse()->setBody(
+            $this->getLayout()->createBlock('adminhtml/newsletter_subscriber_grid')->toHtml()
+        );
+    }
+
+    /**
      * Export subscribers grid to CSV format
      */
     public function exportCsvAction()
     {
         $fileName   = 'subscribers.csv';
         $content    = $this->getLayout()->createBlock('adminhtml/newsletter_subscriber_grid')
-            ->getCsv();
+            ->getCsvFile();
 
-        $this->_sendUploadResponse($fileName, $content);
+        $this->_prepareDownloadResponse($fileName, $content);
     }
 
     /**
@@ -74,40 +84,63 @@ class Mage_Adminhtml_Newsletter_SubscriberController extends Mage_Adminhtml_Cont
     {
         $fileName   = 'subscribers.xml';
         $content    = $this->getLayout()->createBlock('adminhtml/newsletter_subscriber_grid')
-            ->getXml();
+            ->getExcelFile();
 
-        $this->_sendUploadResponse($fileName, $content);
+        $this->_prepareDownloadResponse($fileName, $content);
     }
 
-    protected function _sendUploadResponse($fileName, $content)
+    /**
+     * Prepare file download response
+     *
+     * @todo remove in 1.3
+     * @deprecated please use $this->_prepareDownloadResponse()
+     * @see Mage_Adminhtml_Controller_Action::_prepareDownloadResponse()
+     * @param string $fileName
+     * @param string $content
+     * @param string $contentType
+     */
+    protected function _sendUploadResponse($fileName, $content, $contentType='application/octet-stream')
     {
-        $response = $this->getResponse();
-        $response->setHeader('HTTP/1.1 200 OK','');
-        $response->setHeader('Content-Disposition', 'attachment; filename='.$fileName);
-        $response->setHeader('Last-Modified', date('r'));
-        $response->setHeader('Accept-Ranges', 'bytes');
-        $response->setHeader('Content-Length', strlen($content));
-        $response->setHeader('Content-type', 'application/octet-stream');
-        $response->setBody($content);
-        $response->sendResponse();
-        die;
+        $this->_prepareDownloadResponse($fileName, $content, $contentType);
     }
 
     public function massUnsubscribeAction()
     {
         $subscribersIds = $this->getRequest()->getParam('subscriber');
-        if(!is_array($subscribersIds)) {
+        if (!is_array($subscribersIds)) {
              Mage::getSingleton('adminhtml/session')->addError(Mage::helper('newsletter')->__('Please select subscriber(s)'));
-        } else {
+        }
+        else {
             try {
                 foreach ($subscribersIds as $subscriberId) {
                     $subscriber = Mage::getModel('newsletter/subscriber')->load($subscriberId);
-                    $subscriber->unsubscribe($subscriber->getEmail());
+                    $subscriber->unsubscribe();
                 }
                 Mage::getSingleton('adminhtml/session')->addSuccess(
-                    Mage::helper('adminhtml')->__(
-                        'Total of %d record(s) were successfully updated', count($subscribersIds)
-                    )
+                    Mage::helper('adminhtml')->__('Total of %d record(s) were updated', count($subscribersIds))
+                );
+            } catch (Exception $e) {
+                Mage::getSingleton('adminhtml/session')->addError($e->getMessage());
+            }
+        }
+
+        $this->_redirect('*/*/index');
+    }
+
+    public function massDeleteAction()
+    {
+        $subscribersIds = $this->getRequest()->getParam('subscriber');
+        if (!is_array($subscribersIds)) {
+             Mage::getSingleton('adminhtml/session')->addError(Mage::helper('newsletter')->__('Please select subscriber(s)'));
+        }
+        else {
+            try {
+                foreach ($subscribersIds as $subscriberId) {
+                    $subscriber = Mage::getModel('newsletter/subscriber')->load($subscriberId);
+                    $subscriber->delete();
+                }
+                Mage::getSingleton('adminhtml/session')->addSuccess(
+                    Mage::helper('adminhtml')->__('Total of %d record(s) were deleted', count($subscribersIds))
                 );
             } catch (Exception $e) {
                 Mage::getSingleton('adminhtml/session')->addError($e->getMessage());
@@ -119,6 +152,6 @@ class Mage_Adminhtml_Newsletter_SubscriberController extends Mage_Adminhtml_Cont
 
     protected function _isAllowed()
     {
-	    return Mage::getSingleton('admin/session')->isAllowed('newsletter/subscriber');
+        return Mage::getSingleton('admin/session')->isAllowed('newsletter/subscriber');
     }
 }

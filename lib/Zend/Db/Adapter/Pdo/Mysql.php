@@ -1,5 +1,4 @@
 <?php
-
 /**
  * Zend Framework
  *
@@ -16,16 +15,16 @@
  * @category   Zend
  * @package    Zend_Db
  * @subpackage Adapter
- * @copyright  Copyright (c) 2005-2008 Zend Technologies USA Inc. (http://www.zend.com)
+ * @copyright  Copyright (c) 2005-2015 Zend Technologies USA Inc. (http://www.zend.com)
  * @license    http://framework.zend.com/license/new-bsd     New BSD License
- * @version    $Id: Mysql.php 8857 2008-03-16 12:04:03Z thomas $
+ * @version    $Id$
  */
 
 
 /**
  * @see Zend_Db_Adapter_Pdo_Abstract
  */
-require_once 'Zend/Db/Adapter/Pdo/Abstract.php';
+#require_once 'Zend/Db/Adapter/Pdo/Abstract.php';
 
 
 /**
@@ -34,7 +33,7 @@ require_once 'Zend/Db/Adapter/Pdo/Abstract.php';
  * @category   Zend
  * @package    Zend_Db
  * @subpackage Adapter
- * @copyright  Copyright (c) 2005-2008 Zend Technologies USA Inc. (http://www.zend.com)
+ * @copyright  Copyright (c) 2005-2015 Zend Technologies USA Inc. (http://www.zend.com)
  * @license    http://framework.zend.com/license/new-bsd     New BSD License
  */
 class Zend_Db_Adapter_Pdo_Mysql extends Zend_Db_Adapter_Pdo_Abstract
@@ -76,6 +75,41 @@ class Zend_Db_Adapter_Pdo_Mysql extends Zend_Db_Adapter_Pdo_Abstract
         'FIXED'              => Zend_Db::FLOAT_TYPE,
         'FLOAT'              => Zend_Db::FLOAT_TYPE
     );
+
+    /**
+     * Override _dsn() and ensure that charset is incorporated in mysql
+     * @see Zend_Db_Adapter_Pdo_Abstract::_dsn()
+     */
+    protected function _dsn()
+    {
+        $dsn = parent::_dsn();
+        if (isset($this->_config['charset'])) {
+            $dsn .= ';charset=' . $this->_config['charset'];
+        }
+        return $dsn;
+    }
+    
+    /**
+     * Creates a PDO object and connects to the database.
+     *
+     * @return void
+     * @throws Zend_Db_Adapter_Exception
+     */
+    protected function _connect()
+    {
+        if ($this->_connection) {
+            return;
+        }
+
+        if (!empty($this->_config['charset'])
+            && version_compare(PHP_VERSION, '5.3.6', '<')
+        ) {
+            $initCommand = "SET NAMES '" . $this->_config['charset'] . "'";
+            $this->_config['driver_options'][1002] = $initCommand; // 1002 = PDO::MYSQL_ATTR_INIT_COMMAND
+        }
+
+        parent::_connect();
+    }
 
     /**
      * @return string
@@ -162,6 +196,10 @@ class Zend_Db_Adapter_Pdo_Mysql extends Zend_Db_Adapter_Pdo_Abstract
                 $row[$type] = 'decimal';
                 $precision = $matches[1];
                 $scale = $matches[2];
+            } else if (preg_match('/^float\((\d+),(\d+)\)/', $row[$type], $matches)) {
+                $row[$type] = 'float';
+                $precision = $matches[1];
+                $scale = $matches[2];
             } else if (preg_match('/^((?:big|medium|small|tiny)?int)\((\d+)\)/', $row[$type], $matches)) {
                 $row[$type] = $matches[1];
                 // The optional argument of a MySQL int type is not precision
@@ -212,14 +250,14 @@ class Zend_Db_Adapter_Pdo_Mysql extends Zend_Db_Adapter_Pdo_Abstract
         $count = intval($count);
         if ($count <= 0) {
             /** @see Zend_Db_Adapter_Exception */
-            require_once 'Zend/Db/Adapter/Exception.php';
+            #require_once 'Zend/Db/Adapter/Exception.php';
             throw new Zend_Db_Adapter_Exception("LIMIT argument count=$count is not valid");
         }
 
         $offset = intval($offset);
         if ($offset < 0) {
             /** @see Zend_Db_Adapter_Exception */
-            require_once 'Zend/Db/Adapter/Exception.php';
+            #require_once 'Zend/Db/Adapter/Exception.php';
             throw new Zend_Db_Adapter_Exception("LIMIT argument offset=$offset is not valid");
         }
 

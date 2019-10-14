@@ -10,11 +10,17 @@
  * http://opensource.org/licenses/osl-3.0.php
  * If you did not receive a copy of the license and are unable to
  * obtain it through the world-wide-web, please send an email
- * to license@magentocommerce.com so we can send you a copy immediately.
+ * to license@magento.com so we can send you a copy immediately.
  *
- * @category   Mage
- * @package    Mage_Checkout
- * @copyright  Copyright (c) 2004-2007 Irubin Consulting Inc. DBA Varien (http://www.varien.com)
+ * DISCLAIMER
+ *
+ * Do not edit or add to this file if you wish to upgrade Magento to newer
+ * versions in the future. If you wish to customize Magento for your
+ * needs please refer to http://www.magento.com for more information.
+ *
+ * @category    Mage
+ * @package     Mage_Checkout
+ * @copyright  Copyright (c) 2006-2017 X.commerce, Inc. and affiliates (http://www.magento.com)
  * @license    http://opensource.org/licenses/osl-3.0.php  Open Software License (OSL 3.0)
  */
 
@@ -24,6 +30,7 @@
  * @category   Mage
  * @category   Mage
  * @package    Mage_Checkout
+ * @author      Magento Core Team <core@magentocommerce.com>
  */
 class Mage_Checkout_Block_Onepage_Payment_Methods extends Mage_Payment_Block_Form_Container
 {
@@ -33,16 +40,14 @@ class Mage_Checkout_Block_Onepage_Payment_Methods extends Mage_Payment_Block_For
     }
 
     /**
-     * Check and prepare payment method model
+     * Check payment method model
      *
+     * @param Mage_Payment_Model_Method_Abstract|null
      * @return bool
      */
     protected function _canUseMethod($method)
     {
-        if (!$method || !$method->canUseCheckout()) {
-            return false;
-        }
-        return parent::_canUseMethod($method);
+        return $method && $method->canUseCheckout() && parent::_canUseMethod($method);
     }
 
     /**
@@ -56,5 +61,39 @@ class Mage_Checkout_Block_Onepage_Payment_Methods extends Mage_Payment_Block_For
             return $method;
         }
         return false;
+    }
+
+    /**
+     * Payment method form html getter
+     * @param Mage_Payment_Model_Method_Abstract $method
+     */
+    public function getPaymentMethodFormHtml(Mage_Payment_Model_Method_Abstract $method)
+    {
+         return $this->getChildHtml('payment.method.' . $method->getCode());
+    }
+
+    /**
+     * Return method title for payment selection page
+     *
+     * @param Mage_Payment_Model_Method_Abstract $method
+     */
+    public function getMethodTitle(Mage_Payment_Model_Method_Abstract $method)
+    {
+        $form = $this->getChild('payment.method.' . $method->getCode());
+        if ($form && $form->hasMethodTitle()) {
+            return $form->getMethodTitle();
+        }
+        return $method->getTitle();
+    }
+
+    /**
+     * Payment method additional label part getter
+     * @param Mage_Payment_Model_Method_Abstract $method
+     */
+    public function getMethodLabelAfterHtml(Mage_Payment_Model_Method_Abstract $method)
+    {
+        if ($form = $this->getChild('payment.method.' . $method->getCode())) {
+            return $form->getMethodLabelAfterHtml();
+        }
     }
 }

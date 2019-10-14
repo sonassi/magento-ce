@@ -10,11 +10,17 @@
  * http://opensource.org/licenses/osl-3.0.php
  * If you did not receive a copy of the license and are unable to
  * obtain it through the world-wide-web, please send an email
- * to license@magentocommerce.com so we can send you a copy immediately.
+ * to license@magento.com so we can send you a copy immediately.
  *
- * @category   Mage
- * @package    Mage_Adminhtml
- * @copyright  Copyright (c) 2004-2007 Irubin Consulting Inc. DBA Varien (http://www.varien.com)
+ * DISCLAIMER
+ *
+ * Do not edit or add to this file if you wish to upgrade Magento to newer
+ * versions in the future. If you wish to customize Magento for your
+ * needs please refer to http://www.magento.com for more information.
+ *
+ * @category    Mage
+ * @package     Mage_Adminhtml
+ * @copyright  Copyright (c) 2006-2017 X.commerce, Inc. and affiliates (http://www.magento.com)
  * @license    http://opensource.org/licenses/osl-3.0.php  Open Software License (OSL 3.0)
  */
 
@@ -23,10 +29,13 @@
  *
  * @category   Mage
  * @package    Mage_Adminhtml
+ * @author     Magento Core Team <core@magentocommerce.com>
  */
 
-class Mage_Adminhtml_Block_Widget_Grid_Column_Renderer_Date extends Mage_Adminhtml_Block_Widget_Grid_Column_Renderer_Abstract
+class Mage_Adminhtml_Block_Widget_Grid_Column_Renderer_Date
+    extends Mage_Adminhtml_Block_Widget_Grid_Column_Renderer_Abstract
 {
+    protected $_defaultWidth = 160;
     /**
      * Date format string
      */
@@ -48,7 +57,7 @@ class Mage_Adminhtml_Block_Widget_Grid_Column_Renderer_Date extends Mage_Adminht
                     );
                 }
                 catch (Exception $e) {
-
+                    Mage::logException($e);
                 }
             }
             $format = self::$_format;
@@ -68,15 +77,18 @@ class Mage_Adminhtml_Block_Widget_Grid_Column_Renderer_Date extends Mage_Adminht
             $format = $this->_getFormat();
             try {
                 if($this->getColumn()->getGmtoffset()) {
-                    $data = Mage::app()->getLocale()->date($data, 'yyyy-MM-dd HH:mm:ss')->toString($format);
+                    $data = Mage::app()->getLocale()
+                        ->date($data, Varien_Date::DATETIME_INTERNAL_FORMAT)->toString($format);
                 } else {
-                    $data = Mage::getSingleton('core/locale')->date($data, Zend_Date::ISO_8601, null, false)->toString($format);
+                    $data = Mage::getSingleton('core/locale')
+                        ->date($data, Zend_Date::ISO_8601, null, false)->toString($format);
                 }
             }
             catch (Exception $e)
             {
                 if($this->getColumn()->getTimezone()) {
-                    $data = Mage::app()->getLocale()->date($data, 'yyyy-MM-dd HH:mm:ss')->toString($format);
+                    $data = Mage::app()->getLocale()
+                        ->date($data, Varien_Date::DATETIME_INTERNAL_FORMAT)->toString($format);
                 } else {
                     $data = Mage::getSingleton('core/locale')->date($data, null, null, false)->toString($format);
                 }
@@ -84,12 +96,5 @@ class Mage_Adminhtml_Block_Widget_Grid_Column_Renderer_Date extends Mage_Adminht
             return $data;
         }
         return $this->getColumn()->getDefault();
-    }
-
-    public function renderProperty()
-    {
-        $out = parent::renderProperty();
-        $out.= ' width="160" ';
-        return $out;
     }
 }

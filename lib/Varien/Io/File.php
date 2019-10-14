@@ -10,11 +10,17 @@
  * http://opensource.org/licenses/osl-3.0.php
  * If you did not receive a copy of the license and are unable to
  * obtain it through the world-wide-web, please send an email
- * to license@magentocommerce.com so we can send you a copy immediately.
+ * to license@magento.com so we can send you a copy immediately.
  *
- * @category   Varien
- * @package    Varien_Io
- * @copyright  Copyright (c) 2004-2007 Irubin Consulting Inc. DBA Varien (http://www.varien.com)
+ * DISCLAIMER
+ *
+ * Do not edit or add to this file if you wish to upgrade Magento to newer
+ * versions in the future. If you wish to customize Magento for your
+ * needs please refer to http://www.magento.com for more information.
+ *
+ * @category    Varien
+ * @package     Varien_Io
+ * @copyright  Copyright (c) 2006-2017 X.commerce, Inc. and affiliates (http://www.magento.com)
  * @license    http://opensource.org/licenses/osl-3.0.php  Open Software License (OSL 3.0)
  */
 
@@ -24,6 +30,7 @@
  *
  * @category   Varien
  * @package    Varien_Io
+ * @author      Magento Core Team <core@magentocommerce.com>
  */
 class Varien_Io_File extends Varien_Io_Abstract
 {
@@ -86,9 +93,22 @@ class Varien_Io_File extends Varien_Io_Abstract
     protected $_streamChmod;
 
     /**
-     * Destruct
+     * Lock file
+     *
+     * @var bool
      */
-    public function __destruct()
+    protected $_streamLocked = false;
+
+    public function __construct()
+    {
+        // Initialize shutdown function
+        register_shutdown_function(array($this, 'destruct'));
+    }
+
+    /**
+     * stream close on shutdown
+     */
+    public function destruct()
     {
         if ($this->_streamHandler) {
             $this->streamClose();
@@ -105,19 +125,54 @@ class Varien_Io_File extends Varien_Io_Abstract
      */
     public function streamOpen($fileName, $mode = 'w+', $chmod = 0666)
     {
-        if (!is_writeable($this->_cwd)) {
-            throw new Exception('Permission denied for write to ' . $this->_cwd);
+        $writeableMode = preg_match('#^[wax]#i', $mode);
+        if ($writeableMode && !is_writeable($this->_cwd)) {
+            throw new Exception('Permission denied for write to ' . $this->getFilteredPath($this->_cwd));
         }
+
+        if (!ini_get('auto_detect_line_endings')) {
+            ini_set('auto_detect_line_endings', 1);
+        }
+
         @chdir($this->_cwd);
         $this->_streamHandler = @fopen($fileName, $mode);
         @chdir($this->_iwd);
         if ($this->_streamHandler === false) {
-            throw new Exception('Error write to file ' . $fileName);
+            throw new Exception('Error write to file ' . $this->getFilteredPath($fileName));
         }
 
         $this->_streamFileName = $fileName;
         $this->_streamChmod = $chmod;
         return true;
+    }
+
+    /**
+     * Lock file
+     *
+     * @return bool
+     */
+    public function streamLock($exclusive = true)
+    {
+        if (!$this->_streamHandler) {
+            return false;
+        }
+        $this->_streamLocked = true;
+        $lock = $exclusive ? LOCK_EX : LOCK_SH;
+        return flock($this->_streamHandler, $lock);
+    }
+
+    /**
+     * Unlock file
+     *
+     * @return bool
+     */
+    public function streamUnlock()
+    {
+        if (!$this->_streamHandler || !$this->_streamLocked) {
+            return false;
+        }
+        $this->_streamLocked = false;
+        return flock($this->_streamHandler, LOCK_UN);
     }
 
     /**
@@ -129,6 +184,9 @@ class Varien_Io_File extends Varien_Io_Abstract
     public function streamRead($length = 1024)
     {
         if (!$this->_streamHandler) {
+            return false;
+        }
+        if (feof($this->_streamHandler)) {
             return false;
         }
         return @fgets($this->_streamHandler, $length);
@@ -162,6 +220,23 @@ class Varien_Io_File extends Varien_Io_Abstract
     }
 
     /**
+     * Format line as CSV and write to file pointer
+     *
+     * @param array $row
+     * @param string $delimiter
+     * @param string $enclosure
+     * @return bool|int
+     */
+    public function streamWriteCsv(array $row, $delimiter = ',', $enclosure = '"')
+    {
+        if (!$this->_streamHandler) {
+            return false;
+        }
+
+        return @fputcsv($this->_streamHandler, $row, $delimiter, $enclosure);
+    }
+
+    /**
      * Close an open file pointer
      * Set chmod on a file
      *
@@ -173,9 +248,31 @@ class Varien_Io_File extends Varien_Io_Abstract
             return false;
         }
 
+        if ($this->_streamLocked) {
+            $this->streamUnlock();
+        }
         @fclose($this->_streamHandler);
-        @chmod($this->_streamFileName, $this->_streamChmod);
+        $this->chmod($this->_streamFileName, $this->_streamChmod);
         return true;
+    }
+
+    /**
+     * Retrieve open file statistic
+     *
+     * @param string $part the part of statistic
+     * @param mixed $default default value for part
+     * @return array|bool
+     */
+    public function streamStat($part = null, $default = null)
+    {
+        if (!$this->_streamHandler) {
+            return false;
+        }
+        $stat = @fstat($this->_streamHandler);
+        if (!is_null($part)) {
+            return isset($stat[$part]) ? $stat[$part] : $default;
+        }
+        return $stat;
     }
 
     /**
@@ -199,12 +296,8 @@ class Varien_Io_File extends Varien_Io_Abstract
      */
     public function open(array $args=array())
     {
-        if (!empty($args['path'])) {
-            if ($args['path']) {
-                if($this->_allowCreateFolders ) {
-                    $this->_createDestinationFolder($args['path']);
-                }
-            }
+        if (!empty($args['path']) && $this->_allowCreateFolders) {
+            $this->checkAndCreateFolder($args['path']);
         }
 
         $this->_iwd = getcwd();
@@ -265,28 +358,39 @@ class Varien_Io_File extends Varien_Io_Abstract
      * @param string $dir
      * @return boolean
      */
-    public function rmdir($dir, $recursive=false)
+    public function rmdir($dir, $recursive = false)
     {
-        if( $this->_cwd ) {
+        if ($this->_cwd) {
             @chdir($this->_cwd);
         }
+        $result = self::rmdirRecursive($dir, $recursive);
+        @chdir($this->_iwd);
+        return $result;
+    }
 
-        if( $recursive ) {
-            if( is_dir( $dir ) ){
-                foreach( scandir( $dir ) as $item ){
-                    if( !strcmp( $item, '.' ) || !strcmp( $item, '..' ) )
+    /**
+     * Delete a directory recursively
+     * @param string $dir
+     * @param bool $recursive
+     * @return bool
+     */
+    public static function rmdirRecursive($dir, $recursive = true)
+    {
+        if ($recursive) {
+            if (is_dir($dir)) {
+                foreach (scandir($dir) as $item) {
+                    if (!strcmp($item, '.') || !strcmp($item, '..')) {
                         continue;
-                    $this->rmdir( $dir . "/" . $item, $recursive );
+                    }
+                    self::rmdirRecursive($dir . "/" . $item, $recursive);
                 }
-                $result = @rmdir( $dir );
+                $result = @rmdir($dir);
             } else {
-                $result = @unlink( $dir );
+                $result = @unlink($dir);
             }
         } else {
             $result = @rmdir($dir);
         }
-
-        @chdir($this->_iwd);
         return $result;
     }
 
@@ -349,47 +453,124 @@ class Varien_Io_File extends Varien_Io_Abstract
      *
      * @param string $filename
      * @param string|resource $src
+     * @param int $mode
+     *
      * @return int|boolean
      */
     public function write($filename, $src, $mode=null)
     {
-        if (is_string($src) && is_readable($src)) {
-            $src = realpath($src);
-            $srcIsFile = true;
-        } elseif (is_string($src) || is_resource($src)) {
-            $srcIsFile = false;
-        } else {
+        if (!$this->_IsValidSource($src) || !$this->_isFilenameWriteable($filename)) {
             return false;
         }
-        @chdir($this->_cwd);
 
-        if (file_exists($filename)) {
-            if (!is_writeable($filename)) {
-                printf('File %s don\'t writeable', $filename);
-                return false;
-            }
-        } else {
-            if (!is_writable(dirname($filename))) {
-                printf('Folder %s don\'t writeable', dirname($filename));
-                return false;
-            }
-        }
+        $srcIsFile = $this->_checkSrcIsFile($src);
         if ($srcIsFile) {
-            $result = @copy($src, $filename);
+            $src = realpath($src);
+            $result = $this->cp($src, $filename);
         } else {
-            $result = @file_put_contents($filename, $src);
+            $result = $this->filePutContent($filename, $src);
         }
-        if (!is_null($mode)) {
-            @chmod($filename, $mode);
+
+        if (!is_null($mode) && $result !== false) {
+            $this->chmod($filename, $mode);
         }
-        chdir($this->_iwd);
+
         return $result;
     }
 
-    public function fileExists($file)
+    /**
+     * Check source is valid
+     *
+     * @param string|resource $src
+     * @return bool
+     */
+    protected function _IsValidSource($src)
+    {
+        if (is_string($src) || is_resource($src)) {
+            return true;
+        }
+
+        return false;
+    }
+
+    /**
+     * Check filename is writeable
+     * If filename not exist check dirname writeable
+     *
+     * @param string $filename
+     * @throws Varien_Io_Exception
+     * @return bool
+     */
+    protected function _isFilenameWriteable($filename)
+    {
+        $error = false;
+        @chdir($this->_cwd);
+         if (file_exists($filename)) {
+            if (!is_writeable($filename)) {
+                $error = "File '{$this->getFilteredPath($filename)}' isn't writeable";
+            }
+        } else {
+            $folder = dirname($filename);
+            if (!is_writable($folder)) {
+                $error = "Folder '{$this->getFilteredPath($folder)}' isn't writeable";
+            }
+        }
+        @chdir($this->_iwd);
+
+        if ($error) {
+            throw new Varien_Io_Exception($error);
+        }
+        return true;
+    }
+
+    /**
+     * Check source is file
+     *
+     * @param string $src
+     * @return bool
+     */
+    protected function _checkSrcIsFile($src)
+    {
+        $result = false;
+        if (is_string($src) && is_readable($src) && is_file($src)) {
+            $result = true;
+        }
+
+        return $result;
+    }
+
+    /**
+     * File put content wrapper
+     *
+     * @param string $filename
+     * @param srting|resource $src
+     *
+     * @return int
+     */
+    public function filePutContent($filename, $src)
     {
         @chdir($this->_cwd);
-        $result = file_exists($file) && is_file($file);
+        $result = @file_put_contents($filename, $src);
+        chdir($this->_iwd);
+
+        return $result;
+    }
+
+    public function fileExists($file, $onlyFile = true)
+    {
+        @chdir($this->_cwd);
+        $result = file_exists($file);
+        if ($result && $onlyFile) {
+            $result = is_file($file);
+        }
+        @chdir($this->_iwd);
+        return $result;
+    }
+
+    public function isWriteable($path)
+    {
+        @chdir($this->_cwd);
+        $result = is_writeable($path);
         @chdir($this->_iwd);
         return $result;
     }
@@ -398,7 +579,7 @@ class Varien_Io_File extends Varien_Io_Abstract
     {
         preg_match('/^(.*[!\/])/', $filepath, $mathces);
         if (isset($mathces[0])) {
-        	return $mathces[0];
+            return $mathces[0];
         }
         return false;
     }
@@ -414,46 +595,31 @@ class Varien_Io_File extends Varien_Io_Abstract
         if (!$this->_allowCreateFolders) {
             return false;
         }
-        return $this->_createDestinationFolder($this->getCleanPath($path));
+        return $this->checkAndCreateFolder($this->getCleanPath($path));
     }
 
-    private function _createDestinationFolder($destinationFolder)
+    /**
+     * Check and create if not exists folder
+     *
+     * @param string $folder
+     * @param int $mode
+     * @throws Exception
+     * @return bool
+     */
+    public function checkAndCreateFolder($folder, $mode = 0777)
     {
-        if( !$destinationFolder ) {
-            return $this;
+        if (is_dir($folder)) {
+            return true;
         }
-        if (!(@is_dir($destinationFolder) || $this->mkdir($destinationFolder, 0777, true))) {
-            throw new Exception("Unable to create directory '{$destinationFolder}'.");
+        if (!is_dir(dirname($folder))) {
+            $this->checkAndCreateFolder(dirname($folder), $mode);
         }
-//        return $this;
-
-        $destinationFolder = str_replace('/', DIRECTORY_SEPARATOR, $destinationFolder);
-        $path = explode(DIRECTORY_SEPARATOR, $destinationFolder);
-        $newPath = null;
-        $oldPath = null;
-        foreach( $path as $key => $directory ) {
-            if (trim($directory)=='') {
-                continue;
-            }
-            if (strlen($directory)===2 && $directory{1}===':') {
-                $newPath = $directory;
-                continue;
-            }
-            $newPath.= ( $newPath != DIRECTORY_SEPARATOR ) ? DIRECTORY_SEPARATOR . $directory : $directory;
-            if( is_dir($newPath) ) {
-                $oldPath = $newPath;
-                continue;
-            } else {
-                if( is_writable($oldPath) ) {
-                    $this->mkdir($newPath, 0777);
-                } else {
-                    throw new Exception("Unable to create directory '{$newPath}'. Access forbidden.");
-                }
-            }
-            $oldPath = $newPath;
+        if (!is_dir($folder) && !$this->mkdir($folder, $mode)) {
+            throw new Exception("Unable to create directory '{$this->getFilteredPath($folder)}'. Access forbidden.");
         }
-        return $this;
+        return true;
     }
+
     /**
      * Delete a file
      *
@@ -568,7 +734,10 @@ class Varien_Io_File extends Varien_Io_Abstract
                     $pathinfo = pathinfo($fullpath);
                     $list_item['size'] = filesize($fullpath);
                     $list_item['leaf'] = true;
-                    if( isset($pathinfo['extension']) && in_array(strtolower($pathinfo['extension']), Array('jpg', 'jpeg', 'gif', 'bmp', 'png')) && $list_item['size'] > 0 ) {
+                    if( isset($pathinfo['extension'])
+                        && in_array(strtolower($pathinfo['extension']), Array('jpg', 'jpeg', 'gif', 'bmp', 'png'))
+                        && $list_item['size'] > 0
+                    ) {
                         $list_item['is_image'] = true;
                         $list_item['filetype'] = $pathinfo['extension'];
                     } elseif( $list_item['size'] == 0 ) {
@@ -670,5 +839,10 @@ class Varien_Io_File extends Varien_Io_Abstract
     public function dirsep()
     {
         return DIRECTORY_SEPARATOR;
+    }
+
+    public function dirname($file)
+    {
+        return $this->getCleanPath(dirname($file));
     }
 }

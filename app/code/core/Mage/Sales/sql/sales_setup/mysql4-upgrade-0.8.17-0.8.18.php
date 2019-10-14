@@ -10,11 +10,17 @@
  * http://opensource.org/licenses/osl-3.0.php
  * If you did not receive a copy of the license and are unable to
  * obtain it through the world-wide-web, please send an email
- * to license@magentocommerce.com so we can send you a copy immediately.
+ * to license@magento.com so we can send you a copy immediately.
  *
- * @category   Mage
- * @package    Mage_Sales
- * @copyright  Copyright (c) 2004-2007 Irubin Consulting Inc. DBA Varien (http://www.varien.com)
+ * DISCLAIMER
+ *
+ * Do not edit or add to this file if you wish to upgrade Magento to newer
+ * versions in the future. If you wish to customize Magento for your
+ * needs please refer to http://www.magento.com for more information.
+ *
+ * @category    Mage
+ * @package     Mage_Sales
+ * @copyright  Copyright (c) 2006-2017 X.commerce, Inc. and affiliates (http://www.magento.com)
  * @license    http://opensource.org/licenses/osl-3.0.php  Open Software License (OSL 3.0)
  */
 
@@ -44,7 +50,6 @@ ALTER TABLE `{$installer->getTable('sales_quote')}`
     change `checkout_method` `checkout_method` varchar (255)  NULL  COLLATE utf8_general_ci ,
     change `password_hash` `password_hash` varchar (255)  NULL  COLLATE utf8_general_ci ,
     change `coupon_code` `coupon_code` varchar (255)  NULL  COLLATE utf8_general_ci ,
-    change `giftcert_code` `giftcert_code` varchar (255)  NULL  COLLATE utf8_general_ci ,
     change `base_currency_code` `base_currency_code` varchar (255)  NULL  COLLATE utf8_general_ci ,
     change `store_currency_code` `store_currency_code` varchar (255)  NULL  COLLATE utf8_general_ci ,
     change `quote_currency_code` `quote_currency_code` varchar (255)  NULL  COLLATE utf8_general_ci ,

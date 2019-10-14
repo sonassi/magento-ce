@@ -10,41 +10,50 @@
  * http://opensource.org/licenses/osl-3.0.php
  * If you did not receive a copy of the license and are unable to
  * obtain it through the world-wide-web, please send an email
- * to license@magentocommerce.com so we can send you a copy immediately.
+ * to license@magento.com so we can send you a copy immediately.
  *
- * @category   Mage
- * @package    Mage_Adminhtml
- * @copyright  Copyright (c) 2004-2007 Irubin Consulting Inc. DBA Varien (http://www.varien.com)
+ * DISCLAIMER
+ *
+ * Do not edit or add to this file if you wish to upgrade Magento to newer
+ * versions in the future. If you wish to customize Magento for your
+ * needs please refer to http://www.magento.com for more information.
+ *
+ * @category    Mage
+ * @package     Mage_Adminhtml
+ * @copyright  Copyright (c) 2006-2017 X.commerce, Inc. and affiliates (http://www.magento.com)
  * @license    http://opensource.org/licenses/osl-3.0.php  Open Software License (OSL 3.0)
  */
 
 /**
- * Adminhtml urlrewrite product grid block
+ * Products grid for urlrewrites
  *
  * @category   Mage
  * @package    Mage_Adminhtml
+ * @author      Magento Core Team <core@magentocommerce.com>
  */
 class Mage_Adminhtml_Block_Urlrewrite_Product_Grid extends Mage_Adminhtml_Block_Catalog_Product_Grid
 {
-
-    public function __construct()
-    {
-        parent::__construct();
-        $this->setRowClickCallback('urlrewrite.gridRowClick');
-        $this->setUseAjax(true);
-    }
-
+    /**
+     * Disable massaction
+     *
+     * @return Mage_Adminhtml_Block_Urlrewrite_Product_Grid
+     */
     protected function _prepareMassaction()
     {
         return $this;
     }
 
+    /**
+     * Prepare columns layout
+     *
+     * @return Mage_Adminhtml_Block_Urlrewrite_Product_Grid
+     */
     protected function _prepareColumns()
     {
-        $this->addColumn('id',
+        $this->addColumn('entity_id',
             array(
                 'header'=> Mage::helper('adminhtml')->__('ID'),
-                'width' => '50px',
+                'width' => 50,
                 'index' => 'entity_id',
         ));
 
@@ -57,50 +66,37 @@ class Mage_Adminhtml_Block_Urlrewrite_Product_Grid extends Mage_Adminhtml_Block_
         $this->addColumn('sku',
             array(
                 'header'=> Mage::helper('adminhtml')->__('SKU'),
-                'width' => '80px',
+                'width' => 80,
                 'index' => 'sku',
-        ));
-        $this->addColumn('price',
-            array(
-                'header'=> Mage::helper('adminhtml')->__('Price'),
-                'type'  => 'currency',
-                'index' => 'price',
-        ));
-        $this->addColumn('qty',
-            array(
-                'header'=> Mage::helper('adminhtml')->__('Qty'),
-                'width' => '130px',
-                'type'  => 'number',
-                'index' => 'qty',
         ));
         $this->addColumn('status',
             array(
                 'header'=> Mage::helper('adminhtml')->__('Status'),
-                'width' => '50px',
+                'width' => 50,
                 'index' => 'status',
+                'type'  => 'options',
+                'options' => Mage::getSingleton('catalog/product_status')->getOptionArray(),
         ));
-
-        /*
-        if (!Mage::app()->isSingleStoreMode()) {
-            $this->addColumn('stores', array(
-                'header'    => Mage::helper('adminhtml')->__('Store Views'),
-                'type'      => 'store',
-                'width'     => '100px',
-                'sortable'  => false,
-                'index'     => 'stores',
-           ));
-        }
-        */
+        return $this;
     }
 
+    /**
+     * Get url for dispatching grid ajax requests
+     *
+     * @return string
+     */
     public function getGridUrl()
     {
-        return $this->getUrl('*/*/productGrid', array('_current'=>true));
+        return $this->getUrl('*/*/productGrid', array('_current' => true));
     }
 
+    /**
+     * Get row url
+     *
+     * @return string
+     */
     public function getRowUrl($row)
     {
-        return $this->getUrl('*/*/jsonProductInfo', array('id' => $row->getId()));
+        return $this->getUrl('*/*/edit', array('product' => $row->getId())) . 'category';
     }
-
 }

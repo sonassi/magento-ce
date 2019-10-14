@@ -10,11 +10,17 @@
  * http://opensource.org/licenses/osl-3.0.php
  * If you did not receive a copy of the license and are unable to
  * obtain it through the world-wide-web, please send an email
- * to license@magentocommerce.com so we can send you a copy immediately.
+ * to license@magento.com so we can send you a copy immediately.
  *
- * @category   Mage
- * @package    Mage_Checkout
- * @copyright  Copyright (c) 2004-2007 Irubin Consulting Inc. DBA Varien (http://www.varien.com)
+ * DISCLAIMER
+ *
+ * Do not edit or add to this file if you wish to upgrade Magento to newer
+ * versions in the future. If you wish to customize Magento for your
+ * needs please refer to http://www.magento.com for more information.
+ *
+ * @category    Mage
+ * @package     Mage_Checkout
+ * @copyright  Copyright (c) 2006-2017 X.commerce, Inc. and affiliates (http://www.magento.com)
  * @license    http://opensource.org/licenses/osl-3.0.php  Open Software License (OSL 3.0)
  */
 
@@ -24,6 +30,7 @@
  * @category   Mage
  * @category   Mage
  * @package    Mage_Checkout
+ * @author      Magento Core Team <core@magentocommerce.com>
  */
 class Mage_Checkout_Block_Onepage_Shipping_Method_Available extends Mage_Checkout_Block_Onepage_Abstract
 {
@@ -34,17 +41,19 @@ class Mage_Checkout_Block_Onepage_Shipping_Method_Available extends Mage_Checkou
     {
 
         if (empty($this->_rates)) {
-        	$this->getAddress()->collectShippingRates()->save();
+            $this->getAddress()->collectShippingRates()->save();
 
             $groups = $this->getAddress()->getGroupedAllShippingRates();
+            /*
             if (!empty($groups)) {
                 $ratesFilter = new Varien_Filter_Object_Grid();
                 $ratesFilter->addFilter(Mage::app()->getStore()->getPriceFilter(), 'price');
 
                 foreach ($groups as $code => $groupItems) {
-                	$groups[$code] = $ratesFilter->filter($groupItems);
+                    $groups[$code] = $ratesFilter->filter($groupItems);
                 }
             }
+            */
 
             return $this->_rates = $groups;
         }
@@ -71,5 +80,10 @@ class Mage_Checkout_Block_Onepage_Shipping_Method_Available extends Mage_Checkou
     public function getAddressShippingMethod()
     {
         return $this->getAddress()->getShippingMethod();
+    }
+
+    public function getShippingPrice($price, $flag)
+    {
+        return $this->getQuote()->getStore()->convertPrice(Mage::helper('tax')->getShippingPrice($price, $flag, $this->getAddress()), true);
     }
 }

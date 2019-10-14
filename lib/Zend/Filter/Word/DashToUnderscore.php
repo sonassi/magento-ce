@@ -14,27 +14,27 @@
  *
  * @category   Zend
  * @package    Zend_Filter
- * @copyright  Copyright (c) 2005-2008 Zend Technologies USA Inc. (http://www.zend.com)
+ * @copyright  Copyright (c) 2005-2015 Zend Technologies USA Inc. (http://www.zend.com)
  * @license    http://framework.zend.com/license/new-bsd     New BSD License
- * @version    $Id: CamelCaseToSeparator.php 6779 2007-11-08 15:10:41Z matthew $
+ * @version    $Id$
  */
 
 /**
  * @see Zend_Filter_PregReplace
  */
-require_once 'Zend/Filter/Word/SeparatorToSeparator.php';
+#require_once 'Zend/Filter/Word/SeparatorToSeparator.php';
 
 /**
  * @category   Zend
  * @package    Zend_Filter
- * @copyright  Copyright (c) 2005-2008 Zend Technologies USA Inc. (http://www.zend.com)
+ * @copyright  Copyright (c) 2005-2015 Zend Technologies USA Inc. (http://www.zend.com)
  * @license    http://framework.zend.com/license/new-bsd     New BSD License
  */
-class Zend_Filter_Word_DashToUnderscore extends Zend_Filter_Word_SeparatorToSeparator 
+class Zend_Filter_Word_DashToUnderscore extends Zend_Filter_Word_SeparatorToSeparator
 {
     /**
      * Constructor
-     * 
+     *
      * @param  string $separator Space by default
      * @return void
      */

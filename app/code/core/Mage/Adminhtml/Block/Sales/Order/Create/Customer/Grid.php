@@ -10,17 +10,24 @@
  * http://opensource.org/licenses/osl-3.0.php
  * If you did not receive a copy of the license and are unable to
  * obtain it through the world-wide-web, please send an email
- * to license@magentocommerce.com so we can send you a copy immediately.
+ * to license@magento.com so we can send you a copy immediately.
  *
- * @category   Mage
- * @package    Mage_Adminhtml
- * @copyright  Copyright (c) 2004-2007 Irubin Consulting Inc. DBA Varien (http://www.varien.com)
+ * DISCLAIMER
+ *
+ * Do not edit or add to this file if you wish to upgrade Magento to newer
+ * versions in the future. If you wish to customize Magento for your
+ * needs please refer to http://www.magento.com for more information.
+ *
+ * @category    Mage
+ * @package     Mage_Adminhtml
+ * @copyright  Copyright (c) 2006-2017 X.commerce, Inc. and affiliates (http://www.magento.com)
  * @license    http://opensource.org/licenses/osl-3.0.php  Open Software License (OSL 3.0)
  */
 
 /**
  * Adminhtml sales order create block
  *
+ * @author      Magento Core Team <core@magentocommerce.com>
  */
 class Mage_Adminhtml_Block_Sales_Order_Create_Customer_Grid extends Mage_Adminhtml_Block_Widget_Grid
 {
@@ -31,14 +38,13 @@ class Mage_Adminhtml_Block_Sales_Order_Create_Customer_Grid extends Mage_Adminht
         $this->setId('sales_order_create_customer_grid');
         $this->setRowClickCallback('order.selectCustomer.bind(order)');
         $this->setUseAjax(true);
-        $this->setDefaultSort('id');
+        $this->setDefaultSort('entity_id');
     }
 
     protected function _prepareCollection()
     {
         $collection = Mage::getResourceModel('customer/customer_collection')
-            ->addAttributeToSelect('firstname')
-            ->addAttributeToSelect('lastname')
+            ->addNameToSelect()
             ->addAttributeToSelect('email')
             ->addAttributeToSelect('created_at')
             ->joinAttribute('billing_postcode', 'customer_address/postcode', 'default_billing', null, 'left')
@@ -55,19 +61,15 @@ class Mage_Adminhtml_Block_Sales_Order_Create_Customer_Grid extends Mage_Adminht
 
     protected function _prepareColumns()
     {
-        $this->addColumn('id', array(
+        $this->addColumn('entity_id', array(
             'header'    =>Mage::helper('sales')->__('ID'),
             'width'     =>'50px',
             'index'     =>'entity_id',
             'align'     => 'right',
         ));
-        $this->addColumn('firstname', array(
-            'header'    =>Mage::helper('sales')->__('First Name'),
-            'index'     =>'firstname'
-        ));
-        $this->addColumn('lastname', array(
-            'header'    =>Mage::helper('sales')->__('Last Name'),
-            'index'     =>'lastname'
+        $this->addColumn('name', array(
+            'header'    =>Mage::helper('sales')->__('Name'),
+            'index'     =>'name'
         ));
         $this->addColumn('email', array(
             'header'    =>Mage::helper('sales')->__('Email'),
@@ -96,19 +98,25 @@ class Mage_Adminhtml_Block_Sales_Order_Create_Customer_Grid extends Mage_Adminht
             'index'     =>'billing_regione',
         ));
 
-        if (!Mage::app()->isSingleStoreMode()) {
-            $this->addColumn('store_name', array(
-                'header'    =>Mage::helper('sales')->__('Signed Up From'),
-                'align'     => 'center',
-                'index'     =>'store_name',
-                'width'     =>'130px',
-            ));
-        }
+        $this->addColumn('store_name', array(
+            'header'    =>Mage::helper('sales')->__('Signed Up From'),
+            'align'     => 'center',
+            'index'     =>'store_name',
+            'width'     =>'130px',
+        ));
 
         return parent::_prepareColumns();
     }
 
+    /**
+     * Deprecated since 1.1.7
+     */
     public function getRowId($row)
+    {
+        return $row->getId();
+    }
+
+    public function getRowUrl($row)
     {
         return $row->getId();
     }

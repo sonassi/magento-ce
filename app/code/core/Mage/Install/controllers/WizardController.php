@@ -10,14 +10,20 @@
  * http://opensource.org/licenses/osl-3.0.php
  * If you did not receive a copy of the license and are unable to
  * obtain it through the world-wide-web, please send an email
- * to license@magentocommerce.com so we can send you a copy immediately.
+ * to license@magento.com so we can send you a copy immediately.
  *
- * @category   Mage
- * @package    Mage_Install
- * @copyright  Copyright (c) 2004-2007 Irubin Consulting Inc. DBA Varien (http://www.varien.com)
+ * DISCLAIMER
+ *
+ * Do not edit or add to this file if you wish to upgrade Magento to newer
+ * versions in the future. If you wish to customize Magento for your
+ * needs please refer to http://www.magento.com for more information.
+ *
+ * @category    Mage
+ * @package     Mage_Install
+ * @copyright  Copyright (c) 2006-2017 X.commerce, Inc. and affiliates (http://www.magento.com)
  * @license    http://opensource.org/licenses/osl-3.0.php  Open Software License (OSL 3.0)
  */
-set_time_limit(120);
+
 /**
  * Installation wizard controller
  */
@@ -25,6 +31,11 @@ class Mage_Install_WizardController extends Mage_Install_Controller_Action
 {
     public function preDispatch()
     {
+        if (Mage::isInstalled()) {
+            $this->setFlag('', self::FLAG_NO_DISPATCH, true);
+            $this->_redirect('/');
+            return;
+        }
         $this->setFlag('', self::FLAG_NO_CHECK_INSTALLATION, true);
         return parent::preDispatch();
     }
@@ -151,8 +162,12 @@ class Mage_Install_WizardController extends Mage_Install_Controller_Action
         $this->_checkIfInstalled();
 
         $locale = $this->getRequest()->getParam('locale');
+        $timezone = $this->getRequest()->getParam('timezone');
+        $currency = $this->getRequest()->getParam('currency');
         if ($locale) {
             Mage::getSingleton('install/session')->setLocale($locale);
+            Mage::getSingleton('install/session')->setTimezone($timezone);
+            Mage::getSingleton('install/session')->setCurrency($currency);
         }
 
         $this->_redirect('*/*/locale');
@@ -219,13 +234,13 @@ class Mage_Install_WizardController extends Mage_Install_Controller_Action
     public function installAction()
     {
         $pear = Varien_Pear::getInstance();
-        $params = array('comment'=>Mage::helper('install')->__("Downloading and installing Magento, please wait...")."\r\n\r\n");
+        $params = array('comment'=>Mage::helper('install')->__("Downloading and installing Magento, please wait...") . "\r\n\r\n");
         if ($this->getRequest()->getParam('do')) {
             if ($state = $this->getRequest()->getParam('state', 'beta')) {
                 $result = $pear->runHtmlConsole(array(
-                'comment'=>Mage::helper('install')->__("Setting preferred state to: %s", $state)."\r\n\r\n",
-                'command'=>'config-set',
-                'params'=>array('preferred_state', $state)
+                'comment'   => Mage::helper('install')->__("Setting preferred state to: %s", $state) . "\r\n\r\n",
+                'command'   => 'config-set',
+                'params'    => array('preferred_state', $state)
                 ));
                 if ($result instanceof PEAR_Error) {
                     $this->installFailureCallback();
@@ -273,6 +288,10 @@ class Mage_Install_WizardController extends Mage_Install_Controller_Action
         $this->setFlag('', self::FLAG_NO_DISPATCH_BLOCK_EVENT, true);
         $this->setFlag('', self::FLAG_NO_POST_DISPATCH, true);
 
+        if ($data = $this->getRequest()->getQuery('config')) {
+            Mage::getSingleton('install/session')->setLocaleData($data);
+        }
+
         $this->_prepareLayout();
         $this->_initLayoutMessages('install/session');
         $this->getLayout()->getBlock('content')->append(
@@ -290,22 +309,20 @@ class Mage_Install_WizardController extends Mage_Install_Controller_Action
         $this->_checkIfInstalled();
         $step = $this->_getWizard()->getStepByName('config');
 
-        if ($data = $this->getRequest()->getPost('config')) {
-            //make all table prefix to lower letter
-            if ($data['db_prefix'] !='') {
-               $data['db_prefix'] = strtolower($data['db_prefix']);
-            }
+        $config             = $this->getRequest()->getPost('config');
+        $connectionConfig   = $this->getRequest()->getPost('connection');
+
+        if ($config && $connectionConfig && isset($connectionConfig[$config['db_model']])) {
+
+            $config['unsecure_base_url'] = Mage::helper('core/url')->encodePunycode($config['unsecure_base_url']);
+            $config['secure_base_url'] = Mage::helper('core/url')->encodePunycode($config['unsecure_base_url']);
+            $data = array_merge($config, $connectionConfig[$config['db_model']]);
 
             Mage::getSingleton('install/session')
                 ->setConfigData($data)
-                ->setSkipUrlValidation($this->getRequest()->getPost('skip_url_validation'));
+                ->setSkipUrlValidation($this->getRequest()->getPost('skip_url_validation'))
+                ->setSkipBaseUrlValidation($this->getRequest()->getPost('skip_base_url_validation'));
             try {
-                if($data['db_prefix']!='') {
-                    if(!preg_match('/^[a-z]+[a-z0-9_]*$/',$data['db_prefix'])) {
-                        Mage::throwException(
-                            Mage::helper('install')->__('Table prefix should contain only letters (a-z), numbers (0-9) or underscore(_), first character should be a letter'));
-                    }
-                }
                 $this->_getInstaller()->installConfig($data);
                 $this->_redirect('*/*/installDb');
                 return $this;
@@ -331,7 +348,10 @@ class Mage_Install_WizardController extends Mage_Install_Controller_Action
              * Clear session config data
              */
             Mage::getSingleton('install/session')->getConfigData(true);
-            $this->getResponse()->setRedirect($step->getNextUrl());
+
+            Mage::app()->getStore()->resetConfig();
+
+            $this->getResponse()->setRedirect(Mage::getUrl($step->getNextUrlPath()));
         }
         catch (Exception $e){
             Mage::getSingleton('install/session')->addError($e->getMessage());
@@ -340,7 +360,7 @@ class Mage_Install_WizardController extends Mage_Install_Controller_Action
     }
 
     /**
-     * Install admininstrator account
+     * Install administrator account
      */
     public function administratorAction()
     {
@@ -366,11 +386,30 @@ class Mage_Install_WizardController extends Mage_Install_Controller_Action
         $adminData      = $this->getRequest()->getPost('admin');
         $encryptionKey  = $this->getRequest()->getPost('encryption_key');
 
-        try {
-            $this->_getInstaller()->createAdministrator($adminData)
-                ->installEnryptionKey($encryptionKey);
+        $errors = array();
+
+        //preparing admin user model with data and validate it
+        $user = $this->_getInstaller()->validateAndPrepareAdministrator($adminData);
+        if (is_array($user)) {
+            $errors = $user;
         }
-        catch (Exception $e){
+
+        //checking if valid encryption key was entered
+        $result = $this->_getInstaller()->validateEncryptionKey($encryptionKey);
+        if (is_array($result)) {
+            $errors = array_merge($errors, $result);
+        }
+
+        if (!empty($errors)) {
+            Mage::getSingleton('install/session')->setAdminData($adminData);
+            $this->getResponse()->setRedirect($step->getUrl());
+            return false;
+        }
+
+        try {
+            $this->_getInstaller()->createAdministrator($user);
+            $this->_getInstaller()->installEnryptionKey($encryptionKey);
+        } catch (Exception $e){
             Mage::getSingleton('install/session')
                 ->setAdminData($adminData)
                 ->addError($e->getMessage());
@@ -394,6 +433,8 @@ class Mage_Install_WizardController extends Mage_Install_Controller_Action
         }
 
         $this->_getInstaller()->finish();
+
+        Mage_AdminNotification_Model_Survey::saveSurveyViewed(true);
 
         $this->_prepareLayout();
         $this->_initLayoutMessages('install/session');

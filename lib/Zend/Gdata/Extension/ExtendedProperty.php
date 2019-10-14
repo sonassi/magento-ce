@@ -15,22 +15,25 @@
  *
  * @category   Zend
  * @package    Zend_Gdata
- * @copyright  Copyright (c) 2005-2008 Zend Technologies USA Inc. (http://www.zend.com)
+ * @subpackage Gdata
+ * @copyright  Copyright (c) 2005-2015 Zend Technologies USA Inc. (http://www.zend.com)
  * @license    http://framework.zend.com/license/new-bsd     New BSD License
+ * @version    $Id$
  */
 
 /**
  * @see Zend_Gdata_Extension
  */
-require_once 'Zend/Gdata/Extension.php';
+#require_once 'Zend/Gdata/Extension.php';
 
 /**
- * Data model for gd:extendedProperty element, used by some GData
+ * Data model for gd:extendedProperty element, used by some Gdata
  * services to implement arbitrary name/value pair storage
  *
  * @category   Zend
  * @package    Zend_Gdata
- * @copyright  Copyright (c) 2005-2008 Zend Technologies USA Inc. (http://www.zend.com)
+ * @subpackage Gdata
+ * @copyright  Copyright (c) 2005-2015 Zend Technologies USA Inc. (http://www.zend.com)
  * @license    http://framework.zend.com/license/new-bsd     New BSD License
  */
 class Zend_Gdata_Extension_ExtendedProperty extends Zend_Gdata_Extension
@@ -47,13 +50,13 @@ class Zend_Gdata_Extension_ExtendedProperty extends Zend_Gdata_Extension
         $this->_value = $value;
     }
 
-    public function getDOM($doc = null)
+    public function getDOM($doc = null, $majorVersion = 1, $minorVersion = null)
     {
-        $element = parent::getDOM($doc);
-        if ($this->_name != null) {
+        $element = parent::getDOM($doc, $majorVersion, $minorVersion);
+        if ($this->_name !== null) {
             $element->setAttribute('name', $this->_name);
         }
-        if ($this->_value != null) {
+        if ($this->_value !== null) {
             $element->setAttribute('value', $this->_value);
         }
         return $element;

@@ -10,11 +10,17 @@
  * http://opensource.org/licenses/osl-3.0.php
  * If you did not receive a copy of the license and are unable to
  * obtain it through the world-wide-web, please send an email
- * to license@magentocommerce.com so we can send you a copy immediately.
+ * to license@magento.com so we can send you a copy immediately.
  *
- * @category   Mage
- * @package    Mage_Adminhtml
- * @copyright  Copyright (c) 2004-2007 Irubin Consulting Inc. DBA Varien (http://www.varien.com)
+ * DISCLAIMER
+ *
+ * Do not edit or add to this file if you wish to upgrade Magento to newer
+ * versions in the future. If you wish to customize Magento for your
+ * needs please refer to http://www.magento.com for more information.
+ *
+ * @category    Mage
+ * @package     Mage_Adminhtml
+ * @copyright  Copyright (c) 2006-2017 X.commerce, Inc. and affiliates (http://www.magento.com)
  * @license    http://opensource.org/licenses/osl-3.0.php  Open Software License (OSL 3.0)
  */
 
@@ -23,6 +29,7 @@
  *
  * @category   Mage
  * @package    Mage_Adminhtml
+ * @author      Magento Core Team <core@magentocommerce.com>
  */
 class Mage_Adminhtml_Block_Catalog_Product_Frontend_Product_Watermark extends Mage_Adminhtml_Block_Abstract implements Varien_Data_Form_Element_Renderer_Interface
 {
@@ -30,7 +37,7 @@ class Mage_Adminhtml_Block_Catalog_Product_Frontend_Product_Watermark extends Ma
 
     public function render(Varien_Data_Form_Element_Abstract $element)
     {
-		$html = $this->_getHeaderHtml($element);
+        $html = $this->_getHeaderHtml($element);
         $renderer = Mage::getBlockSingleton('adminhtml/system_config_form_field');
 
         $attributes = Mage::getConfig()->getNode(self::XML_PATH_IMAGE_TYPES)->asArray();
@@ -44,7 +51,7 @@ class Mage_Adminhtml_Block_Catalog_Product_Frontend_Product_Watermark extends Ma
                 ->setForm( $this->getForm() )
                 ->setLabel(Mage::helper('adminhtml')->__('Size for %s', $attribute['title']))
                 ->setRenderer($renderer);
-        	$html.= $field->toHtml();
+            $html.= $field->toHtml();
 
             /**
              * Watermark upload field
@@ -54,7 +61,7 @@ class Mage_Adminhtml_Block_Catalog_Product_Frontend_Product_Watermark extends Ma
                 ->setForm( $this->getForm() )
                 ->setLabel(Mage::helper('adminhtml')->__('Watermark File for %s', $attribute['title']))
                 ->setRenderer($renderer);
-        	$html.= $field->toHtml();
+            $html.= $field->toHtml();
 
             /**
              * Watermark position field
@@ -65,7 +72,7 @@ class Mage_Adminhtml_Block_Catalog_Product_Frontend_Product_Watermark extends Ma
                 ->setLabel(Mage::helper('adminhtml')->__('Position of Watermark for %s', $attribute['title']))
                 ->setRenderer($renderer)
                 ->setValues(Mage::getSingleton('adminhtml/system_config_source_catalog_product_watermark_position')->toOptionArray());
-        	$html.= $field->toHtml();
+            $html.= $field->toHtml();
         }
 
         $html .= $this->_getFooterHtml($element);
@@ -83,9 +90,9 @@ class Mage_Adminhtml_Block_Catalog_Product_Frontend_Product_Watermark extends Ma
         $html.= '<legend>'.$element->getLegend().'</legend>';
 
         // field label column
-        $html.= '<table cellspacing="0"><colgroup class="label"/><colgroup class="value"/>';
+        $html.= '<table cellspacing="0"><colgroup class="label" /><colgroup class="value" />';
         if (!$default) {
-            $html.= '<colgroup class="default"/>';
+            $html.= '<colgroup class="use-default" />';
         }
         $html.= '<tbody>';
 

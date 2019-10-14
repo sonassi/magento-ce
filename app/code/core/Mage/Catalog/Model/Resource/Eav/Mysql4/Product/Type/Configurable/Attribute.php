@@ -10,11 +10,17 @@
  * http://opensource.org/licenses/osl-3.0.php
  * If you did not receive a copy of the license and are unable to
  * obtain it through the world-wide-web, please send an email
- * to license@magentocommerce.com so we can send you a copy immediately.
+ * to license@magento.com so we can send you a copy immediately.
  *
- * @category   Mage
- * @package    Mage_Catalog
- * @copyright  Copyright (c) 2004-2007 Irubin Consulting Inc. DBA Varien (http://www.varien.com)
+ * DISCLAIMER
+ *
+ * Do not edit or add to this file if you wish to upgrade Magento to newer
+ * versions in the future. If you wish to customize Magento for your
+ * needs please refer to http://www.magento.com for more information.
+ *
+ * @category    Mage
+ * @package     Mage_Catalog
+ * @copyright  Copyright (c) 2006-2017 X.commerce, Inc. and affiliates (http://www.magento.com)
  * @license    http://opensource.org/licenses/osl-3.0.php  Open Software License (OSL 3.0)
  */
 
@@ -22,70 +28,11 @@
 /**
  * Catalog super product attribute resource model
  *
- * @category   Mage
- * @package    Mage_Catalog
+ * @category    Mage
+ * @package     Mage_Catalog
+ * @author      Magento Core Team <core@magentocommerce.com>
  */
-class Mage_Catalog_Model_Resource_Eav_Mysql4_Product_Type_Configurable_Attribute extends Mage_Core_Model_Mysql4_Abstract
+class Mage_Catalog_Model_Resource_Eav_Mysql4_Product_Type_Configurable_Attribute
+    extends Mage_Catalog_Model_Resource_Product_Type_Configurable_Attribute
 {
-    protected $_labelTable;
-    protected $_priceTable;
-
-    protected function _construct()
-    {
-        $this->_init('catalog/product_super_attribute', 'product_super_attribute_id');
-        $this->_labelTable = $this->getTable('catalog/product_super_attribute_label');
-        $this->_priceTable = $this->getTable('catalog/product_super_attribute_pricing');
-    }
-
-    public function loadLabel($attribute)
-    {
-
-    }
-
-    public function loadPrices($attribute)
-    {
-
-    }
-
-    public function saveLabel($attribute)
-    {
-        $select = $this->_getWriteAdapter()->select()
-            ->from($this->_labelTable, 'value_id')
-            ->where('product_super_attribute_id=?', $attribute->getId())
-            ->where('store_id=?', (int) $attribute->getStoreId());
-        if ($valueId = $this->_getWriteAdapter()->fetchOne($select)) {
-            $this->_getWriteAdapter()->update($this->_labelTable,array('value'=>$attribute->getLabel()),
-                $this->_getWriteAdapter()->quoteInto('value_id=?', $valueId)
-            );
-        }
-        else {
-            $this->_getWriteAdapter()->insert($this->_labelTable, array(
-                'product_super_attribute_id' => $attribute->getId(),
-                'store_id' => (int) $attribute->getStoreId(),
-                'value' => $attribute->getLabel()
-            ));
-        }
-        return $this;
-    }
-
-    public function savePrices($attribute)
-    {
-        $this->_getWriteAdapter()->delete($this->_priceTable,
-            $this->_getWriteAdapter()->quoteInto('product_super_attribute_id=?', $attribute->getId())
-        );
-        $prices = $attribute->getValues();
-        foreach ($prices as $data) {
-            if(empty($data['pricing_value'])) {
-                continue;
-            }
-        	$priceObject = new Varien_Object($data);
-        	$this->_getWriteAdapter()->insert($this->_priceTable, array(
-        	   'product_super_attribute_id' => $attribute->getId(),
-        	   'value_index' => $priceObject->getValueIndex(),
-        	   'is_percent' => $priceObject->getIsPercent(),
-        	   'pricing_value' => $priceObject->getPricingValue()
-        	));
-        }
-        return $this;
-    }
 }

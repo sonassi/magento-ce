@@ -10,17 +10,28 @@
  * http://opensource.org/licenses/osl-3.0.php
  * If you did not receive a copy of the license and are unable to
  * obtain it through the world-wide-web, please send an email
- * to license@magentocommerce.com so we can send you a copy immediately.
+ * to license@magento.com so we can send you a copy immediately.
  *
- * @category   Mage
- * @package    Mage_Adminhtml
- * @copyright  Copyright (c) 2004-2007 Irubin Consulting Inc. DBA Varien (http://www.varien.com)
+ * DISCLAIMER
+ *
+ * Do not edit or add to this file if you wish to upgrade Magento to newer
+ * versions in the future. If you wish to customize Magento for your
+ * needs please refer to http://www.magento.com for more information.
+ *
+ * @category    Mage
+ * @package     Mage_Adminhtml
+ * @copyright  Copyright (c) 2006-2017 X.commerce, Inc. and affiliates (http://www.magento.com)
  * @license    http://opensource.org/licenses/osl-3.0.php  Open Software License (OSL 3.0)
  */
 
 class Mage_Adminhtml_Block_Dashboard extends Mage_Adminhtml_Block_Template
 {
     protected $_locale;
+
+    /**
+     * Location of the "Enable Chart" config param
+     */
+    const XML_PATH_ENABLE_CHARTS = 'admin/dashboard/enable_charts';
 
     public function __construct()
     {
@@ -31,13 +42,6 @@ class Mage_Adminhtml_Block_Dashboard extends Mage_Adminhtml_Block_Template
 
     protected function _prepareLayout()
     {
-        $this->setChild('store_switcher',
-            $this->getLayout()->createBlock('adminhtml/store_switcher')
-                ->setUseConfirm(false)
-                ->setSwitchUrl($this->getUrl('*/*/*', array('store'=>null)))
-                ->setTemplate('dashboard/store/switcher.phtml')
-        );
-
         $this->setChild('lastOrders',
                 $this->getLayout()->createBlock('adminhtml/dashboard_orders_grid')
         );
@@ -58,20 +62,20 @@ class Mage_Adminhtml_Block_Dashboard extends Mage_Adminhtml_Block_Template
                 $this->getLayout()->createBlock('adminhtml/dashboard_searches_top')
         );
 
-        $this->setChild('diagrams',
-                $this->getLayout()->createBlock('adminhtml/dashboard_diagrams')
-        );
+        if (Mage::getStoreConfig(self::XML_PATH_ENABLE_CHARTS)) {
+            $block = $this->getLayout()->createBlock('adminhtml/dashboard_diagrams');
+        } else {
+            $block = $this->getLayout()->createBlock('adminhtml/template')
+                ->setTemplate('dashboard/graph/disabled.phtml')
+                ->setConfigUrl($this->getUrl('adminhtml/system_config/edit', array('section'=>'admin')));
+        }
+        $this->setChild('diagrams', $block);
 
         $this->setChild('grids',
                 $this->getLayout()->createBlock('adminhtml/dashboard_grids')
         );
 
         parent::_prepareLayout();
-    }
-
-    public function getStoreSwitcherHtml()
-    {
-        return $this->getChildHtml('store_switcher');
     }
 
     public function getSwitchUrl()

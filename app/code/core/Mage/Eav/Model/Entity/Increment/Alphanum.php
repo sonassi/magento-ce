@@ -10,11 +10,17 @@
  * http://opensource.org/licenses/osl-3.0.php
  * If you did not receive a copy of the license and are unable to
  * obtain it through the world-wide-web, please send an email
- * to license@magentocommerce.com so we can send you a copy immediately.
+ * to license@magento.com so we can send you a copy immediately.
  *
- * @category   Mage
- * @package    Mage_Eav
- * @copyright  Copyright (c) 2004-2007 Irubin Consulting Inc. DBA Varien (http://www.varien.com)
+ * DISCLAIMER
+ *
+ * Do not edit or add to this file if you wish to upgrade Magento to newer
+ * versions in the future. If you wish to customize Magento for your
+ * needs please refer to http://www.magento.com for more information.
+ *
+ * @category    Mage
+ * @package     Mage_Eav
+ * @copyright  Copyright (c) 2006-2017 X.commerce, Inc. and affiliates (http://www.magento.com)
  * @license    http://opensource.org/licenses/osl-3.0.php  Open Software License (OSL 3.0)
  */
 
@@ -28,30 +34,29 @@
  * - pad_char
  * - last_id
  */
-class Mage_Eav_Model_Entity_Increment_Alphanum
-    extends Mage_Eav_Model_Entity_Increment_Abstract
+class Mage_Eav_Model_Entity_Increment_Alphanum extends Mage_Eav_Model_Entity_Increment_Abstract
 {
     public function getAllowedChars()
     {
         return '0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZ';
     }
-    
+
     public function getNextId()
     {
         $lastId = $this->getLastId();
-        
+
         if (strpos($lastId, $this->getPrefix())===0) {
             $lastId = substr($lastId, strlen($this->getPrefix()));
         }
-        
+
         $lastId = str_pad((string)$lastId, $this->getPadLength(), $this->getPadChar(), STR_PAD_LEFT);
-        
+
         $nextId = '';
         $bumpNextChar = true;
         $chars = $this->getAllowedChars();
         $lchars = strlen($chars);
         $lid = strlen($lastId)-1;
-        
+
         for ($i = $lid; $i >= 0; $i--) {
             $p = strpos($chars, $lastId{$i});
             if (false===$p) {
@@ -67,7 +72,7 @@ class Mage_Eav_Model_Entity_Increment_Alphanum
             }
             $nextId = $chars{$p}.$nextId;
         }
-        
+
         return $this->format($nextId);
     }
 }

@@ -14,24 +14,24 @@
  *
  * @category   Zend
  * @package    Zend_Auth
- * @subpackage Zend_Ath_Adapter
- * @copyright  Copyright (c) 2005-2008 Zend Technologies USA Inc. (http://www.zend.com)
+ * @subpackage Adapter
+ * @copyright  Copyright (c) 2005-2015 Zend Technologies USA Inc. (http://www.zend.com)
  * @license    http://framework.zend.com/license/new-bsd     New BSD License
- * @version    $Id: Digest.php 8862 2008-03-16 15:36:00Z thomas $
+ * @version    $Id$
  */
 
 
 /**
  * @see Zend_Auth_Adapter_Interface
  */
-require_once 'Zend/Auth/Adapter/Interface.php';
+#require_once 'Zend/Auth/Adapter/Interface.php';
 
 
 /**
  * @category   Zend
  * @package    Zend_Auth
- * @subpackage Zend_Auth_Adapter
- * @copyright  Copyright (c) 2005-2008 Zend Technologies USA Inc. (http://www.zend.com)
+ * @subpackage Adapter
+ * @copyright  Copyright (c) 2005-2015 Zend Technologies USA Inc. (http://www.zend.com)
  * @license    http://framework.zend.com/license/new-bsd     New BSD License
  */
 class Zend_Auth_Adapter_Digest implements Zend_Auth_Adapter_Interface
@@ -71,7 +71,6 @@ class Zend_Auth_Adapter_Digest implements Zend_Auth_Adapter_Interface
      * @param  mixed $realm
      * @param  mixed $username
      * @param  mixed $password
-     * @return void
      */
     public function __construct($filename = null, $realm = null, $username = null, $password = null)
     {
@@ -186,7 +185,7 @@ class Zend_Auth_Adapter_Digest implements Zend_Auth_Adapter_Interface
                 /**
                  * @see Zend_Auth_Adapter_Exception
                  */
-                require_once 'Zend/Auth/Adapter/Exception.php';
+                #require_once 'Zend/Auth/Adapter/Exception.php';
                 throw new Zend_Auth_Adapter_Exception("Option '$optionRequired' must be set before authentication");
             }
         }
@@ -195,7 +194,7 @@ class Zend_Auth_Adapter_Digest implements Zend_Auth_Adapter_Interface
             /**
              * @see Zend_Auth_Adapter_Exception
              */
-            require_once 'Zend/Auth/Adapter/Exception.php';
+            #require_once 'Zend/Auth/Adapter/Exception.php';
             throw new Zend_Auth_Adapter_Exception("Cannot open '$this->_filename' for reading");
         }
 
@@ -213,7 +212,7 @@ class Zend_Auth_Adapter_Digest implements Zend_Auth_Adapter_Interface
 
         while ($line = trim(fgets($fileHandle))) {
             if (substr($line, 0, $idLength) === $id) {
-                if (substr($line, -32) === md5("$this->_username:$this->_realm:$this->_password")) {
+                if ($this->_secureStringCompare(substr($line, -32), md5("$this->_username:$this->_realm:$this->_password"))) {
                     $result['code'] = Zend_Auth_Result::SUCCESS;
                 } else {
                     $result['code'] = Zend_Auth_Result::FAILURE_CREDENTIAL_INVALID;
@@ -226,5 +225,27 @@ class Zend_Auth_Adapter_Digest implements Zend_Auth_Adapter_Interface
         $result['code'] = Zend_Auth_Result::FAILURE_IDENTITY_NOT_FOUND;
         $result['messages'][] = "Username '$this->_username' and realm '$this->_realm' combination not found";
         return new Zend_Auth_Result($result['code'], $result['identity'], $result['messages']);
+    }
+
+    /**
+     * Securely compare two strings for equality while avoided C level memcmp()
+     * optimisations capable of leaking timing information useful to an attacker
+     * attempting to iteratively guess the unknown string (e.g. password) being
+     * compared against.
+     *
+     * @param string $a
+     * @param string $b
+     * @return bool
+     */
+    protected function _secureStringCompare($a, $b)
+    {
+        if (strlen($a) !== strlen($b)) {
+            return false;
+        }
+        $result = 0;
+        for ($i = 0; $i < strlen($a); $i++) {
+            $result |= ord($a[$i]) ^ ord($b[$i]);
+        }
+        return $result == 0;
     }
 }

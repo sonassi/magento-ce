@@ -15,11 +15,13 @@
  *
  * @category   Zend
  * @package    Zend_Feed
- * @copyright  Copyright (c) 2005-2008 Zend Technologies USA Inc. (http://www.zend.com)
+ * @copyright  Copyright (c) 2005-2015 Zend Technologies USA Inc. (http://www.zend.com)
  * @license    http://framework.zend.com/license/new-bsd     New BSD License
- * @version    $Id: Feed.php 8064 2008-02-16 10:58:39Z thomas $
+ * @version    $Id$
  */
 
+/** @see Zend_Xml_Security */
+#require_once 'Zend/Xml/Security.php';
 
 /**
  * Feed utility class
@@ -29,7 +31,7 @@
  *
  * @category   Zend
  * @package    Zend_Feed
- * @copyright  Copyright (c) 2005-2008 Zend Technologies USA Inc. (http://www.zend.com)
+ * @copyright  Copyright (c) 2005-2015 Zend Technologies USA Inc. (http://www.zend.com)
  * @license    http://framework.zend.com/license/new-bsd     New BSD License
  */
 class Zend_Feed
@@ -84,7 +86,7 @@ class Zend_Feed
             /**
              * @see Zend_Http_Client
              */
-            require_once 'Zend/Http/Client.php';
+            #require_once 'Zend/Http/Client.php';
             self::$_httpClient = new Zend_Http_Client();
         }
 
@@ -173,7 +175,7 @@ class Zend_Feed
             /**
              * @see Zend_Feed_Exception
              */
-            require_once 'Zend/Feed/Exception.php';
+            #require_once 'Zend/Feed/Exception.php';
             throw new Zend_Feed_Exception('Feed failed to load, got response code ' . $response->getStatus());
         }
         $feed = $response->getBody();
@@ -190,26 +192,30 @@ class Zend_Feed
      */
     public static function importString($string)
     {
-        // Load the feed as an XML DOMDocument object
-        @ini_set('track_errors', 1);
-        $doc = @DOMDocument::loadXML($string);
-        @ini_restore('track_errors');
+        if (trim($string) == '') {
+            #require_once 'Zend/Feed/Exception.php';
+            throw new Zend_Feed_Exception('Document/string being imported'
+            . ' is an Empty string or comes from an empty HTTP response');
+        }
+        $doc = new DOMDocument;
+        $doc = Zend_Xml_Security::scan($string, $doc);
 
         if (!$doc) {
             // prevent the class to generate an undefined variable notice (ZF-2590)
-            if (!isset($php_errormsg)) {
-                if (function_exists('xdebug_is_enabled')) {
-                    $php_errormsg = '(error message not available, when XDebug is running)';
-                } else {
-                    $php_errormsg = '(error message not available)';
-                }
+            // Build error message
+            $error = libxml_get_last_error();
+            if ($error && $error->message) {
+                $errormsg = "DOMDocument cannot parse XML: {$error->message}";
+            } else {
+                $errormsg = "DOMDocument cannot parse XML";
             }
+
 
             /**
              * @see Zend_Feed_Exception
              */
-            require_once 'Zend/Feed/Exception.php';
-            throw new Zend_Feed_Exception("DOMDocument cannot parse XML: $php_errormsg");
+            #require_once 'Zend/Feed/Exception.php';
+            throw new Zend_Feed_Exception($errormsg);
         }
 
         // Try to find the base feed element or a single <entry> of an Atom feed
@@ -218,7 +224,7 @@ class Zend_Feed
             /**
              * @see Zend_Feed_Atom
              */
-            require_once 'Zend/Feed/Atom.php';
+            #require_once 'Zend/Feed/Atom.php';
             // return a newly created Zend_Feed_Atom object
             return new Zend_Feed_Atom(null, $string);
         }
@@ -228,7 +234,7 @@ class Zend_Feed
             /**
              * @see Zend_Feed_Rss
              */
-            require_once 'Zend/Feed/Rss.php';
+            #require_once 'Zend/Feed/Rss.php';
             // return a newly created Zend_Feed_Rss object
             return new Zend_Feed_Rss(null, $string);
         }
@@ -237,7 +243,7 @@ class Zend_Feed
         /**
          * @see Zend_Feed_Exception
          */
-        require_once 'Zend/Feed/Exception.php';
+        #require_once 'Zend/Feed/Exception.php';
         throw new Zend_Feed_Exception('Invalid or unsupported feed format');
     }
 
@@ -258,7 +264,7 @@ class Zend_Feed
             /**
              * @see Zend_Feed_Exception
              */
-            require_once 'Zend/Feed/Exception.php';
+            #require_once 'Zend/Feed/Exception.php';
             throw new Zend_Feed_Exception("File could not be loaded: $php_errormsg");
         }
         return self::importString($feed);
@@ -285,7 +291,7 @@ class Zend_Feed
             /**
              * @see Zend_Feed_Exception
              */
-            require_once 'Zend/Feed/Exception.php';
+            #require_once 'Zend/Feed/Exception.php';
             throw new Zend_Feed_Exception("Failed to access $uri, got response code " . $response->getStatus());
         }
         $contents = $response->getBody();
@@ -299,7 +305,7 @@ class Zend_Feed
             /**
              * @see Zend_Feed_Exception
              */
-            require_once 'Zend/Feed/Exception.php';
+            #require_once 'Zend/Feed/Exception.php';
             throw new Zend_Feed_Exception("Internal error: $php_errormsg");
         }
 
@@ -311,7 +317,7 @@ class Zend_Feed
                 if (!mb_check_encoding($link, 'UTF-8')) {
                     $link = mb_convert_encoding($link, 'UTF-8');
                 }
-                $xml = @simplexml_load_string(rtrim($link, ' /') . ' />');
+                $xml = @Zend_Xml_Security::scan(rtrim($link, ' /') . ' />');
                 if ($xml === false) {
                     continue;
                 }
@@ -354,7 +360,7 @@ class Zend_Feed
                 } catch (Exception $e) {
                     continue;
                 }
-                $feeds[] = $feed;
+                $feeds[$uri->getUri()] = $feed;
             }
         }
 
@@ -372,13 +378,15 @@ class Zend_Feed
     public static function importArray(array $data, $format = 'atom')
     {
         $obj = 'Zend_Feed_' . ucfirst(strtolower($format));
-        /**
-         * @see Zend_Loader
-         */
-        require_once 'Zend/Loader.php';
-        Zend_Loader::loadClass($obj);
-        Zend_Loader::loadClass('Zend_Feed_Builder');
+        if (!class_exists($obj)) {
+            #require_once 'Zend/Loader.php';
+            Zend_Loader::loadClass($obj);
+        }
 
+        /**
+         * @see Zend_Feed_Builder
+         */
+        #require_once 'Zend/Feed/Builder.php';
         return new $obj(null, null, new Zend_Feed_Builder($data));
     }
 
@@ -392,12 +400,10 @@ class Zend_Feed
     public static function importBuilder(Zend_Feed_Builder_Interface $builder, $format = 'atom')
     {
         $obj = 'Zend_Feed_' . ucfirst(strtolower($format));
-        /**
-         * @see Zend_Loader
-         */
-        require_once 'Zend/Loader.php';
-        Zend_Loader::loadClass($obj);
-
+        if (!class_exists($obj)) {
+            #require_once 'Zend/Loader.php';
+            Zend_Loader::loadClass($obj);
+        }
         return new $obj(null, null, $builder);
     }
 }

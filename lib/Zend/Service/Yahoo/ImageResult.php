@@ -16,23 +16,23 @@
  * @category   Zend
  * @package    Zend_Service
  * @subpackage Yahoo
- * @copyright  Copyright (c) 2005-2008 Zend Technologies USA Inc. (http://www.zend.com)
+ * @copyright  Copyright (c) 2005-2015 Zend Technologies USA Inc. (http://www.zend.com)
  * @license    http://framework.zend.com/license/new-bsd     New BSD License
- * @version    $Id: ImageResult.php 8064 2008-02-16 10:58:39Z thomas $
+ * @version    $Id$
  */
 
 
 /**
  * @see Zend_Service_Yahoo_Result
  */
-require_once 'Zend/Service/Yahoo/Result.php';
+#require_once 'Zend/Service/Yahoo/Result.php';
 
 
 /**
  * @category   Zend
  * @package    Zend_Service
  * @subpackage Yahoo
- * @copyright  Copyright (c) 2005-2008 Zend Technologies USA Inc. (http://www.zend.com)
+ * @copyright  Copyright (c) 2005-2015 Zend Technologies USA Inc. (http://www.zend.com)
  * @license    http://framework.zend.com/license/new-bsd     New BSD License
  */
 class Zend_Service_Yahoo_ImageResult extends Zend_Service_Yahoo_Result

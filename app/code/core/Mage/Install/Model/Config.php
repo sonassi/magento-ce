@@ -10,11 +10,17 @@
  * http://opensource.org/licenses/osl-3.0.php
  * If you did not receive a copy of the license and are unable to
  * obtain it through the world-wide-web, please send an email
- * to license@magentocommerce.com so we can send you a copy immediately.
+ * to license@magento.com so we can send you a copy immediately.
  *
- * @category   Mage
- * @package    Mage_Install
- * @copyright  Copyright (c) 2004-2007 Irubin Consulting Inc. DBA Varien (http://www.varien.com)
+ * DISCLAIMER
+ *
+ * Do not edit or add to this file if you wish to upgrade Magento to newer
+ * versions in the future. If you wish to customize Magento for your
+ * needs please refer to http://www.magento.com for more information.
+ *
+ * @category    Mage
+ * @package     Mage_Install
+ * @copyright  Copyright (c) 2006-2017 X.commerce, Inc. and affiliates (http://www.magento.com)
  * @license    http://opensource.org/licenses/osl-3.0.php  Open Software License (OSL 3.0)
  */
 
@@ -24,6 +30,7 @@
  *
  * @category   Mage
  * @package    Mage_Install
+ * @author      Magento Core Team <core@magentocommerce.com>
  */
 class Mage_Install_Model_Config extends Varien_Simplexml_Config
 {
@@ -32,10 +39,17 @@ class Mage_Install_Model_Config extends Varien_Simplexml_Config
     const XML_PATH_CHECK_WRITEABLE  = 'check/filesystem/writeable';
     const XML_PATH_CHECK_EXTENSIONS = 'check/php/extensions';
 
+    protected $_optionsMapping = array(self::XML_PATH_CHECK_WRITEABLE => array(
+        'app_etc' => 'etc_dir',
+        'var'     => 'var_dir',
+        'media'   => 'media_dir',
+    ));
+
     public function __construct()
     {
         parent::__construct();
-        $this->loadFile(Mage::getConfig()->getModuleDir('etc','Mage_Install').DS.'install.xml');
+        $this->loadString('<?xml version="1.0"?><config></config>');
+        Mage::getConfig()->loadModulesConfiguration('install.xml', $this);
     }
 
     /**
@@ -48,7 +62,7 @@ class Mage_Install_Model_Config extends Varien_Simplexml_Config
     public function getWizardSteps()
     {
         $steps = array();
-        foreach ((array)$this->getNode(self::XML_PATH_WIZARD_STEPS) as $stepName=>$step) {
+        foreach ((array)$this->getNode(self::XML_PATH_WIZARD_STEPS) as $stepName => $step) {
             $stepObject = new Varien_Object((array)$step);
             $stepObject->setName($stepName);
             $steps[] = $stepObject;
@@ -68,6 +82,8 @@ class Mage_Install_Model_Config extends Varien_Simplexml_Config
      *      )
      * )
      *
+     * @deprecated since 1.7.1.0
+     *
      * @return array
      */
     public function getPathForCheck()
@@ -76,11 +92,34 @@ class Mage_Install_Model_Config extends Varien_Simplexml_Config
 
         $items = (array) $this->getNode(self::XML_PATH_CHECK_WRITEABLE);
 
-        foreach ($items['items'] as $item) {
+        foreach ($items as $item) {
             $res['writeable'][] = (array) $item;
         }
 
         return $res;
+    }
+
+    /**
+     * Retrieve writable full paths for checking
+     *
+     * @return array
+     */
+    public function getWritableFullPathsForCheck()
+    {
+        $paths = array();
+        $items = (array) $this->getNode(self::XML_PATH_CHECK_WRITEABLE);
+        foreach ($items as $nodeKey => $item) {
+            $value = (array)$item;
+            if (isset($this->_optionsMapping[self::XML_PATH_CHECK_WRITEABLE][$nodeKey])) {
+                $configKey = $this->_optionsMapping[self::XML_PATH_CHECK_WRITEABLE][$nodeKey];
+                $value['path'] = Mage::app()->getConfig()->getOptions()->getData($configKey);
+            } else {
+                $value['path'] = dirname(Mage::getRoot()) . $value['path'];
+            }
+            $paths[$nodeKey] = $value;
+        }
+
+        return $paths;
     }
 
     /**
@@ -93,10 +132,10 @@ class Mage_Install_Model_Config extends Varien_Simplexml_Config
         $res = array();
         $items = (array) $this->getNode(self::XML_PATH_CHECK_EXTENSIONS);
 
-        foreach ($items as $name=>$value) {
+        foreach ($items as $name => $value) {
             if (!empty($value)) {
                 $res[$name] = array();
-                foreach ($value as $subname=>$subvalue) {
+                foreach ($value as $subname => $subvalue) {
                     $res[$name][] = $subname;
                 }
             }

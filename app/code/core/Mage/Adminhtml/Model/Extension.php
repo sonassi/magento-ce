@@ -10,11 +10,17 @@
  * http://opensource.org/licenses/osl-3.0.php
  * If you did not receive a copy of the license and are unable to
  * obtain it through the world-wide-web, please send an email
- * to license@magentocommerce.com so we can send you a copy immediately.
+ * to license@magento.com so we can send you a copy immediately.
  *
- * @category   Mage
- * @package    Mage_Adminhtml
- * @copyright  Copyright (c) 2004-2007 Irubin Consulting Inc. DBA Varien (http://www.varien.com)
+ * DISCLAIMER
+ *
+ * Do not edit or add to this file if you wish to upgrade Magento to newer
+ * versions in the future. If you wish to customize Magento for your
+ * needs please refer to http://www.magento.com for more information.
+ *
+ * @category    Mage
+ * @package     Mage_Adminhtml
+ * @copyright  Copyright (c) 2006-2017 X.commerce, Inc. and affiliates (http://www.magento.com)
  * @license    http://opensource.org/licenses/osl-3.0.php  Open Software License (OSL 3.0)
  */
 
@@ -70,7 +76,7 @@ class Mage_Adminhtml_Model_Extension extends Varien_Object
         $pfm->setPackageType('php');
         $pfm->setChannel($this->getData('channel'));
 
-	$pfm->setLicense($this->getData('license'), $this->getData('license_uri'));
+    $pfm->setLicense($this->getData('license'), $this->getData('license_uri'));
 
         $pfm->setPackage($this->getData('name'));
         $pfm->setSummary($this->getData('summary'));
@@ -137,7 +143,7 @@ class Mage_Adminhtml_Model_Extension extends Varien_Object
 
                     case 'subpackage':
                         if ($type==='conflicts') {
-                            Mage::throwException(Mage::helper('adminhtml')->__("Subpackage can't be conflicting"));
+                            Mage::throwException(Mage::helper('adminhtml')->__("Subpackage cannot be conflicting."));
                         }
                         $pfm->addSubpackageDepWithChannel(
                             $type, $name, $channel, $min, $max, $recommended, $exclude);
@@ -254,6 +260,17 @@ class Mage_Adminhtml_Model_Extension extends Varien_Object
 
     public function savePackage()
     {
+        if ($this->getData('file_name') != '') {
+            $fileName = $this->getData('file_name');
+            $this->unsetData('file_name');
+        } else {
+            $fileName = $this->getName();
+        }
+
+        if (!preg_match('/^[a-z0-9]+[a-z0-9\-\_\.]*([\/\\\\]{1}[a-z0-9]+[a-z0-9\-\_\.]*)*$/i', $fileName)) {
+            return false;
+        }
+
         if (!$this->getPackageXml()) {
             $this->generatePackageXml();
         }
@@ -263,14 +280,27 @@ class Mage_Adminhtml_Model_Extension extends Varien_Object
 
         $pear = Varien_Pear::getInstance();
         $dir = Mage::getBaseDir('var').DS.'pear';
-        if (!@file_put_contents($dir.'/package.xml', $this->getPackageXml())) {
+        if (!@file_put_contents($dir.DS.'package.xml', $this->getPackageXml())) {
             return false;
         }
 
         $pkgver = $this->getName().'-'.$this->getReleaseVersion();
         $this->unsPackageXml();
         $this->unsRoles();
-        if (!@file_put_contents($dir.DS.$this->getName().'.ser', serialize($this->getData()))) {
+        $xml = Mage::helper('core')->assocToXml($this->getData());
+        $xml = new Varien_Simplexml_Element($xml->asXML());
+
+        // prepare dir to save
+        $parts = explode(DS, $fileName);
+        array_pop($parts);
+        $newDir = implode(DS, $parts);
+        if ((!empty($newDir)) && (!is_dir($dir . DS . $newDir))) {
+            if (!@mkdir($dir . DS . $newDir, 0777, true)) {
+                return false;
+            }
+        }
+
+        if (!@file_put_contents($dir . DS . $fileName . '.xml', $xml->asNiceXml())) {
             return false;
         }
 
@@ -281,10 +311,13 @@ class Mage_Adminhtml_Model_Extension extends Varien_Object
     {
         $pear = Varien_Pear::getInstance();
         $dir = Mage::getBaseDir('var').DS.'pear';
-    	$curDir = getcwd();
-    	chdir($dir);
+        if (!Mage::getConfig()->createDirIfNotExists($dir)) {
+            return false;
+        }
+        $curDir = getcwd();
+        chdir($dir);
         $result = $pear->run('mage-package', array(), array('package.xml'));
-    	chdir($curDir);
+        chdir($curDir);
         if ($result instanceof PEAR_Error) {
             return $result;
         }

@@ -10,11 +10,17 @@
  * http://opensource.org/licenses/osl-3.0.php
  * If you did not receive a copy of the license and are unable to
  * obtain it through the world-wide-web, please send an email
- * to license@magentocommerce.com so we can send you a copy immediately.
+ * to license@magento.com so we can send you a copy immediately.
  *
- * @category   Mage
- * @package    Mage_Adminhtml
- * @copyright  Copyright (c) 2004-2007 Irubin Consulting Inc. DBA Varien (http://www.varien.com)
+ * DISCLAIMER
+ *
+ * Do not edit or add to this file if you wish to upgrade Magento to newer
+ * versions in the future. If you wish to customize Magento for your
+ * needs please refer to http://www.magento.com for more information.
+ *
+ * @category    Mage
+ * @package     Mage_Adminhtml
+ * @copyright  Copyright (c) 2006-2017 X.commerce, Inc. and affiliates (http://www.magento.com)
  * @license    http://opensource.org/licenses/osl-3.0.php  Open Software License (OSL 3.0)
  */
 
@@ -23,6 +29,7 @@
  *
  * @category   Mage
  * @package    Mage_Adminhtml
+ * @author      Magento Core Team <core@magentocommerce.com>
  */
 class Mage_Adminhtml_Block_Sales_Order_View_Giftmessage extends Mage_Adminhtml_Block_Widget
 {
@@ -34,16 +41,28 @@ class Mage_Adminhtml_Block_Sales_Order_View_Giftmessage extends Mage_Adminhtml_B
     protected $_entity;
 
     /**
+     * Retrieve order model instance
+     *
+     * @return Mage_Sales_Model_Order
+     */
+    public function getOrder()
+    {
+        return Mage::registry('current_order');
+    }
+
+    /**
      * Giftmessage object
      *
      * @var Mage_GiftMessage_Model_Message
      */
     protected $_giftMessage;
 
-    public function __construct()
+    protected function _beforeToHtml()
     {
-        parent::__construct();
-        $this->setTemplate('sales/order/view/giftmessage.phtml');
+        if ($this->getParentBlock() && ($order = $this->getOrder())) {
+            $this->setEntity($order);
+        }
+        parent::_beforeToHtml();
     }
 
     /**
@@ -134,10 +153,20 @@ class Mage_Adminhtml_Block_Sales_Order_View_Giftmessage extends Mage_Adminhtml_B
         }
 
         if($this->getEntity()->getOrder()) {
-            return $this->getEntity()->getOrder()->getShippingAddress()->getName();
+            if ($this->getEntity()->getOrder()->getShippingAddress()) {
+                return $this->getEntity()->getOrder()->getShippingAddress()->getName();
+            } else if ($this->getEntity()->getOrder()->getBillingAddress()) {
+                return $this->getEntity()->getOrder()->getBillingAddress()->getName();
+            }
         }
 
-        return $this->getEntity()->getShippingAddress()->getName();
+        if ($this->getEntity()->getShippingAddress()) {
+            return $this->getEntity()->getShippingAddress()->getName();
+        } else if ($this->getEntity()->getBillingAddress()) {
+            return $this->getEntity()->getBillingAddress()->getName();
+        }
+
+        return '';
     }
 
     /**
@@ -169,7 +198,7 @@ class Mage_Adminhtml_Block_Sales_Order_View_Giftmessage extends Mage_Adminhtml_B
      */
     public function getFieldIdPrefix()
     {
-        return 'giftmessage_' . $this->getEntity()->getId() . '_';
+        return 'giftmessage_order_' . $this->getEntity()->getId() . '_';
     }
 
     /**
