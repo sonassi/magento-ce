@@ -1,32 +1,23 @@
 <?php
 /**
- * Magento
- *
- * NOTICE OF LICENSE
- *
- * This source file is subject to the Open Software License (OSL 3.0)
- * that is bundled with this package in the file LICENSE.txt.
- * It is also available through the world-wide-web at this URL:
- * http://opensource.org/licenses/osl-3.0.php
- * If you did not receive a copy of the license and are unable to
- * obtain it through the world-wide-web, please send an email
- * to license@magento.com so we can send you a copy immediately.
- *
- * DISCLAIMER
- *
- * Do not edit or add to this file if you wish to upgrade Magento to newer
- * versions in the future. If you wish to customize Magento for your
- * needs please refer to http://www.magento.com for more information.
- *
- * @category    Tests
- * @package     Tests_Functional
- * @copyright  Copyright (c) 2006-2019 Magento, Inc. (http://www.magento.com)
- * @license    http://opensource.org/licenses/osl-3.0.php  Open Software License (OSL 3.0)
+ * Copyright © 2013-2017 Magento, Inc. All rights reserved.
+ * See COPYING.txt for license details.
  */
 require_once dirname(__FILE__) . '/' . 'bootstrap.php';
 
+// Generate page
 $objectManager->create('Magento\Mtf\Util\Generate\Page')->launch();
+
+// Generate fixtures
+$magentoObjectManagerFactory = \Magento\Framework\App\Bootstrap::createObjectManagerFactory(BP, $_SERVER);
+$magentoObjectManager = $magentoObjectManagerFactory->create($_SERVER);
 $objectManager->create('Magento\Mtf\Util\Generate\Fixture')->launch();
+
+// Generate repositories
+$magentoObjectManager->get('Magento\Framework\App\State')->setAreaCode('frontend');
 $objectManager->create('Magento\Mtf\Util\Generate\Repository')->launch();
+
+// Generate factories for old end-to-end tests
+$magentoObjectManager->create('Magento\Mtf\Util\Generate\Factory')->launch();
 
 \Magento\Mtf\Util\Generate\GenerateResult::displayResults();

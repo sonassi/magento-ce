@@ -1,28 +1,8 @@
-<?xml version="1.0"?>
+<?xml version="1.0" encoding="UTF-8"?>
 <!--
 /**
- * Magento
- *
- * NOTICE OF LICENSE
- *
- * This source file is subject to the Open Software License (OSL 3.0)
- * that is bundled with this package in the file LICENSE.txt.
- * It is also available through the world-wide-web at this URL:
- * http://opensource.org/licenses/osl-3.0.php
- * If you did not receive a copy of the license and are unable to
- * obtain it through the world-wide-web, please send an email
- * to license@magento.com so we can send you a copy immediately.
- *
- * DISCLAIMER
- *
- * Do not edit or add to this file if you wish to upgrade Magento to newer
- * versions in the future. If you wish to customize Magento for your
- * needs please refer to http://www.magento.com for more information.
- *
- * @category    Tests
- * @package     Tests_Functional
- * @copyright  Copyright (c) 2006-2019 Magento, Inc. (http://www.magento.com)
- * @license    http://opensource.org/licenses/osl-3.0.php  Open Software License (OSL 3.0)
+ * Copyright © 2013-2017 Magento, Inc. All rights reserved.
+ * See COPYING.txt for license details.
  */
 -->
 <xs:schema xmlns:xs="http://www.w3.org/2001/XMLSchema">
@@ -54,7 +34,7 @@
                         </xs:sequence>
                     </xs:complexType>
                 </xs:element>
-                <xs:element name="server">
+                <xs:element name="server" minOccurs="0">
                     <xs:complexType>
                         <xs:sequence>
                             <xs:choice maxOccurs="unbounded" minOccurs="1">
@@ -67,7 +47,7 @@
                     <xs:complexType>
                         <xs:sequence>
                             <xs:choice maxOccurs="unbounded">
-                                <xs:element name="host" type="notEmptyType"/>
+                                <xs:element name="host" type="notEmptyType" />
                                 <xs:element name="user" type="notEmptyType" />
                                 <xs:element name="password" type="notEmptyType" />
                                 <xs:element name="dbName" type="notEmptyType" />
@@ -77,8 +57,7 @@
                         </xs:sequence>
                     </xs:complexType>
                 </xs:element>
-                <xs:element name="version" minOccurs="1" maxOccurs="1"/>
-                <xs:element name="handler" minOccurs="0" maxOccurs="1" type="handlerTypes" />
+                <xs:element name="handler" minOccurs="1" maxOccurs="1" type="handlerTypes" />
             </xs:all>
         </xs:complexType>
     </xs:element>
@@ -93,8 +72,8 @@
         </xs:restriction>
     </xs:simpleType>
     <xs:simpleType name="backendLoginUrlType">
-        <xs:restriction base="xs:string" >
-            <xs:minLength value="0"/>
+        <xs:restriction base="xs:string">
+            <xs:minLength value="1" />
         </xs:restriction>
     </xs:simpleType>
     <xs:simpleType name="appBackendUrlType">
@@ -157,6 +136,14 @@
     </xs:complexType>
     <xs:complexType name="handlerTypes">
         <xs:all>
+            <xs:element name="webapi" maxOccurs="1" minOccurs="0">
+                <xs:complexType>
+                    <xs:sequence>
+                        <xs:element type="xs:string" name="token" maxOccurs="1" minOccurs="1"/>
+                    </xs:sequence>
+                    <xs:attribute type="xs:unsignedByte" name="priority" use="required" />
+                </xs:complexType>
+            </xs:element>
             <xs:element name="curl" maxOccurs="1" minOccurs="0">
                 <xs:complexType>
                     <xs:simpleContent>

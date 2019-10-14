@@ -1,49 +1,20 @@
 <?php
 /**
- * Magento
- *
- * NOTICE OF LICENSE
- *
- * This source file is subject to the Open Software License (OSL 3.0)
- * that is bundled with this package in the file LICENSE.txt.
- * It is also available through the world-wide-web at this URL:
- * http://opensource.org/licenses/osl-3.0.php
- * If you did not receive a copy of the license and are unable to
- * obtain it through the world-wide-web, please send an email
- * to license@magento.com so we can send you a copy immediately.
- *
- * DISCLAIMER
- *
- * Do not edit or add to this file if you wish to upgrade Magento to newer
- * versions in the future. If you wish to customize Magento for your
- * needs please refer to http://www.magento.com for more information.
- *
- * @category    Tests
- * @package     Tests_Functional
- * @copyright  Copyright (c) 2006-2019 Magento, Inc. (http://www.magento.com)
- * @license    http://opensource.org/licenses/osl-3.0.php  Open Software License (OSL 3.0)
+ * Copyright © 2013-2017 Magento, Inc. All rights reserved.
+ * See COPYING.txt for license details.
  */
-
 
 namespace Magento\Mtf\Util\Protocol\CurlTransport;
 
 use Magento\Mtf\Config\DataInterface;
 use Magento\Mtf\Util\Protocol\CurlInterface;
 use Magento\Mtf\Util\Protocol\CurlTransport;
-use Magento\Mtf\System\Event\EventManagerInterface;
 
 /**
  * Curl transport on backend.
  */
 class BackendDecorator implements CurlInterface
 {
-    /**
-     * Event Manager.
-     *
-     * @var EventManagerInterface
-     */
-    protected $eventManager;
-
     /**
      * Curl transport protocol.
      *
@@ -97,17 +68,17 @@ class BackendDecorator implements CurlInterface
         $this->transport->write($url, [], CurlInterface::GET);
         $this->read();
 
+        $url = $_ENV['app_backend_url'] . $this->configuration->get('application/0/backendLoginUrl/0/value');
         $data = [
             'login[username]' => $this->configuration->get('application/0/backendLogin/0/value'),
             'login[password]' => $this->configuration->get('application/0/backendPassword/0/value'),
             'form_key' => $this->formKey,
         ];
-        $this->transport->write($url, $data, CurlInterface::POST, []);
+        $this->transport->write($url, $data, CurlInterface::POST);
         $response = $this->read();
-
-        if (!strpos($response, 'link-logout')) {
+        if (strpos($response, 'page-login')) {
             throw new \Exception(
-                "Admin user cannot be logged in by curl handler!"
+                'Admin user cannot be logged in by curl handler!'
             );
         }
     }
@@ -120,14 +91,8 @@ class BackendDecorator implements CurlInterface
     protected function initFormKey()
     {
         preg_match('!var FORM_KEY = \'(\w+)\';!', $this->response, $matches);
-
         if (!empty($matches[1])) {
             $this->formKey = $matches[1];
-        } else {
-            preg_match('!input name="form_key" type="hidden" value="(\w+)"!', $this->response, $matches);
-            if (!empty($matches[1])) {
-                $this->formKey = $matches[1];
-            }
         }
     }
 
