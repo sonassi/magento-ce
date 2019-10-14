@@ -5,10 +5,8 @@
  */
 namespace Magento\Sales\Service\V1;
 
-use Magento\Sales\Model\Order;
-
 /**
- * API tests for creation of Creditmemo for certain Order.
+ * API test for creation of Creditmemo for certain Order.
  */
 class RefundOrderTest extends \Magento\TestFramework\TestCase\WebapiAbstract
 {
@@ -25,9 +23,6 @@ class RefundOrderTest extends \Magento\TestFramework\TestCase\WebapiAbstract
      */
     private $creditmemoRepository;
 
-    /**
-     * @inheritdoc
-     */
     protected function setUp()
     {
         $this->objectManager = \Magento\TestFramework\Helper\Bootstrap::getObjectManager();
@@ -91,10 +86,10 @@ class RefundOrderTest extends \Magento\TestFramework\TestCase\WebapiAbstract
                 'Failed asserting that proper shipping amount of the Order was refunded'
             );
 
-            $this->assertEquals(
-                Order::STATE_COMPLETE,
+            $this->assertNotEquals(
+                $existingOrder->getStatus(),
                 $updatedOrder->getStatus(),
-                'Failed asserting that order status has not changed'
+                'Failed asserting that order status was changed'
             );
         } catch (\Magento\Framework\Exception\NoSuchEntityException $e) {
             $this->fail('Failed asserting that Creditmemo was created');

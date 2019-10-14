@@ -212,8 +212,6 @@ class ProductTest extends \PHPUnit\Framework\TestCase
     /**
      * @magentoAppArea adminhtml
      * @depends testReindexAll
-     *
-     * @return void
      */
     public function testCatalogCategoryProductIndexInvalidateAfterDelete()
     {

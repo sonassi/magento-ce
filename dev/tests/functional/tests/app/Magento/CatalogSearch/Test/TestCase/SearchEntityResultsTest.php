@@ -9,7 +9,6 @@ namespace Magento\CatalogSearch\Test\TestCase;
 use Magento\CatalogSearch\Test\Fixture\CatalogSearchQuery;
 use Magento\Cms\Test\Page\CmsIndex;
 use Magento\Mtf\TestCase\Injectable;
-use Magento\Mtf\Util\Command\Cli\EnvWhitelist;
 
 /**
  * Preconditions:
@@ -38,23 +37,14 @@ class SearchEntityResultsTest extends Injectable
     protected $cmsIndex;
 
     /**
-     * @var EnvWhitelist
-     */
-    private $envWhitelist;
-
-    /**
      * Inject data.
      *
      * @param CmsIndex $cmsIndex
-     * @param EnvWhitelist $envWhitelist
      * @return void
      */
-    public function __inject(
-        CmsIndex $cmsIndex,
-        EnvWhitelist $envWhitelist
-    ) {
+    public function __inject(CmsIndex $cmsIndex)
+    {
         $this->cmsIndex = $cmsIndex;
-        $this->envWhitelist = $envWhitelist;
     }
 
     /**
@@ -66,16 +56,7 @@ class SearchEntityResultsTest extends Injectable
      */
     public function test(CatalogSearchQuery $catalogSearch, $queryLength = null)
     {
-        $this->envWhitelist->addHost('example.com');
         $this->cmsIndex->open();
         $this->cmsIndex->getSearchBlock()->search($catalogSearch->getQueryText(), $queryLength);
-    }
-
-    /**
-     * @inheritDoc
-     */
-    protected function tearDown()
-    {
-        $this->envWhitelist->removeHost('example.com');
     }
 }

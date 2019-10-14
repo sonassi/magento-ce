@@ -98,6 +98,25 @@ class NewFolderTest extends \PHPUnit\Framework\TestCase
     }
 
     /**
+     * Execute method with traversal directory path to check that there is no ability to create new folder not
+     * under media directory.
+     *
+     * @return void
+     */
+    public function testExecuteWithWrongPath()
+    {
+        $dirPath = '/../../../';
+        $this->model->getRequest()->setMethod('POST')
+            ->setPostValue('name', $this->dirName);
+        $this->model->getStorage()->getSession()->setCurrentPath($this->fullDirectoryPath . $dirPath);
+        $this->model->execute();
+
+        $this->assertFileNotExists(
+            $this->fullDirectoryPath . $dirPath . $this->dirName
+        );
+    }
+
+    /**
      * @inheritdoc
      */
     public static function tearDownAfterClass()

@@ -34,6 +34,8 @@ class MassAssignGroupTest extends AbstractBackendController
 
     /**
      * @inheritDoc
+     *
+     * @throws \Magento\Framework\Exception\AuthenticationException
      */
     protected function setUp()
     {
@@ -70,14 +72,10 @@ class MassAssignGroupTest extends AbstractBackendController
         $customer = $this->customerRepository->get($customerEmail);
         $this->assertEquals(1, $customer->getGroupId());
 
-        /** @var \Magento\Framework\Data\Form\FormKey $formKey */
-        $formKey = $this->_objectManager->get(\Magento\Framework\Data\Form\FormKey::class);
-
         $params = [
             'group' => 0,
             'namespace' => 'customer_listing',
-            'selected' => [$customer->getId()],
-            'form_key' => $formKey->getFormKey()
+            'selected' => [$customer->getId()]
         ];
 
         $this->getRequest()->setParams($params)
@@ -108,14 +106,11 @@ class MassAssignGroupTest extends AbstractBackendController
             $this->assertEquals(1, $customer->getGroupId());
             $ids[] = $customer->getId();
         }
-        /** @var \Magento\Framework\Data\Form\FormKey $formKey */
-        $formKey = $this->_objectManager->get(\Magento\Framework\Data\Form\FormKey::class);
 
         $params = [
             'group' => 0,
             'namespace' => 'customer_listing',
             'selected' => $ids,
-            'form_key' => $formKey->getFormKey()
         ];
 
         $this->getRequest()->setParams($params)
@@ -140,18 +135,12 @@ class MassAssignGroupTest extends AbstractBackendController
      */
     public function testMassAssignGroupActionNoCustomerIds()
     {
-        /** @var \Magento\Framework\Data\Form\FormKey $formKey */
-        $formKey = $this->_objectManager->get(\Magento\Framework\Data\Form\FormKey::class);
-
-        $params = [
-            'group' => 0,
-            'namespace' => 'customer_listing',
-            'form_key' => $formKey->getFormKey()
+        $params = ['group'=> 0,'namespace'=> 'customer_listing',
         ];
         $this->getRequest()->setParams($params)->setMethod(HttpRequest::METHOD_POST);
         $this->dispatch('backend/customer/index/massAssignGroup');
         $this->assertSessionMessages(
-            $this->equalTo(['Please select item(s).']),
+            $this->equalTo(['An item needs to be selected. Select and try again.']),
             MessageInterface::TYPE_ERROR
         );
     }

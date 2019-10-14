@@ -7,7 +7,7 @@ namespace Magento\Update;
 
 use Magento\Update\Backup\BackupInfo;
 
-class CronTest extends \PHPUnit_Framework_TestCase
+class CronTest extends \PHPUnit\Framework\TestCase
 {
     /**
      * @var string

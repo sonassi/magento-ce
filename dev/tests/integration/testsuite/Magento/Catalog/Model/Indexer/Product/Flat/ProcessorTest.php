@@ -5,10 +5,8 @@
  */
 namespace Magento\Catalog\Model\Indexer\Product\Flat;
 
-use Magento\Catalog\Model\Product\Attribute\Repository;
-
 /**
- * Integration tests for \Magento\Catalog\Model\Indexer\Product\Flat\Processor.
+ * Class FullTest
  */
 class ProcessorTest extends \Magento\TestFramework\Indexer\TestCase
 {
@@ -66,23 +64,22 @@ class ProcessorTest extends \Magento\TestFramework\Indexer\TestCase
     }
 
     /**
-     * @magentoDbIsolation disabled
+     * @magentoDbIsolation enabled
      * @magentoAppIsolation enabled
      * @magentoAppArea adminhtml
-     * @magentoDataFixture Magento/Catalog/_files/product_simple_with_custom_attribute_in_flat.php
+     * @magentoDataFixture Magento/Catalog/_files/multiple_products.php
      * @magentoConfigFixture current_store catalog/frontend/flat_catalog_product 1
      */
     public function testDeleteAttribute()
     {
-        /** @var \Magento\Catalog\Model\ResourceModel\Eav\Attribute $model */
-        $model = \Magento\TestFramework\Helper\Bootstrap::getObjectManager()
-            ->get(\Magento\Catalog\Model\ResourceModel\Eav\Attribute::class);
-        /** @var Repository $productAttributeRepository */
-        $productAttributeRepository = \Magento\TestFramework\Helper\Bootstrap::getObjectManager()
-            ->get(Repository::class);
-        $productAttrubute = $productAttributeRepository->get('flat_attribute');
-        $productAttributeId = $productAttrubute->getAttributeId();
-        $model->load($productAttributeId)->delete();
+        /** @var $product \Magento\Catalog\Model\Product */
+        $product = \Magento\TestFramework\Helper\Bootstrap::getObjectManager()->create(
+            \Magento\Catalog\Model\Product::class
+        );
+
+        /** @var \Magento\Catalog\Model\ResourceModel\Product $productResource */
+        $productResource = $product->getResource();
+        $productResource->getAttribute('media_gallery')->delete();
 
         $this->assertTrue($this->_processor->getIndexer()->isInvalid());
     }

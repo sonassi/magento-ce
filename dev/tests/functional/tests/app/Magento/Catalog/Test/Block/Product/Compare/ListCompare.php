@@ -17,13 +17,6 @@ use Magento\Mtf\Client\Element\SimpleElement;
 class ListCompare extends Block
 {
     /**
-     * Price displaying format.
-     *
-     * @var int
-     */
-    protected $priceFormat = 2;
-
-    /**
      * Selector by product info.
      *
      * @var string
@@ -101,12 +94,12 @@ class ListCompare extends Block
     protected $confirmModal = '.confirm._show[data-role=modal]';
 
     /**
-     * Get Product info.
+     * Get product info.
      *
      * @param int $index
      * @param string $attributeKey
      * @param string $currency
-     * @return string|array
+     * @return string
      */
     public function getProductInfo($index, $attributeKey, $currency = ' $')
     {

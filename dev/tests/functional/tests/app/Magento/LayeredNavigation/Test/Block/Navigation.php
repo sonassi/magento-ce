@@ -36,15 +36,6 @@ class Navigation extends Block
      */
     protected $optionTitle = './/div[@class="filter-options-title" and contains(text(),"%s")]';
 
-    // @codingStandardsIgnoreStart
-    /**
-     * Locator value for corresponding filtered attribute option content.
-     *
-     * @var string
-     */
-    protected $optionContent = './/div[@class="filter-options-title" and contains(text(),"")]/following-sibling::div//a[contains(text(), \'SIZE\')]';
-    // @codingStandardsIgnoreEnd
-
     /**
      * Locator value for correspondent "Filter" link.
      *
@@ -102,32 +93,6 @@ class Navigation extends Block
     }
 
     /**
-     * Get all available filters.
-     *
-     * @param string $attributeLabel
-     * @return array
-     */
-    public function getFilterContents($attributeLabel)
-    {
-        $data = [];
-
-        if (trim($attributeLabel) === '') {
-            return $data;
-        }
-
-        $link = sprintf($this->filterLink, $attributeLabel);
-        $this->openFilterContainer($attributeLabel, $link);
-
-        $optionContents = $this->_rootElement->getElements($link, Locator::SELECTOR_XPATH);
-
-        foreach ($optionContents as $optionContent) {
-            $data[] = trim(strtoupper($optionContent->getText()));
-        }
-
-        return $data;
-    }
-
-    /**
      * Apply Layered Navigation filter.
      *
      * @param string $filter
@@ -166,6 +131,34 @@ class Navigation extends Block
     }
 
     /**
+     * Get Layered Navigation filter options.
+     *
+     * @param string $attributeLabel
+     * @return array
+     */
+    public function getFilterContents($attributeLabel)
+    {
+        $data = [];
+
+        if (trim($attributeLabel) === '') {
+            return $data;
+        }
+
+        $link = sprintf($this->filterLink, $attributeLabel);
+        $this->openFilterContainer($attributeLabel, $link);
+
+        $optionContents = $this->_rootElement->getElements($link, Locator::SELECTOR_XPATH);
+
+        foreach ($optionContents as $optionContent) {
+            $data[] = trim(strtoupper($optionContent->getText()));
+        }
+
+        return $data;
+    }
+
+    /**
+     * Open filter container.
+     *
      * @param string $filter
      * @param string $link
      * @return void

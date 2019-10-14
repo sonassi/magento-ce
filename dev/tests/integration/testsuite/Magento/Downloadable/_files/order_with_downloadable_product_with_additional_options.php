@@ -42,12 +42,21 @@ $orderItem->setProductId(
 $orderItem->setProductOptions(['additional_options' => ['additional_option_key' => 'additional_option_value']]);
 
 $order = \Magento\TestFramework\Helper\Bootstrap::getObjectManager()->create(\Magento\Sales\Model\Order::class);
-$order->setCustomerEmail('mail@to.co')
-    ->addItem($orderItem)
-    ->setIncrementId('100000001')
-    ->setCustomerIsGuest(true)
-    ->setStoreId(1)
-    ->setEmailSent(1)
-    ->setBillingAddress($billingAddress)
-    ->setPayment($payment);
+$order->setCustomerEmail(
+    'mail@to.co'
+)->addItem(
+    $orderItem
+)->setIncrementId(
+    '100000001'
+)->setCustomerIsGuest(
+    true
+)->setStoreId(
+    1
+)->setEmailSent(
+    1
+)->setBillingAddress(
+    $billingAddress
+)->setPayment(
+    $payment
+);
 $order->save();

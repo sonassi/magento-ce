@@ -20,19 +20,33 @@ $customer = \Magento\TestFramework\Helper\Bootstrap::getObjectManager()->create(
     \Magento\Customer\Model\Customer::class
 );
 /** @var Magento\Customer\Model\Customer $customer */
-$customer->setWebsiteId($websiteId)
-    ->setId(1)
-    ->setEntityTypeId(1)
-    ->setAttributeSetId(1)
-    ->setEmail('customer2@example.com')
-    ->setPassword('password')
-    ->setGroupId(1)
-    ->setStoreId($website->getStoreId())
-    ->setIsActive(1)
-    ->setFirstname('Firstname')
-    ->setLastname('Lastname')
-    ->setDefaultBilling(1)
-    ->setDefaultShipping(1);
+$customer->setWebsiteId(
+    $websiteId
+)->setId(
+    1
+)->setEntityTypeId(
+    1
+)->setAttributeSetId(
+    1
+)->setEmail(
+    'customer2@example.com'
+)->setPassword(
+    'password'
+)->setGroupId(
+    1
+)->setStoreId(
+    $website->getStoreId()
+)->setIsActive(
+    1
+)->setFirstname(
+    'Firstname'
+)->setLastname(
+    'Lastname'
+)->setDefaultBilling(
+    1
+)->setDefaultShipping(
+    1
+);
 $customer->isObjectNew(true);
 
 /** @var \Magento\Customer\Model\Address $addressOne  */

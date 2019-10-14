@@ -29,7 +29,7 @@ class CacheTest extends \PHPUnit\Framework\TestCase
     private $deploymentConfigMock;
 
     /**
-     * @inheritdoc
+     * Tests setup
      */
     protected function setUp()
     {
@@ -39,10 +39,13 @@ class CacheTest extends \PHPUnit\Framework\TestCase
         $this->configOptionsList = new CacheConfigOptionsList($this->validatorMock);
     }
 
+    /**
+     * testGetOptions
+     */
     public function testGetOptions()
     {
         $options = $this->configOptionsList->getOptions();
-        $this->assertCount(6, $options);
+        $this->assertCount(5, $options);
 
         $this->assertArrayHasKey(0, $options);
         $this->assertInstanceOf(SelectConfigOption::class, $options[0]);
@@ -63,12 +66,11 @@ class CacheTest extends \PHPUnit\Framework\TestCase
         $this->assertArrayHasKey(4, $options);
         $this->assertInstanceOf(TextConfigOption::class, $options[4]);
         $this->assertEquals('cache-backend-redis-password', $options[4]->getName());
-
-        $this->assertArrayHasKey(5, $options);
-        $this->assertInstanceOf(TextConfigOption::class, $options[5]);
-        $this->assertEquals('cache-id-prefix', $options[5]->getName());
     }
 
+    /**
+     * testCreateConfigCacheRedis
+     */
     public function testCreateConfigCacheRedis()
     {
         $this->deploymentConfigMock->method('get')->willReturn('');
@@ -83,8 +85,7 @@ class CacheTest extends \PHPUnit\Framework\TestCase
                             'port' => '',
                             'database' => '',
                             'password' => ''
-                        ],
-                        'id_prefix' => $this->expectedIdPrefix(),
+                        ]
                     ]
                 ]
             ]
@@ -95,6 +96,9 @@ class CacheTest extends \PHPUnit\Framework\TestCase
         $this->assertEquals($expectedConfigData, $configData->getData());
     }
 
+    /**
+     * testCreateConfigWithRedisConfig
+     */
     public function testCreateConfigWithRedisConfig()
     {
         $expectedConfigData = [
@@ -107,8 +111,7 @@ class CacheTest extends \PHPUnit\Framework\TestCase
                             'port' => '1234',
                             'database' => '5',
                             'password' => ''
-                        ],
-                        'id_prefix' => $this->expectedIdPrefix(),
+                        ]
                     ]
                 ]
             ]
@@ -125,48 +128,9 @@ class CacheTest extends \PHPUnit\Framework\TestCase
         $this->assertEquals($expectedConfigData, $configData->getData());
     }
 
-    public function testCreateConfigWithFileCache()
-    {
-        $this->deploymentConfigMock->method('get')->willReturn('');
-
-        $expectedConfigData = [
-            'cache' => [
-                'frontend' => [
-                    'default' => [
-                        'id_prefix' => $this->expectedIdPrefix(),
-                    ]
-                ]
-            ]
-        ];
-
-        $configData = $this->configOptionsList->createConfig([], $this->deploymentConfigMock);
-
-        $this->assertEquals($expectedConfigData, $configData->getData());
-    }
-
-    public function testCreateConfigWithIdPrefix()
-    {
-        $this->deploymentConfigMock->method('get')->willReturn('');
-
-        $explicitPrefix = 'XXX_';
-        $expectedConfigData = [
-            'cache' => [
-                'frontend' => [
-                    'default' => [
-                        'id_prefix' => $explicitPrefix,
-                    ]
-                ]
-            ]
-        ];
-
-        $configData = $this->configOptionsList->createConfig(
-            ['cache-id-prefix' => $explicitPrefix],
-            $this->deploymentConfigMock
-        );
-
-        $this->assertEquals($expectedConfigData, $configData->getData());
-    }
-
+    /**
+     * testValidateWithValidInput
+     */
     public function testValidateWithValidInput()
     {
         $options = [
@@ -175,7 +139,7 @@ class CacheTest extends \PHPUnit\Framework\TestCase
         ];
         $this->validatorMock->expects($this->once())
             ->method('isValidConnection')
-            ->with(['host'=>'localhost', 'db'=>'', 'port'=>'', 'password'=> ''])
+            ->with(['host'=>'localhost', 'db'=>'', 'port'=>'', 'password'=>''])
             ->willReturn(true);
 
         $errors = $this->configOptionsList->validate($options, $this->deploymentConfigMock);
@@ -183,6 +147,9 @@ class CacheTest extends \PHPUnit\Framework\TestCase
         $this->assertEmpty($errors);
     }
 
+    /**
+     * testValidateWithInvalidInput
+     */
     public function testValidateWithInvalidInput()
     {
         $invalidCacheOption = 'clay-tablet';
@@ -192,15 +159,5 @@ class CacheTest extends \PHPUnit\Framework\TestCase
 
         $this->assertCount(1, $errors);
         $this->assertEquals("Invalid cache handler 'clay-tablet'", $errors[0]);
-    }
-
-    /**
-     * The default ID prefix, based on installation directory
-     *
-     * @return string
-     */
-    private function expectedIdPrefix(): string
-    {
-        return substr(\md5(dirname(__DIR__, 8)), 0, 3) . '_';
     }
 }

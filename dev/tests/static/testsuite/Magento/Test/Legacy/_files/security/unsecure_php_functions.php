@@ -35,44 +35,36 @@ return [
     ],
     'eval' => [
         'replacement' => '',
-        'exclude' => [
-            // allowing in this file so that an error isn't raised for its use of the JS eval function
-            [
-                'type' => 'module',
-                'name' => 'Magento_Config',
-                'path' => 'view/adminhtml/templates/system/config/js.phtml'
-            ],
-            [
-                'type' => 'module',
-                'name' => 'Magento_Catalog',
-                'path' => 'view/adminhtml/templates/catalog/wysiwyg/js.phtml'
-            ]
-        ]
+        'exclude' => []
     ],
     'md5' => [
         'replacement' => '',
         'exclude' => [
+            /*
+             * Usage of md5 in MessageQueue key generation algorithm
+             * added to exclude list to avoid backward incompatible changes
+             */
             [
                 'type' => 'library',
                 'name' => 'magento/framework',
-                'path' => 'App/Utility/Files.php'
+                'path' => 'MessageQueue/Rpc/Publisher.php',
+            ],
+            [
+                'type' => 'library',
+                'name' => 'magento/framework',
+                'path' => 'MessageQueue/MessageController.php',
+            ],
+            [
+                'type' => 'library',
+                'name' => 'magento/framework',
+                'path' => 'MessageQueue/Publisher.php',
             ],
             [
                 'type' => 'module',
-                'name' => 'Magento_Support',
-                'path' => 'Console/Command/AbstractBackupDumpCommand.php'
-            ],
-            [
-                'type' => 'module',
-                'name' => 'Magento_Catalog',
-                'path' => 'view/adminhtml/templates/catalog/product/edit/serializer.phtml'
-            ],
-            [
-                'type' => 'module',
-                'name' => 'Magento_Authorizenet',
-                'path' => 'Model/Directpost/Response.php',
-            ],
-        ],
+                'name' => 'Magento_AsynchronousOperations',
+                'path' => 'Model/ResourceModel/System/Message/Collection/Synchronized/Plugin.php'
+            ]
+        ]
     ],
     'srand' => [
         'replacement' => '',
@@ -80,54 +72,6 @@ return [
     ],
     'mt_srand' => [
         'replacement' => '',
-        'exclude' => [
-            [
-                'type' => 'setup',
-                'path' => 'src/Magento/Setup/Fixtures/ConfigurableProductsFixture.php'
-            ],
-            [
-                'type' => 'setup',
-                'path' => 'src/Magento/Setup/Fixtures/PriceProvider.php'
-            ],
-            [
-                'type' => 'setup',
-                'path' => 'src/Magento/Setup/Fixtures/SimpleProductsFixture.php'
-            ],
-        ]
-    ],
-    'mt_rand' => [
-        'replacement' => 'random_int',
-        'exclude' => [
-            [
-                'type' => 'setup',
-                'path' => 'src/Magento/Setup/Fixtures/ImagesGenerator/ImagesGenerator.php'
-            ],
-            [
-                'type' => 'setup',
-                'path' => 'src/Magento/Setup/Fixtures/BundleProductsFixture.php'
-            ],
-            [
-                'type' => 'setup',
-                'path' => 'src/Magento/Setup/Fixtures/ConfigurableProductsFixture.php'
-            ],
-            [
-                'type' => 'setup',
-                'path' => 'src/Magento/Setup/Fixtures/OrdersFixture.php'
-            ],
-            [
-                'type' => 'setup',
-                'path' => 'src/Magento/Setup/Fixtures/PriceProvider.php'
-            ],
-            [
-                'type' => 'setup',
-                'path' => 'src/Magento/Setup/Fixtures/SimpleProductsFixture.php'
-            ],
-        ]
-    ],
-    'htmlspecialchars' => [
-        'replacement' => '\Magento\Framework\Escaper::escapeHtml',
-        'exclude' => [
-            ['type' => 'library', 'name' => 'magento/framework', 'path' => 'Escaper.php'],
-        ]
+        'exclude' => []
     ],
 ];

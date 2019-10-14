@@ -11,7 +11,6 @@ use Magento\Catalog\Test\Page\Adminhtml\CatalogProductEdit;
 use Magento\Catalog\Test\Page\Adminhtml\CatalogProductIndex;
 use Magento\Mtf\Fixture\FixtureFactory;
 use Magento\Mtf\TestCase\Injectable;
-use Magento\Mtf\Util\Command\Cli\EnvWhitelist;
 
 /**
  * Precondition:
@@ -62,13 +61,6 @@ class DuplicateProductEntityTest extends Injectable
     protected $fixtureFactory;
 
     /**
-     * DomainWhitelist CLI
-     *
-     * @var EnvWhitelist
-     */
-    private $envWhitelist;
-
-    /**
      * Prepare data.
      *
      * @param Category $category
@@ -91,18 +83,6 @@ class DuplicateProductEntityTest extends Injectable
     }
 
     /**
-     * Setup necessary data for test.
-     *
-     * @param EnvWhitelist $envWhitelist
-     * @return void
-     */
-    public function __inject(
-        EnvWhitelist $envWhitelist
-    ) {
-        $this->envWhitelist = $envWhitelist;
-    }
-
-    /**
      * Run test duplicate product entity.
      *
      * @param string $productType
@@ -110,8 +90,9 @@ class DuplicateProductEntityTest extends Injectable
      */
     public function test($productType)
     {
+        $this->markTestIncomplete('https://github.com/magento-engcom/msi/issues/666');
+
         // Precondition
-        $this->envWhitelist->addHost('example.com');
         $product = $this->createProduct($productType);
 
         // Steps
@@ -146,13 +127,5 @@ class DuplicateProductEntityTest extends Injectable
         $product->persist();
 
         return $product;
-    }
-
-    /**
-     * @inheritDoc
-     */
-    protected function tearDown()
-    {
-        $this->envWhitelist->removeHost('example.com');
     }
 }

@@ -113,7 +113,6 @@ class BackupCommand extends AbstractSetupCommand
 
     /**
      * {@inheritdoc}
-     * @SuppressWarnings(PHPMD.CyclomaticComplexity)
      */
     protected function execute(InputInterface $input, OutputInterface $output)
     {
@@ -123,7 +122,6 @@ class BackupCommand extends AbstractSetupCommand
             // We need exit code higher than 0 here as an indication
             return \Magento\Framework\Console\Cli::RETURN_FAILURE;
         }
-
         $returnValue = $this->maintenanceModeEnabler->executeInMaintenanceMode(
             function () use ($input, $output) {
                 try {
@@ -157,6 +155,7 @@ class BackupCommand extends AbstractSetupCommand
             $output,
             false
         );
+        
         return $returnValue;
     }
 

@@ -4,22 +4,8 @@
  * See COPYING.txt for license details.
  */
 
-use Magento\Downloadable\Api\DomainManagerInterface;
-
 \Magento\TestFramework\Helper\Bootstrap::getInstance()->getInstance()->reinitialize();
 $objectManager = \Magento\TestFramework\Helper\Bootstrap::getObjectManager();
-
-/** @var DomainManagerInterface $domainManager */
-$domainManager = $objectManager->get(DomainManagerInterface::class);
-$domainManager->addDomains(
-    [
-        'example.com',
-        'www.example.com',
-        'www.sample.example.com',
-        'google.com'
-    ]
-);
-
 /**
  * @var \Magento\Catalog\Model\Product $product
  */
@@ -95,10 +81,10 @@ $link->setSampleType($linkData['sample']['type']);
  */
 $content = $objectManager->create(\Magento\Downloadable\Api\Data\File\ContentInterfaceFactory::class)->create();
 $content->setFileData(
-    // @codingStandardsIgnoreLine
     base64_encode(file_get_contents(__DIR__ . DIRECTORY_SEPARATOR . DIRECTORY_SEPARATOR . 'test_image.jpg'))
 );
 $content->setName('jellyfish_2_4.jpg');
+//$content->setName('');
 $link->setLinkFileContent($content);
 
 /**
@@ -106,7 +92,6 @@ $link->setLinkFileContent($content);
  */
 $sampleContent = $objectManager->create(\Magento\Downloadable\Api\Data\File\ContentInterfaceFactory::class)->create();
 $sampleContent->setFileData(
-    // @codingStandardsIgnoreLine
     base64_encode(file_get_contents(__DIR__ . DIRECTORY_SEPARATOR . DIRECTORY_SEPARATOR . 'test_image.jpg'))
 );
 $sampleContent->setName('jellyfish_1_3.jpg');
@@ -151,7 +136,6 @@ if (isset($downloadableData['sample']) && is_array($downloadableData['sample']))
                 \Magento\Downloadable\Api\Data\File\ContentInterfaceFactory::class
             )->create();
             $content->setFileData(
-                // @codingStandardsIgnoreLine
                 base64_encode(file_get_contents(__DIR__ . DIRECTORY_SEPARATOR . DIRECTORY_SEPARATOR . 'test_image.jpg'))
             );
             $content->setName('jellyfish_1_4.jpg');

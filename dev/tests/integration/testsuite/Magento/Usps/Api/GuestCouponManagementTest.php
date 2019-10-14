@@ -25,6 +25,9 @@ use Magento\TestFramework\ObjectManager;
 use PHPUnit\Framework\TestCase;
 use PHPUnit_Framework_MockObject_MockObject as MockObject;
 
+/**
+ * @SuppressWarnings(PHPMD.CouplingBetweenObjects)
+ */
 class GuestCouponManagementTest extends TestCase
 {
     /**
@@ -77,8 +80,9 @@ class GuestCouponManagementTest extends TestCase
      * @magentoConfigFixture default_store carriers/usps/free_method 1
      * @magentoDataFixture Magento/Usps/Fixtures/cart_rule_coupon_free_shipping.php
      * @magentoDataFixture Magento/Quote/_files/is_salable_product.php
+     * @return void
      */
-    public function testFreeShippingWithCoupon()
+    public function testFreeShippingWithCoupon(): void
     {
         $couponCode = 'IMPHBR852R61';
         $cartId = $this->createGuestCart();
@@ -125,10 +129,10 @@ class GuestCouponManagementTest extends TestCase
     /**
      * Estimates shipment for guest cart.
      *
-     * @param int $cartId
+     * @param string $cartId
      * @return array ShippingMethodInterface[]
      */
-    private function estimateShipping(string $cartId)
+    private function estimateShipping(string $cartId): array
     {
         $addressFactory = $this->objectManager->get(AddressInterfaceFactory::class);
         /** @var AddressInterface $address */

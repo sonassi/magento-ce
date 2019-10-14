@@ -80,4 +80,3 @@ class ManagerStub extends Manager
         return null;
     }
 }
-//@codingStandardsIgnoreEnd

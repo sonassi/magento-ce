@@ -22,7 +22,6 @@ $subscriber = \Magento\TestFramework\Helper\Bootstrap::getObjectManager()
 $subscriber->setStoreId($currentStore)
     ->setCustomerId(1)
     ->setSubscriberEmail('customer@example.com')
-    ->setSubscriberConfirmCode('zxayquyajua23iq29gxwu2eax2qb6gvy')
     ->setSubscriberStatus(\Magento\Newsletter\Model\Subscriber::STATUS_SUBSCRIBED)
     ->save();
 $firstSubscriberId = $subscriber->getId();

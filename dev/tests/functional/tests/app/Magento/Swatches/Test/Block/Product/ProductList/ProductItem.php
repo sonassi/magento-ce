@@ -42,7 +42,7 @@ class ProductItem extends CatalogProductItem
         $confAttrSource = $confAttrData['source'];
         $attributes = $confAttrSource->getAttributes();
 
-        foreach ($options as $option) {
+        foreach (array_reverse($options) as $option) {
             if (!isset($attributes[$option['title']])
                 || stripos($attributes[$option['title']]->getFrontendInput(), "swatch") === false
             ) {
@@ -66,7 +66,7 @@ class ProductItem extends CatalogProductItem
     private function clickOnSwatch($optionId)
     {
         $selector = sprintf($this->swatchSelector, $optionId);
-        $this->_rootElement->find($selector)->click();
+        $this->_rootElement->find($selector, Locator::SELECTOR_CSS)->click();
     }
 
     /**

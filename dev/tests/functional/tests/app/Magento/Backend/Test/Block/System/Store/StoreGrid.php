@@ -6,37 +6,30 @@
 
 namespace Magento\Backend\Test\Block\System\Store;
 
-use Magento\Mtf\Client\Locator;
+use Magento\Backend\Test\Block\Widget\Grid;
 use Magento\Store\Test\Fixture\Store;
 use Magento\Store\Test\Fixture\StoreGroup;
 use Magento\Store\Test\Fixture\Website;
-use Magento\Ui\Test\Block\Adminhtml\DataGrid;
+use Magento\Mtf\Client\Locator;
 
 /**
  * Adminhtml Store View management grid.
  */
-class StoreGrid extends DataGrid
+class StoreGrid extends Grid
 {
-    /**
-     * Secondary part of row locator template for getRow() method
-     *
-     * @var string
-     */
-    protected $rowTemplate = 'td[div[*[contains(.,normalize-space("%s"))]]]';
-
-    /**
-     * Secondary part of row locator template for getRow() method with strict option
-     *
-     * @var string
-     */
-    protected $rowTemplateStrict = 'td[div[*[text()[normalize-space()="%s"]]]]';
-
     /**
      * Locator value for opening needed row.
      *
      * @var string
      */
-    protected $editLink = '[href*="editStore"]';
+    protected $editLink = 'td[data-column="store_title"] > a';
+
+    /**
+     * Secondary part of row locator template for getRow() method with strict option.
+     *
+     * @var string
+     */
+    protected $rowTemplateStrict = '//*[text()[normalize-space()="%s"]]';
 
     /**
      * Filters array mapping.
@@ -45,13 +38,13 @@ class StoreGrid extends DataGrid
      */
     protected $filters = [
         'store_title' => [
-            'selector' => '[name="store_title"]',
+            'selector' => '#storeGrid_filter_store_title',
         ],
         'group_title' => [
-            'selector' => '[name="group_title"]',
+            'selector' => '#storeGrid_filter_group_title',
         ],
         'website_title' => [
-            'selector' => '[name="name"]',
+            'selector' => '#storeGrid_filter_website_title',
         ],
     ];
 
@@ -60,7 +53,7 @@ class StoreGrid extends DataGrid
      *
      * @var string
      */
-    protected $titleFormat = '//a[.="%s"]';
+    protected $titleFormat = '//td[a[.="%s"]]';
 
     /**
      * Store name link selector.

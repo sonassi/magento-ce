@@ -15,15 +15,14 @@ namespace Magento\Framework\Session {
     // @codingStandardsIgnoreEnd
 
     /**
-     * Mock ini_get global function.
+     * Mock ini_get global function
      *
-     * @param string $varName
      * @return string
      */
-    function ini_get(string $varName)
+    function ini_get($varName)
     {
         global $mockPHPFunctions;
-        if ($mockPHPFunctions === 1) {
+        if ($mockPHPFunctions == 1) {
             switch ($varName) {
                 case 'session.save_path':
                     return 'preset_save_path';
@@ -32,10 +31,9 @@ namespace Magento\Framework\Session {
                 default:
                     return '';
             }
-        } elseif ($mockPHPFunctions === 2) {
+        } elseif ($mockPHPFunctions == 2) {
             return null;
         }
-
         return call_user_func_array('\ini_get', func_get_args());
     }
 
@@ -44,14 +42,11 @@ namespace Magento\Framework\Session {
      */
     class ConfigTest extends \PHPUnit\Framework\TestCase
     {
-        /** @var \Magento\Framework\Session\Config */
-        private $model;
-
         /** @var string */
-        private $cacheLimiter = 'private_no_expire';
+        private $_cacheLimiter = 'private_no_expire';
 
         /** @var \Magento\TestFramework\ObjectManager */
-        private $objectManager;
+        private $_objectManager;
 
         /** @var string Default value for session.save_path setting */
         private $defaultSavePath;
@@ -59,12 +54,9 @@ namespace Magento\Framework\Session {
         /** @var \Magento\Framework\App\DeploymentConfig | \PHPUnit_Framework_MockObject_MockObject */
         private $deploymentConfigMock;
 
-        /**
-         * @inheritdoc
-         */
         protected function setUp()
         {
-            $this->objectManager = \Magento\TestFramework\Helper\Bootstrap::getObjectManager();
+            $this->_objectManager = \Magento\TestFramework\Helper\Bootstrap::getObjectManager();
 
             $this->deploymentConfigMock = $this->createMock(\Magento\Framework\App\DeploymentConfig::class);
             $this->deploymentConfigMock
@@ -74,27 +66,23 @@ namespace Magento\Framework\Session {
                         case Config::PARAM_SESSION_SAVE_METHOD:
                             return 'files';
                         case Config::PARAM_SESSION_CACHE_LIMITER:
-                            return $this->cacheLimiter;
+                            return $this->_cacheLimiter;
                         default:
                             return null;
                     }
                 });
 
-            $this->model = $this->objectManager->create(
-                \Magento\Framework\Session\Config::class,
-                ['deploymentConfig' => $this->deploymentConfigMock]
-            );
-            $this->defaultSavePath = $this->objectManager
+            $this->defaultSavePath = $this->_objectManager
                 ->get(\Magento\Framework\Filesystem\DirectoryList::class)
                 ->getPath(DirectoryList::SESSION);
         }
 
         /**
-         * @return void
          * @magentoAppIsolation enabled
          */
         public function testDefaultConfiguration()
         {
+            $model = $this->getModel();
             /** @var \Magento\Framework\Filesystem $filesystem */
             $filesystem = \Magento\TestFramework\Helper\Bootstrap::getObjectManager()->get(
                 \Magento\Framework\Filesystem::class
@@ -104,48 +92,40 @@ namespace Magento\Framework\Session {
 
             $this->assertEquals(
                 $path,
-                $this->model->getSavePath()
+                $model->getSavePath()
             );
             $this->assertEquals(
                 \Magento\Framework\Session\Config::COOKIE_LIFETIME_DEFAULT,
-                $this->model->getCookieLifetime()
+                $model->getCookieLifetime()
             );
-            $this->assertEquals($this->cacheLimiter, $this->model->getCacheLimiter());
-            $this->assertEquals('/', $this->model->getCookiePath());
-            $this->assertEquals('localhost', $this->model->getCookieDomain());
-            $this->assertEquals(false, $this->model->getCookieSecure());
-            $this->assertEquals(true, $this->model->getCookieHttpOnly());
-            $this->assertEquals($this->model->getSavePath(), $this->model->getOption('save_path'));
+            $this->assertEquals($this->_cacheLimiter, $model->getCacheLimiter());
+            $this->assertEquals('/', $model->getCookiePath());
+            $this->assertEquals('localhost', $model->getCookieDomain());
+            $this->assertEquals(false, $model->getCookieSecure());
+            $this->assertEquals(true, $model->getCookieHttpOnly());
+            $this->assertEquals($model->getSavePath(), $model->getOption('save_path'));
         }
 
-        /**
-         * @return void
-         */
         public function testSetOptionsInvalidValue()
         {
-            $preValue = $this->model->getOptions();
-            $this->model->setOptions('');
-            $this->assertEquals($preValue, $this->model->getOptions());
+            $model = $this->getModel();
+            $preValue = $model->getOptions();
+            $model->setOptions('');
+            $this->assertEquals($preValue, $model->getOptions());
         }
 
         /**
-         * @param string $option
-         * @param string $getter
-         * @param mixed $value
-         * @return void
          * @dataProvider optionsProvider
          */
-        public function testSetOptions(string $option, string $getter, $value)
+        public function testSetOptions($option, $getter, $value)
         {
+            $model = $this->getModel();
             $options = [$option => $value];
-            $this->model->setOptions($options);
-            $this->assertSame($value, $this->model->{$getter}());
+            $model->setOptions($options);
+            $this->assertSame($value, $model->{$getter}());
         }
 
-        /**
-         * @return array
-         */
-        public function optionsProvider(): array
+        public function optionsProvider()
         {
             return [
                 ['save_path', 'getSavePath', __DIR__],
@@ -169,217 +149,174 @@ namespace Magento\Framework\Session {
                 ['use_trans_sid', 'getUseTransSid', true],
                 ['hash_function', 'getHashFunction', 'md5'],
                 ['hash_bits_per_character', 'getHashBitsPerCharacter', 5],
-                ['url_rewriter_tags', 'getUrlRewriterTags', 'a=href'],
+                ['url_rewriter_tags', 'getUrlRewriterTags', 'a=href']
             ];
         }
 
-        /**
-         * @return void
-         */
         public function testNameIsMutable()
         {
-            $this->model->setName('FOOBAR');
-            $this->assertEquals('FOOBAR', $this->model->getName());
+            $model = $this->getModel();
+            $model->setName('FOOBAR');
+            $this->assertEquals('FOOBAR', $model->getName());
         }
 
-        /**
-         * @return void
-         */
         public function testCookieLifetimeIsMutable()
         {
-            $this->model->setCookieLifetime(20);
-            $this->assertEquals(20, $this->model->getCookieLifetime());
+            $model = $this->getModel();
+            $model->setCookieLifetime(20);
+            $this->assertEquals(20, $model->getCookieLifetime());
         }
 
-        /**
-         * @return void
-         */
         public function testCookieLifetimeCanBeZero()
         {
-            $this->model->setCookieLifetime(0);
-            $this->assertEquals(0, $this->model->getCookieLifetime());
+            $model = $this->getModel();
+            $model->setCookieLifetime(0);
+            $this->assertEquals(0, $model->getCookieLifetime());
         }
 
-        /**
-         * @return void
-         */
         public function testSettingInvalidCookieLifetime()
         {
-            $preVal = $this->model->getCookieLifetime();
-            $this->model->setCookieLifetime('foobar_bogus');
-            $this->assertEquals($preVal, $this->model->getCookieLifetime());
+            $model = $this->getModel();
+            $preVal = $model->getCookieLifetime();
+            $model->setCookieLifetime('foobar_bogus');
+            $this->assertEquals($preVal, $model->getCookieLifetime());
         }
-
-        /**
-         * @return void
-         */
+      
         public function testSettingInvalidCookieLifetime2()
         {
-            $preVal = $this->model->getCookieLifetime();
-            $this->model->setCookieLifetime(-1);
-            $this->assertEquals($preVal, $this->model->getCookieLifetime());
+            $model = $this->getModel();
+            $preVal = $model->getCookieLifetime();
+            $model->setCookieLifetime(-1);
+            $this->assertEquals($preVal, $model->getCookieLifetime());
         }
 
-        /**
-         * @return void
-         */
         public function testWrongMethodCall()
         {
+            $model = $this->getModel();
             $this->expectException(
                 '\BadMethodCallException',
                 'Method "methodThatNotExist" does not exist in Magento\Framework\Session\Config'
             );
-            $this->model->methodThatNotExist();
+            $model->methodThatNotExist();
         }
 
-        /**
-         * @return void
-         */
         public function testCookieSecureDefaultsToIniSettings()
         {
-            $this->assertSame((bool)ini_get('session.cookie_secure'), $this->model->getCookieSecure());
+            $model = $this->getModel();
+            $this->assertSame((bool)ini_get('session.cookie_secure'), $model->getCookieSecure());
         }
 
-        /**
-         * @return void
-         */
         public function testSetCookieSecureInOptions()
         {
-            $this->model->setCookieSecure(true);
-            $this->assertTrue($this->model->getCookieSecure());
+            $model = $this->getModel();
+            $model->setCookieSecure(true);
+            $this->assertTrue($model->getCookieSecure());
         }
 
-        /**
-         * @return void
-         */
         public function testCookieDomainIsMutable()
         {
-            $this->model->setCookieDomain('example.com');
-            $this->assertEquals('example.com', $this->model->getCookieDomain());
+            $model = $this->getModel();
+            $model->setCookieDomain('example.com');
+            $this->assertEquals('example.com', $model->getCookieDomain());
         }
 
-        /**
-         * @return void
-         */
         public function testCookieDomainCanBeEmpty()
         {
-            $this->model->setCookieDomain('');
-            $this->assertEquals('', $this->model->getCookieDomain());
+            $model = $this->getModel();
+            $model->setCookieDomain('');
+            $this->assertEquals('', $model->getCookieDomain());
         }
 
-        /**
-         * @return void
-         */
         public function testSettingInvalidCookieDomain()
         {
-            $preVal = $this->model->getCookieDomain();
-            $this->model->setCookieDomain(24);
-            $this->assertEquals($preVal, $this->model->getCookieDomain());
+            $model = $this->getModel();
+            $preVal = $model->getCookieDomain();
+            $model->setCookieDomain(24);
+            $this->assertEquals($preVal, $model->getCookieDomain());
         }
 
-        /**
-         * @return void
-         */
         public function testSettingInvalidCookieDomain2()
         {
-            $preVal = $this->model->getCookieDomain();
-            $this->model->setCookieDomain('D:\\WINDOWS\\System32\\drivers\\etc\\hosts');
-            $this->assertEquals($preVal, $this->model->getCookieDomain());
+            $model = $this->getModel();
+            $preVal = $model->getCookieDomain();
+            $model->setCookieDomain('D:\\WINDOWS\\System32\\drivers\\etc\\hosts');
+            $this->assertEquals($preVal, $model->getCookieDomain());
         }
 
-        /**
-         * @return void
-         */
         public function testSetCookieHttpOnlyInOptions()
         {
-            $this->model->setCookieHttpOnly(true);
-            $this->assertTrue($this->model->getCookieHttpOnly());
+            $model = $this->getModel();
+            $model->setCookieHttpOnly(true);
+            $this->assertTrue($model->getCookieHttpOnly());
         }
 
-        /**
-         * @return void
-         */
         public function testUseCookiesDefaultsToIniSettings()
         {
-            $this->assertSame((bool)ini_get('session.use_cookies'), $this->model->getUseCookies());
+            $model = $this->getModel();
+            $this->assertSame((bool)ini_get('session.use_cookies'), $model->getUseCookies());
         }
 
-        /**
-         * @return void
-         */
         public function testSetUseCookiesInOptions()
         {
-            $this->model->setUseCookies(true);
-            $this->assertTrue($this->model->getUseCookies());
+            $model = $this->getModel();
+            $model->setUseCookies(true);
+            $this->assertTrue($model->getUseCookies());
         }
 
-        /**
-         * @return void
-         */
         public function testUseOnlyCookiesDefaultsToIniSettings()
         {
-            $this->assertSame((bool)ini_get('session.use_only_cookies'), $this->model->getUseOnlyCookies());
+            $model = $this->getModel();
+            $this->assertSame((bool)ini_get('session.use_only_cookies'), $model->getUseOnlyCookies());
         }
 
-        /**
-         * @return void
-         */
         public function testSetUseOnlyCookiesInOptions()
         {
-            $this->model->setOption('use_only_cookies', true);
-            $this->assertTrue((bool)$this->model->getOption('use_only_cookies'));
+            $model = $this->getModel();
+            $model->setOption('use_only_cookies', true);
+            $this->assertTrue((bool)$model->getOption('use_only_cookies'));
         }
 
-        /**
-         * @return void
-         */
         public function testRefererCheckDefaultsToIniSettings()
         {
-            $this->assertSame(ini_get('session.referer_check'), $this->model->getRefererCheck());
+            $model = $this->getModel();
+            $this->assertSame(ini_get('session.referer_check'), $model->getRefererCheck());
         }
 
-        /**
-         * @return void
-         */
         public function testRefererCheckIsMutable()
         {
-            $this->model->setOption('referer_check', 'FOOBAR');
-            $this->assertEquals('FOOBAR', $this->model->getOption('referer_check'));
+            $model = $this->getModel();
+            $model->setOption('referer_check', 'FOOBAR');
+            $this->assertEquals('FOOBAR', $model->getOption('referer_check'));
         }
 
-        /**
-         * @return void
-         */
         public function testRefererCheckMayBeEmpty()
         {
-            $this->model->setOption('referer_check', '');
-            $this->assertEquals('', $this->model->getOption('referer_check'));
+            $model = $this->getModel();
+            $model->setOption('referer_check', '');
+            $this->assertEquals('', $model->getOption('referer_check'));
         }
 
-        /**
-         * @return void
-         */
         public function testSetSavePath()
         {
-            $this->model->setSavePath('some_save_path');
-            $this->assertEquals($this->model->getOption('save_path'), 'some_save_path');
+            $model = $this->getModel();
+            $model->setSavePath('some_save_path');
+            $this->assertEquals($model->getOption('save_path'), 'some_save_path');
         }
 
         /**
-         * @param int $mockPHPFunctionNum
-         * @param string|null $givenSavePath
-         * @param string $expectedSavePath
-         * @param string|null $givenSaveHandler
-         * @param string $expectedSaveHandler
-         * @return void
+         * @param $mockPHPFunctionNum
+         * @param $givenSavePath
+         * @param $expectedSavePath
+         * @param $givenSaveHandler
+         * @param $expectedSaveHandler
          * @dataProvider constructorDataProvider
          */
         public function testConstructor(
-            int $mockPHPFunctionNum,
+            $mockPHPFunctionNum,
             $givenSavePath,
-            string $expectedSavePath,
+            $expectedSavePath,
             $givenSaveHandler,
-            string $expectedSaveHandler
+            $expectedSaveHandler
         ) {
             global $mockPHPFunctions;
             $mockPHPFunctions = $mockPHPFunctionNum;
@@ -400,7 +337,7 @@ namespace Magento\Framework\Session {
                         case Config::PARAM_SESSION_SAVE_METHOD:
                             return $givenSaveHandler;
                         case Config::PARAM_SESSION_CACHE_LIMITER:
-                            return $this->cacheLimiter;
+                            return $this->_cacheLimiter;
                         case Config::PARAM_SESSION_SAVE_PATH:
                             return $givenSavePath;
                         default:
@@ -408,7 +345,7 @@ namespace Magento\Framework\Session {
                     }
                 });
 
-            $model = $this->objectManager->create(
+            $model = $this->_objectManager->create(
                 \Magento\Framework\Session\Config::class,
                 ['deploymentConfig' => $deploymentConfigMock]
             );
@@ -418,10 +355,7 @@ namespace Magento\Framework\Session {
             $mockPHPFunctions = false;
         }
 
-        /**
-         * @return array
-         */
-        public function constructorDataProvider(): array
+        public function constructorDataProvider()
         {
             // preset value (null = not set), input value (null = not set), expected value
             $savePathGiven = 'explicit_save_path';
@@ -432,6 +366,14 @@ namespace Magento\Framework\Session {
                 [1, $savePathGiven, $savePathGiven, null, 'php'],
                 [1, null, $presetPath, 'files', 'files'],
             ];
+        }
+
+        private function getModel(): \Magento\Framework\Session\Config
+        {
+            return $this->_objectManager->create(
+                \Magento\Framework\Session\Config::class,
+                ['deploymentConfig' => $this->deploymentConfigMock]
+            );
         }
     }
 }

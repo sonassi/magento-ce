@@ -7,47 +7,68 @@ namespace Magento\Cms\Model;
 
 use Magento\Cms\Api\PageRepositoryInterface;
 use Magento\Framework\App\ResourceConnection;
+use Magento\Framework\Stdlib\DateTime\DateTime;
 
 /**
  * @magentoAppArea adminhtml
  */
 class PageTest extends \PHPUnit\Framework\TestCase
 {
-    /**
-     * @var \Magento\Framework\ObjectManagerInterface
-     */
-    private $objectManager;
-
-    /**
-     * @inheritdoc
-     */
     protected function setUp()
     {
-        $this->objectManager = \Magento\TestFramework\Helper\Bootstrap::getObjectManager();
-        $user = $this->objectManager->create(
+        $user = \Magento\TestFramework\Helper\Bootstrap::getObjectManager()->create(
             \Magento\User\Model\User::class
         )->loadByUsername(
             \Magento\TestFramework\Bootstrap::ADMIN_NAME
         );
 
         /** @var $session \Magento\Backend\Model\Auth\Session */
-        $session = $this->objectManager->get(
+        $session = \Magento\TestFramework\Helper\Bootstrap::getObjectManager()->get(
             \Magento\Backend\Model\Auth\Session::class
         );
         $session->setUser($user);
     }
 
     /**
+     * Tests the get by identifier command
+     * @param array $pageData
+     * @throws \Magento\Framework\Exception\NoSuchEntityException
      * @magentoDbIsolation enabled
-     * @dataProvider       generateIdentifierFromTitleDataProvider
-     * @param array  $data
-     * @param string $expectedIdentifier
-     * @return void
+     * @dataProvider testGetByIdentifierDataProvider
      */
-    public function testGenerateIdentifierFromTitle(array $data, string $expectedIdentifier)
+    public function testGetByIdentifier(array $pageData)
     {
-        /** @var Page $page */
-        $page = $this->objectManager->create(Page::class);
+        $objectManager = \Magento\TestFramework\Helper\Bootstrap::getObjectManager();
+
+        /** @var \Magento\Cms\Model\GetPageByIdentifier $getPageByIdentifierCommand */
+        /** @var \Magento\Cms\Model\ResourceModel\Page $pageResource */
+        /** @var \Magento\Cms\Model\PageFactory $pageFactory */
+        $pageFactory = $objectManager->create(\Magento\Cms\Model\PageFactory::class);
+        $pageResource = $objectManager->create(\Magento\Cms\Model\ResourceModel\Page::class);
+        $getPageByIdentifierCommand = $objectManager->create(\Magento\Cms\Model\GetPageByIdentifier::class);
+
+        # Prepare and save the temporary page
+        $tempPage = $pageFactory->create();
+        $tempPage->setData($pageData);
+        $pageResource->save($tempPage);
+
+        # Load previously created block and compare identifiers
+        $storeId = reset($pageData['stores']);
+        $page = $getPageByIdentifierCommand->execute($pageData['identifier'], $storeId);
+        $this->assertEquals($pageData['identifier'], $page->getIdentifier());
+    }
+
+    /**
+     * @param array $data
+     * @param string $expectedIdentifier
+     * @magentoDbIsolation enabled
+     * @dataProvider generateIdentifierFromTitleDataProvider
+     */
+    public function testGenerateIdentifierFromTitle($data, $expectedIdentifier)
+    {
+        $objectManager = \Magento\TestFramework\Helper\Bootstrap::getObjectManager();
+        /** @var \Magento\Cms\Model\Page $page */
+        $page = $objectManager->create(\Magento\Cms\Model\Page::class);
         $page->setData($data);
         $page->save();
         $this->assertEquals($expectedIdentifier, $page->getIdentifier());
@@ -55,43 +76,63 @@ class PageTest extends \PHPUnit\Framework\TestCase
 
     /**
      * @magentoDbIsolation enabled
-     * @return void
      */
     public function testUpdateTime()
     {
-        /** @var \Magento\Framework\DB\Adapter\AdapterInterface $db */
-        $db = $this->objectManager->get(ResourceConnection::class)
+        $objectManager = \Magento\TestFramework\Helper\Bootstrap::getObjectManager();
+
+        /**
+         * @var $db \Magento\Framework\DB\Adapter\AdapterInterface
+         */
+        $db = $objectManager->get(\Magento\Framework\App\ResourceConnection::class)
             ->getConnection(ResourceConnection::DEFAULT_CONNECTION);
 
-        /** @var Page $page */
-        $page = $this->objectManager->create(Page::class);
+        /** @var \Magento\Cms\Model\Page $page */
+        $page = $objectManager->create(\Magento\Cms\Model\Page::class);
         $page->setData(['title' => 'Test', 'stores' => [1]]);
-        $beforeTimestamp = $db->fetchOne('SELECT UNIX_TIMESTAMP()');
+        $beforeTimestamp = $db->fetchCol('SELECT UNIX_TIMESTAMP()')[0];
         $page->save();
-        $afterTimestamp = $db->fetchOne('SELECT UNIX_TIMESTAMP()');
-        $page = $this->objectManager->get(PageRepositoryInterface::class)->getById($page->getId());
+        $afterTimestamp = $db->fetchCol('SELECT UNIX_TIMESTAMP()')[0];
+        $page = $objectManager->get(PageRepositoryInterface::class)->getById($page->getId());
         $pageTimestamp = strtotime($page->getUpdateTime());
 
-        /** These checks prevent a race condition */
+        /*
+         * These checks prevent a race condition MAGETWO-95534
+         */
         $this->assertGreaterThanOrEqual($beforeTimestamp, $pageTimestamp);
         $this->assertLessThanOrEqual($afterTimestamp, $pageTimestamp);
     }
 
-    /**
-     * @return array
-     */
-    public function generateIdentifierFromTitleDataProvider(): array
+    public function generateIdentifierFromTitleDataProvider() : array
     {
         return [
             ['data' => ['title' => 'Test title', 'stores' => [1]], 'expectedIdentifier' => 'test-title'],
             [
                 'data' => ['title' => 'Кирилический заголовок', 'stores' => [1]],
-                'expectedIdentifier' => 'kirilicheskij-zagolovok',
+                'expectedIdentifier' => 'kirilicheskij-zagolovok'
             ],
             [
                 'data' => ['title' => 'Test title', 'identifier' => 'custom-identifier', 'stores' => [1]],
-                'expectedIdentifier' => 'custom-identifier',
-            ],
+                'expectedIdentifier' => 'custom-identifier'
+            ]
+        ];
+    }
+
+    /**
+     * Data provider for "testGetByIdentifier" method
+     * @return array
+     */
+    public function testGetByIdentifierDataProvider() : array
+    {
+        return [
+            ['data' => [
+                'title' => 'Test title',
+                'identifier' => 'test-identifier',
+                'page_layout' => '1column',
+                'stores' => [1],
+                'content' => 'Test content',
+                'is_active' => 1
+            ]]
         ];
     }
 }

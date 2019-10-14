@@ -25,12 +25,9 @@
     @_icon-font-text-hide: @icon-font__text-hide,
     @_icon-font-display: @icon-font__display
 ) when (@_icon-font-position = before) {
+    ._lib-icon-text-hide(@_icon-font-text-hide);
     .lib-css(display, @_icon-font-display);
-    text-decoration: none; 
-    
-    & when not (@_icon-font-content = false) {
-        ._lib-icon-text-hide(@_icon-font-text-hide);
-    }
+    text-decoration: none;
 
     &:before {
         ._lib-icon-font(
@@ -71,13 +68,10 @@
     @_icon-font-text-hide: @icon-font__text-hide,
     @_icon-font-display: @icon-font__display
 ) when (@_icon-font-position = after) {
+    ._lib-icon-text-hide(@_icon-font-text-hide);
     .lib-css(display, @_icon-font-display);
     text-decoration: none;
-    
-    & when not (@_icon-font-content = false) {
-        ._lib-icon-text-hide(@_icon-font-text-hide);
-    }
-    
+
     &:after {
         ._lib-icon-font(
             @_icon-font-content,
@@ -157,11 +151,8 @@
     @_icon-image-text-hide: @icon__text-hide
 ) when (@_icon-image-position = before) {
     display: inline-block;
-    
-    & when not (@_icon-image = false) {
-        ._lib-icon-text-hide(@_icon-image-text-hide);
-    }
-    
+    ._lib-icon-text-hide(@_icon-image-text-hide);
+
     &:before {
         ._lib-icon-image(
             @_icon-image,
@@ -188,10 +179,7 @@
     @_icon-image-text-hide: @icon__text-hide
 ) when (@_icon-image-position = after) {
     display: inline-block;
-    
-    & when not (@_icon-image = false) {
-        ._lib-icon-text-hide(@_icon-font-text-hide);
-    }
+    ._lib-icon-text-hide(@_icon-image-text-hide);
 
     &:after {
         ._lib-icon-image(

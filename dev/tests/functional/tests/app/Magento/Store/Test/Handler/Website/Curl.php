@@ -76,7 +76,7 @@ class Curl extends AbstractCurl implements WebsiteInterface
         $curl->write($url, $data);
         $response = $curl->read();
         $curl->close();
-        if (!strpos($response, 'data-ui-id="messages-message-success"')) {
+        if (strpos($response, 'data-ui-id="messages-message-success"') === false) {
             throw new \Exception("Website entity creating by curl handler was not successful! Response: $response");
         }
 
@@ -103,30 +103,23 @@ class Curl extends AbstractCurl implements WebsiteInterface
      */
     protected function getWebSiteIdByWebsiteName($websiteName)
     {
-        $url = $_ENV['app_backend_url'] . 'mui/index/render/';
-        $data = [
-            'namespace' => 'store_listing',
-            'filters' => [
-                'placeholder' => true,
-                'name' => $websiteName,
-            ],
-            'paging' => [
-                'pageSize' => 1,
-            ]
-        ];
+        // Set pager limit to 2000 in order to find created website by name
+        $url = $_ENV['app_backend_url'] . 'admin/system_store/index/sort/group_title/dir/asc/limit/2000';
         $curl = new BackendDecorator(new CurlTransport(), $this->_configuration);
-
-        $curl->write($url, $data, CurlInterface::POST);
+        $curl->addOption(CURLOPT_HEADER, 1);
+        $curl->write($url, [], CurlInterface::GET);
         $response = $curl->read();
-        $curl->close();
 
-        preg_match('/store_listing_data_source.+items.+"website_id":"(\d+)"/', $response, $match);
+        $expectedUrl = '/admin/system_store/editWebsite/website_id/';
+        $expectedUrl = preg_quote($expectedUrl);
+        $expectedUrl = str_replace('/', '\/', $expectedUrl);
+        preg_match('/' . $expectedUrl . '([0-9]*)\/(.)*>' . $websiteName . '<\/a>/', $response, $matches);
 
-        if (empty($match)) {
+        if (empty($matches)) {
             throw new \Exception('Cannot find website id.');
         }
 
-        return (int)$match[1];
+        return intval($matches[1]);
     }
 
     /**

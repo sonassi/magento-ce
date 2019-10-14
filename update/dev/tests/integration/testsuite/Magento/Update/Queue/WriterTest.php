@@ -5,7 +5,7 @@
  */
 namespace Magento\Update\Queue;
 
-class WriterTest extends \PHPUnit_Framework_TestCase
+class WriterTest extends \PHPUnit\Framework\TestCase
 {
     /**
      * @var \Magento\Update\Queue\Reader

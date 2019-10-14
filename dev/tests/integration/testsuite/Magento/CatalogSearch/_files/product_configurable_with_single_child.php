@@ -3,6 +3,8 @@
  * Copyright © Magento, Inc. All rights reserved.
  * See COPYING.txt for license details.
  */
+declare(strict_types=1);
+
 use Magento\Catalog\Api\ProductRepositoryInterface;
 use Magento\Catalog\Model\Product;
 use Magento\Catalog\Model\Product\Attribute\Source\Status;
@@ -20,8 +22,7 @@ Bootstrap::getInstance()->reinitialize();
 require __DIR__ . '/../../../Magento/ConfigurableProduct/_files/configurable_attribute.php';
 
 /** @var ProductRepositoryInterface $productRepository */
-$productRepository = Bootstrap::getObjectManager()
-    ->create(ProductRepositoryInterface::class);
+$productRepository = Bootstrap::getObjectManager()->create(ProductRepositoryInterface::class);
 
 /** @var $installer CategorySetup */
 $installer = Bootstrap::getObjectManager()->create(CategorySetup::class);
@@ -32,14 +33,12 @@ $options = $attribute->getOptions();
 
 $attributeValues = [];
 $attributeSetId = $installer->getAttributeSetId('catalog_product', 'Default');
-$productsSku = [1410];
 array_shift($options); //remove the first option which is empty
 
 $option = reset($options);
 
 /** @var $childProduct Product */
 $childProduct = Bootstrap::getObjectManager()->create(Product::class);
-$productSku = array_shift($productsSku);
 $childProduct->setTypeId(Type::TYPE_SIMPLE)
     ->setAttributeSetId($attributeSetId)
     ->setName('Configurable Product Option' . $option->getLabel())
@@ -47,13 +46,15 @@ $childProduct->setTypeId(Type::TYPE_SIMPLE)
     ->setPrice(11)
     ->setTestConfigurable($option->getValue())
     ->setVisibility(Visibility::VISIBILITY_NOT_VISIBLE)
-    ->setStatus(Status::STATUS_ENABLED);
-$childProduct = $productRepository->save($childProduct);
-
-/** @var StockItemInterface $stockItem */
-$stockItem = $childProduct->getExtensionAttributes()->getStockItem();
-$stockItem->setUseConfigManageStock(1)->setIsInStock(true)->setQty(100)->setIsQtyDecimal(0);
-
+    ->setStatus(Status::STATUS_ENABLED)
+    ->setStockData(
+        [
+            'use_config_manage_stock'   => 1,
+            'qty'                       => 100,
+            'is_qty_decimal'            => 0,
+            'is_in_stock'               => 1,
+        ]
+    );
 $childProduct = $productRepository->save($childProduct);
 
 $attributeValues[] = [
@@ -91,11 +92,11 @@ $configurableProduct->setTypeId(Configurable::TYPE_CODE)
     ->setName('Configurable Product with single child')
     ->setSku('configurable_with_single_child')
     ->setVisibility(Visibility::VISIBILITY_BOTH)
-    ->setStatus(Status::STATUS_ENABLED);
+    ->setStatus(Status::STATUS_ENABLED)
+    ->setStockData(
+        [
+            'use_config_manage_stock'   => 1,
+            'is_in_stock'               => 1,
+        ]
+    );
 $configurableProduct = $productRepository->save($configurableProduct);
-
-/** @var StockItemInterface $stockItem */
-$stockItem = $configurableProduct->getExtensionAttributes()->getStockItem();
-$stockItem->setUseConfigManageStock(1)->setIsInStock(1);
-
-$productRepository->save($configurableProduct);

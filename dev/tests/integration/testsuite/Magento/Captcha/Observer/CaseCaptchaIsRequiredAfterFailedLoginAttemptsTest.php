@@ -8,13 +8,13 @@ namespace Magento\Captcha\Observer;
 use Magento\Framework\Message\MessageInterface;
 
 /**
+ * Test captcha observer behavior.
+ *
  * @magentoAppArea adminhtml
  */
 class CaseCaptchaIsRequiredAfterFailedLoginAttemptsTest extends \Magento\TestFramework\TestCase\AbstractController
 {
     /**
-     * Tests backend login action with invalid captcha.
-     *
      * @magentoAdminConfigFixture admin/captcha/forms backend_login
      * @magentoAdminConfigFixture admin/captcha/enable 1
      * @magentoAdminConfigFixture admin/captcha/mode always

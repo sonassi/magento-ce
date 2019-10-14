@@ -3,6 +3,8 @@
  * Copyright © Magento, Inc. All rights reserved.
  * See COPYING.txt for license details.
  */
+declare(strict_types=1);
+
 namespace Magento\Catalog\Model\Product\Type;
 
 use Magento\Catalog\Model\Product;
@@ -17,7 +19,7 @@ use Magento\TestFramework\Helper\Bootstrap;
 
 /**
  * @magentoDbIsolation disabled
- * @--magentoIndexerDimensionMode catalog_product_price website_and_customer_group
+ * @magentoIndexerDimensionMode catalog_product_price website_and_customer_group
  * @group indexer_dimension
  * @magentoDataFixture Magento/Catalog/_files/product_simple.php
  */
@@ -28,6 +30,9 @@ class PriceWithDimensionTest extends \PHPUnit\Framework\TestCase
      */
     protected $_model;
 
+    /**
+     * Set up
+     */
     protected function setUp()
     {
         $this->_model = Bootstrap::getObjectManager()->create(
@@ -35,11 +40,11 @@ class PriceWithDimensionTest extends \PHPUnit\Framework\TestCase
         );
     }
 
+    /**
+     * Get price from indexer
+     */
     public function testGetPriceFromIndexer()
     {
-        $this->markTestSkipped(
-            'Skipped because of MAGETWO-99136'
-        );
         /** @var PriceTableResolver $tableResolver */
         $tableResolver = Bootstrap::getObjectManager()->create(PriceTableResolver::class);
 
@@ -67,19 +72,19 @@ class PriceWithDimensionTest extends \PHPUnit\Framework\TestCase
         $this->assertEquals('19', $return[0]['max_price']);
     }
 
+    /**
+     * Get price
+     */
     public function testGetPrice()
     {
-        $this->markTestSkipped(
-            'Skipped because of MAGETWO-99136'
-        );
         $this->assertEquals('test', $this->_model->getPrice(new DataObject(['price' => 'test'])));
     }
 
+    /**
+     * Get final price
+     */
     public function testGetFinalPrice()
     {
-        $this->markTestSkipped(
-            'Skipped because of MAGETWO-99136'
-        );
         $repository = Bootstrap::getObjectManager()->create(
             ProductRepository::class
         );
@@ -102,11 +107,11 @@ class PriceWithDimensionTest extends \PHPUnit\Framework\TestCase
         $this->assertEquals(14.0, $this->_model->getFinalPrice(5, $product));
     }
 
+    /**
+     * Get formated price
+     */
     public function testGetFormatedPrice()
     {
-        $this->markTestSkipped(
-            'Skipped because of MAGETWO-99136'
-        );
         $repository = Bootstrap::getObjectManager()->create(
             ProductRepository::class
         );
@@ -115,20 +120,20 @@ class PriceWithDimensionTest extends \PHPUnit\Framework\TestCase
         $this->assertEquals('<span class="price">$10.00</span>', $this->_model->getFormatedPrice($product));
     }
 
+    /**
+     * Calculate price
+     */
     public function testCalculatePrice()
     {
-        $this->markTestSkipped(
-            'Skipped because of MAGETWO-99136'
-        );
         $this->assertEquals(10, $this->_model->calculatePrice(10, 8, '1970-12-12 23:59:59', '1971-01-01 01:01:01'));
         $this->assertEquals(8, $this->_model->calculatePrice(10, 8, '1970-12-12 23:59:59', '2034-01-01 01:01:01'));
     }
 
+    /**
+     * Calculate special price
+     */
     public function testCalculateSpecialPrice()
     {
-        $this->markTestSkipped(
-            'Skipped because of MAGETWO-99136'
-        );
         $this->assertEquals(
             10,
             $this->_model->calculateSpecialPrice(10, 8, '1970-12-12 23:59:59', '1971-01-01 01:01:01')
@@ -139,11 +144,11 @@ class PriceWithDimensionTest extends \PHPUnit\Framework\TestCase
         );
     }
 
+    /**
+     * Is tier price fixed
+     */
     public function testIsTierPriceFixed()
     {
-        $this->markTestSkipped(
-            'Skipped because of MAGETWO-99136'
-        );
         $this->assertTrue($this->_model->isTierPriceFixed());
     }
 
@@ -155,9 +160,6 @@ class PriceWithDimensionTest extends \PHPUnit\Framework\TestCase
      */
     private function prepareBuyRequest(Product $product)
     {
-        $this->markTestSkipped(
-            'Skipped because of MAGETWO-99136'
-        );
         $options = [];
         /** @var $option \Magento\Catalog\Model\Product\Option */
         foreach ($product->getOptions() as $option) {

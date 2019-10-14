@@ -6,7 +6,6 @@
 
 namespace Magento\CatalogRule\Test\Constraint;
 
-use Magento\Checkout\Test\Constraint\Utils\CartPageLoadTrait;
 use Magento\Customer\Test\Fixture\Customer;
 use Magento\Checkout\Test\Page\CheckoutCart;
 use Magento\Mtf\Constraint\AbstractConstraint;
@@ -17,8 +16,6 @@ use Magento\Catalog\Test\Fixture\CatalogProductSimple;
  */
 class AssertCatalogPriceRuleAppliedShoppingCart extends AbstractConstraint
 {
-    use CartPageLoadTrait;
-
     /**
      * Assert that Catalog Price Rule is applied for product(s) in Shopping Cart
      * according to Priority(Priority/Stop Further Rules Processing).
@@ -51,10 +48,9 @@ class AssertCatalogPriceRuleAppliedShoppingCart extends AbstractConstraint
             ['products' => $products]
         )->run();
         $checkoutCartPage->open();
-        $this->waitForCartPageLoaded($checkoutCartPage);
         foreach ($products as $key => $product) {
             $actualPrice = $checkoutCartPage->getCartBlock()->getCartItem($product)->getSubtotalPrice();
-            \PHPUnit_Framework_Assert::assertEquals(
+            \PHPUnit\Framework\Assert::assertEquals(
                 $productPrice[$key]['sub_total'],
                 $actualPrice,
                 'Wrong product price is displayed.'
@@ -68,7 +64,7 @@ class AssertCatalogPriceRuleAppliedShoppingCart extends AbstractConstraint
         $actualPrices['grand_total'] = $checkoutCartPage->getTotalsBlock()->getGrandTotal();
         $expectedPrices['sub_total'] = $cartPrice['sub_total'];
         $expectedPrices['grand_total'] = $cartPrice['grand_total'];
-        \PHPUnit_Framework_Assert::assertEquals(
+        \PHPUnit\Framework\Assert::assertEquals(
             $expectedPrices,
             $actualPrices,
             'Wrong total cart prices are displayed.'

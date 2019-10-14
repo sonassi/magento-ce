@@ -14,13 +14,12 @@ use Magento\Catalog\Test\Constraint\AssertProductPage;
  */
 class AssertConfigurableProductPage extends AssertProductPage
 {
-
     /**
      * Price format.
      *
      * @var int
      */
-    protected $priceFormat = 2;
+    private $priceFormat = 2;
 
     /**
      * Verify displayed product data on product page(front-end) equals passed from fixture:
@@ -155,8 +154,7 @@ class AssertConfigurableProductPage extends AssertProductPage
     }
 
     /**
-     * Verifies displayed product price label on a product page (front-end)
-     * equals passed from the fixture.
+     * Verifies displayed product price label on a product page (front-end) equals passed from the fixture.
      *
      * @return string|null
      */

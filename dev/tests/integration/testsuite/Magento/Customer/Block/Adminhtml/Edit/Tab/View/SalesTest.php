@@ -53,7 +53,7 @@ class SalesTest extends \PHPUnit\Framework\TestCase
             \Magento\Framework\View\LayoutInterface::class
         )->createBlock(
             \Magento\Customer\Block\Adminhtml\Edit\Tab\View\Sales::class,
-            'sales_' . random_int(0, PHP_INT_MAX),
+            'sales_' . mt_rand(),
             ['coreRegistry' => $this->coreRegistry]
         )->setTemplate(
             'tab/view/sales.phtml'

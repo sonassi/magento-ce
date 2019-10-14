@@ -156,8 +156,8 @@ class AttributeTest extends \Magento\TestFramework\TestCase\AbstractBackendContr
         /** @var \Magento\Framework\Message\Error $message */
         $message = $messages->getItemsByType('error')[0];
         $this->assertEquals(
-            'Attribute code "_()&&&?" is invalid. Please use only letters (a-z or A-Z),'
-            . ' numbers (0-9) or underscore (_) in this field, and the first character should be a letter.',
+            'Attribute code "_()&&&?" is invalid. Please use only letters (a-z),'
+            . ' numbers (0-9) or underscore(_) in this field, first character should be a letter.',
             $message->getText()
         );
     }
@@ -245,7 +245,7 @@ class AttributeTest extends \Magento\TestFramework\TestCase\AbstractBackendContr
      *
      * @return array
      */
-    private function getLargeOptionsSetAttributeData(): array
+    private function getLargeOptionsSetAttributeData()
     {
         return [
             'frontend_label' => [
@@ -286,7 +286,6 @@ class AttributeTest extends \Magento\TestFramework\TestCase\AbstractBackendContr
 
     /**
      * Test attribute saving with large amount of options exceeding maximum allowed by max_input_vars limit.
-     *
      * @return void
      */
     public function testLargeOptionsDataSet()
@@ -394,7 +393,7 @@ class AttributeTest extends \Magento\TestFramework\TestCase\AbstractBackendContr
             'used_in_product_listing' => '1',
             'used_for_sort_by' => '0',
             'apply_to' => ['simple'],
-            'frontend_label' => [\Magento\Store\Model\Store::DEFAULT_STORE_ID => 'string to translate']
+            'frontend_label' => [\Magento\Store\Model\Store::DEFAULT_STORE_ID => 'string to translate'],
         ];
     }
 }

@@ -360,7 +360,7 @@ class ConfigurableAttributesData extends DataSource
 
         /* If empty matrix add one empty row */
         if (empty($variationsMatrix)) {
-            $variationIsolation = random_int(10000, 70000);
+            $variationIsolation = mt_rand(10000, 70000);
             $variationsMatrix = [
                 [
                     'name' => "In configurable product {$variationIsolation}",
@@ -370,7 +370,7 @@ class ConfigurableAttributesData extends DataSource
         }
 
         foreach ($variationsMatrix as $rowKey => $row) {
-            $randIsolation = random_int(1, 100);
+            $randIsolation = mt_rand(1, 100);
             $rowName = $row['name'];
             $rowSku = $row['sku'];
             $index = 1;

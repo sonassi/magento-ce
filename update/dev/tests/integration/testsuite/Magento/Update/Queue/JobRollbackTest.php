@@ -5,7 +5,7 @@
  */
 namespace Magento\Update\Queue;
 
-class JobRollbackTest extends \PHPUnit_Framework_TestCase
+class JobRollbackTest extends \PHPUnit\Framework\TestCase
 {
     /** @var string */
     protected $maintenanceFlagFilePath;
@@ -44,14 +44,12 @@ class JobRollbackTest extends \PHPUnit_Framework_TestCase
             new \Magento\Update\Status(),
             $maintenanceMode
         );
-        $this->setExpectedException(
-            'RuntimeException',
-            sprintf(
-                'Cannot create phar \'%s\', file extension (or combination) not recognised'.
-                ' or the directory does not exist',
-                $backupFileName
-            )
-        );
+        $this->expectException('RuntimeException');
+        $this->expectExceptionMessage(sprintf(
+            'Cannot create phar \'%s\', file extension (or combination) not recognised' .
+            ' or the directory does not exist',
+            $backupFileName
+        ));
         $jobRollback->execute();
     }
 }

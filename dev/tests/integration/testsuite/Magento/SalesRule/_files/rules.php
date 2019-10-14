@@ -4,9 +4,9 @@
  * See COPYING.txt for license details.
  */
 
-/** @var \Magento\SalesRule\Model\Rule $rule1 */
-$rule1 = \Magento\TestFramework\Helper\Bootstrap::getObjectManager()->create(\Magento\SalesRule\Model\Rule::class);
-$rule1->setName(
+/** @var \Magento\SalesRule\Model\Rule $rule */
+$rule = \Magento\TestFramework\Helper\Bootstrap::getObjectManager()->create(\Magento\SalesRule\Model\Rule::class);
+$rule->setName(
     '#1'
 )->setIsActive(
     1
@@ -27,9 +27,9 @@ $rule1->setName(
 )->setSortOrder(1)
     ->save();
 
-/** @var \Magento\SalesRule\Model\Rule $rule2 */
-$rule2 = \Magento\TestFramework\Helper\Bootstrap::getObjectManager()->create(\Magento\SalesRule\Model\Rule::class);
-$rule2->setName(
+/** @var \Magento\SalesRule\Model\Rule $rule */
+$rule = \Magento\TestFramework\Helper\Bootstrap::getObjectManager()->create(\Magento\SalesRule\Model\Rule::class);
+$rule->setName(
     '#2'
 )->setIsActive(
     1
@@ -50,9 +50,9 @@ $rule2->setName(
 )->setSortOrder(2)
     ->save();
 
-/** @var \Magento\SalesRule\Model\Rule $rule3 */
-$rule3 = \Magento\TestFramework\Helper\Bootstrap::getObjectManager()->create(\Magento\SalesRule\Model\Rule::class);
-$rule3->setName(
+/** @var \Magento\SalesRule\Model\Rule $rule */
+$rule = \Magento\TestFramework\Helper\Bootstrap::getObjectManager()->create(\Magento\SalesRule\Model\Rule::class);
+$rule->setName(
     '#3'
 )->setIsActive(
     1
@@ -73,9 +73,9 @@ $rule3->setName(
 )->setSortOrder(3)
     ->save();
 
-/** @var \Magento\SalesRule\Model\Rule $rule4 */
-$rule4 = \Magento\TestFramework\Helper\Bootstrap::getObjectManager()->create(\Magento\SalesRule\Model\Rule::class);
-$rule4->setName(
+/** @var \Magento\SalesRule\Model\Rule $rule */
+$rule = \Magento\TestFramework\Helper\Bootstrap::getObjectManager()->create(\Magento\SalesRule\Model\Rule::class);
+$rule->setName(
     '#4'
 )->setIsActive(
     1
@@ -96,9 +96,9 @@ $rule4->setName(
 )->setSortOrder(4)
     ->save();
 
-/** @var \Magento\SalesRule\Model\Rule $rule5 */
-$rule5 = \Magento\TestFramework\Helper\Bootstrap::getObjectManager()->create(\Magento\SalesRule\Model\Rule::class);
-$rule5->setName(
+/** @var \Magento\SalesRule\Model\Rule $rule */
+$rule = \Magento\TestFramework\Helper\Bootstrap::getObjectManager()->create(\Magento\SalesRule\Model\Rule::class);
+$rule->setName(
     '#5'
 )->setIsActive(
     1

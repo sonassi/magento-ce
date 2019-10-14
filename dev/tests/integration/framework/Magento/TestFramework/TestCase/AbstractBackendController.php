@@ -122,7 +122,7 @@ abstract class AbstractBackendController extends \Magento\TestFramework\TestCase
      */
     public function testAclNoAccess()
     {
-        if ($this->resource === null || $this->uri === null) {
+        if ($this->resource === null) {
             $this->markTestIncomplete('Acl test is not complete');
         }
         if ($this->httpMethod) {

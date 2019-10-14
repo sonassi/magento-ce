@@ -27,15 +27,14 @@ class View extends ParentView
      *
      * @var string
      */
-    protected $formatTierPrice =
-        "//tr[@class='row-tier-price'][%row-number%]//ul[contains(@class,'tier')]//*[@class='item'][%line-number%]";
+    protected $formatTierPrice = "//tbody[%row-number%]//ul[contains(@class,'tier')]//*[@class='item'][%line-number%]";
 
     /**
      * This member holds the class name of the special price block.
      *
      * @var string
      */
-    protected $formatSpecialPrice = '//tbody//tr[%row-number%]//*[contains(@class,"price-box")]';
+    protected $formatSpecialPrice = '//tbody[%row-number%]//*[contains(@class,"price-box")]';
 
     /**
      * Get grouped product block

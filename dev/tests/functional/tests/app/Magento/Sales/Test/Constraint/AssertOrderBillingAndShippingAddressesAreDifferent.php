@@ -5,7 +5,6 @@
  */
 namespace Magento\Sales\Test\Constraint;
 
-use Magento\Sales\Test\Page\Adminhtml\OrderIndex;
 use Magento\Sales\Test\Page\Adminhtml\SalesOrderView;
 use Magento\Mtf\Constraint\AbstractConstraint;
 
@@ -17,22 +16,19 @@ class AssertOrderBillingAndShippingAddressesAreDifferent extends AbstractConstra
     /**
      * Assert that Order Billing Address different than Shipping Address on order page.
      *
-     * @param OrderIndex $salesOrder
      * @param SalesOrderView $salesOrderView
      * @param string $orderId
      * @return void
      */
     public function processAssert(
-        OrderIndex $salesOrder,
         SalesOrderView $salesOrderView,
         $orderId
     ) {
-        $salesOrder->open();
-        $salesOrder->getSalesOrderGrid()->searchAndOpen(['id' => $orderId]);
+        $salesOrderView->open(['order_id' => $orderId]);
         $orderBillingAddress = $salesOrderView->getAddressesBlock()->getCustomerBillingAddress();
         $orderShippingAddress = $salesOrderView->getAddressesBlock()->getCustomerShippingAddress();
 
-        \PHPUnit_Framework_Assert::assertNotEquals(
+        \PHPUnit\Framework\Assert::assertNotEquals(
             $orderBillingAddress,
             $orderShippingAddress,
             "Billing and shipping addresses on order page are the same but shouldn't."

@@ -32,7 +32,11 @@ class AssertDownloadableDuplicateForm extends AssertProductDuplicateForm
         usort(
             $fields,
             function ($row1, $row2) {
-                return $row1['sort_order'] <=> $row2['sort_order'];
+                if ($row1['sort_order'] == $row2['sort_order']) {
+                    return 0;
+                }
+
+                return ($row1['sort_order'] < $row2['sort_order']) ? -1 : 1;
             }
         );
 

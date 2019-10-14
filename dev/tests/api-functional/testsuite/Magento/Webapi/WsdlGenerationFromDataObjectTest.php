@@ -71,7 +71,7 @@ class WsdlGenerationFromDataObjectTest extends \Magento\TestFramework\TestCase\W
         curl_setopt($connection, CURLOPT_RETURNTRANSFER, 1);
         $responseContent = curl_exec($connection);
         $this->assertEquals(curl_getinfo($connection, CURLINFO_HTTP_CODE), 401);
-        $this->assertContains("Consumer is not authorized to access %resources", $responseContent);
+        $this->assertContains("The consumer isn't authorized to access %resources.", $responseContent);
     }
 
     public function testInvalidWsdlUrlNoServices()
@@ -858,6 +858,7 @@ PARAM_COMPLEX_TYPE;
             'Details parameter complex types declaration is invalid.'
         );
 
+        // @codingStandardsIgnoreStart
         if ($this->isSingleService) {
             $detailsWrappedErrorType = <<< WRAPPED_ERROR_COMPLEX_TYPE
 <xsd:complexType name="WrappedError">
@@ -905,6 +906,7 @@ WRAPPED_ERROR_COMPLEX_TYPE;
 </xsd:complexType>
 WRAPPED_ERROR_COMPLEX_TYPE;
         }
+        // @codingStandardsIgnoreEnd
         $this->assertContains(
             $this->_convertXmlToString($detailsWrappedErrorType),
             $wsdlContent,

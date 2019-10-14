@@ -105,7 +105,7 @@ class Create extends Block
      *
      * @var string
      */
-    protected $orderMethodsSelector = '#shipping-methods';
+    protected $orderMethodsSelector = '#order-methods';
 
     /**
      * Page header.
@@ -323,6 +323,7 @@ class Create extends Block
      */
     public function selectShippingMethod(array $shippingMethod)
     {
+        $this->_rootElement->find($this->orderMethodsSelector)->click();
         $this->getShippingMethodBlock()->selectShippingMethod($shippingMethod);
         $this->getTemplateBlock()->waitLoader();
     }

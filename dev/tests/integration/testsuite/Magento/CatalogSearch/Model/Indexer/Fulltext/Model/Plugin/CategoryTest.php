@@ -11,11 +11,7 @@ use Magento\Catalog\Api\CategoryRepositoryInterface;
 use Magento\Catalog\Model\Category;
 use Magento\CatalogSearch\Model\Indexer\Fulltext\Processor;
 use Magento\TestFramework\Helper\Bootstrap;
-use Magento\Framework\Indexer\StateInterface;
 
-/**
- * Test for Magento\CatalogSearch\Model\Indexer\Fulltext\Model\Plugin\Category
- */
 class CategoryTest extends \PHPUnit\Framework\TestCase
 {
     /**
@@ -28,9 +24,6 @@ class CategoryTest extends \PHPUnit\Framework\TestCase
      */
     private $categoryRepository;
 
-    /**
-     * @inheritdoc
-     */
     protected function setUp()
     {
         $this->indexerProcessor = Bootstrap::getObjectManager()->create(Processor::class);
@@ -40,8 +33,6 @@ class CategoryTest extends \PHPUnit\Framework\TestCase
     /**
      * @magentoDataFixture Magento/Catalog/_files/indexer_catalog_category.php
      * @magentoAppArea adminhtml
-     *
-     * @return void
      */
     public function testIndexerInvalidatedAfterCategoryDelete()
     {
@@ -56,17 +47,19 @@ class CategoryTest extends \PHPUnit\Framework\TestCase
         $status = $state->getStatus();
 
         $this->assertTrue($isIndexerValid);
-        $this->assertEquals(StateInterface::STATUS_INVALID, $status);
+        $this->assertEquals(\Magento\Framework\Indexer\StateInterface::STATUS_INVALID, $status);
     }
 
     /**
      * @param int $count
      * @return Category[]
      */
-    private function getCategories(int $count): array
+    private function getCategories($count)
     {
         /** @var Category $category */
-        $category = Bootstrap::getObjectManager()->create(Category::class);
+        $category = \Magento\TestFramework\Helper\Bootstrap::getObjectManager()->create(
+            \Magento\Catalog\Model\Category::class
+        );
 
         $result = $category->getCollection()->addAttributeToSelect('name')->getItems();
         $result = array_slice($result, 2);

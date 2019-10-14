@@ -5,12 +5,7 @@
  */
 namespace Magento\User\Controller\Adminhtml\Locks;
 
-use Magento\TestFramework\TestCase\AbstractBackendController;
-
-/**
- * Testing the list of locked users.
- */
-class GridTest extends AbstractBackendController
+class GridTest extends \Magento\TestFramework\TestCase\AbstractBackendController
 {
     /**
      * Test index action
@@ -29,11 +24,11 @@ class GridTest extends AbstractBackendController
         $this->assertContains('data-column="failures_num"', $body);
         $this->assertContains('data-column="lock_expires"', $body);
         $this->assertRegExp(
-            '/<td data-column\="username"\s*class\="[^"]*col-name[^"]*col-username[^"]*"\s*>\s*adminUser1\s*<\/td>/',
+            '/<td data-column\="username"\s*class\="\s*col-name\s*col-username\s*"\s*>\s*adminUser1\s*<\/td>/',
             $body
         );
         $this->assertRegExp(
-            '/<td data-column\="username"\s*class\="[^"]*col-name[^"]*col-username[^"]*"\s*>\s*adminUser2\s*<\/td>/',
+            '/<td data-column\="username"\s*class\="\s*col-name\s*col-username\s*"\s*>\s*adminUser2\s*<\/td>/',
             $body
         );
     }

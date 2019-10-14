@@ -7,7 +7,7 @@ namespace Magento\Update\Queue;
 
 use Magento\Update\MaintenanceMode;
 
-class JobBackupTest extends \PHPUnit_Framework_TestCase
+class JobBackupTest extends \PHPUnit\Framework\TestCase
 {
     /** @var  string */
     protected $backupFilename;

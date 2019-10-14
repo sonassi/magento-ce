@@ -5,10 +5,12 @@
  */
 namespace Magento\Cms\Model;
 
-use Magento\Cms\Api\BlockRepositoryInterface;
 use Magento\Cms\Model\ResourceModel\Block;
+use Magento\Cms\Model\BlockFactory;
 use Magento\Framework\App\ResourceConnection;
 use Magento\Framework\ObjectManagerInterface;
+use Magento\Framework\Stdlib\DateTime\DateTime;
+use Magento\Framework\Stdlib\DateTime\Timezone;
 use Magento\TestFramework\Helper\Bootstrap;
 use PHPUnit\Framework\TestCase;
 
@@ -17,6 +19,7 @@ use PHPUnit\Framework\TestCase;
  */
 class BlockTest extends TestCase
 {
+
     /**
      * @var ObjectManagerInterface
      */
@@ -33,57 +36,83 @@ class BlockTest extends TestCase
     private $blockFactory;
 
     /**
-     * @var BlockRepositoryInterface
+     * @var GetBlockByIdentifier
      */
-    private $blockRepository;
+    private $blockIdentifier;
 
-    /**
-     * @inheritdoc
-     */
     protected function setUp()
     {
         $this->objectManager = Bootstrap::getObjectManager();
+
+        /** @var BlockFactory $blockFactory */
+        /** @var Block $blockResource */
+        /** @var GetBlockByIdentifier $getBlockByIdentifierCommand */
         $this->blockResource   = $this->objectManager->create(Block::class);
         $this->blockFactory    = $this->objectManager->create(BlockFactory::class);
-        $this->blockRepository = $this->objectManager->create(BlockRepositoryInterface::class);
+        $this->blockIdentifier = $this->objectManager->create(GetBlockByIdentifier::class);
     }
 
     /**
-     * Tests update time.
-     *
+     * Tests the get by identifier command
      * @param array $blockData
-     * @return void
+     * @throws \Exception
+     * @throws \Magento\Framework\Exception\NoSuchEntityException
      * @magentoDbIsolation enabled
-     * @dataProvider testUpdateTimeDataProvider
+     * @dataProvider testGetByIdentifierDataProvider
      */
-    public function testUpdateTime(array $blockData)
+    public function testGetByIdentifier(array $blockData)
     {
-        /** @var \Magento\Framework\DB\Adapter\AdapterInterface $db */
-        $db = $this->objectManager->get(ResourceConnection::class)
-            ->getConnection(ResourceConnection::DEFAULT_CONNECTION);
-
         # Prepare and save the temporary block
         $tempBlock = $this->blockFactory->create();
         $tempBlock->setData($blockData);
-        $beforeTimestamp = $db->fetchOne('SELECT UNIX_TIMESTAMP()');
         $this->blockResource->save($tempBlock);
-        $afterTimestamp = $db->fetchOne('SELECT UNIX_TIMESTAMP()');
 
-        # Load previously created block and compare update_time field
-        $block = $this->blockRepository->getById($tempBlock->getId());
+        # Load previously created block and compare identifiers
+        $storeId = reset($blockData['stores']);
+        $block   = $this->blockIdentifier->execute($blockData['identifier'], $storeId);
+        $this->assertEquals($blockData['identifier'], $block->getIdentifier());
+    }
+
+    /**
+     * Tests the get by identifier command
+     * @param array $blockData
+     * @throws \Exception
+     * @throws \Magento\Framework\Exception\NoSuchEntityException
+     * @magentoDbIsolation enabled
+     * @dataProvider testGetByIdentifierDataProvider
+     */
+    public function testUpdateTime(array $blockData)
+    {
+        /**
+         * @var $db \Magento\Framework\DB\Adapter\AdapterInterface
+         */
+        $db = $this->objectManager->get(\Magento\Framework\App\ResourceConnection::class)
+            ->getConnection(ResourceConnection::DEFAULT_CONNECTION);
+
+        # Prepare and save the temporary block
+        $tempBlock       = $this->blockFactory->create();
+        $tempBlock->setData($blockData);
+        $beforeTimestamp = $db->fetchCol('SELECT UNIX_TIMESTAMP()')[0];
+        $this->blockResource->save($tempBlock);
+        $afterTimestamp = $db->fetchCol('SELECT UNIX_TIMESTAMP()')[0];
+
+        # Load previously created block and compare identifiers
+        $storeId        = reset($blockData['stores']);
+        $block          = $this->blockIdentifier->execute($blockData['identifier'], $storeId);
         $blockTimestamp = strtotime($block->getUpdateTime());
 
-        /** These checks prevent a race condition */
+        /*
+         * These checks prevent a race condition MAGETWO-87353
+         */
         $this->assertGreaterThanOrEqual($beforeTimestamp, $blockTimestamp);
         $this->assertLessThanOrEqual($afterTimestamp, $blockTimestamp);
     }
 
     /**
-     * Data provider "testUpdateTime" method.
-     *
+     * Data provider for "testGetByIdentifier" and "testUpdateTime" method
      * @return array
      */
-    public function testUpdateTimeDataProvider(): array
+    public function testGetByIdentifierDataProvider(): array
     {
         return [
             [
@@ -92,9 +121,9 @@ class BlockTest extends TestCase
                     'stores'     => [0],
                     'identifier' => 'test-identifier',
                     'content'    => 'Test content',
-                    'is_active'  => 1,
-                ],
-            ],
+                    'is_active'  => 1
+                ]
+            ]
         ];
     }
 }

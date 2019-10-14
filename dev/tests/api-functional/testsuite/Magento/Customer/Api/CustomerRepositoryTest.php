@@ -3,6 +3,7 @@
  * Copyright © Magento, Inc. All rights reserved.
  * See COPYING.txt for license details.
  */
+
 namespace Magento\Customer\Api;
 
 use Magento\Customer\Api\Data\CustomerInterface as Customer;
@@ -146,9 +147,12 @@ class CustomerRepositoryTest extends WebapiAbstract
      * Validate update by invalid customer.
      *
      * @expectedException \Exception
+     * @expectedExceptionMessage The consumer isn't authorized to access %resources.
      */
     public function testInvalidCustomerUpdate()
     {
+        $this->_markTestAsRestOnly();
+
         //Create first customer and retrieve customer token.
         $firstCustomerData = $this->_createCustomer();
 
@@ -177,12 +181,6 @@ class CustomerRepositoryTest extends WebapiAbstract
                 'resourcePath' => self::RESOURCE_PATH . "/{$customerData[Customer::ID]}",
                 'httpMethod' => \Magento\Framework\Webapi\Rest\Request::HTTP_METHOD_PUT,
                 'token' => $token,
-            ],
-            'soap' => [
-                'service' => self::SERVICE_NAME,
-                'serviceVersion' => self::SERVICE_VERSION,
-                'operation' => self::SERVICE_NAME . 'Save',
-                'token' => $token
             ]
         ];
 
@@ -219,10 +217,8 @@ class CustomerRepositoryTest extends WebapiAbstract
         $this->assertTrue($response);
 
         //Verify if the customer is deleted
-        $this->expectException(
-            \Magento\Framework\Exception\NoSuchEntityException::class,
-            sprintf("No such entity with customerId = %s", $customerData[Customer::ID])
-        );
+        $this->expectException(\Magento\Framework\Exception\NoSuchEntityException::class);
+        $this->expectExceptionMessage(sprintf("No such entity with customerId = %s", $customerData[Customer::ID]));
         $this->_getCustomerData($customerData[Customer::ID]);
     }
 
@@ -435,7 +431,7 @@ class CustomerRepositoryTest extends WebapiAbstract
                 $expectedException = new InputException();
                 $expectedException->addError(
                     __(
-                        '%fieldName is a required field.',
+                        '"%fieldName" is required. Enter and try again.',
                         ['fieldName' => Address::FIRSTNAME]
                     )
                 );
@@ -450,7 +446,7 @@ class CustomerRepositoryTest extends WebapiAbstract
                 $this->assertEquals(HTTPExceptionCodes::HTTP_BAD_REQUEST, $e->getCode());
                 $exceptionData = $this->processRestExceptionResult($e);
                 $expectedExceptionData = [
-                    'message' => '%fieldName is a required field.',
+                    'message' => '"%fieldName" is required. Enter and try again.',
                     'parameters' => ['fieldName' => Address::FIRSTNAME],
                 ];
                 $this->assertEquals($expectedExceptionData, $exceptionData);
@@ -557,7 +553,7 @@ class CustomerRepositoryTest extends WebapiAbstract
             $this->assertEquals(HTTPExceptionCodes::HTTP_BAD_REQUEST, $e->getCode());
             $exceptionData = $this->processRestExceptionResult($e);
             $expectedExceptionData = [
-                'message' => '%fieldName is a required field.',
+                'message' => '"%fieldName" is required. Enter and try again.',
                 'parameters' => [
                     'fieldName' => 'searchCriteria'
                 ],

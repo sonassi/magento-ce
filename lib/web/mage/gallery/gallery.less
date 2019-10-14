@@ -400,10 +400,6 @@
         .fotorama-abs-center();
         height: @size-fotorama-block;
         width: @size-fotorama-block;
-
-        .ie9 & {
-            margin: (-@size-fotorama-block/2) 0 0 (-@size-fotorama-block/2);
-        }
     }
 }
 
@@ -641,7 +637,7 @@
     }
     &.fotorama__shadows--top:before,
     &.fotorama__shadows--bottom:after {
-        background-size: 100% 1px, 100% 5px;
+        background-size: 100% 1px, 100% 5px ;
         height:10px;
         left: 0;
         right:0;
@@ -768,7 +764,6 @@
         max-width: inherit;
         position: absolute;
         top: 0;
-        object-fit: scale-down;
     }
 }
 
@@ -874,10 +869,6 @@
         .fotorama__thumb--icon {
             .fotorama-abs-center();
             width: 100%;
-
-            .ie9 & {
-                margin: (-@fotorama-thumb-arrow/2) 0 0 (-@fotorama-thumb-arrow/2);
-            }
         }
     }
     .fotorama__thumb__arr--left {

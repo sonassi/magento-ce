@@ -89,7 +89,7 @@ class BundleProductTemplateGenerator implements TemplateEntityGeneratorInterface
                 'type_id' => Type::TYPE_BUNDLE,
                 'name' => 'template name' . $productRandomizerNumber,
                 'url_key' => 'template-url' . $productRandomizerNumber,
-                'sku' => 'template_sku' . $productRandomizerNumber,
+                'sku' => 'template_sku_bundle' . $productRandomizerNumber,
                 'price' => 10,
                 'visibility' => Visibility::VISIBILITY_BOTH,
                 'status' => Status::STATUS_ENABLED,

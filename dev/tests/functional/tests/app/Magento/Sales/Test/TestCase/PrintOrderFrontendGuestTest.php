@@ -8,7 +8,6 @@ namespace Magento\Sales\Test\TestCase;
 
 use Magento\Mtf\Client\BrowserInterface;
 use Magento\Mtf\TestCase\Scenario;
-use Magento\Mtf\Util\Command\Cli\EnvWhitelist;
 
 /**
  * Preconditions:
@@ -36,13 +35,6 @@ class PrintOrderFrontendGuestTest extends Scenario
     /* end tags */
 
     /**
-     * DomainWhitelist CLI
-     *
-     * @var EnvWhitelist
-     */
-    private $envWhitelist;
-
-    /**
      * Browser.
      *
      * @var BrowserInterface
@@ -53,14 +45,10 @@ class PrintOrderFrontendGuestTest extends Scenario
      * Prepare data.
      *
      * @param BrowserInterface $browser
-     * @param EnvWhitelist $envWhitelist
      */
-    public function __prepare(
-        BrowserInterface $browser,
-        EnvWhitelist $envWhitelist
-    ) {
+    public function __prepare(BrowserInterface $browser)
+    {
         $this->browser = $browser;
-        $this->envWhitelist = $envWhitelist;
     }
 
     /**
@@ -70,7 +58,6 @@ class PrintOrderFrontendGuestTest extends Scenario
      */
     public function test()
     {
-        $this->envWhitelist->addHost('example.com');
         $this->executeScenario();
     }
 
@@ -81,7 +68,6 @@ class PrintOrderFrontendGuestTest extends Scenario
      */
     public function tearDown()
     {
-        $this->envWhitelist->removeHost('example.com');
         $this->browser->closeWindow();
     }
 }

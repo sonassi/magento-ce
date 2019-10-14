@@ -39,6 +39,7 @@ define([
             turnOffInlineTranslation = function () {
                 manageInlineTranslation(false);
             },
+
             storedConfig;
 
         beforeEach(function () {

@@ -7,7 +7,6 @@
 namespace Magento\Cms\Controller\Adminhtml\Wysiwyg\Images;
 
 use Magento\Framework\App\Filesystem\DirectoryList;
-use Magento\Framework\App\Response\HttpFactory as ResponseFactory;
 
 /**
  * Test for \Magento\Cms\Controller\Adminhtml\Wysiwyg\Images\Upload class.
@@ -27,7 +26,7 @@ class UploadTest extends \PHPUnit\Framework\TestCase
     /**
      * @var string
      */
-    private $fullExcludedDirectoryPath;
+    private $fullDirectoryPath;
 
     /**
      * @var string
@@ -45,25 +44,21 @@ class UploadTest extends \PHPUnit\Framework\TestCase
     private $objectManager;
 
     /**
-     * @var ResponseFactory
-     */
-    private $responseFactory;
-
-    /**
      * @inheritdoc
      */
     protected function setUp()
     {
         $this->objectManager = \Magento\TestFramework\Helper\Bootstrap::getObjectManager();
-        $excludedDirName = 'downloadable';
+        $directoryName = 'directory1';
         $this->filesystem = $this->objectManager->get(\Magento\Framework\Filesystem::class);
+        /** @var \Magento\Cms\Helper\Wysiwyg\Images $imagesHelper */
         $imagesHelper = $this->objectManager->get(\Magento\Cms\Helper\Wysiwyg\Images::class);
         $this->mediaDirectory = $this->filesystem->getDirectoryWrite(DirectoryList::MEDIA);
+        $this->fullDirectoryPath = $imagesHelper->getStorageRoot() . DIRECTORY_SEPARATOR . $directoryName;
+        $this->mediaDirectory->create($this->mediaDirectory->getRelativePath($this->fullDirectoryPath));
         $this->model = $this->objectManager->get(\Magento\Cms\Controller\Adminhtml\Wysiwyg\Images\Upload::class);
         $fixtureDir = realpath(__DIR__ . '/../../../../../Catalog/_files');
         $tmpFile = $this->filesystem->getDirectoryRead(DirectoryList::PUB)->getAbsolutePath() . $this->fileName;
-        $this->fullExcludedDirectoryPath = $imagesHelper->getStorageRoot() . DIRECTORY_SEPARATOR . $excludedDirName;
-        $this->responseFactory = $this->objectManager->get(ResponseFactory::class);
         copy($fixtureDir . DIRECTORY_SEPARATOR . $this->fileName, $tmpFile);
         $_FILES = [
             'image' => [
@@ -85,48 +80,14 @@ class UploadTest extends \PHPUnit\Framework\TestCase
      */
     public function testExecute()
     {
-        $directoryName = 'directory1';
-        /** @var \Magento\Cms\Helper\Wysiwyg\Images $imagesHelper */
-        $imagesHelper = $this->objectManager->get(\Magento\Cms\Helper\Wysiwyg\Images::class);
-        $fullDirectoryPath = $imagesHelper->getStorageRoot() . DIRECTORY_SEPARATOR . $directoryName;
-        $this->mediaDirectory->create($this->mediaDirectory->getRelativePath($fullDirectoryPath));
-
         $this->model->getRequest()->setParams(['type' => 'image/png']);
-        $this->model->getRequest()->setMethod('POST');
-        $this->model->getStorage()->getSession()->setCurrentPath($fullDirectoryPath);
+        $this->model->getStorage()->getSession()->setCurrentPath($this->fullDirectoryPath);
         $this->model->execute();
+
         $this->assertTrue(
             $this->mediaDirectory->isExist(
                 $this->mediaDirectory->getRelativePath(
-                    $fullDirectoryPath . DIRECTORY_SEPARATOR . $this->fileName
-                )
-            )
-        );
-    }
-
-    /**
-     * Execute method with excluded directory path and file name to check that file can't be uploaded.
-     *
-     * @return void
-     * @magentoAppIsolation enabled
-     */
-    public function testExecuteWithExcludedDirectory()
-    {
-        $expectedError = 'We can\'t upload the file to current folder right now. Please try another folder.';
-        $this->model->getRequest()->setParams(['type' => 'image/png']);
-        $this->model->getRequest()->setMethod('POST');
-        $this->model->getStorage()->getSession()->setCurrentPath($this->fullExcludedDirectoryPath);
-        /** @var JsonResponse $jsonResponse */
-        $jsonResponse = $this->model->execute();
-        /** @var Response $response */
-        $jsonResponse->renderResult($response = $this->responseFactory->create());
-        $data = json_decode($response->getBody(), true);
-
-        $this->assertEquals($expectedError, $data['error']);
-        $this->assertFalse(
-            $this->mediaDirectory->isExist(
-                $this->mediaDirectory->getRelativePath(
-                    $this->fullExcludedDirectoryPath . DIRECTORY_SEPARATOR . $this->fileName
+                    $this->fullDirectoryPath . DIRECTORY_SEPARATOR . $this->fileName
                 )
             )
         );
@@ -145,11 +106,46 @@ class UploadTest extends \PHPUnit\Framework\TestCase
         $fullDirectoryPath = $this->filesystem->getDirectoryRead(DirectoryList::PUB)
                 ->getAbsolutePath() . DIRECTORY_SEPARATOR . $directoryName;
         $wysiwygDir = $this->mediaDirectory->getAbsolutePath() . '/wysiwyg';
-        $this->model->getRequest()->setMethod('POST');
         $this->model->getRequest()->setParams(['type' => 'image/png']);
         $this->model->getStorage()->getSession()->setCurrentPath($wysiwygDir);
         $this->model->execute();
         $this->assertTrue(is_file($fullDirectoryPath . DIRECTORY_SEPARATOR . $this->fileName));
+    }
+
+    /**
+     * Execute method with traversal directory path to check that there is no ability to create file not
+     * under media directory.
+     *
+     * @return void
+     */
+    public function testExecuteWithWrongPath()
+    {
+        $dirPath = '/../../../etc/';
+        $this->model->getRequest()->setParams(['type' => 'image/png']);
+        $this->model->getStorage()->getSession()->setCurrentPath($dirPath);
+        $this->model->execute();
+
+        $this->assertFileNotExists(
+            $this->fullDirectoryPath . $dirPath . $this->fileName
+        );
+    }
+
+    /**
+     * Execute method with traversal file path to check that there is no ability to create file not
+     * under media directory.
+     *
+     * @return void
+     */
+    public function testExecuteWithWrongFileName()
+    {
+        $newFilename = '/../../../../etc/new_file.png';
+        $_FILES['image']['name'] = $newFilename;
+        $_FILES['image']['tmp_name'] = __DIR__ . DIRECTORY_SEPARATOR . $this->fileName;
+        $this->model->getRequest()->setParams(['type' => 'image/png']);
+        $this->model->getStorage()->getSession()->setCurrentPath($this->fullDirectoryPath);
+        $this->model->execute();
+
+        $this->assertFileNotExists($this->fullDirectoryPath . $newFilename);
     }
 
     /**

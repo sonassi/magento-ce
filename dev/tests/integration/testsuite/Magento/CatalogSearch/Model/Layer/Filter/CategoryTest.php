@@ -36,9 +36,7 @@ class CategoryTest extends \PHPUnit\Framework\TestCase
         $layer = \Magento\TestFramework\Helper\Bootstrap::getObjectManager()
             ->create(
                 \Magento\Catalog\Model\Layer\Category::class,
-                [
-                    'data' => ['current_category' => $this->_category],
-                ]
+                ['data' => ['current_category' => $this->_category]]
             );
         $this->_model = \Magento\TestFramework\Helper\Bootstrap::getObjectManager()
             ->create(\Magento\CatalogSearch\Model\Layer\Filter\Category::class, ['layer' => $layer]);
@@ -71,9 +69,7 @@ class CategoryTest extends \PHPUnit\Framework\TestCase
         /** @var $objectManager \Magento\TestFramework\ObjectManager */
         $objectManager = \Magento\TestFramework\Helper\Bootstrap::getObjectManager();
         $this->assertNull(
-            $objectManager->get(\Magento\Framework\Registry::class)->registry(
-                self::CURRENT_CATEGORY_FILTER
-            )
+            $objectManager->get(\Magento\Framework\Registry::class)->registry(self::CURRENT_CATEGORY_FILTER)
         );
     }
 

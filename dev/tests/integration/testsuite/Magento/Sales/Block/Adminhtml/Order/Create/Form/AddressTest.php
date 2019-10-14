@@ -84,7 +84,6 @@ class AddressTest extends \PHPUnit\Framework\TestCase
      * Checks address collection output encoded to json.
      *
      * @magentoDataFixture Magento/Customer/Fixtures/customer_sec_website_2_addresses.php
-     * @magentoDbIsolation enabled
      */
     public function testGetAddressCollectionJson()
     {
@@ -123,10 +122,6 @@ class AddressTest extends \PHPUnit\Framework\TestCase
                 'postcode' => '90230',
                 'telephone' => '3468676',
                 'vat_id' => false,
-                'prefix' => false,
-                'middlename' => false,
-                'suffix' => false,
-                'fax' => false
             ],
             $addresses[1]->getId() => [
                 'telephone' => '845454465',
@@ -140,10 +135,6 @@ class AddressTest extends \PHPUnit\Framework\TestCase
                 'region' => false,
                 'region_id' => 0,
                 'vat_id' => false,
-                'prefix' => false,
-                'middlename' => false,
-                'suffix' => false,
-                'fax' => false
             ]
         ];
 

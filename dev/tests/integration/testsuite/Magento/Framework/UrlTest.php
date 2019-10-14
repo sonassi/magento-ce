@@ -8,9 +8,6 @@ namespace Magento\Framework;
 use Zend\Stdlib\Parameters;
 use Magento\TestFramework\Helper\Bootstrap;
 
-/**
- * Test class for \Magento\Framework\Url
- */
 class UrlTest extends \PHPUnit\Framework\TestCase
 {
     /**
@@ -25,7 +22,7 @@ class UrlTest extends \PHPUnit\Framework\TestCase
 
     public function testSetGetUseSession()
     {
-        $this->assertFalse((bool)$this->model->getUseSession());
+        $this->assertTrue((bool)$this->model->getUseSession());
         $this->model->setUseSession(false);
         $this->assertFalse($this->model->getUseSession());
     }

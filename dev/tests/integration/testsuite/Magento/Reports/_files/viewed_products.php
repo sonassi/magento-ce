@@ -35,7 +35,7 @@ foreach ($productIds as $productId) {
                 'event' => new \Magento\Framework\DataObject(
                     [
                         'product' => new \Magento\Framework\DataObject(['id' => $productId]),
-                    ]
+                        ]
                 ),
             ]
         )

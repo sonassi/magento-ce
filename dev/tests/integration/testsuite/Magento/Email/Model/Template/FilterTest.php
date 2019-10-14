@@ -130,22 +130,22 @@ class FilterTest extends \PHPUnit\Framework\TestCase
             'area parameter - omitted' => [
                 'adminhtml',
                 'handle="email_template_test_handle"',
-                '<strong>Email content for frontend/Magento/default theme</strong>',
+                '<b>Email content for frontend/Magento/default theme</b>',
             ],
             'area parameter - frontend' => [
                 'adminhtml',
                 'handle="email_template_test_handle" area="frontend"',
-                '<strong>Email content for frontend/Magento/default theme</strong>',
+                '<b>Email content for frontend/Magento/default theme</b>',
             ],
             'area parameter - backend' => [
                 'frontend',
                 'handle="email_template_test_handle" area="adminhtml"',
-                '<strong>Email content for adminhtml/Magento/default theme</strong>',
+                '<b>Email content for adminhtml/Magento/default theme</b>',
             ],
             'custom parameter' => [
                 'frontend',
                 'handle="email_template_test_handle" template="Magento_Email::sample_email_content_custom.phtml"',
-                '<strong>Custom Email content for frontend/Magento/default theme</strong>',
+                '<b>Custom Email content for frontend/Magento/default theme</b>',
             ],
         ];
         return $result;
@@ -267,7 +267,7 @@ class FilterTest extends \PHPUnit\Framework\TestCase
             'Empty or missing file' => [
                 TemplateTypesInterface::TYPE_HTML,
                 'file="css/non-existent-file.css"',
-                '/* Contents of the specified CSS file could not be loaded or is empty */'
+                '/* Contents of css/non-existent-file.css could not be loaded or is empty */'
             ],
             'File with compilation error results in error message' => [
                 TemplateTypesInterface::TYPE_HTML,

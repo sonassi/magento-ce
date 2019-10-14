@@ -64,8 +64,7 @@ class ConfigTest extends \PHPUnit\Framework\TestCase
                                     '\\' . LocalizedException::class
                                 ]
                             ]
-                        ],
-                        'parameters' => []
+                        ]
                     ]
                 ],
                 'class' => AccountManagementInterface::class,
@@ -89,8 +88,8 @@ class ConfigTest extends \PHPUnit\Framework\TestCase
             'isSecure' => false,
             'resources' => [
                 'Magento_Customer::customer',
+                'self'
             ],
-            'parameters' => []
         ];
         $actual = $this->soapConfig->getServiceMethodInfo(
             'customerCustomerRepositoryV1GetById',

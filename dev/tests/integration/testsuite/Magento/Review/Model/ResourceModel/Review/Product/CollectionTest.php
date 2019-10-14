@@ -3,11 +3,9 @@
  * Copyright © Magento, Inc. All rights reserved.
  * See COPYING.txt for license details.
  */
+declare(strict_types=1);
 
 namespace Magento\Review\Model\ResourceModel\Review\Product;
-
-use Magento\Review\Model\Review;
-use Magento\TestFramework\Helper\Bootstrap;
 
 /**
  * Tests some functionality of the Product Review collection
@@ -15,9 +13,7 @@ use Magento\TestFramework\Helper\Bootstrap;
 class CollectionTest extends \PHPUnit\Framework\TestCase
 {
     /**
-     * Checks resulting ids count
-     *
-     * @param int $status
+     * @param string $status
      * @param int $expectedCount
      * @param string $sortAttribute
      * @param string $dir
@@ -26,14 +22,19 @@ class CollectionTest extends \PHPUnit\Framework\TestCase
      * @magentoDataFixture Magento/Review/_files/different_reviews.php
      */
     public function testGetResultingIds(
-        int $status,
+        ?string $status,
         int $expectedCount,
         string $sortAttribute,
         string $dir,
         callable $assertion
     ) {
-        $collection = Bootstrap::getObjectManager()->create(Collection::class);
-        if ($status > 0) {
+        /**
+         * @var $collection \Magento\Review\Model\ResourceModel\Review\Product\Collection
+         */
+        $collection = \Magento\TestFramework\Helper\Bootstrap::getObjectManager()->create(
+            \Magento\Review\Model\ResourceModel\Review\Product\Collection::class
+        );
+        if ($status) {
             $collection->addStatusFilter($status);
         }
         $collection->setOrder($sortAttribute, $dir);
@@ -43,46 +44,44 @@ class CollectionTest extends \PHPUnit\Framework\TestCase
     }
 
     /**
-     * Sort order assertions data provider
-     *
      * @return array
      */
-    public function sortOrderAssertionsDataProvider(): array
+    public function sortOrderAssertionsDataProvider() :array
     {
         return [
             [
-                Review::STATUS_APPROVED,
+                \Magento\Review\Model\Review::STATUS_APPROVED,
                 2,
                 'rt.review_id',
                 'DESC',
-                function (array $actual) {
+                function (array $actual) :void {
                     $this->assertLessThan($actual[0], $actual[1]);
                 }
             ],
             [
-                Review::STATUS_APPROVED,
+                \Magento\Review\Model\Review::STATUS_APPROVED,
                 2,
                 'rt.review_id',
                 'ASC',
-                function (array $actual) {
+                function (array $actual) :void {
                     $this->assertLessThan($actual[1], $actual[0]);
                 }
             ],
             [
-                Review::STATUS_APPROVED,
+                \Magento\Review\Model\Review::STATUS_APPROVED,
                 2,
                 'rt.created_at',
                 'ASC',
-                function (array $actual) {
+                function (array $actual) :void {
                     $this->assertLessThan($actual[1], $actual[0]);
                 }
             ],
             [
-                0,
+                null,
                 3,
                 'rt.review_id',
                 'ASC',
-                function (array $actual) {
+                function (array $actual) :void {
                     $this->assertLessThan($actual[1], $actual[0]);
                 }
             ]

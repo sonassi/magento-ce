@@ -128,8 +128,7 @@ class CustomOptions extends Form
      *
      * @var string
      */
-    private $validationErrorMessage = '//div[@class="mage-error"][contains(text(), "required field")' .
-    ' and not(contains(@style,"display"))]';
+    private $validationErrorMessage = '//div[@class="mage-error"][contains(text(), "required field")]';
 
     /**
      * Get product options
@@ -232,9 +231,9 @@ class CustomOptions extends Form
         return [
             'options' => [
                 [
-                    'price' => (float)$price,
-                    'max_characters' => $maxCharacters
-                ]
+                    'price' => floatval($price),
+                    'max_characters' => $maxCharacters,
+                ],
             ]
         ];
     }
@@ -263,11 +262,11 @@ class CustomOptions extends Form
         return [
             'options' => [
                 [
-                    'price' => (float)$price,
+                    'price' => floatval($price),
                     'file_extension' => $this->getOptionNotice($option, 1),
                     'image_size_x' => preg_replace('/[^0-9]/', '', $this->getOptionNotice($option, 2)),
-                    'image_size_y' => preg_replace('/[^0-9]/', '', $this->getOptionNotice($option, 3))
-                ]
+                    'image_size_y' => preg_replace('/[^0-9]/', '', $this->getOptionNotice($option, 3)),
+                ],
             ]
         ];
     }
@@ -345,8 +344,8 @@ class CustomOptions extends Form
         return [
             'options' => [
                 [
-                    'price' => (float)$price
-                ]
+                    'price' => floatval($price),
+                ],
             ]
         ];
     }

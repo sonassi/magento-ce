@@ -8,10 +8,10 @@
 <mapping strict="1">
     <fields>
         <login_id>
-            <selector>[name="input-username"]</selector>
+            <selector>[name=MerchantLogin]</selector>
         </login_id>
         <password>
-            <selector>[name="input-password"]</selector>
+            <selector>[name=Password]</selector>
         </password>
     </fields>
 </mapping>

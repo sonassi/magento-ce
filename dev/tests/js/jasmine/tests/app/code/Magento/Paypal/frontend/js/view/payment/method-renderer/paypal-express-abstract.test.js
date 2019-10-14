@@ -24,28 +24,12 @@ define([
                 return true;
             }).and.callThrough(),
             mocks = {
-                'Magento_Checkout/js/model/checkout-data-resolver': {
-
-                    /** Stub */
-                    applyBillingAddress: function () {
-                        return true;
-                    },
-
-                    /** Stub */
-                    resolveBillingAddress: function () {
-                        return true;
-                    }
-                },
                 'Magento_Checkout/js/model/quote': {
                     billingAddress: ko.observable(),
                     shippingAddress: ko.observable(),
                     paymentMethod: ko.observable(),
-                    totals: ko.observable({}),
+                    totals: ko.observable({})
 
-                    /** Stub */
-                    isVirtual: function () {
-                        return false;
-                    }
                 },
                 'Magento_Checkout/js/action/set-payment-information': setPaymentMock,
                 'Magento_Checkout/js/model/payment/additional-validators': {
@@ -86,6 +70,13 @@ define([
                     ko.applyBindings(paypalExpressAbstract, tplElement);
                     done();
                 });
+        });
+
+        afterEach(function () {
+            try {
+                injector.clean();
+                injector.remove();
+            } catch (e) {}
         });
 
         it('showAcceptanceWindow is invoked when the anchor element of help link is clicked', function (done) {

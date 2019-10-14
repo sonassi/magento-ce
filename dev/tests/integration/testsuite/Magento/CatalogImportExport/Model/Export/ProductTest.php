@@ -70,7 +70,7 @@ class ProductTest extends \PHPUnit\Framework\TestCase
 
     /**
      * @magentoDataFixture Magento/CatalogImportExport/_files/product_export_data.php
-     * @magentoDbIsolation enabled
+     * @magentoDbIsolationEnabled
      */
     public function testExport()
     {
@@ -95,7 +95,7 @@ class ProductTest extends \PHPUnit\Framework\TestCase
 
     /**
      * @magentoDataFixture Magento/CatalogImportExport/_files/product_export_data_special_chars.php
-     * @magentoDbIsolation enabled
+     * @magentoDbIsolationEnabled
      */
     public function testExportSpecialChars()
     {
@@ -106,11 +106,12 @@ class ProductTest extends \PHPUnit\Framework\TestCase
         );
         $exportData = $this->model->export();
         $this->assertContains('simple ""1""', $exportData);
+        $this->assertContains('Category with slash\/ symbol', $exportData);
     }
 
     /**
      * @magentoDataFixture Magento/CatalogImportExport/_files/product_export_with_product_links_data.php
-     * @magentoDbIsolation enabled
+     * @magentoDbIsolationEnabled
      */
     public function testExportWithProductLinks()
     {
@@ -325,10 +326,9 @@ class ProductTest extends \PHPUnit\Framework\TestCase
 
     /**
      * @magentoDataFixture Magento/CatalogImportExport/_files/product_export_data.php
-     *
      * @return void
      */
-    public function testExportWithCustomOptionsAndSecondStore()
+    public function testExportWithCustomOptions(): void
     {
         $storeCode = 'default';
         $expectedData = [];
@@ -360,9 +360,7 @@ class ProductTest extends \PHPUnit\Framework\TestCase
         $product->setOptions($newCustomOptions);
         $productRepository->save($product);
         $this->model->setWriter(
-            $this->objectManager->create(
-                \Magento\ImportExport\Model\Export\Adapter\Csv::class
-            )
+            $this->objectManager->create(\Magento\ImportExport\Model\Export\Adapter\Csv::class)
         );
         $exportData = $this->model->export();
         /** @var $varDirectory \Magento\Framework\Filesystem\Directory\WriteInterface */
@@ -379,64 +377,15 @@ class ProductTest extends \PHPUnit\Framework\TestCase
                 $customOptionData[$storeCode] = $this->parseExportedCustomOption($data[2][$columnNumber]);
             }
         }
+
         self::assertSame($expectedData, $customOptionData);
     }
 
     /**
-     * @magentoDataFixture Magento/Catalog/_files/product_simple_with_custom_options.php
-     *
-     * @return void
-     */
-    public function testExportWithCustomOptions()
-    {
-        $expectedData = [];
-        /** @var \Magento\Catalog\Api\ProductRepositoryInterface $productRepository */
-        $productRepository = $this->objectManager->get(\Magento\Catalog\Api\ProductRepositoryInterface::class);
-        /** @var \Magento\Catalog\Api\Data\ProductInterface $product */
-        $product = $productRepository->get('simple_with_custom_options', true);
-
-        foreach ($product->getOptions() as $customOption) {
-            $optionTitle = $customOption->getTitle();
-            $expectedData[$optionTitle] = [];
-            if ($customOption->getValues()) {
-                foreach ($customOption->getValues() as $customOptionValue) {
-                    $expectedData[$optionTitle][] = $customOptionValue->getTitle();
-                }
-            }
-        }
-
-        ksort($expectedData);
-
-        $this->model->setWriter(
-            $this->objectManager->create(
-                \Magento\ImportExport\Model\Export\Adapter\Csv::class
-            )
-        );
-        $exportData = $this->model->export();
-        /** @var $varDirectory \Magento\Framework\Filesystem\Directory\WriteInterface */
-        $varDirectory = $this->objectManager->get(\Magento\Framework\Filesystem::class)
-            ->getDirectoryWrite(\Magento\Framework\App\Filesystem\DirectoryList::VAR_DIR);
-        $varDirectory->writeFile('test_product_with_custom_options.csv', $exportData);
-        /** @var \Magento\Framework\File\Csv $csv */
-        $csv = $this->objectManager->get(\Magento\Framework\File\Csv::class);
-        $data = $csv->getData($varDirectory->getAbsolutePath('test_product_with_custom_options.csv'));
-
-        foreach ($data[0] as $columnNumber => $columnName) {
-            if ($columnName === 'custom_options') {
-                $exportedCustomOptionData = $this->parseExportedCustomOption($data[1][$columnNumber]);
-            }
-        }
-
-        ksort($exportedCustomOptionData);
-
-        self::assertSame($expectedData, $exportedCustomOptionData);
-    }
-
-    /**
-     * @param $exportedCustomOption
+     * @param string $exportedCustomOption
      * @return array
      */
-    private function parseExportedCustomOption($exportedCustomOption)
+    private function parseExportedCustomOption(string $exportedCustomOption): array
     {
         $customOptions = explode('|', $exportedCustomOption);
         $optionItems = [];
@@ -457,6 +406,7 @@ class ProductTest extends \PHPUnit\Framework\TestCase
                 $optionItems[$optionName] = [];
             }
         }
+
         return $optionItems;
     }
 }

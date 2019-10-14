@@ -45,6 +45,13 @@ define([
         });
     });
 
+    afterEach(function () {
+        try {
+            injector.clean();
+            injector.remove();
+        } catch (e) {}
+    });
+
     describe('Magento_Ui/js/form/element/multiselect', function () {
         describe('"setPrepareToSendData" method', function () {
             it('Check method call with empty array as parameter.', function () {
@@ -53,6 +60,7 @@ define([
             });
 
             it('Check method call with undefined as parameter.', function () {
+
                 expect(obj.setPrepareToSendData(undefined)).toBeUndefined();
                 expect(obj.source.set).toHaveBeenCalledWith(dataScope + '-prepared-for-send', '');
             });

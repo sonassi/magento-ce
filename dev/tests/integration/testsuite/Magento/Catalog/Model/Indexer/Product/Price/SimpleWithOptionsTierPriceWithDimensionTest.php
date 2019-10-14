@@ -3,6 +3,8 @@
  * Copyright © Magento, Inc. All rights reserved.
  * See COPYING.txt for license details.
  */
+declare(strict_types=1);
+
 namespace Magento\Catalog\Model\Indexer\Product\Price;
 
 use Magento\TestFramework\Helper\Bootstrap;
@@ -11,7 +13,7 @@ use Magento\Catalog\Api\ScopedProductTierPriceManagementInterface;
 use Magento\Catalog\Api\Data\ProductTierPriceInterfaceFactory;
 use Magento\Catalog\Model\ResourceModel\Product\CollectionFactory;
 use Magento\Catalog\Pricing\Price\TierPrice;
-use Magento\Customer\Model\Group as CustomerGroup;
+use Magento\Customer\Model\Group;
 
 /**
  * @group indexer_dimension
@@ -33,6 +35,9 @@ class SimpleWithOptionsTierPriceWithDimensionTest extends \PHPUnit\Framework\Tes
      */
     private $productCollectionFactory;
 
+    /**
+     * set up
+     */
     protected function setUp()
     {
         $this->objectManager = Bootstrap::getObjectManager();
@@ -42,19 +47,16 @@ class SimpleWithOptionsTierPriceWithDimensionTest extends \PHPUnit\Framework\Tes
 
     /**
      * @magentoDbIsolation disabled
-     * @--magentoIndexerDimensionMode catalog_product_price website_and_customer_group
+     * @magentoIndexerDimensionMode catalog_product_price website_and_customer_group
      * @magentoDataFixture Magento/Catalog/_files/category_product.php
      */
     public function testTierPrice()
     {
-        $this->markTestSkipped(
-            'Skipped because of MAGETWO-99136'
-        );
         $tierPriceValue = 9.00;
 
         $tierPrice = $this->objectManager->create(ProductTierPriceInterfaceFactory::class)
             ->create();
-        $tierPrice->setCustomerGroupId(CustomerGroup::CUST_GROUP_ALL);
+        $tierPrice->setCustomerGroupId(Group::CUST_GROUP_ALL);
         $tierPrice->setQty(1.00);
         $tierPrice->setValue($tierPriceValue);
         $tierPriceManagement = $this->objectManager->create(ScopedProductTierPriceManagementInterface::class);

@@ -29,10 +29,13 @@ $shippingAddress->setId(null)->setAddressType('shipping');
 $payment = $objectManager->create(Payment::class);
 $payment->setMethod('checkmo')
     ->setAdditionalInformation('last_trans_id', '11122')
-    ->setAdditionalInformation('metadata', [
-        'type' => 'free',
-        'fraudulent' => false,
-    ]);
+    ->setAdditionalInformation(
+        'metadata',
+        [
+            'type' => 'free',
+            'fraudulent' => false,
+        ]
+    );
 
 /** @var OrderItem $orderItem */
 $orderItem = $objectManager->create(OrderItem::class);
@@ -41,8 +44,7 @@ $orderItem->setProductId($product->getId())
     ->setBasePrice($product->getPrice())
     ->setPrice($product->getPrice())
     ->setRowTotal($product->getPrice())
-    ->setProductType('simple')
-    ->setName($product->getName());
+    ->setProductType('simple');
 
 /** @var Order $order */
 $order = $objectManager->create(Order::class);

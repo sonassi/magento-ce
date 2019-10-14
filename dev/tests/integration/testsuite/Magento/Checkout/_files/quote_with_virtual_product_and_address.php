@@ -27,19 +27,14 @@ $quote = \Magento\TestFramework\Helper\Bootstrap::getObjectManager()->create(\Ma
 $quote->setStoreId(1)
     ->setIsActive(true)
     ->setIsMultiShipping(false)
-    ->assignCustomerWithAddressChange(
-        $customerRepository->getById($customer->getId())
-    )->setShippingAddress($quoteShippingAddress)
+    ->assignCustomerWithAddressChange($customerRepository->getById($customer->getId()))
+    ->setShippingAddress($quoteShippingAddress)
     ->setBillingAddress($quoteShippingAddress)
     ->setCheckoutMethod($customer->getMode())
-    ->setPasswordHash(
-        $customer->encryptPassword($customer->getPassword())
-    )->setReservedOrderId('test_order_with_virtual_product')
+    ->setPasswordHash($customer->encryptPassword($customer->getPassword()))
+    ->setReservedOrderId('test_order_with_virtual_product')
     ->setEmail('store@example.com')
-    ->addProduct(
-        $product,
-        1
-    );
+    ->addProduct($product->load($product->getId()), 1);
 
 $quote->collectTotals()->save();
 

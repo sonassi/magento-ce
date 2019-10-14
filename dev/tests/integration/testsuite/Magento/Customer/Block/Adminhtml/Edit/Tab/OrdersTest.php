@@ -6,7 +6,6 @@
 namespace Magento\Customer\Block\Adminhtml\Edit\Tab;
 
 use Magento\Customer\Controller\RegistryConstants;
-use Magento\Framework\Escaper;
 use Magento\TestFramework\Helper\Bootstrap;
 
 /**
@@ -31,11 +30,6 @@ class OrdersTest extends \PHPUnit\Framework\TestCase
     private $coreRegistry;
 
     /**
-     * @var Escaper
-     */
-    private $escaper;
-
-    /**
      * Execute per test initialization.
      */
     public function setUp()
@@ -54,7 +48,6 @@ class OrdersTest extends \PHPUnit\Framework\TestCase
             ['coreRegistry' => $this->coreRegistry]
         );
         $this->block->getPreparedCollection();
-        $this->escaper = $objectManager->get(Escaper::class);
     }
 
     /**
@@ -88,9 +81,6 @@ class OrdersTest extends \PHPUnit\Framework\TestCase
      */
     public function testToHtml()
     {
-        $this->assertContains(
-            $this->escaper->escapeHtml("We couldn't find any records."),
-            $this->block->toHtml()
-        );
+        $this->assertContains("We couldn't find any records.", $this->block->toHtml());
     }
 }

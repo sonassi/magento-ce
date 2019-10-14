@@ -5,9 +5,6 @@
  */
 namespace Magento\Catalog\Model\ResourceModel\Product;
 
-/**
- * Collection test
- */
 class CollectionTest extends \PHPUnit\Framework\TestCase
 {
     /**
@@ -131,36 +128,6 @@ class CollectionTest extends \PHPUnit\Framework\TestCase
     }
 
     /**
-     * @magentoDataFixture Magento/Catalog/_files/products.php
-     * @magentoDbIsolation disabled
-     */
-    public function testGetProductsWithSpecialPrice()
-    {
-        $product = $this->productRepository->get('simple');
-        $originalFinalPrice = $product->getFinalPrice();
-
-        $specialPrice = 9;
-        $product->setSpecialPrice($specialPrice);
-        $product = $this->productRepository->save($product);
-        /** @var \Magento\Catalog\Model\Product $item */
-        $item = $this->collection->addIdFilter($product->getId())
-            ->addPriceData()
-            ->getFirstItem();
-        $item->setPriceCalculation(false);
-        $this->assertEquals($specialPrice, $item->getFinalPrice());
-
-        $product->setSpecialPrice(null);
-        $product = $this->productRepository->save($product);
-        /** @var \Magento\Catalog\Model\Product $item */
-        $item = $this->collection->clear()
-            ->addIdFilter($product->getId())
-            ->addPriceData()
-            ->getFirstItem();
-        $item->setPriceCalculation(false);
-        $this->assertEquals($originalFinalPrice, $item->getFinalPrice());
-    }
-
-    /**
      * Test addAttributeToSort() with attribute 'is_saleable' works properly on frontend.
      *
      * @dataProvider addAttributeToSortDataProvider
@@ -225,23 +192,10 @@ class CollectionTest extends \PHPUnit\Framework\TestCase
      * @magentoDataFixture Magento/Catalog/Model/ResourceModel/_files/few_simple_products.php
      * @magentoDbIsolation enabled
      */
-    public function testAddAttributeToFilterAffectsGetSize()
+    public function testAddAttributeToFilterAffectsGetSize(): void
     {
         $this->assertEquals(10, $this->collection->getSize());
         $this->collection->addAttributeToFilter('sku', 'Product1');
-        $this->assertEquals(1, $this->collection->getSize());
-    }
-
-    /**
-     * Add tier price attribute filter to collection
-     *
-     * @magentoDataFixture Magento/Catalog/Model/ResourceModel/_files/few_simple_products.php
-     * @magentoDataFixture Magento/Catalog/Model/ResourceModel/_files/product_simple.php
-     */
-    public function testAddAttributeTierPriceToFilter()
-    {
-        $this->assertEquals(11, $this->collection->getSize());
-        $this->collection->addAttributeToFilter('tier_price', ['gt' => 0]);
         $this->assertEquals(1, $this->collection->getSize());
     }
 }

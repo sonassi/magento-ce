@@ -42,7 +42,6 @@ class TransactionsGrid extends Block
      */
     public function openTransaction($transactionId)
     {
-        $this->waitForElementVisible(sprintf($this->transaction, $transactionId), Locator::SELECTOR_XPATH);
         $this->_rootElement->find(sprintf($this->transaction, $transactionId), Locator::SELECTOR_XPATH)->click();
         return $this;
     }
@@ -54,7 +53,6 @@ class TransactionsGrid extends Block
      */
     public function approveTransaction()
     {
-        $this->waitForElementVisible($this->transactionApprove, Locator::SELECTOR_XPATH);
         $this->_rootElement->find($this->transactionApprove, Locator::SELECTOR_XPATH)->click();
         $this->confirmTransactionApproval();
         return $this;

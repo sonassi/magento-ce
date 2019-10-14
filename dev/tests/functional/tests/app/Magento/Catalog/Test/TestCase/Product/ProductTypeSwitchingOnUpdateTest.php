@@ -12,7 +12,6 @@ use Magento\ConfigurableProduct\Test\Block\Adminhtml\Product\Edit\Section\Variat
 use Magento\Downloadable\Test\Block\Adminhtml\Catalog\Product\Edit\Section\Downloadable;
 use Magento\Mtf\Fixture\FixtureFactory;
 use Magento\Mtf\TestCase\Injectable;
-use Magento\Mtf\Util\Command\Cli\EnvWhitelist;
 
 /**
  * Test Creation for ProductTypeSwitchingOnUpdating
@@ -62,31 +61,21 @@ class ProductTypeSwitchingOnUpdateTest extends Injectable
     protected $fixtureFactory;
 
     /**
-     * DomainWhitelist CLI
-     *
-     * @var EnvWhitelist
-     */
-    private $envWhitelist;
-
-    /**
      * Injection data.
      *
      * @param CatalogProductIndex $catalogProductIndex
      * @param CatalogProductEdit $catalogProductEdit
      * @param FixtureFactory $fixtureFactory
-     * @param EnvWhitelist $envWhitelist
      * @return void
      */
     public function __inject(
         CatalogProductIndex $catalogProductIndex,
         CatalogProductEdit $catalogProductEdit,
-        FixtureFactory $fixtureFactory,
-        EnvWhitelist $envWhitelist
+        FixtureFactory $fixtureFactory
     ) {
         $this->catalogProductIndex = $catalogProductIndex;
         $this->catalogProductEdit = $catalogProductEdit;
         $this->fixtureFactory = $fixtureFactory;
-        $this->envWhitelist = $envWhitelist;
     }
 
     /**
@@ -100,7 +89,6 @@ class ProductTypeSwitchingOnUpdateTest extends Injectable
     public function test($productOrigin, $product, $actionName)
     {
         // Preconditions
-        $this->envWhitelist->addHost('example.com');
         list($fixtureClass, $dataset) = explode('::', $productOrigin);
         $productOrigin = $this->fixtureFactory->createByCode(trim($fixtureClass), ['dataset' => trim($dataset)]);
         $productOrigin->persist();
@@ -155,7 +143,5 @@ class ProductTypeSwitchingOnUpdateTest extends Injectable
         /** @var Downloadable $downloadableInfoTab */
         $downloadableInfoTab = $this->catalogProductEdit->getProductForm()->getSection('downloadable_information');
         $downloadableInfoTab->getDownloadableBlock('Links')->clearDownloadableData();
-        $downloadableInfoTab->setIsDownloadable('No');
-        $this->envWhitelist->removeHost('example.com');
     }
 }

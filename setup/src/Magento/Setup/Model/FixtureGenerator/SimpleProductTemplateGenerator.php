@@ -69,7 +69,7 @@ class SimpleProductTemplateGenerator implements TemplateEntityGeneratorInterface
                 'type_id' => Type::TYPE_SIMPLE,
                 'name' => 'template name' . $productRandomizerNumber,
                 'url_key' => 'template-url' . $productRandomizerNumber,
-                'sku' => 'template_sku' . $productRandomizerNumber,
+                'sku' => 'template_sku_simple' . $productRandomizerNumber,
                 'price' => 10,
                 'visibility' => Visibility::VISIBILITY_BOTH,
                 'status' => Status::STATUS_ENABLED,

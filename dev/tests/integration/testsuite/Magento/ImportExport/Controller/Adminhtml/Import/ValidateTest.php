@@ -3,11 +3,9 @@
  * Copyright © Magento, Inc. All rights reserved.
  * See COPYING.txt for license details.
  */
-
 namespace Magento\ImportExport\Controller\Adminhtml\Import;
 
 use Magento\Framework\Filesystem\DirectoryList;
-use Magento\Framework\HTTP\Adapter\FileTransferFactory;
 use Magento\ImportExport\Model\Import;
 use Magento\ImportExport\Model\Import\ErrorProcessing\ProcessingErrorAggregatorInterface;
 
@@ -22,6 +20,7 @@ class ValidateTest extends \Magento\TestFramework\TestCase\AbstractBackendContro
      * @param string $mimeType
      * @param string $message
      * @param string $delimiter
+     * @throws \Magento\Framework\Exception\FileSystemException
      * @backupGlobals enabled
      * @magentoDbIsolation enabled
      * @SuppressWarnings(PHPMD.Superglobals)
@@ -63,7 +62,10 @@ class ValidateTest extends \Magento\TestFramework\TestCase\AbstractBackendContro
 
         $this->_objectManager->configure(
             [
-                'preferences' => [FileTransferFactory::class => HttpFactoryMock::class]
+                'preferences' => [
+                    \Magento\Framework\HTTP\Adapter\FileTransferFactory::class =>
+                        \Magento\ImportExport\Controller\Adminhtml\Import\HttpFactoryMock::class
+                ]
             ]
         );
 
@@ -80,7 +82,7 @@ class ValidateTest extends \Magento\TestFramework\TestCase\AbstractBackendContro
     /**
      * @return array
      */
-    public function validationDataProvider(): array
+    public function validationDataProvider()
     {
         return [
             [
@@ -92,7 +94,7 @@ class ValidateTest extends \Magento\TestFramework\TestCase\AbstractBackendContro
             [
                 'file_name' => 'test.txt',
                 'mime-type' => 'text/csv',
-                'message' => 'The file cannot be uploaded.',
+                'message' => '\'txt\' file extension is not supported',
                 'delimiter' => ',',
             ],
             [

@@ -11,7 +11,6 @@ use Magento\Catalog\Test\Page\Adminhtml\CatalogProductIndex;
 use Magento\Catalog\Test\Page\Adminhtml\CatalogProductNew;
 use Magento\GroupedProduct\Test\Fixture\GroupedProduct;
 use Magento\Mtf\TestCase\Injectable;
-use Magento\Mtf\Util\Command\Cli\EnvWhitelist;
 
 /**
  * Test Creation for CreateGroupedProductEntity
@@ -55,11 +54,6 @@ class CreateGroupedProductEntityTest extends Injectable
     protected $catalogProductNew;
 
     /**
-     * @var EnvWhitelist
-     */
-    private $envWhitelist;
-
-    /**
      * Persist category
      *
      * @param Category $category
@@ -76,17 +70,14 @@ class CreateGroupedProductEntityTest extends Injectable
      *
      * @param CatalogProductIndex $catalogProductIndexNewPage
      * @param CatalogProductNew $catalogProductNewPage
-     * @param EnvWhitelist $envWhitelist
      * @return void
      */
     public function __inject(
         CatalogProductIndex $catalogProductIndexNewPage,
-        CatalogProductNew $catalogProductNewPage,
-        EnvWhitelist $envWhitelist
+        CatalogProductNew $catalogProductNewPage
     ) {
         $this->catalogProductIndex = $catalogProductIndexNewPage;
         $this->catalogProductNew = $catalogProductNewPage;
-        $this->envWhitelist = $envWhitelist;
     }
 
     /**
@@ -99,18 +90,9 @@ class CreateGroupedProductEntityTest extends Injectable
     public function test(GroupedProduct $product, Category $category)
     {
         //Steps
-        $this->envWhitelist->addHost('example.com');
         $this->catalogProductIndex->open();
         $this->catalogProductIndex->getGridPageActionBlock()->addProduct('grouped');
         $this->catalogProductNew->getProductForm()->fill($product, null, $category);
         $this->catalogProductNew->getFormPageActions()->save();
-    }
-
-    /**
-     * @inheritDoc
-     */
-    protected function tearDown()
-    {
-        $this->envWhitelist->removeHost('example.com');
     }
 }

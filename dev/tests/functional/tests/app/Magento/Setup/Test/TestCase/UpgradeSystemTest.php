@@ -16,9 +16,6 @@ use Magento\Setup\Test\Constraint\AssertVersionAndEditionCheck;
 use Magento\Setup\Test\Constraint\AssertSuccessMessage;
 use Magento\Setup\Test\Constraint\AssertApplicationVersion;
 
-/**
- * Magento upgrade test using UI.
- */
 class UpgradeSystemTest extends Injectable
 {
     /**
@@ -56,7 +53,6 @@ class UpgradeSystemTest extends Injectable
      * @param AssertApplicationVersion $assertApplicationVersion
      * @param array $upgrade
      * @return void
-     * @throws \Exception
      */
     public function test(
         FixtureFactory $fixtureFactory,
@@ -114,9 +110,6 @@ class UpgradeSystemTest extends Injectable
         $this->setupWizard->getSelectVersion()->fill($upgradeFixture);
         if ($upgrade['otherComponents'] === 'Yes') {
             $this->setupWizard->getSelectVersion()->chooseUpgradeOtherComponents($upgrade['otherComponentsList']);
-            $this->setupWizard
-                ->getSelectVersion()
-                ->chooseSampleDataModulesVersions($upgrade['sampleDataVersion']);
         }
         $this->setupWizard->getSelectVersion()->clickNext();
 

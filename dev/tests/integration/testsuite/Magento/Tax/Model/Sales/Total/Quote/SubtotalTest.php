@@ -4,6 +4,8 @@
  * See COPYING.txt for license details.
  */
 
+// @codingStandardsIgnoreFile
+
 namespace Magento\Tax\Model\Sales\Total\Quote;
 
 use Magento\TestFramework\Helper\Bootstrap;
@@ -96,20 +98,26 @@ class SubtotalTest extends \Magento\TestFramework\Indexer\TestCase
 
         /** @var \Magento\Quote\Model\Quote $quote */
         $quote = $this->objectManager->create(\Magento\Quote\Model\Quote::class);
-        $quote->setStoreId(1)
-            ->setIsActive(true)
-            ->setIsMultiShipping(false)
-            ->assignCustomerWithAddressChange(
-                $this->getCustomerById($customer->getId())
-            )->setShippingAddress($quoteShippingAddress)
-            ->setBillingAddress($quoteShippingAddress)
-            ->setCheckoutMethod($customer->getMode())
-            ->setPasswordHash(
-                $customer->encryptPassword($customer->getPassword())
-            )->addProduct(
-                $product->load($product->getId()),
-                $quantity
-            );
+        $quote->setStoreId(
+            1
+        )->setIsActive(
+            true
+        )->setIsMultiShipping(
+            false
+        )->assignCustomerWithAddressChange(
+            $this->getCustomerById($customer->getId())
+        )->setShippingAddress(
+            $quoteShippingAddress
+        )->setBillingAddress(
+            $quoteShippingAddress
+        )->setCheckoutMethod(
+            $customer->getMode()
+        )->setPasswordHash(
+            $customer->encryptPassword($customer->getPassword())
+        )->addProduct(
+            $product->load($product->getId()),
+            $quantity
+        );
         $address = $quote->getShippingAddress();
         /** @var \Magento\Quote\Model\ShippingAssignment $shippingAssignment */
         $shippingAssignment = $this->objectManager->create(\Magento\Quote\Model\ShippingAssignment::class);
@@ -214,20 +222,26 @@ class SubtotalTest extends \Magento\TestFramework\Indexer\TestCase
 
         /** @var \Magento\Quote\Model\Quote $quote */
         $quote = $this->objectManager->create(\Magento\Quote\Model\Quote::class);
-        $quote->setStoreId(1)
-            ->setIsActive(true)
-            ->setIsMultiShipping(false)
-            ->assignCustomerWithAddressChange(
-                $this->getCustomerById($customer->getId())
-            )->setShippingAddress($quoteShippingAddress)
-            ->setBillingAddress($quoteShippingAddress)
-            ->setCheckoutMethod($customer->getMode())
-            ->setPasswordHash(
-                $customer->encryptPassword($customer->getPassword())
-            )->addProduct(
-                $product->load($product->getId()),
-                $quantity
-            );
+        $quote->setStoreId(
+            1
+        )->setIsActive(
+            true
+        )->setIsMultiShipping(
+            false
+        )->assignCustomerWithAddressChange(
+            $this->getCustomerById($customer->getId())
+        )->setShippingAddress(
+            $quoteShippingAddress
+        )->setBillingAddress(
+            $quoteShippingAddress
+        )->setCheckoutMethod(
+            $customer->getMode()
+        )->setPasswordHash(
+            $customer->encryptPassword($customer->getPassword())
+        )->addProduct(
+            $product->load($product->getId()),
+            $quantity
+        );
         $address = $quote->getShippingAddress();
         /** @var \Magento\Quote\Model\ShippingAssignment $shippingAssignment */
         $shippingAssignment = $this->objectManager->create(\Magento\Quote\Model\ShippingAssignment::class);

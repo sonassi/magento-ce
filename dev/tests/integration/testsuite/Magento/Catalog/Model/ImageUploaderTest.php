@@ -34,6 +34,9 @@ class ImageUploaderTest extends \PHPUnit\Framework\TestCase
      */
     private $mediaDirectory;
 
+    /**
+     * @inheritdoc
+     */
     protected function setUp()
     {
         $this->objectManager = \Magento\TestFramework\Helper\Bootstrap::getObjectManager();
@@ -44,15 +47,17 @@ class ImageUploaderTest extends \PHPUnit\Framework\TestCase
         $this->imageUploader = $this->objectManager->create(
             \Magento\Catalog\Model\ImageUploader::class,
             [
-                'baseTmpPath' => 'catalog/tmp/category',
-                'basePath' => 'catalog/category',
+                'baseTmpPath' => $this->mediaDirectory->getRelativePath('tmp'),
+                'basePath' => __DIR__,
                 'allowedExtensions' => ['jpg', 'jpeg', 'gif', 'png'],
-                'allowedMimeTypes' => ['image/jpg', 'image/jpeg', 'image/gif', 'image/png']
             ]
         );
     }
 
-    public function testSaveFileToTmpDir()
+    /**
+     * @return void
+     */
+    public function testSaveFileToTmpDir(): void
     {
         $fileName = 'magento_small_image.jpg';
         $tmpDirectory = $this->filesystem->getDirectoryWrite(\Magento\Framework\App\Filesystem\DirectoryList::SYS_TMP);
@@ -74,28 +79,11 @@ class ImageUploaderTest extends \PHPUnit\Framework\TestCase
     }
 
     /**
-     * Test that method rename files when move it with the same name into base directory.
-     *
-     * @return void
-     * @magentoDataFixture Magento/Catalog/_files/catalog_category_image.php
-     * @magentoDataFixture Magento/Catalog/_files/catalog_tmp_category_image.php
-     */
-    public function testMoveFileFromTmp()
-    {
-        $expectedFilePath = $this->imageUploader->getBasePath() . DIRECTORY_SEPARATOR . 'magento_small_image_1.jpg';
-
-        $this->assertFileNotExists($this->mediaDirectory->getAbsolutePath($expectedFilePath));
-
-        $this->imageUploader->moveFileFromTmp('magento_small_image.jpg');
-
-        $this->assertFileExists($this->mediaDirectory->getAbsolutePath($expectedFilePath));
-    }
-
-    /**
      * @expectedException \Magento\Framework\Exception\LocalizedException
      * @expectedExceptionMessage File validation failed.
+     * @return void
      */
-    public function testSaveFileToTmpDirWithWrongExtension()
+    public function testSaveFileToTmpDirWithWrongExtension(): void
     {
         $fileName = 'text.txt';
         $tmpDirectory = $this->filesystem->getDirectoryWrite(\Magento\Framework\App\Filesystem\DirectoryList::SYS_TMP);
@@ -119,8 +107,9 @@ class ImageUploaderTest extends \PHPUnit\Framework\TestCase
     /**
      * @expectedException \Magento\Framework\Exception\LocalizedException
      * @expectedExceptionMessage File validation failed.
+     * @return void
      */
-    public function testSaveFileToTmpDirWithWrongFile()
+    public function testSaveFileToTmpDirWithWrongFile(): void
     {
         $fileName = 'file.gif';
         $tmpDirectory = $this->filesystem->getDirectoryWrite(\Magento\Framework\App\Filesystem\DirectoryList::SYS_TMP);
@@ -153,6 +142,5 @@ class ImageUploaderTest extends \PHPUnit\Framework\TestCase
         /** @var \Magento\Framework\Filesystem\Directory\WriteInterface $mediaDirectory */
         $mediaDirectory = $filesystem->getDirectoryWrite(DirectoryList::MEDIA);
         $mediaDirectory->delete('tmp');
-        $mediaDirectory->delete('catalog');
     }
 }

@@ -11,7 +11,6 @@ use Magento\Framework\Api\SortOrder;
 
 /**
  * Integration test for \Magento\Customer\Model\ResourceModel\GroupRepository
- * @magentoAppIsolation enabled
  */
 class GroupRepositoryTest extends \PHPUnit\Framework\TestCase
 {

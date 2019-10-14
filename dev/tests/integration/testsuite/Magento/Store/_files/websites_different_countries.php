@@ -3,14 +3,13 @@
  * Copyright © Magento, Inc. All rights reserved.
  * See COPYING.txt for license details.
  */
+declare(strict_types=1);
 
 use Magento\TestFramework\Helper\Bootstrap;
-use Magento\Config\Model\Config\Factory as ConfigFactory;
 use Magento\Store\Model\Website;
 use Magento\Store\Model\Store;
 use Magento\CatalogSearch\Model\Indexer\Fulltext as FulltextIndex;
 use Magento\Framework\App\Config\ReinitableConfigInterface;
-use Magento\Store\Model\Group;
 
 $objectManager = Bootstrap::getObjectManager();
 //Creating second website with a store.
@@ -22,22 +21,11 @@ if (!$website->getId()) {
     $website->setData([
         'code' => 'test',
         'name' => 'Test Website',
+        'default_group_id' => '1',
         'is_default' => '0',
     ]);
     $website->save();
 }
-
-/**
- * @var Group $storeGroup
- */
-$storeGroup = $objectManager->create(Group::class);
-$storeGroup->setCode('some_group')
-    ->setName('custom store group')
-    ->setWebsite($website);
-$storeGroup->save($storeGroup);
-
-$website->setDefaultGroupId($storeGroup->getId());
-$website->save($website);
 
 $websiteId = $website->getId();
 $store = $objectManager->create(Store::class);

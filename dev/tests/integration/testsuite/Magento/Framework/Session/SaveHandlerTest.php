@@ -28,9 +28,6 @@ class SaveHandlerTest extends \PHPUnit\Framework\TestCase
      */
     private $saveHandlerFactoryMock;
 
-    /**
-     * @inheritdoc
-     */
     protected function setUp()
     {
         $this->objectManager = \Magento\TestFramework\Helper\Bootstrap::getObjectManager();
@@ -40,9 +37,6 @@ class SaveHandlerTest extends \PHPUnit\Framework\TestCase
         $this->objectManager->addSharedInstance($this->saveHandlerFactoryMock, SaveHandlerFactory::class);
     }
 
-    /**
-     * @inheritdoc
-     */
     protected function tearDown()
     {
         $this->objectManager->removeSharedInstance(DeploymentConfig::class);
@@ -54,7 +48,6 @@ class SaveHandlerTest extends \PHPUnit\Framework\TestCase
      *
      * @dataProvider saveHandlerProvider
      * @param string $deploymentConfigHandler
-     * @return void
      */
     public function testConstructor($deploymentConfigHandler)
     {
@@ -87,10 +80,7 @@ class SaveHandlerTest extends \PHPUnit\Framework\TestCase
         );
     }
 
-    /**
-     * @return array
-     */
-    public function saveHandlerProvider(): array
+    public function saveHandlerProvider()
     {
         return [
             ['db'],
@@ -101,7 +91,7 @@ class SaveHandlerTest extends \PHPUnit\Framework\TestCase
     }
 
     /**
-     * Retrieve expected session.save_handler.
+     * Retrieve expected session.save_handler
      *
      * @param string $deploymentConfigHandler
      * @param string $iniHandler
@@ -118,9 +108,6 @@ class SaveHandlerTest extends \PHPUnit\Framework\TestCase
         }
     }
 
-    /**
-     * @return void
-     */
     public function testConstructorWithException()
     {
         $this->deploymentConfigMock->method('get')
@@ -147,6 +134,9 @@ class SaveHandlerTest extends \PHPUnit\Framework\TestCase
         $this->objectManager->create(SaveHandler::class, ['sessionConfig' => $sessionConfig]);
 
         // Test expectation
-        $this->assertEquals('db', $sessionConfig->getOption('session.save_handler'));
+        $this->assertEquals(
+            'db',
+            $sessionConfig->getOption('session.save_handler')
+        );
     }
 }

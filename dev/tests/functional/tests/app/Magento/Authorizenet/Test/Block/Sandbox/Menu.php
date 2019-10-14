@@ -27,7 +27,6 @@ class Menu extends Block
      */
     public function openSearchMenu()
     {
-        $this->waitForElementVisible($this->searchMenuButton, Locator::SELECTOR_XPATH);
         $this->_rootElement->find($this->searchMenuButton, Locator::SELECTOR_XPATH)->click();
         return $this;
     }

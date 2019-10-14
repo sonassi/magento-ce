@@ -9,7 +9,6 @@ namespace Magento\Wishlist\Test\TestCase;
 use Magento\Customer\Test\Fixture\Customer;
 use Magento\Customer\Test\Page\Adminhtml\CustomerIndex;
 use Magento\Customer\Test\Page\Adminhtml\CustomerIndexEdit;
-use Magento\Mtf\Util\Command\Cli\EnvWhitelist;
 
 /**
  * Preconditions:
@@ -37,24 +36,14 @@ class ConfigureProductInCustomerWishlistOnBackendTest extends AbstractWishlistTe
     /* end tags */
 
     /**
-     * DomainWhitelist CLI
-     *
-     * @var EnvWhitelist
-     */
-    private $envWhitelist;
-
-    /**
      * Create customer.
      *
      * @param Customer $customer
      * @return array
      */
-    public function __prepare(
-        Customer $customer,
-        EnvWhitelist $envWhitelist
-    ) {
+    public function __prepare(Customer $customer)
+    {
         $customer->persist();
-        $this->envWhitelist = $envWhitelist;
 
         return ['customer' => $customer];
     }
@@ -75,7 +64,6 @@ class ConfigureProductInCustomerWishlistOnBackendTest extends AbstractWishlistTe
         CustomerIndexEdit $customerIndexEdit
     ) {
         // Preconditions
-        $this->envWhitelist->addHost('example.com');
         $product = $this->createProducts($product)[0];
         $this->loginCustomer($customer);
         $this->addToWishlist([$product]);
@@ -91,15 +79,5 @@ class ConfigureProductInCustomerWishlistOnBackendTest extends AbstractWishlistTe
         $customerIndexEdit->getConfigureProductBlock()->configProduct($product);
 
         return['product' => $product];
-    }
-
-    /**
-     * Clean data after running test.
-     *
-     * @return void
-     */
-    public function tearDown()
-    {
-        $this->envWhitelist->removeHost('example.com');
     }
 }

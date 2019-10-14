@@ -36,6 +36,7 @@ class ProductTest extends \PHPUnit\Framework\TestCase
      * @magentoAppIsolation enabled
      * @param int $categoryId
      * @param bool $expectedResult
+     *
      * @magentoDataFixture Magento/ConfigurableProduct/_files/quote_with_configurable_product.php
      * @magentoDataFixture Magento/SalesRule/_files/rules_category.php
      * @dataProvider validateProductConditionDataProvider
@@ -68,8 +69,10 @@ class ProductTest extends \PHPUnit\Framework\TestCase
      * @magentoDbIsolation disabled
      * @magentoDataFixture Magento/Bundle/_files/order_item_with_bundle_and_options.php
      * @magentoDataFixture Magento/SalesRule/_files/rules_sku_exclude.php
+     *
+     * @return void
      */
-    public function testValidateSalesRuleExcludesBundleChildren()
+    public function testValidateSalesRuleExcludesBundleChildren(): void
     {
         // Load the quote that contains a child of a bundle product
         /** @var \Magento\Quote\Model\Quote  $quote */

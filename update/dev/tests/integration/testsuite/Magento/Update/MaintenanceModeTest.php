@@ -5,7 +5,7 @@
  */
 namespace Magento\Update;
 
-class MaintenanceModeTest extends \PHPUnit_Framework_TestCase
+class MaintenanceModeTest extends \PHPUnit\Framework\TestCase
 {
     /**
      * Path to the maintenance flag file

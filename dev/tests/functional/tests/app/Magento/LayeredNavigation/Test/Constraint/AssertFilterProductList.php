@@ -3,6 +3,7 @@
  * Copyright © Magento, Inc. All rights reserved.
  * See COPYING.txt for license details.
  */
+
 namespace Magento\LayeredNavigation\Test\Constraint;
 
 use Magento\Catalog\Test\Fixture\Category;
@@ -52,7 +53,7 @@ class AssertFilterProductList extends AbstractConstraint
                 sort($productNames);
                 $pageProductNames = $catalogCategoryView->getListProductBlock()->getProductNames();
                 sort($pageProductNames);
-                \PHPUnit_Framework_Assert::assertEquals($productNames, $pageProductNames);
+                \PHPUnit\Framework\Assert::assertEquals($productNames, $pageProductNames);
             }
             $catalogCategoryView->getLayeredNavigationBlock()->clearAll();
         }

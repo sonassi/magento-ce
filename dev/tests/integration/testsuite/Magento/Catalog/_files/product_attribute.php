@@ -10,6 +10,5 @@ $attribute = \Magento\TestFramework\Helper\Bootstrap::getObjectManager()
 $attribute->setAttributeCode('test_attribute_code_333')
     ->setEntityTypeId(4)
     ->setIsGlobal(1)
-    ->setPrice(95)
-    ->setIsUserDefined(1);
+    ->setPrice(95);
 $attribute->save();

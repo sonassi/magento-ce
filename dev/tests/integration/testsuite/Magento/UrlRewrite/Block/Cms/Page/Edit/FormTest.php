@@ -78,11 +78,10 @@ class FormTest extends \PHPUnit\Framework\TestCase
         $form = $this->_getFormInstance($args);
 
         $expectedStores = [
-            ['label' => 'Main Website', 'value' => [], '__disableTmpl' => true],
+            ['label' => 'Main Website', 'value' => []],
             [
                 'label' => '    Main Website Store',
-                'value' => [['label' => '    Default Store View', 'value' => 1]],
-                '__disableTmpl' => true
+                'value' => [['label' => '    Default Store View', 'value' => 1]]
             ],
         ];
         $this->assertEquals($expectedStores, $form->getElement('store_id')->getValues());

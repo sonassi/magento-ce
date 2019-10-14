@@ -154,8 +154,8 @@ class AddressTest extends \Magento\TestFramework\TestCase\AbstractController
             $this->equalTo(
                 [
                     'One or more input exceptions have occurred.',
-                    'street is a required field.',
-                    'city is a required field.',
+                    '&quot;street&quot; is required. Enter and try again.',
+                    '&quot;city&quot; is required. Enter and try again.',
                 ]
             ),
             \Magento\Framework\Message\MessageInterface::TYPE_ERROR
@@ -193,7 +193,7 @@ class AddressTest extends \Magento\TestFramework\TestCase\AbstractController
 
         $this->assertRedirect($this->stringContains('customer/address/index'));
         $this->assertSessionMessages(
-            $this->equalTo(['We can&#039;t delete the address right now.']),
+            $this->equalTo(['We can\'t delete the address right now.']),
             \Magento\Framework\Message\MessageInterface::TYPE_ERROR
         );
     }

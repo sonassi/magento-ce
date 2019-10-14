@@ -3,6 +3,7 @@
  * Copyright © Magento, Inc. All rights reserved.
  * See COPYING.txt for license details.
  */
+declare(strict_types=1);
 
 namespace Magento\Wishlist\Test\Constraint;
 
@@ -11,9 +12,11 @@ use Magento\Customer\Test\Page\CustomerAccountIndex;
 use Magento\Wishlist\Test\Page\WishlistIndex;
 use Magento\Mtf\Constraint\AbstractConstraint;
 use Magento\Mtf\Fixture\InjectableFixture;
+use Magento\GroupedProduct\Test\Fixture\GroupedProduct;
+use Magento\Bundle\Test\Fixture\BundleProduct;
 
 /**
- * Assert that product is present in default wishlist.
+ * Asserts that correct product regular price is displayed in default wishlist.
  */
 class AssertProductRegularPriceOnStorefront extends AbstractConstraint
 {
@@ -23,7 +26,7 @@ class AssertProductRegularPriceOnStorefront extends AbstractConstraint
     private $regularPriceLabel = 'Regular Price';
 
     /**
-     * Assert that product is present in default wishlist.
+     * Asserts that correct product regular price is displayed in default wishlist.
      *
      * @param CmsIndex             $cmsIndex
      * @param CustomerAccountIndex $customerAccountIndex
@@ -42,7 +45,7 @@ class AssertProductRegularPriceOnStorefront extends AbstractConstraint
         $customerAccountIndex->getAccountMenuBlock()->openMenuItem('My Wish List');
 
         $productRegularPrice = 0;
-        if ($product instanceof \Magento\GroupedProduct\Test\Fixture\GroupedProduct) {
+        if ($product instanceof GroupedProduct) {
             $associatedProducts = $product->getAssociated();
 
             /** @var \Magento\Catalog\Test\Fixture\CatalogProductSimple $associatedProduct */
@@ -51,7 +54,7 @@ class AssertProductRegularPriceOnStorefront extends AbstractConstraint
                 $price = $associatedProduct->getPrice();
                 $productRegularPrice += $qty * $price;
             }
-        } elseif ($product instanceof \Magento\Bundle\Test\Fixture\BundleProduct) {
+        } elseif ($product instanceof BundleProduct) {
             $bundleSelection = (array)$product->getBundleSelections();
             foreach ($bundleSelection['products'] as $bundleOption) {
                 $regularBundleProductPrice = 0;
@@ -74,18 +77,18 @@ class AssertProductRegularPriceOnStorefront extends AbstractConstraint
         $productItem = $wishlistIndex->getWishlistBlock()->getProductItemsBlock()->getItemProduct($product);
         $wishListProductRegularPrice = (float)$productItem->getRegularPrice();
 
-        \PHPUnit_Framework_Assert::assertEquals(
+        \PHPUnit\Framework\Assert::assertEquals(
             $this->regularPriceLabel,
             $productItem->getPriceLabel(),
             'Wrong product regular price is displayed.'
         );
 
-        \PHPUnit_Framework_Assert::assertNotEmpty(
+        \PHPUnit\Framework\Assert::assertNotEmpty(
             $wishListProductRegularPrice,
             'Regular Price for "' . $product->getName() . '" is not correct.'
         );
 
-        \PHPUnit_Framework_Assert::assertEquals(
+        \PHPUnit\Framework\Assert::assertEquals(
             $productRegularPrice,
             $wishListProductRegularPrice,
             'Wrong product regular price is displayed.'
@@ -97,7 +100,7 @@ class AssertProductRegularPriceOnStorefront extends AbstractConstraint
      *
      * @return string
      */
-    public function toString()
+    public function toString(): string
     {
         return 'Product is displayed with correct regular price.';
     }

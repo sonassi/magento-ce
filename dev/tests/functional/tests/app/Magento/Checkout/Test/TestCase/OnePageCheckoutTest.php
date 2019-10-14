@@ -7,7 +7,6 @@
 namespace Magento\Checkout\Test\TestCase;
 
 use Magento\Mtf\TestCase\Scenario;
-use Magento\Mtf\Util\Command\Cli\EnvWhitelist;
 
 /**
  * Preconditions:
@@ -46,36 +45,12 @@ class OnePageCheckoutTest extends Scenario
     /* end tags */
 
     /**
-     * DomainWhitelist CLI
-     *
-     * @var EnvWhitelist
-     */
-    private $envWhitelist;
-
-    /**
-     * Prepare data.
-     *
-     * @param EnvWhitelist $envWhitelist
-     */
-    public function __prepare(
-        EnvWhitelist $envWhitelist
-    ) {
-        $this->envWhitelist = $envWhitelist;
-    }
-
-    /**
      * Runs one page checkout test.
      *
      * @return void
      */
     public function test()
     {
-        $this->envWhitelist->addHost('example.com');
         $this->executeScenario();
-    }
-
-    protected function tearDown()
-    {
-        $this->envWhitelist->removeHost('example.com');
     }
 }

@@ -7,10 +7,9 @@
 namespace Magento\Swatches\Test\TestCase;
 
 use Magento\Mtf\TestCase\Injectable;
-use Magento\Swatches\Test\TestStep\AddProductToCartFromCatalogCategoryPageStep as AddToCart;
+use Magento\ConfigurableProduct\Test\Fixture\ConfigurableProduct;
 use Magento\Mtf\TestStep\TestStepFactory;
 use Magento\Catalog\Test\Page\Category\CatalogCategoryView;
-use Magento\ConfigurableProduct\Test\Fixture\ConfigurableProduct;
 
 /**
  * Preconditions:
@@ -63,17 +62,21 @@ class AddConfigurableProductWithSwatchToShoppingCartTest extends Injectable
      * Runs add configurable product with swatches attributes test.
      *
      * @param ConfigurableProduct $product
+     * @param bool $addToCart
      * @return array
      */
-    public function test(ConfigurableProduct $product)
+    public function test(ConfigurableProduct $product, $addToCart)
     {
         $product->persist();
         $cart = $this->testStepFactory->create(
-            AddToCart::class,
+            \Magento\Swatches\Test\TestStep\AddProductToCartFromCatalogCategoryPageStep::class,
             [
                 'product' => $product
             ]
         )->run()['cart'];
+        if ($addToCart) {
+            $this->categoryView->getMessagesBlock()->waitSuccessMessage();
+        }
 
         return ['cart' => $cart];
     }

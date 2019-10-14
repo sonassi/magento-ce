@@ -4,6 +4,8 @@
  * See COPYING.txt for license details.
  */
 
+declare(strict_types=1);
+
 /** @var \Magento\Eav\Api\AttributeRepositoryInterface $repository */
 $repository = \Magento\TestFramework\Helper\Bootstrap::getObjectManager()
     ->create(\Magento\Eav\Api\AttributeRepositoryInterface::class);

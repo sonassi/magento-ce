@@ -3,6 +3,7 @@
  * Copyright © Magento, Inc. All rights reserved.
  * See COPYING.txt for license details.
  */
+declare(strict_types=1);
 
 $billingAddress = \Magento\TestFramework\Helper\Bootstrap::getObjectManager()->create(
     \Magento\Sales\Model\Order\Address::class,
@@ -51,12 +52,21 @@ $orderItem->setProductId(
 );
 
 $order = \Magento\TestFramework\Helper\Bootstrap::getObjectManager()->create(\Magento\Sales\Model\Order::class);
-$order->setCustomerEmail('mail@to.co')
-    ->addItem($orderItem)
-    ->setIncrementId('100000001')
-    ->setCustomerIsGuest(true)
-    ->setStoreId(1)
-    ->setEmailSent(1)
-    ->setBillingAddress($billingAddress)
-    ->setPayment($payment);
+$order->setCustomerEmail(
+    'mail@to.co'
+)->addItem(
+    $orderItem
+)->setIncrementId(
+    '100000001'
+)->setCustomerIsGuest(
+    true
+)->setStoreId(
+    1
+)->setEmailSent(
+    1
+)->setBillingAddress(
+    $billingAddress
+)->setPayment(
+    $payment
+);
 $order->save();

@@ -71,4 +71,3 @@ $review->setEntityId(
         )->getStore()->getId()
     ]
 )->save();
-$review->aggregate();

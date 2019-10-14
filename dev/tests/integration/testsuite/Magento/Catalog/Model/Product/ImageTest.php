@@ -75,9 +75,18 @@ class ImageTest extends \PHPUnit\Framework\TestCase
         $processor = $this->createPartialMock(
             \Magento\Framework\Image::class,
             [
-                'save', 'keepAspectRatio', 'keepFrame', 'keepTransparency', 'constrainOnly', 'backgroundColor',
-                'quality', 'setWatermarkPosition', 'setWatermarkImageOpacity', 'setWatermarkWidth',
-                'setWatermarkHeight', 'watermark',
+                'save',
+                'keepAspectRatio',
+                'keepFrame',
+                'keepTransparency',
+                'constrainOnly',
+                'backgroundColor',
+                'quality',
+                'setWatermarkPosition',
+                'setWatermarkImageOpacity',
+                'setWatermarkWidth',
+                'setWatermarkHeight',
+                'watermark'
             ]
         );
         $processor->expects($this->once())

@@ -3,6 +3,7 @@
  * Copyright © Magento, Inc. All rights reserved.
  * See COPYING.txt for license details.
  */
+declare(strict_types=1);
 
 namespace Magento\Sales\CustomerData;
 
@@ -12,8 +13,6 @@ use PHPUnit\Framework\TestCase;
 use Magento\Customer\Model\Session;
 
 /**
- * Test for LastOrderedItems.
- *
  * @magentoAppIsolation enabled
  */
 class LastOrderedItemsTest extends TestCase
@@ -23,17 +22,12 @@ class LastOrderedItemsTest extends TestCase
      */
     private $objectManager;
 
-    /**
-     * @inheritdoc
-     */
     public function setUp()
     {
         $this->objectManager = Bootstrap::getObjectManager();
     }
 
     /**
-     * Test to check count in items collection.
-     *
      * @magentoDataFixture Magento/Sales/_files/order_with_customer_and_multiple_order_items.php
      */
     public function testDefaultFormatterIsAppliedWhenBasicIntegration()
@@ -45,7 +39,6 @@ class LastOrderedItemsTest extends TestCase
         /** @var LastOrderedItems $customerDataSectionSource */
         $customerDataSectionSource = $this->objectManager->get(LastOrderedItems::class);
         $data = $customerDataSectionSource->getSectionData();
-
         $this->assertEquals(
             LastOrderedItems::SIDEBAR_ORDER_LIMIT,
             count($data['items']),

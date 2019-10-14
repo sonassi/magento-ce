@@ -8,7 +8,6 @@ namespace Magento\Customer\Model;
 
 /**
  * Test for \Magento\Customer\Model\GroupRegistry
- * @magentoAppIsolation enabled
  */
 class GroupRegistryTest extends \PHPUnit\Framework\TestCase
 {

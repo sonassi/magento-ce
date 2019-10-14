@@ -3,10 +3,11 @@
  * Copyright © Magento, Inc. All rights reserved.
  * See COPYING.txt for license details.
  */
+declare(strict_types=1);
+
 namespace Magento\Setup\Test\Block\SelectVersion\OtherComponentsGrid;
 
 use Magento\Mtf\Block\Block;
-use Magento\Mtf\Client\ElementInterface;
 use Magento\Mtf\Client\Locator;
 
 /**
@@ -22,13 +23,6 @@ class Item extends Block
     private $version = '[ng-change*="setComponentVersion"]';
 
     /**
-     * CSS selector for available version options.
-     *
-     * @var string
-     */
-    private $versionOptions = '[ng-change*="setComponentVersion"] option';
-
-    /**
      * CSS selector for package name element.
      *
      * @var string
@@ -40,7 +34,7 @@ class Item extends Block
      *
      * @param string $version
      */
-    public function setVersion($version)
+    public function setVersion(string $version)
     {
         $this->_rootElement->find($this->version, Locator::SELECTOR_CSS, 'select')->setValue($version);
     }
@@ -53,21 +47,5 @@ class Item extends Block
     public function getPackageName()
     {
         return $this->_rootElement->find($this->packageName)->getText();
-    }
-
-    /**
-     * Return list of available versions.
-     *
-     * @return string[]
-     */
-    public function getAvailableVersions()
-    {
-        $options = $this->_rootElement->getElements($this->versionOptions, Locator::SELECTOR_CSS);
-        return array_map(
-            function (ElementInterface $item) {
-                return $item->getText();
-            },
-            $options
-        );
     }
 }

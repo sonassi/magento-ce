@@ -203,8 +203,7 @@ class ConfigurableProductsFixture extends Fixture
     }
 
     /**
-     * @inheritdoc
-     *
+     * {@inheritdoc}
      * @SuppressWarnings(PHPMD)
      */
     public function execute()
@@ -297,8 +296,6 @@ class ConfigurableProductsFixture extends Fixture
     }
 
     /**
-     * Get the closure to return the website IDs.
-     *
      * @return \Closure
      * @SuppressWarnings(PHPMD.UnusedLocalVariable)
      */
@@ -402,7 +399,7 @@ class ConfigurableProductsFixture extends Fixture
     }
 
     /**
-     * @inheritdoc
+     * {@inheritdoc}
      */
     public function getActionTitle()
     {
@@ -410,7 +407,7 @@ class ConfigurableProductsFixture extends Fixture
     }
 
     /**
-     * @inheritdoc
+     * {@inheritdoc}
      */
     public function introduceParamLabels()
     {
@@ -418,10 +415,7 @@ class ConfigurableProductsFixture extends Fixture
     }
 
     /**
-     * @inheritdoc
-     *
-     * @param OutputInterface $output
-     * @return void
+     * {@inheritdoc}
      * @throws ValidatorException
      */
     public function printInfo(OutputInterface $output)
@@ -439,8 +433,7 @@ class ConfigurableProductsFixture extends Fixture
     }
 
     /**
-     * Get default attribute sets with attributes
-     *
+     * Gen default attribute sets with attributes
      * @see config/attributeSets.xml
      *
      * @return array
@@ -559,7 +552,7 @@ class ConfigurableProductsFixture extends Fixture
 
         if (count($skuPull) !== count(array_unique($skuPull))) {
             throw new ValidatorException(
-                __('Sku pattern for configurable product must be unique per attribute set')
+                __("The configurable product's SKU pattern must be unique in an attribute set.")
             );
         }
 
@@ -567,9 +560,7 @@ class ConfigurableProductsFixture extends Fixture
     }
 
     /**
-     * Prepare configuration.
-     *
-     * If amount of configurable products set in profile then return predefined attribute sets
+     * Prepare configuration. If amount of configurable products set in profile then return predefined attribute sets
      * else return configuration from profile
      *
      * @param array $defaultAttributeSets
@@ -600,15 +591,15 @@ class ConfigurableProductsFixture extends Fixture
                 }
             }
         } else {
-            throw new ValidatorException(__('Configurable product config is invalid'));
+            throw new ValidatorException(
+                __('The configurable product config is invalid. Verify the product and try again.')
+            );
         }
 
         return $configurableConfigs;
     }
 
     /**
-     * Get closure to return configurable category.
-     *
      * @param array $config
      * @return \Closure
      */
@@ -632,8 +623,6 @@ class ConfigurableProductsFixture extends Fixture
     }
 
     /**
-     * Get sku pattern.
-     *
      * @param array $config
      * @param string $attributeSetName
      * @return string
@@ -704,8 +693,6 @@ class ConfigurableProductsFixture extends Fixture
     }
 
     /**
-     * Get search configuration.
-     *
      * @return array
      */
     private function getSearchConfig()
@@ -717,8 +704,6 @@ class ConfigurableProductsFixture extends Fixture
     }
 
     /**
-     * Get value of search configuration property.
-     *
      * @param string $name
      * @return int|mixed
      */
@@ -729,8 +714,6 @@ class ConfigurableProductsFixture extends Fixture
     }
 
     /**
-     * Get search terms.
-     *
      * @return array
      */
     private function getSearchTerms()
@@ -739,6 +722,8 @@ class ConfigurableProductsFixture extends Fixture
         if ($searchTerms !== null) {
             $searchTerms = array_key_exists(0, $searchTerms['search_term'])
                 ? $searchTerms['search_term'] : [$searchTerms['search_term']];
+        } else {
+            $searchTerms = [];
         }
         return $searchTerms;
     }
@@ -786,7 +771,6 @@ class ConfigurableProductsFixture extends Fixture
 
     /**
      * Generates matrix of all possible variations.
-     *
      * @param int $attributesPerSet
      * @param int $optionsPerAttribute
      * @return array
@@ -802,7 +786,6 @@ class ConfigurableProductsFixture extends Fixture
 
     /**
      * Build all possible variations based on attributes and options count.
-     *
      * @param array|null $variationsMatrix
      * @return array
      */
@@ -835,8 +818,6 @@ class ConfigurableProductsFixture extends Fixture
     }
 
     /**
-     * Get description closure.
-     *
      * @param array|null $searchTerms
      * @param int $simpleProductsCount
      * @param int $configurableProductsCount

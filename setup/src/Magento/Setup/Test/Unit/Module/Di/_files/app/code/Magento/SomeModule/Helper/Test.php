@@ -27,7 +27,6 @@ class Test
 
     /**
      * Test constructor.
-     *
      * @param \Magento\SomeModule\Module\Factory $factory
      * @param \Magento\SomeModule\Element\Factory $elementFactory
      * @param \Magento\SomeModule\ElementFactory $rightElementFactory
