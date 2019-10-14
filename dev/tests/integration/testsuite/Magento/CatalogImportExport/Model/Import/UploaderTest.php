@@ -68,7 +68,8 @@ class UploaderTest extends \Magento\TestFramework\Indexer\TestCase
     {
         $fileName = 'magento_additional_image_one.jpg';
         $filePath = $this->directory->getAbsolutePath($this->uploader->getTmpDir() . '/' . $fileName);
-        $this->directory->copyFile(__DIR__ . '/_files/' . $fileName, $filePath);
+        //phpcs:ignore
+        copy(__DIR__ . '/_files/' . $fileName, $filePath);
         $this->uploader->move($fileName);
         $this->assertTrue($this->directory->isExist($this->uploader->getTmpDir() . '/' . $fileName));
     }
@@ -89,8 +90,8 @@ class UploaderTest extends \Magento\TestFramework\Indexer\TestCase
         $this->uploader->setTmpDir($newTmpDir);
         $fileName = 'magento_additional_image_one.jpg';
         $filePath = $this->directory->getAbsolutePath($tmpDir . '/' . $fileName);
-
-        $this->directory->copyFile(__DIR__ . '/_files/' . $fileName, $filePath . '_1');
+        //phpcs:ignore
+        copy(__DIR__ . '/_files/' . $fileName, $filePath);
         $this->uploader->move('../' .$fileName);
         $this->assertTrue($this->directory->isExist($tmpDir . '/' . $fileName));
     }
@@ -105,7 +106,8 @@ class UploaderTest extends \Magento\TestFramework\Indexer\TestCase
     {
         $fileName = 'media_import_image.php';
         $filePath = $this->directory->getAbsolutePath($this->uploader->getTmpDir() . '/' . $fileName);
-        $this->directory->copyFile(__DIR__ . '/_files/' . $fileName, $filePath);
+        //phpcs:ignore
+        copy(__DIR__ . '/_files/' . $fileName, $filePath);
         $this->uploader->move($fileName);
         $this->assertFalse($this->directory->isExist($this->uploader->getTmpDir() . '/' . $fileName));
     }

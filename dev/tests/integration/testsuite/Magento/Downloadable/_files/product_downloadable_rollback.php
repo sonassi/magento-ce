@@ -6,10 +6,11 @@
 
 use Magento\Downloadable\Api\DomainManagerInterface;
 use Magento\Framework\Exception\NoSuchEntityException;
-use Magento\TestFramework\Helper\Bootstrap;
 
-Bootstrap::getInstance()->reinitialize();
-$objectManager = Bootstrap::getObjectManager();
+\Magento\TestFramework\Helper\Bootstrap::getInstance()->getInstance()->reinitialize();
+
+$objectManager = \Magento\TestFramework\Helper\Bootstrap::getObjectManager();
+
 /** @var DomainManagerInterface $domainManager */
 $domainManager = $objectManager->get(DomainManagerInterface::class);
 $domainManager->removeDomains(
@@ -17,7 +18,7 @@ $domainManager->removeDomains(
         'example.com',
         'www.example.com',
         'www.sample.example.com',
-        'google.com',
+        'google.com'
     ]
 );
 
@@ -33,8 +34,7 @@ $productRepository = $objectManager
 try {
     $product = $productRepository->get('downloadable-product', false, null, true);
     $productRepository->delete($product);
-    // phpcs:ignore Magento2.CodeAnalysis.EmptyBlock.DetectedCatch
-} catch (NoSuchEntityException $e) {
+} catch (NoSuchEntityException $e) { // @codingStandardsIgnoreLine
 }
 $registry->unregister('isSecureArea');
 $registry->register('isSecureArea', false);

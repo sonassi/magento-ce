@@ -218,7 +218,7 @@ class AddProductsToShoppingCartEntityTest extends Injectable
      *
      * @return void
      */
-    protected function tearDown()
+    public function tearDown()
     {
         // Workaround until MTA-3879 is delivered.
         if ($this->configData == 'enable_https_frontend_admin_with_url') {

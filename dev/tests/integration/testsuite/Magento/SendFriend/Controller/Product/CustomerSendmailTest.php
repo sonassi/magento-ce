@@ -18,7 +18,7 @@ use Magento\Framework\Message\MessageInterface;
 use Magento\Captcha\Helper\Data as CaptchaHelper;
 
 /**
- * Class CustomerSendmailTest.
+ * Class CustomerSendmailTest
  */
 class CustomerSendmailTest extends AbstractController
 {

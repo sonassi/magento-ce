@@ -12,7 +12,6 @@ use Magento\Mtf\Fixture\FixtureInterface;
 use Magento\Mtf\Fixture\InjectableFixture;
 use Magento\Mtf\ObjectManager;
 use Magento\Mtf\TestCase\Injectable;
-use Magento\Mtf\Util\Command\Cli\EnvWhitelist;
 
 /**
  * Preconditions:
@@ -51,28 +50,16 @@ class DeleteProductFromMiniShoppingCartTest extends Injectable
     protected $cartPage;
 
     /**
-     * DomainWhitelist CLI
-     *
-     * @var EnvWhitelist
-     */
-    private $envWhitelist;
-
-    /**
      * Prepare test data
      *
      * @param CmsIndex $cmsIndex
      * @param CheckoutCart $cartPage
-     * @param EnvWhitelist $envWhitelist
      * @return void
      */
-    public function __prepare(
-        CmsIndex $cmsIndex,
-        CheckoutCart $cartPage,
-        EnvWhitelist $envWhitelist
-    ) {
+    public function __prepare(CmsIndex $cmsIndex, CheckoutCart $cartPage)
+    {
         $this->cmsIndex = $cmsIndex;
         $this->cartPage = $cartPage;
-        $this->envWhitelist = $envWhitelist;
     }
 
     /**
@@ -85,7 +72,6 @@ class DeleteProductFromMiniShoppingCartTest extends Injectable
     public function test(array $products, $deletedProductIndex)
     {
         // Preconditions
-        $this->envWhitelist->addHost('example.com');
         $products = $this->prepareProducts($products);
         $this->cartPage->open();
         $this->cartPage->getCartBlock()->clearShoppingCart();
@@ -143,15 +129,5 @@ class DeleteProductFromMiniShoppingCartTest extends Injectable
         $this->cmsIndex->open();
         $this->cmsIndex->getCartSidebarBlock()->openMiniCart();
         $this->cmsIndex->getCartSidebarBlock()->getCartItem($product)->removeItemFromMiniCart();
-    }
-
-    /**
-     * Clean data after running test.
-     *
-     * @return void
-     */
-    protected function tearDown()
-    {
-        $this->envWhitelist->removeHost('example.com');
     }
 }

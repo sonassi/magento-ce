@@ -156,15 +156,6 @@ class ProductTypeSwitchingOnUpdateTest extends Injectable
         $downloadableInfoTab = $this->catalogProductEdit->getProductForm()->getSection('downloadable_information');
         $downloadableInfoTab->getDownloadableBlock('Links')->clearDownloadableData();
         $downloadableInfoTab->setIsDownloadable('No');
-    }
-
-    /**
-     * Clean data after running test.
-     *
-     * @return void
-     */
-    protected function tearDown()
-    {
         $this->envWhitelist->removeHost('example.com');
     }
 }

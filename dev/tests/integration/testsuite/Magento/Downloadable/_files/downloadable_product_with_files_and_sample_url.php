@@ -3,11 +3,11 @@
  * Copyright © Magento, Inc. All rights reserved.
  * See COPYING.txt for license details.
  */
-declare(strict_types=1);
 
 use Magento\Downloadable\Api\DomainManagerInterface;
 
 $objectManager = \Magento\TestFramework\Helper\Bootstrap::getObjectManager();
+
 /** @var DomainManagerInterface $domainManager */
 $domainManager = $objectManager->get(DomainManagerInterface::class);
 $domainManager->addDomains(['example.com', 'sampleurl.com']);
@@ -79,7 +79,7 @@ $linkData = [
  */
 $sampleContent = $objectManager->create(\Magento\Downloadable\Api\Data\File\ContentInterfaceFactory::class)->create();
 $sampleContent->setFileData(
-    // phpcs:ignore Magento2.Functions.DiscouragedFunction
+    // @codingStandardsIgnoreLine
     base64_encode(file_get_contents(__DIR__ . DIRECTORY_SEPARATOR . DIRECTORY_SEPARATOR . 'test_image.jpg'))
 );
 $sampleContent->setName('jellyfish_1_3.jpg');
@@ -98,7 +98,7 @@ $sampleLink->setSortOrder(2);
  */
 $content = $objectManager->create(\Magento\Downloadable\Api\Data\File\ContentInterfaceFactory::class)->create();
 $content->setFileData(
-    // phpcs:ignore Magento2.Functions.DiscouragedFunction
+    // @codingStandardsIgnoreLine
     base64_encode(file_get_contents(__DIR__ . DIRECTORY_SEPARATOR . DIRECTORY_SEPARATOR . 'test_image.jpg'))
 );
 $content->setName('jellyfish_2_4.jpg');
@@ -152,7 +152,7 @@ foreach ($downloadableData['sample'] as $sampleData) {
             \Magento\Downloadable\Api\Data\File\ContentInterfaceFactory::class
         )->create();
         $content->setFileData(
-            // phpcs:ignore Magento2.Functions.DiscouragedFunction
+            // @codingStandardsIgnoreLine
             base64_encode(file_get_contents(__DIR__ . DIRECTORY_SEPARATOR . DIRECTORY_SEPARATOR . 'test_image.jpg'))
         );
         $content->setName('jellyfish_1_4.jpg');

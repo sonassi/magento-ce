@@ -99,7 +99,7 @@ class ConfigureProductInCustomerWishlistOnBackendTest extends AbstractWishlistTe
      *
      * @return void
      */
-    protected function tearDown()
+    public function tearDown()
     {
         $this->envWhitelist->removeHost('example.com');
     }

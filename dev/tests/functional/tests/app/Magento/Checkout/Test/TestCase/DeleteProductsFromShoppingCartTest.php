@@ -13,7 +13,6 @@ use Magento\Mtf\Fixture\FixtureFactory;
 use Magento\Mtf\Fixture\InjectableFixture;
 use Magento\Mtf\ObjectManager;
 use Magento\Mtf\TestCase\Injectable;
-use Magento\Mtf\Util\Command\Cli\EnvWhitelist;
 
 /**
  * Preconditions
@@ -63,34 +62,24 @@ class DeleteProductsFromShoppingCartTest extends Injectable
     protected $cartPage;
 
     /**
-     * DomainWhitelist CLI
-     *
-     * @var EnvWhitelist
-     */
-    private $envWhitelist;
-
-    /**
      * Prepare test data
      *
      * @param BrowserInterface $browser
      * @param FixtureFactory $fixtureFactory
      * @param CatalogProductView $catalogProductView
      * @param CheckoutCart $cartPage
-     * @param EnvWhitelist $envWhitelist
      * @return void
      */
     public function __prepare(
         BrowserInterface $browser,
         FixtureFactory $fixtureFactory,
         CatalogProductView $catalogProductView,
-        CheckoutCart $cartPage,
-        EnvWhitelist $envWhitelist
+        CheckoutCart $cartPage
     ) {
         $this->browser = $browser;
         $this->fixtureFactory = $fixtureFactory;
         $this->catalogProductView = $catalogProductView;
         $this->cartPage = $cartPage;
-        $this->envWhitelist = $envWhitelist;
     }
 
     /**
@@ -102,7 +91,6 @@ class DeleteProductsFromShoppingCartTest extends Injectable
     public function test($productsData)
     {
         // Preconditions
-        $this->envWhitelist->addHost('example.com');
         $products = $this->prepareProducts($productsData);
 
         // Steps
@@ -154,15 +142,5 @@ class DeleteProductsFromShoppingCartTest extends Injectable
         foreach ($products as $product) {
             $this->cartPage->getCartBlock()->getCartItem($product)->removeItem();
         }
-    }
-
-    /**
-     * Clean data after running test.
-     *
-     * @return void
-     */
-    protected function tearDown()
-    {
-        $this->envWhitelist->removeHost('example.com');
     }
 }

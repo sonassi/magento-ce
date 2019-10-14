@@ -75,7 +75,7 @@ class ImportTest extends \PHPUnit\Framework\TestCase
         $this->_model = Bootstrap::getObjectManager()->create(
             Import::class,
             [
-                'importConfig' => $this->_importConfig,
+                'importConfig' => $this->_importConfig
             ]
         );
         $this->_model->setData('images_base_directory', $provider->getDirectory());

@@ -3,8 +3,6 @@
  * Copyright © Magento, Inc. All rights reserved.
  * See COPYING.txt for license details.
  */
-declare(strict_types=1);
-
 namespace Magento\Downloadable\Model\Url;
 
 use Magento\Downloadable\Model\DomainManager;
@@ -12,7 +10,7 @@ use Magento\TestFramework\Helper\Bootstrap;
 use Magento\Framework\App\DeploymentConfig;
 
 /**
- * Test for Magento\Downloadable\Model\Url\DomainValidator.
+ * Test for Magento\Downloadable\Model\Url\DomainValidator
  */
 class DomainValidatorTest extends \PHPUnit\Framework\TestCase
 {
@@ -26,9 +24,6 @@ class DomainValidatorTest extends \PHPUnit\Framework\TestCase
      */
     private $deploymentConfig;
 
-    /**
-     * @inheritdoc
-     */
     protected function setUp()
     {
         $objectManager = Bootstrap::getObjectManager();
@@ -77,9 +72,6 @@ class DomainValidatorTest extends \PHPUnit\Framework\TestCase
         );
     }
 
-    /**
-     * @return array
-     */
     public function isValidDataProvider()
     {
         return [
