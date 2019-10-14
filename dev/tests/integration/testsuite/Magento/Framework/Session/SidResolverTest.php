@@ -5,10 +5,9 @@
  */
 namespace Magento\Framework\Session;
 
-use Magento\Framework\App\State;
 use Zend\Stdlib\Parameters;
 
-class SidResolverTest extends \PHPUnit_Framework_TestCase
+class SidResolverTest extends \PHPUnit\Framework\TestCase
 {
     /**
      * @var \Magento\Framework\Session\SidResolver
@@ -50,11 +49,6 @@ class SidResolverTest extends \PHPUnit_Framework_TestCase
      */
     protected $request;
 
-    /**
-     * @var State|\PHPUnit_Framework_MockObject_MockObject
-     */
-    private $appState;
-
     protected function setUp()
     {
         $objectManager = \Magento\TestFramework\Helper\Bootstrap::getObjectManager();
@@ -76,11 +70,6 @@ class SidResolverTest extends \PHPUnit_Framework_TestCase
 
         $this->request = $objectManager->get(\Magento\Framework\App\RequestInterface::class);
 
-        $this->appState = $this->getMockBuilder(State::class)
-            ->setMethods(['getAreaCode'])
-            ->disableOriginalConstructor()
-            ->getMock();
-
         $this->model = $objectManager->create(
             \Magento\Framework\Session\SidResolver::class,
             [
@@ -88,7 +77,6 @@ class SidResolverTest extends \PHPUnit_Framework_TestCase
                 'urlBuilder' => $this->urlBuilder,
                 'sidNameMap' => [$this->customSessionName => $this->customSessionQueryParam],
                 'request' => $this->request,
-                'appState' => $this->appState,
             ]
         );
     }
@@ -107,10 +95,6 @@ class SidResolverTest extends \PHPUnit_Framework_TestCase
      */
     public function testGetSid($sid, $useFrontedSid, $isOwnOriginUrl, $testSid)
     {
-        $this->appState->expects($this->atLeastOnce())
-            ->method('getAreaCode')
-            ->willReturn(\Magento\Framework\App\Area::AREA_FRONTEND);
-
         $this->scopeConfig->expects(
             $this->any()
         )->method(
@@ -128,7 +112,6 @@ class SidResolverTest extends \PHPUnit_Framework_TestCase
             $this->request->getQuery()->set($this->model->getSessionIdQueryParam($this->session), $testSid);
         }
         $this->assertEquals($sid, $this->model->getSid($this->session));
-        $this->assertEquals($useFrontedSid, $this->model->getUseSessionInUrl());
     }
 
     /**
@@ -167,42 +150,10 @@ class SidResolverTest extends \PHPUnit_Framework_TestCase
         $this->assertTrue($this->model->getUseSessionVar());
     }
 
-    /**
-     * Variations of Use SID on frontend value.
-     *
-     * @return array
-     */
-    public function dataProviderSessionInUrl()
+    public function testSetGetUseSessionInUrl()
     {
-        return [
-            [true],
-            [false],
-        ];
-    }
-
-    /**
-     * Testing "Use SID in URLs" flag.
-     * Checking that the method returns config value if not explicitly
-     * overridden.
-     *
-     * @param bool $configValue Use SID on frontend config value.
-     * @dataProvider dataProviderSessionInUrl
-     */
-    public function testSetGetUseSessionInUrl($configValue)
-    {
-        $this->scopeConfig->expects(
-            $this->any()
-        )->method(
-            'getValue'
-        )->with(
-            \Magento\Framework\Session\SidResolver::XML_PATH_USE_FRONTEND_SID,
-            \Magento\Store\Model\ScopeInterface::SCOPE_STORE
-        )->will(
-            $this->returnValue($configValue)
-        );
-
-        $this->assertEquals($configValue, $this->model->getUseSessionInUrl());
-        $this->model->setUseSessionInUrl(!$configValue);
-        $this->assertEquals(!$configValue, $this->model->getUseSessionInUrl());
+        $this->assertTrue($this->model->getUseSessionInUrl());
+        $this->model->setUseSessionInUrl(false);
+        $this->assertFalse($this->model->getUseSessionInUrl());
     }
 }

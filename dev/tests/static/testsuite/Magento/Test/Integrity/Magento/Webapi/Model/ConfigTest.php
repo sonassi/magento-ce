@@ -12,9 +12,6 @@ use Magento\TestFramework\Integrity\AbstractConfig;
  */
 class ConfigTest extends AbstractConfig
 {
-    /**
-     * @inheritdoc
-     */
     public function testSchemaUsingInvalidXml($expectedErrors = null)
     {
         // @codingStandardsIgnoreStart
@@ -28,22 +25,6 @@ class ConfigTest extends AbstractConfig
         ];
         // @codingStandardsIgnoreEnd
         parent::testSchemaUsingInvalidXml($expectedErrors);
-    }
-
-    /**
-     * @inheritdoc
-     */
-    public function testFileSchemaUsingInvalidXml($expectedErrors = null)
-    {
-        // @codingStandardsIgnoreStart
-        $expectedErrors = [
-            "Element 'route', attribute 'method': [facet 'enumeration'] The value 'PATCH' is not an element of the set {'GET', 'PUT', 'POST', 'DELETE'}.",
-            "Element 'route', attribute 'method': 'PATCH' is not a valid value of the local atomic type.",
-            "Element 'service': The attribute 'method' is required but missing.",
-            "Element 'data': Missing child element(s). Expected is ( parameter ).",
-        ];
-        // @codingStandardsIgnoreEnd
-        parent::testFileSchemaUsingInvalidXml($expectedErrors);
     }
 
     /**
@@ -83,7 +64,7 @@ class ConfigTest extends AbstractConfig
      */
     protected function _getKnownValidPartialXml()
     {
-        return __DIR__ . '/_files/partial_webapi.xml';
+        return null;
     }
 
     /**
@@ -93,7 +74,7 @@ class ConfigTest extends AbstractConfig
      */
     protected function _getKnownInvalidPartialXml()
     {
-        return __DIR__ . '/_files/partial_invalid_webapi.xml';
+        return null;
     }
 
     /**
@@ -104,7 +85,7 @@ class ConfigTest extends AbstractConfig
     protected function _getXsd()
     {
         $urnResolver = new \Magento\Framework\Config\Dom\UrnResolver();
-        return $urnResolver->getRealPath('urn:magento:module:Magento_Webapi:etc/webapi_merged.xsd');
+        return $urnResolver->getRealPath('urn:magento:module:Magento_Webapi:etc/webapi.xsd');
     }
 
     /**
@@ -114,7 +95,6 @@ class ConfigTest extends AbstractConfig
      */
     protected function _getFileXsd()
     {
-        $urnResolver = new \Magento\Framework\Config\Dom\UrnResolver();
-        return $urnResolver->getRealPath('urn:magento:module:Magento_Webapi:etc/webapi.xsd');
+        return null;
     }
 }

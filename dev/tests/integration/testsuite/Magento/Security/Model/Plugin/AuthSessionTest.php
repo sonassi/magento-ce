@@ -8,7 +8,7 @@ namespace Magento\Security\Model\Plugin;
 /**
  * @magentoAppIsolation enabled
  */
-class AuthSessionTest extends \PHPUnit_Framework_TestCase
+class AuthSessionTest extends \PHPUnit\Framework\TestCase
 {
     /**
      * @var \Magento\Backend\Model\Auth
@@ -41,18 +41,6 @@ class AuthSessionTest extends \PHPUnit_Framework_TestCase
     protected $dateTime;
 
     /**
-     * Session Manager.
-     *
-     * @var \Magento\Framework\Session\SessionManager
-     */
-    private $sessionManager;
-
-    /**
-     * @var \Magento\Security\Model\ConfigInterface
-     */
-    protected $securityConfig;
-
-    /**
      * Set up
      */
     protected function setUp()
@@ -60,16 +48,14 @@ class AuthSessionTest extends \PHPUnit_Framework_TestCase
         parent::setUp();
 
         $this->objectManager = \Magento\TestFramework\Helper\Bootstrap::getObjectManager();
-        $this->sessionManager = $this->objectManager->create(\Magento\Framework\Session\SessionManager::class);
         $this->objectManager->get(\Magento\Framework\Config\ScopeInterface::class)
             ->setCurrentScope(\Magento\Backend\App\Area\FrontNameResolver::AREA_CODE);
         $this->auth = $this->objectManager->create(\Magento\Backend\Model\Auth::class);
         $this->authSession = $this->objectManager->create(\Magento\Backend\Model\Auth\Session::class);
         $this->adminSessionInfo = $this->objectManager->create(\Magento\Security\Model\AdminSessionInfo::class);
         $this->auth->setAuthStorage($this->authSession);
-        $this->adminSessionsManager = $this->objectManager->get(\Magento\Security\Model\AdminSessionsManager::class);
+        $this->adminSessionsManager = $this->objectManager->create(\Magento\Security\Model\AdminSessionsManager::class);
         $this->dateTime = $this->objectManager->create(\Magento\Framework\Stdlib\DateTime::class);
-        $this->securityConfig = $this->objectManager->create(\Magento\Security\Model\ConfigInterface::class);
     }
 
     /**
@@ -87,42 +73,7 @@ class AuthSessionTest extends \PHPUnit_Framework_TestCase
 
     /**
      * Test of prolong user action
-     * session manager will not trigger new prolong if previous prolong was less than X sec ago
-     * X - is calculated based on current admin session lifetime
      *
-     * @see \Magento\Security\Model\AdminSessionsManager::lastProlongIsOldEnough
-     * @magentoDbIsolation enabled
-     */
-    public function testConsecutiveProcessProlong()
-    {
-        $this->auth->login(
-            \Magento\TestFramework\Bootstrap::ADMIN_NAME,
-            \Magento\TestFramework\Bootstrap::ADMIN_PASSWORD
-        );
-        $sessionId = $this->authSession->getSessionId();
-        $prolongsDiff = log($this->securityConfig->getAdminSessionLifetime()) - 2; // X from comment above
-        $dateInPast = $this->dateTime->formatDate($this->authSession->getUpdatedAt() - $prolongsDiff);
-        $this->adminSessionsManager->getCurrentSession()
-            ->setData(
-                'updated_at',
-                $dateInPast
-            )
-            ->save();
-        $this->adminSessionInfo->load($sessionId, 'session_id');
-        $oldUpdatedAt = $this->adminSessionInfo->getUpdatedAt();
-        $this->authSession->prolong();
-        $this->adminSessionInfo->load($sessionId, 'session_id');
-        $updatedAt = $this->adminSessionInfo->getUpdatedAt();
-
-        $this->assertSame(strtotime($oldUpdatedAt), strtotime($updatedAt));
-    }
-
-    /**
-     * Test of prolong user action
-     * session manager will trigger new prolong if previous prolong was more than X sec ago
-     * X - is calculated based on current admin session lifetime
-     *
-     * @see \Magento\Security\Model\AdminSessionsManager::lastProlongIsOldEnough
      * @magentoDbIsolation enabled
      */
     public function testProcessProlong()
@@ -132,8 +83,7 @@ class AuthSessionTest extends \PHPUnit_Framework_TestCase
             \Magento\TestFramework\Bootstrap::ADMIN_PASSWORD
         );
         $sessionId = $this->authSession->getSessionId();
-        $prolongsDiff = 4 * log($this->securityConfig->getAdminSessionLifetime()) + 2; // X from comment above
-        $dateInPast = $this->dateTime->formatDate($this->authSession->getUpdatedAt() - $prolongsDiff);
+        $dateInPast = $this->dateTime->formatDate($this->authSession->getUpdatedAt() - 100);
         $this->adminSessionsManager->getCurrentSession()
             ->setData(
                 'updated_at',
@@ -145,7 +95,6 @@ class AuthSessionTest extends \PHPUnit_Framework_TestCase
         $this->authSession->prolong();
         $this->adminSessionInfo->load($sessionId, 'session_id');
         $updatedAt = $this->adminSessionInfo->getUpdatedAt();
-
-        $this->assertGreaterThan(strtotime($oldUpdatedAt), strtotime($updatedAt));
+        $this->assertGreaterThan($oldUpdatedAt, $updatedAt);
     }
 }

@@ -5,11 +5,8 @@
  */
 namespace Magento\CurrencySymbol\Controller\Adminhtml\System\Currencysymbol;
 
-use Magento\Framework\App\Request\Http as HttpRequest;
-
 class SaveTest extends \Magento\TestFramework\TestCase\AbstractBackendController
 {
-
     /**
      * Test save action
      *
@@ -34,7 +31,6 @@ class SaveTest extends \Magento\TestFramework\TestCase\AbstractBackendController
                 $currencyCode => $inputCurrencySymbol,
             ]
         );
-        $request->setMethod(HttpRequest::METHOD_POST);
         $this->dispatch('backend/admin/system_currencysymbol/save');
 
         $this->assertRedirect();

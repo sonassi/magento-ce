@@ -7,7 +7,7 @@ namespace Magento\Directory\Model\Country\Postcode;
 
 use Magento\TestFramework\Helper\Bootstrap;
 
-class ValidatorTest extends \PHPUnit_Framework_TestCase
+class ValidatorTest extends \PHPUnit\Framework\TestCase
 {
     /**
      * @var \Magento\Directory\Model\Country\Postcode\ValidatorInterface
@@ -17,7 +17,7 @@ class ValidatorTest extends \PHPUnit_Framework_TestCase
     protected function setUp()
     {
         $objectManager = Bootstrap::getObjectManager();
-        $this->validator = $objectManager->create('Magento\Directory\Model\Country\Postcode\ValidatorInterface');
+        $this->validator = $objectManager->create(\Magento\Directory\Model\Country\Postcode\ValidatorInterface::class);
     }
 
     /**
@@ -40,48 +40,6 @@ class ValidatorTest extends \PHPUnit_Framework_TestCase
     public function testPostCodesThrowsExceptionIfCountryDoesNotExist()
     {
         $this->validator->validate('12345', 'INVALID-CODE');
-    }
-
-    /**
-     * @dataProvider getCanadaInvalidPostCodes
-     */
-    public function testInvalidCanadaZipCode($countryId, $invalidPostCode)
-    {
-        $this->assertFalse($this->validator->validate($invalidPostCode, $countryId));
-    }
-
-    /**
-     * @dataProvider getCanadaValidPostCodes
-     */
-    public function testValidCanadaZipCode($countryId, $validPostCode)
-    {
-        $this->assertTrue($this->validator->validate($validPostCode, $countryId));
-    }
-
-    /**
-     * @return array
-     */
-    public function getCanadaInvalidPostCodes()
-    {
-        return [
-            ['countryId' => 'CA', 'postcode' => '12345'],
-            ['countryId' => 'CA', 'postcode' => 'A1B2C3D'],
-            ['countryId' => 'CA', 'postcode' => 'A1B2C'],
-            ['countryId' => 'CA', 'postcode' => 'A1B  2C3'],
-        ];
-    }
-
-    /**
-     * @return array
-     */
-    public function getCanadaValidPostCodes()
-    {
-        return [
-            ['countryId' => 'CA', 'postcode' => 'A1B2C3'],
-            ['countryId' => 'CA', 'postcode' => 'A1B 2C3'],
-            ['countryId' => 'CA', 'postcode' => 'Z9Y 8X7'],
-            ['countryId' => 'CA', 'postcode' => 'Z9Y8X7'],
-        ];
     }
 
     /**

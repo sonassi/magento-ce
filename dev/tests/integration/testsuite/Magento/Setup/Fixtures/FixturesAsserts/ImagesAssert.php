@@ -1,6 +1,6 @@
 <?php
 /**
- * Copyright © 2013-2018 Magento, Inc. All rights reserved.
+ * Copyright © Magento, Inc. All rights reserved.
  * See COPYING.txt for license details.
  */
 
@@ -70,7 +70,6 @@ class ImagesAssert
     /**
      * Performs assertions over images
      *
-     * @return bool
      * @throws \AssertionError
      */
     public function assert()
@@ -83,8 +82,6 @@ class ImagesAssert
             $this->assertProductMediaAttributes($product);
             $this->assertProductImageExistsInFS($product);
         }
-
-        return true;
     }
 
     /**

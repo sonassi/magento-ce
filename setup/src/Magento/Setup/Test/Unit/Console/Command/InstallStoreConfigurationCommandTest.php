@@ -16,7 +16,10 @@ use Magento\Framework\Validator\Locale as LocaleValidator;
 use Magento\Framework\Validator\Timezone as TimezoneValidator;
 use Magento\Framework\Validator\Currency as CurrencyValidator;
 
-class InstallStoreConfigurationCommandTest extends \PHPUnit_Framework_TestCase
+/**
+ * @SuppressWarnings(PHPMD.CouplingBetweenObjects)
+ */
+class InstallStoreConfigurationCommandTest extends \PHPUnit\Framework\TestCase
 {
     /**
      * @var \Magento\Framework\App\DeploymentConfig|\PHPUnit_Framework_MockObject_MockObject
@@ -65,23 +68,17 @@ class InstallStoreConfigurationCommandTest extends \PHPUnit_Framework_TestCase
 
     protected function setUp()
     {
-        $this->urlValidatorMock = $this->getMock('Magento\Framework\Validator\Url', [], [], '', false);
-        $this->localeValidatorMock = $this->getMock('Magento\Framework\Validator\Locale', [], [], '', false);
-        $this->timezoneValidatorMock = $this->getMock('Magento\Framework\Validator\Timezone', [], [], '', false);
-        $this->currencyValidatorMock = $this->getMock('Magento\Framework\Validator\Currency', [], [], '', false);
+        $this->urlValidatorMock = $this->createMock(UrlValidator::class);
+        $this->localeValidatorMock = $this->createMock(LocaleValidator::class);
+        $this->timezoneValidatorMock = $this->createMock(TimezoneValidator::class);
+        $this->currencyValidatorMock = $this->createMock(CurrencyValidator::class);
 
-        $this->installerFactory = $this->getMock('Magento\Setup\Model\InstallerFactory', [], [], '', false);
-        $this->deploymentConfig = $this->getMock('Magento\Framework\App\DeploymentConfig', [], [], '', false);
-        $this->installer = $this->getMock('Magento\Setup\Model\Installer', [], [], '', false);
-        $objectManagerProvider = $this->getMock(
-            'Magento\Setup\Model\ObjectManagerProvider',
-            [],
-            [],
-            '',
-            false
-        );
+        $this->installerFactory = $this->createMock(\Magento\Setup\Model\InstallerFactory::class);
+        $this->deploymentConfig = $this->createMock(\Magento\Framework\App\DeploymentConfig::class);
+        $this->installer = $this->createMock(\Magento\Setup\Model\Installer::class);
+        $objectManagerProvider = $this->createMock(\Magento\Setup\Model\ObjectManagerProvider::class);
         $this->objectManager = $this->getMockForAbstractClass(
-            'Magento\Framework\ObjectManagerInterface',
+            \Magento\Framework\ObjectManagerInterface::class,
             [],
             '',
             false
@@ -204,6 +201,7 @@ class InstallStoreConfigurationCommandTest extends \PHPUnit_Framework_TestCase
                 'Command option \'' . StoreConfigurationDataMapper::KEY_ADMIN_USE_SECURITY_KEY
                     . '\': Invalid value. Possible values (0|1).'
             ],
+
         ];
     }
 }

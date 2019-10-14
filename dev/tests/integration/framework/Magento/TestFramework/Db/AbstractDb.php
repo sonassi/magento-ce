@@ -84,7 +84,7 @@ abstract class AbstractDb
     abstract protected function getSetupDbDumpFilename();
 
     /**
-     * Is dump exists
+     * Is dump esxists
      *
      * @return bool
      */

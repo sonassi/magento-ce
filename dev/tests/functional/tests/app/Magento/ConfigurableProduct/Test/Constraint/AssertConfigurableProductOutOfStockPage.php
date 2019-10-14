@@ -61,14 +61,10 @@ class AssertConfigurableProductOutOfStockPage extends AssertProductPage
 
         if (null === $price) {
             $configurableOptions = $this->product->getConfigurableAttributesData();
-            $products = $this->product->getDataFieldConfig('configurable_attributes_data')['source']->getProducts();
-            foreach ($configurableOptions['matrix'] as $key => $option) {
+            foreach ($configurableOptions['matrix'] as $option) {
                 $price = $price === null ? $option['price'] : $price;
                 if ($price > $option['price']) {
                     $price = $option['price'];
-                }
-                if ($products[$key]->getQuantityAndStockStatus()['is_in_stock'] === 'Out of Stock') {
-                    $price = null;
                 }
             }
         }

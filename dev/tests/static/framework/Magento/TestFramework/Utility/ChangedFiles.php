@@ -3,6 +3,7 @@
  * Copyright © Magento, Inc. All rights reserved.
  * See COPYING.txt for license details.
  */
+
 namespace Magento\TestFramework\Utility;
 
 use Magento\Framework\App\Utility\Files;
@@ -31,7 +32,7 @@ class ChangedFiles
         $fileUtilities = Files::init();
         if (isset($_ENV['INCREMENTAL_BUILD'])) {
             $phpFiles = [];
-            foreach (glob($changedFilesList, GLOB_NOSORT) as $listFile) {
+            foreach (glob($changedFilesList) as $listFile) {
                 $phpFiles = array_merge($phpFiles, file($listFile, FILE_IGNORE_NEW_LINES | FILE_SKIP_EMPTY_LINES));
             }
             array_walk(

@@ -4,7 +4,6 @@
  */
 
 /*eslint max-nested-callbacks: 0*/
-
 define([
     'Magento_Ui/js/form/element/select'
 ], function (SelectElement) {
@@ -195,25 +194,31 @@ define([
                     }, {
                         value: 'value'
                     }];
+
                 model.options = jasmine.createSpy();
                 model.caption = jasmine.createSpy().and.returnValue(false);
+
                 model.setOptions(data);
                 expect(model.options).toHaveBeenCalledWith([{
                     value: 'value'
                 }]);
                 expect(model.caption.calls.allArgs()).toEqual([[], ['label']]);
+
             });
             it('Check call "parseOptions" method with predefined "captionValue" property', function () {
                 var data = [{
                         value: 'value',
                         label: 'label'
                     }];
+
                 model.options = jasmine.createSpy();
                 model.caption = jasmine.createSpy().and.returnValue(false);
                 model.captionValue = 'value';
+
                 model.setOptions(data);
                 expect(model.options).toHaveBeenCalledWith([]);
                 expect(model.caption.calls.allArgs()).toEqual([[], ['label']]);
+
             });
         });
         describe('getPreview method', function () {

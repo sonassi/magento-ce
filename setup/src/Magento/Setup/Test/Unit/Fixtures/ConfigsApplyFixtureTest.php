@@ -1,6 +1,6 @@
 <?php
 /**
- * Copyright © 2013-2018 Magento, Inc. All rights reserved.
+ * Copyright © Magento, Inc. All rights reserved.
  * See COPYING.txt for license details.
  */
 
@@ -8,7 +8,7 @@ namespace Magento\Setup\Test\Unit\Fixtures;
 
 use Magento\Setup\Fixtures\ConfigsApplyFixture;
 
-class ConfigsApplyFixtureTest extends \PHPUnit_Framework_TestCase
+class ConfigsApplyFixtureTest extends \PHPUnit\Framework\TestCase
 {
 
     /**
@@ -23,36 +23,30 @@ class ConfigsApplyFixtureTest extends \PHPUnit_Framework_TestCase
 
     public function setUp()
     {
-        $this->fixtureModelMock = $this->getMock(\Magento\Setup\Fixtures\FixtureModel::class, [], [], '', false);
+        $this->fixtureModelMock = $this->createMock(\Magento\Setup\Fixtures\FixtureModel::class);
 
         $this->model = new ConfigsApplyFixture($this->fixtureModelMock);
     }
 
     public function testExecute()
     {
-        $cacheMock = $this->getMock(\Magento\Framework\App\Cache::class, [], [], '', false);
+        $cacheMock = $this->createMock(\Magento\Framework\App\Cache::class);
 
-        $valueMock = $this->getMock(\Magento\Framework\App\Config::class, [], [], '', false);
-        $configMock = $this->getMock(\Magento\Config\App\Config\Type\System::class, [], [], '', false);
+        $valueMock = $this->createMock(\Magento\Framework\App\Config::class);
 
-        $objectManagerMock = $this->getMock(\Magento\Framework\ObjectManager\ObjectManager::class, [], [], '', false);
-        $objectManagerMock
+        $objectManagerMock = $this->createMock(\Magento\Framework\ObjectManager\ObjectManager::class);
+        $objectManagerMock->expects($this->once())
             ->method('get')
-            ->willReturnMap([
-                [\Magento\Framework\App\CacheInterface::class, $cacheMock],
-                [\Magento\Config\App\Config\Type\System::class, $configMock]
-            ]);
+            ->will($this->returnValue($cacheMock));
 
         $this->fixtureModelMock
             ->expects($this->once())
             ->method('getValue')
             ->will($this->returnValue(['config' => $valueMock]));
         $this->fixtureModelMock
+            ->expects($this->once())
             ->method('getObjectManager')
             ->will($this->returnValue($objectManagerMock));
-
-        $cacheMock->method('clean');
-        $configMock->method('clean');
 
         $this->model->execute();
     }
@@ -64,7 +58,7 @@ class ConfigsApplyFixtureTest extends \PHPUnit_Framework_TestCase
             ->getMockForAbstractClass();
         $configMock->expects($this->never())->method('save');
 
-        $objectManagerMock = $this->getMock(\Magento\Framework\ObjectManager\ObjectManager::class, [], [], '', false);
+        $objectManagerMock = $this->createMock(\Magento\Framework\ObjectManager\ObjectManager::class);
         $objectManagerMock->expects($this->never())
             ->method('create')
             ->willReturn($configMock);

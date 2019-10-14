@@ -91,6 +91,5 @@ class I18nPackCommand extends Command
             $input->getOption(self::INPUT_KEY_ALLOW_DUPLICATES)
         );
         $output->writeln("<info>Successfully saved $locale language package.</info>");
-        return \Magento\Framework\Console\Cli::RETURN_SUCCESS;
     }
 }

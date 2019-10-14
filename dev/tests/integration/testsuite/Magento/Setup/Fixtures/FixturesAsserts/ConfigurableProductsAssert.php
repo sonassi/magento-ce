@@ -1,6 +1,6 @@
 <?php
 /**
- * Copyright © 2013-2018 Magento, Inc. All rights reserved.
+ * Copyright © Magento, Inc. All rights reserved.
  * See COPYING.txt for license details.
  */
 namespace Magento\Setup\Fixtures\FixturesAsserts;
@@ -46,7 +46,7 @@ class ConfigurableProductsAssert
     /**
      * Asserts that generated configurable products are valid
      *
-     * @return bool
+     * @return void
      * @throws \Magento\Framework\Exception\NoSuchEntityException
      * @throws \Magento\Framework\Exception\InputException
      * @throws \AssertionError
@@ -86,7 +86,5 @@ class ConfigurableProductsAssert
                 throw new \AssertionError('Configurable option values amount is wrong');
             }
         }
-
-        return true;
     }
 }

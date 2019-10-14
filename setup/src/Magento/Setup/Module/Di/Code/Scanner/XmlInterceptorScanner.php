@@ -42,9 +42,9 @@ class XmlInterceptorScanner implements ScannerInterface
             $attributes = $entityNode->attributes;
             $type = $attributes->getNamedItem('type');
             if ($type !== null) {
-                $output[] = $type->nodeValue;
+                array_push($output, $type->nodeValue);
             } else {
-                $output[] = $attributes->getNamedItem('name')->nodeValue;
+                array_push($output, $attributes->getNamedItem('name')->nodeValue);
             }
         }
         return $output;
@@ -80,7 +80,7 @@ class XmlInterceptorScanner implements ScannerInterface
                 $this->_handleControllerClassName($entityName);
             }
             if (class_exists($entityName) || interface_exists($entityName)) {
-                $filteredEntities[] = $entityName . '\\Interceptor';
+                array_push($filteredEntities, $entityName . '\\Interceptor');
             }
         }
         return $filteredEntities;

@@ -9,10 +9,6 @@
  */
 namespace Magento\ConfigurableProduct\Controller;
 
-use Magento\TestFramework\Helper\Bootstrap;
-use Magento\Catalog\Api\ProductRepositoryInterface;
-use Magento\Framework\App\Request\Http as HttpRequest;
-
 class CartTest extends \Magento\TestFramework\TestCase\AbstractController
 {
     /**
@@ -25,10 +21,7 @@ class CartTest extends \Magento\TestFramework\TestCase\AbstractController
         /** @var $session \Magento\Checkout\Model\Session  */
         $session = $this->_objectManager->create(\Magento\Checkout\Model\Session::class);
 
-        $productRepository = Bootstrap::getObjectManager()->create(ProductRepositoryInterface::class);
-        $product = $productRepository->get('configurable');
-
-        $quoteItem = $this->_getQuoteItemIdByProductId($session->getQuote(), $product->getId());
+        $quoteItem = $this->_getQuoteItemIdByProductId($session->getQuote(), 1);
         $this->assertNotNull($quoteItem, 'Cannot get quote item for configurable product');
 
         $this->dispatch(
@@ -38,17 +31,21 @@ class CartTest extends \Magento\TestFramework\TestCase\AbstractController
 
         $this->assertSessionMessages($this->isEmpty(), \Magento\Framework\Message\MessageInterface::TYPE_ERROR);
 
-        $this->assertSelectCount(
-            'button[type="submit"][title="Update Cart"]',
+        $this->assertEquals(
             1,
-            $response->getBody(),
+            \Magento\TestFramework\Helper\Xpath::getElementsCountForXpath(
+                '//button[@type="submit" and @title="Update Cart"]',
+                $response->getBody()
+            ),
             'Response for configurable product doesn\'t contain "Update Cart" button'
         );
 
-        $this->assertSelectCount(
-            'select.super-attribute-select',
+        $this->assertEquals(
             1,
-            $response->getBody(),
+            \Magento\TestFramework\Helper\Xpath::getElementsCountForXpath(
+                '//select[contains(@class,"super-attribute-select")]',
+                $response->getBody()
+            ),
             'Response for configurable product doesn\'t contain select for super attribute'
         );
     }
@@ -73,7 +70,8 @@ class CartTest extends \Magento\TestFramework\TestCase\AbstractController
     }
 
     /**
-     * Test for \Magento\Checkout\Controller\Cart\CouponPost::execute() with configurable product with last option.
+     * Test for \Magento\Checkout\Controller\Cart\CouponPost::execute() with configurable product with last option
+     * Covers MAGETWO-60352
      *
      * @magentoDataFixture Magento/ConfigurableProduct/_files/quote_with_configurable_product_last_variation.php
      */
@@ -85,16 +83,15 @@ class CartTest extends \Magento\TestFramework\TestCase\AbstractController
         $quote->setData('trigger_recollect', 1)->setTotalsCollectedFlag(true);
         $inputData = [
             'remove' => 0,
-            'coupon_code' => 'test',
+            'coupon_code' => 'test'
         ];
-        $this->getRequest()->setMethod(HttpRequest::METHOD_POST);
         $this->getRequest()->setPostValue($inputData);
         $this->dispatch(
             'checkout/cart/couponPost/'
         );
 
         $this->assertSessionMessages(
-            $this->equalTo(['The coupon code &quot;test&quot; is not valid.']),
+            $this->equalTo(['The coupon code "test" is not valid.']),
             \Magento\Framework\Message\MessageInterface::TYPE_ERROR
         );
     }

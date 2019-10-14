@@ -72,7 +72,7 @@ class XmlScanner implements ScannerInterface
             }
             if (false === $isClassExists) {
                 if (class_exists($entityName) || interface_exists($entityName)) {
-                    $filteredEntities[] = $className;
+                    array_push($filteredEntities, $className);
                 } else {
                     $this->_log->add(
                         \Magento\Setup\Module\Di\Compiler\Log\Log::CONFIGURATION_ERROR,

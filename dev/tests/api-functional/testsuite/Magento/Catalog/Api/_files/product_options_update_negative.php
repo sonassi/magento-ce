@@ -18,6 +18,5 @@ return [
                 'max_characters' => 10,
             ],
             'ProductSku should be specified',
-            400,
-        ],
+        ]
 ];

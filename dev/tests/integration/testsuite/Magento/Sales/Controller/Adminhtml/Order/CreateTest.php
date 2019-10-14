@@ -5,8 +5,6 @@
  */
 namespace Magento\Sales\Controller\Adminhtml\Order;
 
-use Magento\Framework\App\Request\Http as HttpRequest;
-
 /**
  * @magentoAppArea adminhtml
  * @magentoDbIsolation enabled
@@ -18,9 +16,6 @@ class CreateTest extends \Magento\TestFramework\TestCase\AbstractBackendControll
      */
     protected $productRepository;
 
-    /**
-     * @inheritdoc
-     */
     protected function setUp()
     {
         parent::setUp();
@@ -30,7 +25,6 @@ class CreateTest extends \Magento\TestFramework\TestCase\AbstractBackendControll
 
     public function testLoadBlockAction()
     {
-        $this->getRequest()->setMethod(HttpRequest::METHOD_POST);
         $this->getRequest()->setParam('block', ',');
         $this->getRequest()->setParam('json', 1);
         $this->dispatch('backend/sales/order_create/loadBlock');
@@ -48,7 +42,6 @@ class CreateTest extends \Magento\TestFramework\TestCase\AbstractBackendControll
         )->addProducts(
             [$product->getId() => ['qty' => 1]]
         );
-        $this->getRequest()->setMethod(HttpRequest::METHOD_POST);
         $this->getRequest()->setParam('block', 'data');
         $this->getRequest()->setParam('json', 1);
         $this->dispatch('backend/sales/order_create/loadBlock');
@@ -71,9 +64,6 @@ class CreateTest extends \Magento\TestFramework\TestCase\AbstractBackendControll
         $this->assertContains($expected, $html);
     }
 
-    /**
-     * @return array
-     */
     public function loadBlockActionsDataProvider()
     {
         return [
@@ -96,7 +86,6 @@ class CreateTest extends \Magento\TestFramework\TestCase\AbstractBackendControll
         )->addProducts(
             [$product->getId() => ['qty' => 1]]
         );
-        $this->getRequest()->setMethod(HttpRequest::METHOD_POST);
         $this->getRequest()->setParam('block', 'items');
         $this->getRequest()->setParam('json', 1);
         $this->dispatch('backend/sales/order_create/loadBlock');
@@ -117,12 +106,46 @@ class CreateTest extends \Magento\TestFramework\TestCase\AbstractBackendControll
         $this->dispatch('backend/sales/order_create/index');
         $html = $this->getResponse()->getBody();
 
-        $this->assertSelectCount('div#order-customer-selector', true, $html);
-        $this->assertSelectCount('[data-grid-id=sales_order_create_customer_grid]', true, $html);
-        $this->assertSelectCount('div#order-billing_method_form', true, $html);
-        $this->assertSelectCount('#shipping-method-overlay', true, $html);
-        $this->assertSelectCount('div#sales_order_create_search_grid', true, $html);
-        $this->assertSelectCount('#coupons:code', true, $html);
+        $this->assertGreaterThanOrEqual(
+            1,
+            \Magento\TestFramework\Helper\Xpath::getElementsCountForXpath(
+                '//div[@id="order-customer-selector"]',
+                $html
+            )
+        );
+        $this->assertGreaterThanOrEqual(
+            1,
+            \Magento\TestFramework\Helper\Xpath::getElementsCountForXpath(
+                '//*[@data-grid-id="sales_order_create_customer_grid"]',
+                $html
+            )
+        );
+        $this->assertGreaterThanOrEqual(
+            1,
+            \Magento\TestFramework\Helper\Xpath::getElementsCountForXpath(
+                '//div[@id="order-billing_method_form"]',
+                $html
+            )
+        );
+        $this->assertGreaterThanOrEqual(
+            1,
+            \Magento\TestFramework\Helper\Xpath::getElementsCountForXpath(
+                '//*[@id="shipping-method-overlay"]',
+                $html
+            )
+        );
+        $this->assertGreaterThanOrEqual(
+            1,
+            \Magento\TestFramework\Helper\Xpath::getElementsCountForXpath(
+                '//div[@id="sales_order_create_search_grid"]',
+                $html
+            )
+        );
+
+        $this->assertGreaterThanOrEqual(
+            1,
+            \Magento\TestFramework\Helper\Xpath::getElementsCountForXpath('//*[@id="coupons:code"]', $html)
+        );
     }
 
     /**
@@ -191,8 +214,7 @@ class CreateTest extends \Magento\TestFramework\TestCase\AbstractBackendControll
     public function testDeniedSaveAction()
     {
         $this->_objectManager->configure(
-            [
-                \Magento\Backend\App\Action\Context::class => [
+            [\Magento\Backend\App\Action\Context::class => [
                     'arguments' => [
                         'authorization' => [
                             'instance' => \Magento\Sales\Controller\Adminhtml\Order\AuthorizationMock::class,
@@ -204,7 +226,6 @@ class CreateTest extends \Magento\TestFramework\TestCase\AbstractBackendControll
         \Magento\TestFramework\Helper\Bootstrap::getInstance()
             ->loadArea('adminhtml');
 
-        $this->getRequest()->setMethod(HttpRequest::METHOD_POST);
         $this->dispatch('backend/sales/order_create/save');
         $this->assertEquals('403', $this->getResponse()->getHttpResponseCode());
     }

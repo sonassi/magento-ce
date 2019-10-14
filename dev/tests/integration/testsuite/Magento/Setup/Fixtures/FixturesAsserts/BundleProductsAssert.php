@@ -1,6 +1,6 @@
 <?php
 /**
- * Copyright © 2013-2018 Magento, Inc. All rights reserved.
+ * Copyright © Magento, Inc. All rights reserved.
  * See COPYING.txt for license details.
  */
 namespace Magento\Setup\Fixtures\FixturesAsserts;
@@ -48,7 +48,7 @@ class BundleProductsAssert
     /**
      * Asserts that generated bundled products are valid
      *
-     * @return bool
+     * @return void
      * @throws \Magento\Framework\Exception\NoSuchEntityException
      * @throws \AssertionError
      */
@@ -74,7 +74,5 @@ class BundleProductsAssert
                 throw new \AssertionError('Bundle option product links amount is wrong');
             }
         }
-
-        return true;
     }
 }

@@ -6,35 +6,33 @@
 
 namespace Magento\Widget\Test\Constraint;
 
-use Magento\PageCache\Test\Page\Adminhtml\AdminCache;
+use Magento\Mtf\Util\Command\Cli\Cache;
 use Magento\Cms\Test\Page\CmsIndex;
 use Magento\Widget\Test\Fixture\Widget;
 use Magento\Mtf\Constraint\AbstractConstraint;
 
 /**
- * Check that created widget displayed on frontend on Home page and on Advanced Search and
+ * Check that created widget displayed on frontent on Home page and on Advanced Search and
  * after click on widget link on frontend system redirects you to cms page.
  */
 class AssertWidgetCmsPageLink extends AbstractConstraint
 {
     /**
-     * Assert that created widget displayed on frontend on Home page and on Advanced Search and
+     * Assert that created widget displayed on frontent on Home page and on Advanced Search and
      * after click on widget link on frontend system redirects you to cms page.
      *
      * @param CmsIndex $cmsIndex
      * @param Widget $widget
-     * @param AdminCache $adminCache
+     * @param Cache $cache
      * @return void
      */
     public function processAssert(
         CmsIndex $cmsIndex,
         Widget $widget,
-        AdminCache $adminCache
+        Cache $cache
     ) {
         // Flush cache
-        $adminCache->open();
-        $adminCache->getActionsBlock()->flushMagentoCache();
-        $adminCache->getMessagesBlock()->waitSuccessMessage();
+        $cache->flush();
 
         $cmsIndex->open();
         $widgetText = $widget->getParameters()['anchor_text'];

@@ -7,9 +7,9 @@
 namespace Magento\Setup\Model\FixtureGenerator;
 
 use Magento\Catalog\Api\Data\ProductInterface;
-use Magento\Catalog\Model\ProductFactory;
 use Magento\Catalog\Model\Product\Attribute\Source\Status;
 use Magento\Catalog\Model\Product\Visibility;
+use Magento\Catalog\Model\ProductFactory;
 use Magento\ConfigurableProduct\Helper\Product\Options\Factory as OptionFactory;
 use Magento\ConfigurableProduct\Model\Product\Type\Configurable;
 use Magento\Framework\App\ResourceConnection;
@@ -79,7 +79,7 @@ class ConfigurableProductTemplateGenerator implements TemplateEntityGeneratorInt
      */
     private function getProductTemplate($attributeSet)
     {
-        $productRandomizerNumber = crc32(random_int(1, PHP_INT_MAX));
+        $productRandomizerNumber = crc32(mt_rand(1, PHP_INT_MAX));
         $product = $this->productFactory->create([
             'data' => [
                 'attribute_set_id' => $attributeSet,

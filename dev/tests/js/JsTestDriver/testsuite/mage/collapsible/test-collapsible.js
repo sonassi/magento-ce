@@ -148,7 +148,7 @@ asyncTest( "keyboard support", function() {
         group.collapsible('destroy');
         start();
     } );
-    
+
     setTimeout(function(){
         title.focus();
     },10);

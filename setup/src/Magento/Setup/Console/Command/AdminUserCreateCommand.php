@@ -66,7 +66,6 @@ class AdminUserCreateCommand extends AbstractSetupCommand
         $output->writeln(
             '<info>Created Magento administrator user named ' . $input->getOption(AdminAccount::KEY_USER) . '</info>'
         );
-        return \Magento\Framework\Console\Cli::RETURN_SUCCESS;
     }
 
     /**

@@ -5,8 +5,6 @@
  */
 namespace Magento\Catalog\Controller\Adminhtml;
 
-use Magento\Framework\App\Request\Http as HttpRequest;
-
 /**
  * @magentoAppArea adminhtml
  */
@@ -29,7 +27,6 @@ class CategoryTest extends \Magento\TestFramework\TestCase\AbstractBackendContro
         $store->load('fixturestore', 'code');
         $storeId = $store->getId();
 
-        $this->getRequest()->setMethod(HttpRequest::METHOD_POST);
         $this->getRequest()->setPostValue($inputData);
         $this->getRequest()->setParam('store', $storeId);
         $this->getRequest()->setParam('id', 2);
@@ -62,7 +59,7 @@ class CategoryTest extends \Magento\TestFramework\TestCase\AbstractBackendContro
             if ($exists !== $category->getExistsStoreValueFlag($attribute)) {
                 if ($exists) {
                     $errors[] = "custom value for '{$attribute}' attribute is not found";
-                } else {
+                } elseif (!$exists && $category->getCustomAttribute($attribute) !== null) {
                     $errors[] = "custom value for '{$attribute}' attribute is found, but default one must be used";
                 }
             }
@@ -78,7 +75,6 @@ class CategoryTest extends \Magento\TestFramework\TestCase\AbstractBackendContro
      */
     public function testSaveActionFromProductCreationPage($postData)
     {
-        $this->getRequest()->setMethod(HttpRequest::METHOD_POST);
         $this->getRequest()->setPostValue($postData);
 
         $this->dispatch('backend/catalog/category/save');
@@ -328,7 +324,6 @@ class CategoryTest extends \Magento\TestFramework\TestCase\AbstractBackendContro
 
     public function testSaveActionCategoryWithDangerRequest()
     {
-        $this->getRequest()->setMethod(HttpRequest::METHOD_POST);
         $this->getRequest()->setPostValue(
             [
                 'general' => [
@@ -379,8 +374,7 @@ class CategoryTest extends \Magento\TestFramework\TestCase\AbstractBackendContro
         }
         $this->getRequest()
             ->setPostValue('id', $grandChildId)
-            ->setPostValue('pid', $parentId)
-            ->setMethod(HttpRequest::METHOD_POST);
+            ->setPostValue('pid', $parentId);
         $this->dispatch('backend/catalog/category/move');
         $jsonResponse = json_decode($this->getResponse()->getBody());
         $this->assertNotNull($jsonResponse);

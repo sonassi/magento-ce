@@ -5,15 +5,18 @@
  */
 namespace Magento\Sniffs\NamingConventions;
 
-use PHP_CodeSniffer_File;
-use PHP_CodeSniffer_Sniff;
+use PHP_CodeSniffer\Sniffs\Sniff;
+use PHP_CodeSniffer\Files\File;
 
-class ReservedWordsSniff implements PHP_CodeSniffer_Sniff
+class ReservedWordsSniff implements Sniff
 {
     /**
-     * source: http://php.net/manual/en/reserved.other-reserved-words.php
+     * The following words cannot be used to name a class, interface or trait,
+     * and they are also prohibited from being used in namespaces.
      *
-     * @var array PHP 7 reserved words for name spaces
+     * @link http://php.net/manual/en/reserved.other-reserved-words.php
+     *
+     * @var string[]
      */
     protected $reservedWords = [
         'int' => '7',
@@ -42,11 +45,11 @@ class ReservedWordsSniff implements PHP_CodeSniffer_Sniff
     /**
      * Check all namespace parts
      *
-     * @param PHP_CodeSniffer_File $sourceFile
+     * @param File $sourceFile
      * @param int $stackPtr
      * @return void
      */
-    protected function validateNamespace(PHP_CodeSniffer_File $sourceFile, $stackPtr)
+    protected function validateNamespace(File $sourceFile, $stackPtr)
     {
         $stackPtr += 2;
         $tokens = $sourceFile->getTokens();
@@ -71,11 +74,11 @@ class ReservedWordsSniff implements PHP_CodeSniffer_Sniff
     /**
      * Check class name not having reserved words
      *
-     * @param PHP_CodeSniffer_File $sourceFile
+     * @param File $sourceFile
      * @param int $stackPtr
      * @return void
      */
-    protected function validateClass(PHP_CodeSniffer_File $sourceFile, $stackPtr)
+    protected function validateClass(File $sourceFile, $stackPtr)
     {
         $tokens = $sourceFile->getTokens();
         $stackPtr += 2; //skip "class" and whitespace
@@ -93,7 +96,7 @@ class ReservedWordsSniff implements PHP_CodeSniffer_Sniff
     /**
      * {@inheritdoc}
      */
-    public function process(PHP_CodeSniffer_File $sourceFile, $stackPtr)
+    public function process(File $sourceFile, $stackPtr)
     {
         $tokens = $sourceFile->getTokens();
         switch ($tokens[$stackPtr]['code']) {

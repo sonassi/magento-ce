@@ -2,26 +2,23 @@
     "name": "magento/project-community-edition",
     "description": "eCommerce Platform for Growth (Community Edition)",
     "type": "project",
-    "version": "2.1.18",
+    "version": "2.2.0",
     "license": [
         "OSL-3.0",
         "AFL-3.0"
     ],
     "require": {
-        "magento/product-community-edition": "2.1.18",
+        "magento/product-community-edition": "2.2.0",
         "composer/composer": "@alpha"
     },
     "require-dev": {
-        "phpunit/phpunit": "4.1.0",
-        "squizlabs/php_codesniffer": "1.5.3",
+        "phpunit/phpunit": "~6.2.0",
+        "squizlabs/php_codesniffer": "3.0.1",
         "phpmd/phpmd": "@stable",
         "pdepend/pdepend": "2.5.0",
-        "fabpot/php-cs-fixer": "~1.2",
+        "friendsofphp/php-cs-fixer": "~2.1.1",
         "lusitanian/oauth": "~0.8.10",
         "sebastian/phpcpd": "2.0.4"
-    },
-    "config": {
-        "use-include-path": true
     },
     "autoload": {
         "psr-4": {
@@ -36,6 +33,11 @@
         },
         "files": [
             "app/etc/NonComposerComponentRegistration.php"
+        ],
+        "exclude-from-classmap": [
+            "**/dev/**",
+            "**/update/**",
+            "**/Test/**"
         ]
     },
     "autoload-dev": {
@@ -47,8 +49,7 @@
             "Magento\\TestFramework\\Utility\\": "dev/tests/static/framework/Magento/TestFramework/Utility/"
         }
     },
-    "minimum-stability": "alpha",
-    "prefer-stable": true,
+    "minimum-stability": "stable",
     "repositories": [
         {
             "type": "composer",

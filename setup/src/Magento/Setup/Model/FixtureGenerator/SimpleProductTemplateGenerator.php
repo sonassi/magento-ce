@@ -7,10 +7,10 @@
 namespace Magento\Setup\Model\FixtureGenerator;
 
 use Magento\Catalog\Api\Data\ProductInterface;
-use Magento\Catalog\Model\ProductFactory;
 use Magento\Catalog\Model\Product\Attribute\Source\Status;
 use Magento\Catalog\Model\Product\Type;
 use Magento\Catalog\Model\Product\Visibility;
+use Magento\Catalog\Model\ProductFactory;
 
 /**
  * Simple product template generator. Return newly created simple product for specified attribute set
@@ -62,7 +62,7 @@ class SimpleProductTemplateGenerator implements TemplateEntityGeneratorInterface
      */
     private function getProductTemplate($attributeSet, $additionalAttributes = [])
     {
-        $productRandomizerNumber = crc32(random_int(1, PHP_INT_MAX));
+        $productRandomizerNumber = crc32(mt_rand(1, PHP_INT_MAX));
         $product = $this->productFactory->create([
             'data' => [
                 'attribute_set_id' => $attributeSet,

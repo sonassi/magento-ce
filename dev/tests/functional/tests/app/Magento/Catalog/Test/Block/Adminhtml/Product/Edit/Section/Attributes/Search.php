@@ -37,7 +37,7 @@ class Search extends SuggestElement
     protected $actionToggle = '.action-toggle';
 
     /**
-     * Search result dropdown.
+     * Saerch result dropdown.
      *
      * @var string
      */

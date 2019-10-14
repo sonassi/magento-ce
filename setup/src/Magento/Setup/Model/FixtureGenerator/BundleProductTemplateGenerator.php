@@ -9,10 +9,10 @@ namespace Magento\Setup\Model\FixtureGenerator;
 use Magento\Bundle\Api\Data\LinkInterfaceFactory;
 use Magento\Bundle\Api\Data\OptionInterfaceFactory;
 use Magento\Catalog\Api\Data\ProductInterface;
-use Magento\Catalog\Model\ProductFactory;
 use Magento\Catalog\Model\Product\Attribute\Source\Status;
 use Magento\Catalog\Model\Product\Type;
 use Magento\Catalog\Model\Product\Visibility;
+use Magento\Catalog\Model\ProductFactory;
 
 /**
  * Bundle product template generator. Return newly created bundle product for specified attribute set
@@ -82,7 +82,7 @@ class BundleProductTemplateGenerator implements TemplateEntityGeneratorInterface
         $bundleOptions = $this->fixture['_bundle_options'];
         $bundleProductsPerOption = $this->fixture['_bundle_products_per_option'];
         $bundleVariationSkuPattern = $this->fixture['_bundle_variation_sku_pattern'];
-        $productRandomizerNumber = crc32(random_int(1, PHP_INT_MAX));
+        $productRandomizerNumber = crc32(mt_rand(1, PHP_INT_MAX));
         $bundleProduct = $this->productFactory->create([
             'data' => [
                 'attribute_set_id' => $attributeSet,
@@ -126,7 +126,6 @@ class BundleProductTemplateGenerator implements TemplateEntityGeneratorInterface
                 'option_id' => '',
             ]]);
             $option->setSku($bundleProduct->getSku());
-            $option->setOptionId(null);
 
             $links = [];
             for ($linkN = 1; $linkN <= $bundleProductsPerOption; $linkN++) {

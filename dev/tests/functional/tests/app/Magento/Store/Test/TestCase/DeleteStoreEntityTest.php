@@ -12,7 +12,6 @@ use Magento\Backend\Test\Page\Adminhtml\StoreIndex;
 use Magento\Backup\Test\Page\Adminhtml\BackupIndex;
 use Magento\Store\Test\Fixture\Store;
 use Magento\Mtf\TestCase\Injectable;
-use Magento\Config\Test\TestStep\SetupConfigurationStep;
 
 /**
  * Test Creation for DeleteStoreEntity
@@ -27,17 +26,18 @@ use Magento\Config\Test\TestStep\SetupConfigurationStep;
  * 3. Open created store view
  * 4. Click "Delete Store View"
  * 5. Set "Create DB Backup" according to dataset
- * 6. Click "Delete Store View"
- * 7. Perform all assertions
+ * 6. Click "Delete Store View" - Warning message "This operation can take a long time" appears.
+ * 7. Click "OK".
+ * 8. Perform all assertions
  *
- * @group Store_Management_(PS)
+ * @group Store_Management
  * @ZephyrId MAGETWO-27942
  */
 class DeleteStoreEntityTest extends Injectable
 {
     /* tags */
     const MVP = 'yes';
-    const DOMAIN = 'PS';
+    const SEVERITY = 'S2';
     /* end tags */
 
     /**
@@ -100,15 +100,7 @@ class DeleteStoreEntityTest extends Injectable
     {
         // Preconditions:
         $store->persist();
-        /** @var SetupConfigurationStep $enableBackupsStep */
-        $enableBackupsStep = $this->objectManager->create(
-            SetupConfigurationStep::class,
-            ['configData' => 'enable_backups_functionality']
-        );
-        $enableBackupsStep->run();
-        $this->backupIndex->open()
-            ->getBackupGrid()
-            ->massaction([], 'Delete', true, 'Select All');
+        $this->backupIndex->open()->getBackupGrid()->massaction([], 'Delete', true, 'Select All');
 
         // Steps:
         $this->storeIndex->open();
@@ -116,20 +108,6 @@ class DeleteStoreEntityTest extends Injectable
         $this->editStore->getFormPageActions()->delete();
         $this->storeDelete->getStoreForm()->fillForm(['create_backup' => $createBackup]);
         $this->storeDelete->getFormPageActions()->delete();
-    }
-
-    /**
-     * Reset config settings to default.
-     *
-     * @return void
-     */
-    public function tearDown()
-    {
-        /** @var SetupConfigurationStep $enableBackupsStep */
-        $enableBackupsStep = $this->objectManager->create(
-            SetupConfigurationStep::class,
-            ['configData' => 'enable_backups_functionality', 'rollback' => true]
-        );
-        $enableBackupsStep->run();
+        $this->storeDelete->getModalBlock()->acceptAlert();
     }
 }

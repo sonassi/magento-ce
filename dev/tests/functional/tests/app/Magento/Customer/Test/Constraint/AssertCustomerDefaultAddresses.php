@@ -24,7 +24,7 @@ class AssertCustomerDefaultAddresses extends AbstractConstraint
      */
     public function processAssert(CustomerAccountIndex $customerAccountIndex, Address $address)
     {
-        $customerAccountIndex->getAccountMenuBlock()->openMenuItem('My Account');
+        $customerAccountIndex->getAccountMenuBlock()->openMenuItem('Account Dashboard');
         sleep(6);
         $defaultBillingAddress = explode(
             "\n",

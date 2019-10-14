@@ -12,7 +12,6 @@ use Magento\Backend\Test\Page\Adminhtml\StoreIndex;
 use Magento\Backup\Test\Page\Adminhtml\BackupIndex;
 use Magento\Store\Test\Fixture\Website;
 use Magento\Mtf\TestCase\Injectable;
-use Magento\Config\Test\TestStep\SetupConfigurationStep;
 
 /**
  * Delete Website (Store Management)
@@ -32,14 +31,15 @@ use Magento\Config\Test\TestStep\SetupConfigurationStep;
  * 6. Click "Delete Web Site"
  * 7. Perform all assertions
  *
- * @group Store_Management_(PS)
+ * @group Store_Management
  * @ZephyrId MAGETWO-27723
  */
 class DeleteWebsiteEntityTest extends Injectable
 {
     /* tags */
     const MVP = 'yes';
-    const DOMAIN = 'PS';
+    const SEVERITY = 'S3';
+    const STABLE = 'no';
     /* end tags */
 
     /**
@@ -102,15 +102,7 @@ class DeleteWebsiteEntityTest extends Injectable
     {
         //Preconditions
         $website->persist();
-        /** @var SetupConfigurationStep $enableBackupsStep */
-        $enableBackupsStep = $this->objectManager->create(
-            SetupConfigurationStep::class,
-            ['configData' => 'enable_backups_functionality']
-        );
-        $enableBackupsStep->run();
-        $this->backupIndex->open()
-            ->getBackupGrid()
-            ->massaction([], 'Delete', true, 'Select All');
+        $this->backupIndex->open()->getBackupGrid()->massaction([], 'Delete', true, 'Select All');
 
         //Steps
         $this->storeIndex->open();
@@ -118,20 +110,5 @@ class DeleteWebsiteEntityTest extends Injectable
         $this->editWebsite->getFormPageActions()->delete();
         $this->deleteWebsite->getDeleteWebsiteForm()->fillForm(['create_backup' => $createBackup]);
         $this->deleteWebsite->getFormPageActions()->delete();
-    }
-
-    /**
-     * Reset config settings to default.
-     *
-     * @return void
-     */
-    public function tearDown()
-    {
-        /** @var SetupConfigurationStep $enableBackupsStep */
-        $enableBackupsStep = $this->objectManager->create(
-            SetupConfigurationStep::class,
-            ['configData' => 'enable_backups_functionality', 'rollback' => true]
-        );
-        $enableBackupsStep->run();
     }
 }

@@ -56,6 +56,5 @@ class MaintenanceStatusCommand extends AbstractSetupCommand
         $addressInfo = $this->maintenanceMode->getAddressInfo();
         $addresses = implode(', ', $addressInfo);
         $output->writeln('<info>List of exempt IP-addresses: ' . ($addresses ? $addresses : 'none') . '</info>');
-        return \Magento\Framework\Console\Cli::RETURN_SUCCESS;
     }
 }

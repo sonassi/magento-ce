@@ -7,10 +7,12 @@
 require dirname(dirname(__DIR__)) . '/Catalog/_files/category.php';
 /** Create fixture store */
 require dirname(dirname(__DIR__)) . '/Store/_files/second_store.php';
-/** Create product with multiselect attribute */
+/** Create product with mulselect attribute */
 require dirname(dirname(__DIR__)) . '/Catalog/_files/products_with_multiselect_attribute.php';
 
-$productModel = \Magento\TestFramework\Helper\Bootstrap::getObjectManager()->create('Magento\Catalog\Model\Product');
+$productModel = \Magento\TestFramework\Helper\Bootstrap::getObjectManager()->create(
+    \Magento\Catalog\Model\Product::class
+);
 
 $productModel->setTypeId(
     \Magento\Catalog\Model\Product\Type::TYPE_SIMPLE
@@ -32,7 +34,7 @@ $productModel->setTypeId(
     \Magento\Catalog\Model\Product\Attribute\Source\Status::STATUS_ENABLED
 )->setWebsiteIds(
     [1]
-)->setCategoryIds(
+)->setCateroryIds(
     []
 )->setStockData(
     ['qty' => 100, 'is_in_stock' => 1]

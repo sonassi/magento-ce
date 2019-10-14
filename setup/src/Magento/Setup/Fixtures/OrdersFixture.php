@@ -11,11 +11,10 @@ use Magento\ConfigurableProduct\Model\Product\Type\Configurable;
 
 /**
  * Fixture generator for Order entities with configurable number of different types of order items.
- *
  * Optionally generates inactive quotes for generated orders.
  *
  * Support the following format:
- * <!-- It is necessary to enable quotes for orders -->
+ * <!-- Is is nescessary to enable quotes for orders -->
  * <order_quotes_enable>{bool}</order_quotes_enable>
  *
  * <!-- Min number of simple products per each order -->
@@ -148,6 +147,11 @@ class OrdersFixture extends Fixture
     private $linkManagement;
 
     /**
+     * @var \Magento\Framework\Serialize\SerializerInterface
+     */
+    private $serializer;
+
+    /**
      * Flag specifies if inactive quotes should be generated for orders.
      *
      * @var bool
@@ -160,6 +164,7 @@ class OrdersFixture extends Fixture
      * @param \Magento\Catalog\Api\ProductRepositoryInterface $productRepository
      * @param \Magento\ConfigurableProduct\Api\OptionRepositoryInterface $optionRepository
      * @param \Magento\ConfigurableProduct\Api\LinkManagementInterface $linkManagement
+     * @param \Magento\Framework\Serialize\SerializerInterface $serializer
      * @param FixtureModel $fixtureModel
      */
     public function __construct(
@@ -168,6 +173,7 @@ class OrdersFixture extends Fixture
         \Magento\Catalog\Api\ProductRepositoryInterface $productRepository,
         \Magento\ConfigurableProduct\Api\OptionRepositoryInterface $optionRepository,
         \Magento\ConfigurableProduct\Api\LinkManagementInterface $linkManagement,
+        \Magento\Framework\Serialize\SerializerInterface $serializer,
         FixtureModel $fixtureModel
     ) {
         $this->storeManager = $storeManager;
@@ -175,6 +181,7 @@ class OrdersFixture extends Fixture
         $this->productRepository = $productRepository;
         $this->optionRepository = $optionRepository;
         $this->linkManagement = $linkManagement;
+        $this->serializer = $serializer;
         parent::__construct($fixtureModel);
     }
 
@@ -356,7 +363,7 @@ class OrdersFixture extends Fixture
                     $this->query('quote_item', $order, $itemData);
                     $this->query('quote_item_option', $order, $itemData, [
                         '%code%' => 'info_buyRequest',
-                        '%value%' => serialize([
+                        '%value%' => $this->serializer->serialize([
                             'product' => $productId($entityId, $i, Type::TYPE_SIMPLE),
                             'qty' => "1",
                             'uenc' => 'aHR0cDovL21hZ2UyLmNvbS9jYXRlZ29yeS0xLmh0bWw'
@@ -509,7 +516,7 @@ class OrdersFixture extends Fixture
      * DB connection (if setup). Additionally filters out quote-related queries, if appropriate flag is set.
      *
      * @param string $table
-     * @param array $replacements
+     * @param array ...$replacements
      * @return void
      */
     protected function query($table, ... $replacements)
@@ -598,7 +605,7 @@ class OrdersFixture extends Fixture
             $productsResult[$key]['id'] = $simpleId;
             $productsResult[$key]['sku'] = $simpleProduct->getSku();
             $productsResult[$key]['name'] = $simpleProduct->getName();
-            $productsResult[$key]['buyRequest'] = serialize([
+            $productsResult[$key]['buyRequest'] = $this->serializer->serialize([
                 "info_buyRequest" => [
                     "uenc" => "aHR0cDovL21hZ2VudG8uZGV2L2NvbmZpZ3VyYWJsZS1wcm9kdWN0LTEuaHRtbA,,",
                     "product" => $simpleId,
@@ -674,13 +681,13 @@ class OrdersFixture extends Fixture
             $productsResult[$key]['name'] = $configurableProduct->getName();
             $productsResult[$key]['childId'] = $simpleId;
             $productsResult[$key]['buyRequest'] = [
-                'order' => serialize($configurableBuyRequest),
-                'quote' => serialize($quoteConfigurableBuyRequest),
-                'super_attribute' => serialize($superAttribute)
+                'order' => $this->serializer->serialize($configurableBuyRequest),
+                'quote' => $this->serializer->serialize($quoteConfigurableBuyRequest),
+                'super_attribute' => $this->serializer->serialize($superAttribute)
             ];
             $productsResult[$key]['childBuyRequest'] = [
-                'order' => serialize($simpleBuyRequest),
-                'quote' => serialize($quoteSimpleBuyRequest),
+                'order' => $this->serializer->serialize($simpleBuyRequest),
+                'quote' => $this->serializer->serialize($quoteSimpleBuyRequest),
             ];
         }
         return $productsResult;
@@ -704,7 +711,7 @@ class OrdersFixture extends Fixture
     }
 
     /**
-     * @inheritdoc
+     * {@inheritdoc}
      */
     public function getActionTitle()
     {
@@ -712,7 +719,7 @@ class OrdersFixture extends Fixture
     }
 
     /**
-     * @inheritdoc
+     * {@inheritdoc}
      */
     public function introduceParamLabels()
     {
@@ -723,7 +730,6 @@ class OrdersFixture extends Fixture
 
     /**
      * Get real table name for db table, validated by db adapter.
-     *
      * In case prefix or other features mutating default table names are used.
      *
      * @param string $tableName

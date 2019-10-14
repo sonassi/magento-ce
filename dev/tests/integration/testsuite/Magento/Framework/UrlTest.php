@@ -6,9 +6,8 @@
 namespace Magento\Framework;
 
 use Zend\Stdlib\Parameters;
-use Magento\TestFramework\Helper\Bootstrap;
 
-class UrlTest extends \PHPUnit_Framework_TestCase
+class UrlTest extends \PHPUnit\Framework\TestCase
 {
     /**
      * @var \Magento\Framework\UrlInterface
@@ -17,7 +16,9 @@ class UrlTest extends \PHPUnit_Framework_TestCase
 
     protected function setUp()
     {
-        $this->_model = Bootstrap::getObjectManager()->create('Magento\Framework\Url');
+        $this->_model = \Magento\TestFramework\Helper\Bootstrap::getObjectManager()->create(
+            \Magento\Framework\Url::class
+        );
     }
 
     public function testSetGetUseSession()
@@ -76,92 +77,6 @@ class UrlTest extends \PHPUnit_Framework_TestCase
     {
         $actualUrl = $this->_model->getBaseUrl($params);
         $this->assertEquals($expectedUrl, $actualUrl);
-    }
-
-    /**
-     * Note: isolation flushes the URL memory cache
-     * @magentoAppIsolation enabled
-     *
-     * @magentoConfigFixture current_store web/secure/base_url http://sample.com/
-     * @magentoConfigFixture current_store web/unsecure/base_link_url http://sample.com/
-     * @magentoConfigFixture current_store web/secure/base_link_url https://sample.com/
-     * @magentoConfigFixture current_store web/secure/use_in_frontend 1
-     *
-     * @magentoAppArea frontend
-     */
-    public function testGetUnsecureUrlInSecureArea()
-    {
-        /** @var \Magento\Framework\App\Request\Http $request */
-        $request = Bootstrap::getObjectManager()->create(\Magento\Framework\App\Request\Http::class);
-        //Emulate HTTPS request
-        $request->getServer()->set('HTTPS', 'on');
-        $request->getServer()->set('SERVER_PORT', 443);
-
-        $model = Bootstrap::getObjectManager()->create(\Magento\Framework\Url::class, ['request' => $request]);
-
-        $secureUrl = $model->getUrl('some/index/controller', ['_nosid' => 1]);
-        $this->assertEquals(
-            'https://sample.com/index.php/some/index/controller/',
-            $secureUrl,
-            'Default URL in secure area is incorrect'
-        );
-
-        $secureUrl = $model->getUrl('some/index/controller', ['_secure' => true, '_nosid' => 1]);
-        $this->assertEquals(
-            'https://sample.com/index.php/some/index/controller/',
-            $secureUrl,
-            'Secure URL in secure area is incorrect'
-        );
-
-        $unsecureUrl = $model->getUrl('some/index/controller', ['_secure' => false, '_nosid' => 1]);
-        $this->assertEquals(
-            'http://sample.com/index.php/some/index/controller/',
-            $unsecureUrl,
-            'Unsecure URL in secure area is incorrect'
-        );
-    }
-
-    /**
-     * Note: isolation flushes the URL memory cache
-     * @magentoAppIsolation enabled
-     *
-     * @magentoConfigFixture current_store web/secure/base_url http://sample.com/
-     * @magentoConfigFixture current_store web/unsecure/base_link_url http://sample.com/
-     * @magentoConfigFixture current_store web/secure/base_link_url https://sample.com/
-     * @magentoConfigFixture current_store web/secure/use_in_frontend 1
-     *
-     * @magentoAppArea frontend
-     */
-    public function testGetSecureUrlInUnsecureArea()
-    {
-        /** @var \Magento\Framework\App\Request\Http $request */
-        $request = Bootstrap::getObjectManager()->create(\Magento\Framework\App\Request\Http::class);
-        //Emulate HTTPS request
-        $request->getServer()->set('HTTPS', 'off');
-        $request->getServer()->set('SERVER_PORT', 80);
-
-        $model = Bootstrap::getObjectManager()->create(\Magento\Framework\Url::class, ['request' => $request]);
-
-        $secureUrl = $model->getUrl('some/index/controller', ['_nosid' => 1]);
-        $this->assertEquals(
-            'http://sample.com/index.php/some/index/controller/',
-            $secureUrl,
-            'Default URL in unsecure area is incorrect'
-        );
-
-        $secureUrl = $model->getUrl('some/index/controller', ['_secure' => true, '_nosid' => 1]);
-        $this->assertEquals(
-            'https://sample.com/index.php/some/index/controller/',
-            $secureUrl,
-            'Secure URL in unsecure area is incorrect'
-        );
-
-        $unsecureUrl = $model->getUrl('some/index/controller', ['_secure' => false, '_nosid' => 1]);
-        $this->assertEquals(
-            'http://sample.com/index.php/some/index/controller/',
-            $unsecureUrl,
-            'Unsecure URL in unsecure area is incorrect'
-        );
     }
 
     /**
@@ -483,7 +398,7 @@ class UrlTest extends \PHPUnit_Framework_TestCase
     public function testSessionUrlVar()
     {
         $sessionId = \Magento\TestFramework\Helper\Bootstrap::getObjectManager()->get(
-            'Magento\Framework\Session\Generic'
+            \Magento\Framework\Session\Generic::class
         )->getSessionId();
         $sessionUrl = $this->_model->sessionUrlVar('<a href="http://example.com/?___SID=U">www.example.com</a>');
         $this->assertEquals('<a href="http://example.com/?SID=' . $sessionId . '">www.example.com</a>', $sessionUrl);
@@ -504,7 +419,7 @@ class UrlTest extends \PHPUnit_Framework_TestCase
     {
         $objectManager = \Magento\TestFramework\Helper\Bootstrap::getObjectManager();
         /** @var $request \Magento\TestFramework\Request */
-        $request = $objectManager->get('Magento\Framework\App\RequestInterface');
+        $request = $objectManager->get(\Magento\Framework\App\RequestInterface::class);
         $request->setServer(new Parameters(['HTTP_REFERER' => 'http://localhost/']));
         $this->assertTrue($this->_model->isOwnOriginUrl());
 

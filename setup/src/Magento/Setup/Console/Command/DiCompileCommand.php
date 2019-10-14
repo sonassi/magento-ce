@@ -21,7 +21,6 @@ use Magento\Setup\Module\Di\App\Task\OperationException;
 use Magento\Setup\Module\Di\App\Task\OperationInterface;
 use Symfony\Component\Console\Command\Command;
 use Symfony\Component\Console\Helper\ProgressBar;
-use Magento\Framework\Console\Cli;
 
 /**
  * Command to run compile in single-tenant mode
@@ -32,25 +31,39 @@ class DiCompileCommand extends Command
     /** Command name */
     const NAME = 'setup:di:compile';
 
-    /** @var DeploymentConfig */
+    /**
+     * @var \Magento\Framework\App\DeploymentConfig
+     */
     private $deploymentConfig;
 
-    /** @var ObjectManagerInterface */
+    /**
+     * @var \Magento\Framework\ObjectManagerInterface
+     */
     private $objectManager;
 
-    /** @var Manager */
+    /**
+     * @var \Magento\Setup\Module\Di\App\Task\Manager
+     */
     private $taskManager;
 
-    /** @var DirectoryList */
+    /**
+     * @var \Magento\Framework\App\Filesystem\DirectoryList
+     */
     private $directoryList;
 
-    /** @var Filesystem */
+    /**
+     * @var \Magento\Framework\Filesystem
+     */
     private $filesystem;
 
-    /** @var array */
+    /**
+     * @var array
+     */
     private $excludedPathsList;
 
-    /** @var DriverInterface */
+    /**
+     * @var \Magento\Framework\Filesystem\DriverInterface
+     */
     private $fileDriver;
 
     /**
@@ -128,22 +141,26 @@ class DiCompileCommand extends Command
                 $output->writeln($line);
             }
             // we must have an exit code higher than zero to indicate something was wrong
-            return Cli::RETURN_FAILURE;
+            return \Magento\Framework\Console\Cli::RETURN_FAILURE;
         }
 
         $modulePaths = $this->componentRegistrar->getPaths(ComponentRegistrar::MODULE);
         $libraryPaths = $this->componentRegistrar->getPaths(ComponentRegistrar::LIBRARY);
-        $generationPath = $this->directoryList->getPath(DirectoryList::GENERATION);
+        $setupPath = $this->directoryList->getPath(DirectoryList::SETUP);
+        $generationPath = $this->directoryList->getPath(DirectoryList::GENERATED_CODE);
 
-        $this->objectManager->get('Magento\Framework\App\Cache')->clean();
+        $this->objectManager->get(\Magento\Framework\App\Cache::class)->clean();
         $compiledPathsList = [
             'application' => $modulePaths,
             'library' => $libraryPaths,
+            'setup' => $setupPath,
             'generated_helpers' => $generationPath
         ];
+
         $this->excludedPathsList = [
             'application' => $this->getExcludedModulePaths($modulePaths),
             'framework' => $this->getExcludedLibraryPaths($libraryPaths),
+            'setup' => $this->getExcludedSetupPaths($setupPath),
         ];
         $this->configureObjectManager($output);
 
@@ -153,7 +170,7 @@ class DiCompileCommand extends Command
             $this->cleanupFilesystem(
                 [
                     DirectoryList::CACHE,
-                    DirectoryList::DI,
+                    DirectoryList::GENERATED_METADATA,
                 ]
             );
             foreach ($operations as $operationCode => $arguments) {
@@ -165,7 +182,7 @@ class DiCompileCommand extends Command
 
             /** @var ProgressBar $progressBar */
             $progressBar = $this->objectManager->create(
-                'Symfony\Component\Console\Helper\ProgressBar',
+                \Symfony\Component\Console\Helper\ProgressBar::class,
                 [
                     'output' => $output,
                     'max' => count($operations)
@@ -194,9 +211,8 @@ class DiCompileCommand extends Command
         } catch (OperationException $e) {
             $output->writeln('<error>' . $e->getMessage() . '</error>');
             // we must have an exit code higher than zero to indicate something was wrong
-            return Cli::RETURN_FAILURE;
+            return \Magento\Framework\Console\Cli::RETURN_FAILURE;
         }
-        return Cli::RETURN_SUCCESS;
     }
 
     /**
@@ -223,7 +239,7 @@ class DiCompileCommand extends Command
                 $vendorPathsRegExps[] = $vendorDir
                     . '/(?:' . join('|', $vendorModules) . ')';
             }
-            $basePathsRegExps[] = preg_quote($basePath, '#')
+            $basePathsRegExps[] = $basePath
                 . '/(?:' . join('|', $vendorPathsRegExps) . ')';
         }
 
@@ -242,15 +258,24 @@ class DiCompileCommand extends Command
      */
     private function getExcludedLibraryPaths(array $libraryPaths)
     {
-        $libraryPaths = array_map(function ($libraryPath) {
-            return preg_quote($libraryPath, '#');
-        }, $libraryPaths);
-
         $excludedLibraryPaths = [
             '#^(?:' . join('|', $libraryPaths) . ')/([\\w]+/)?Test#',
             '#^(?:' . join('|', $libraryPaths) . ')/([\\w]+/)?tests#',
         ];
         return $excludedLibraryPaths;
+    }
+
+    /**
+     * Get excluded setup application paths
+     *
+     * @param string $setupPath
+     * @return string[]
+     */
+    private function getExcludedSetupPaths($setupPath)
+    {
+        return [
+            '#^(?:' . $setupPath . ')(/[\\w]+)*/Test#'
+        ];
     }
 
     /**
@@ -276,39 +301,39 @@ class DiCompileCommand extends Command
     {
         $this->objectManager->configure(
             [
-                'preferences' => [
-                    'Magento\Setup\Module\Di\Compiler\Config\WriterInterface' =>
-                        'Magento\Setup\Module\Di\Compiler\Config\Writer\Filesystem',
-                ],
-                'Magento\Setup\Module\Di\Compiler\Config\ModificationChain' => [
+                'preferences' => [\Magento\Setup\Module\Di\Compiler\Config\WriterInterface::class =>
+                    \Magento\Setup\Module\Di\Compiler\Config\Writer\Filesystem::class,
+                ], \Magento\Setup\Module\Di\Compiler\Config\ModificationChain::class => [
                     'arguments' => [
                         'modificationsList' => [
-                            'BackslashTrim' =>
-                                ['instance' => 'Magento\Setup\Module\Di\Compiler\Config\Chain\BackslashTrim'],
-                            'PreferencesResolving' =>
-                                ['instance' => 'Magento\Setup\Module\Di\Compiler\Config\Chain\PreferencesResolving'],
-                            'InterceptorSubstitution' =>
-                                ['instance' => 'Magento\Setup\Module\Di\Compiler\Config\Chain\InterceptorSubstitution'],
-                            'InterceptionPreferencesResolving' =>
-                                ['instance' => 'Magento\Setup\Module\Di\Compiler\Config\Chain\PreferencesResolving'],
-                            'ArgumentsSerialization' =>
-                                ['instance' => 'Magento\Setup\Module\Di\Compiler\Config\Chain\ArgumentsSerialization'],
+                            'BackslashTrim' => [
+                                'instance' =>
+                                    \Magento\Setup\Module\Di\Compiler\Config\Chain\BackslashTrim::class
+                            ],
+                            'PreferencesResolving' => [
+                                'instance' =>
+                                    \Magento\Setup\Module\Di\Compiler\Config\Chain\PreferencesResolving::class
+                            ],
+                            'InterceptorSubstitution' => [
+                                'instance' =>
+                                    \Magento\Setup\Module\Di\Compiler\Config\Chain\InterceptorSubstitution::class
+                            ],
+                            'InterceptionPreferencesResolving' => [
+                                'instance' => \Magento\Setup\Module\Di\Compiler\Config\Chain\PreferencesResolving::class
+                            ],
                         ]
                     ]
-                ],
-                'Magento\Setup\Module\Di\Code\Generator\PluginList' => [
+                ], \Magento\Setup\Module\Di\Code\Generator\PluginList::class => [
                     'arguments' => [
                         'cache' => [
-                            'instance' => 'Magento\Framework\App\Interception\Cache\CompiledConfig'
+                            'instance' => \Magento\Framework\App\Interception\Cache\CompiledConfig::class
                         ]
                     ]
-                ],
-                'Magento\Setup\Module\Di\Code\Reader\ClassesScanner' => [
+                ], \Magento\Setup\Module\Di\Code\Reader\ClassesScanner::class => [
                     'arguments' => [
                         'excludePatterns' => $this->excludedPathsList
                     ]
-                ],
-                'Magento\Setup\Module\Di\Compiler\Log\Writer\Console' => [
+                ], \Magento\Setup\Module\Di\Compiler\Log\Writer\Console::class => [
                     'arguments' => [
                         'output' => $output,
                     ]
@@ -341,6 +366,7 @@ class DiCompileCommand extends Command
                 'paths' => [
                     $compiledPathsList['application'],
                     $compiledPathsList['library'],
+                    $compiledPathsList['setup'],
                     $compiledPathsList['generated_helpers'],
                 ],
                 'filePatterns' => ['php' => '/\.php$/'],

@@ -6,9 +6,9 @@
 namespace Magento\Customer\Controller;
 
 use Magento\Customer\Api\AccountManagementInterface;
+use Magento\Customer\Model\CustomerRegistry;
 use Magento\Framework\Data\Form\FormKey;
 use Magento\TestFramework\Helper\Bootstrap;
-use Magento\Framework\App\Request\Http as HttpRequest;
 
 class AddressTest extends \Magento\TestFramework\TestCase\AbstractController
 {
@@ -18,13 +18,10 @@ class AddressTest extends \Magento\TestFramework\TestCase\AbstractController
     /** @var FormKey */
     private $formKey;
 
-    /**
-     * @inheritDoc
-     */
     protected function setUp()
     {
         parent::setUp();
-        $logger = $this->getMockForAbstractClass(\Psr\Log\LoggerInterface::class);
+        $logger = $this->createMock(\Psr\Log\LoggerInterface::class);
         $session = \Magento\TestFramework\Helper\Bootstrap::getObjectManager()->create(
             \Magento\Customer\Model\Session::class,
             [$logger]
@@ -72,7 +69,7 @@ class AddressTest extends \Magento\TestFramework\TestCase\AbstractController
             'id',
             2
         )->setMethod(
-            HttpRequest::METHOD_POST
+            'POST'
         )->setPostValue(
             [
                 'form_key' => $this->_objectManager->get(\Magento\Framework\Data\Form\FormKey::class)->getFormKey(),
@@ -94,7 +91,7 @@ class AddressTest extends \Magento\TestFramework\TestCase\AbstractController
         );
         // we are overwriting the address coming from the fixture
         $this->dispatch('customer/address/formPost');
-
+        $this->getCustomerRegistry()->remove(1);
         $this->assertRedirect($this->stringContains('customer/address/index'));
         $this->assertSessionMessages(
             $this->equalTo(['You saved the address.']),
@@ -110,6 +107,14 @@ class AddressTest extends \Magento\TestFramework\TestCase\AbstractController
     }
 
     /**
+     * @return CustomerRegistry
+     */
+    private function getCustomerRegistry()
+    {
+        return $this->_objectManager->get(CustomerRegistry::class);
+    }
+
+    /**
      * @magentoDataFixture Magento/Customer/_files/customer.php
      * @magentoDataFixture Magento/Customer/_files/customer_address.php
      */
@@ -119,7 +124,7 @@ class AddressTest extends \Magento\TestFramework\TestCase\AbstractController
             'id',
             1
         )->setMethod(
-            HttpRequest::METHOD_POST
+            'POST'
         )->setPostValue(
             [
                 'form_key' => $this->_objectManager->get(\Magento\Framework\Data\Form\FormKey::class)->getFormKey(),
@@ -139,7 +144,7 @@ class AddressTest extends \Magento\TestFramework\TestCase\AbstractController
         );
         // we are overwriting the address coming from the fixture
         $this->dispatch('customer/address/formPost');
-
+        $this->getCustomerRegistry()->remove(1);
         $this->assertRedirect($this->stringContains('customer/address/edit'));
         $this->assertSessionMessages(
             $this->equalTo(
@@ -160,7 +165,7 @@ class AddressTest extends \Magento\TestFramework\TestCase\AbstractController
     public function testDeleteAction()
     {
         $this->getRequest()->setParam('id', 1);
-        $this->getRequest()->setParam('form_key', $this->formKey->getFormKey())->setMethod(HttpRequest::METHOD_POST);
+        $this->getRequest()->setParam('form_key', $this->formKey->getFormKey());
         // we are overwriting the address coming from the fixture
         $this->dispatch('customer/address/delete');
 
@@ -178,13 +183,13 @@ class AddressTest extends \Magento\TestFramework\TestCase\AbstractController
     public function testWrongAddressDeleteAction()
     {
         $this->getRequest()->setParam('id', 555);
-        $this->getRequest()->setParam('form_key', $this->formKey->getFormKey())->setMethod(HttpRequest::METHOD_POST);
+        $this->getRequest()->setParam('form_key', $this->formKey->getFormKey());
         // we are overwriting the address coming from the fixture
         $this->dispatch('customer/address/delete');
 
         $this->assertRedirect($this->stringContains('customer/address/index'));
         $this->assertSessionMessages(
-            $this->equalTo(['We can&#039;t delete the address right now.']),
+            $this->equalTo(['We can\'t delete the address right now.']),
             \Magento\Framework\Message\MessageInterface::TYPE_ERROR
         );
     }

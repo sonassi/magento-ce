@@ -1,6 +1,6 @@
 <?php
 /**
- * Copyright © 2013-2018 Magento, Inc. All rights reserved.
+ * Copyright © Magento, Inc. All rights reserved.
  * See COPYING.txt for license details.
  */
 
@@ -118,7 +118,7 @@ class FixtureModelTest extends \Magento\TestFramework\Indexer\TestCase
 
         foreach ($this->entityAsserts as $entityAssert) {
             try {
-                $this->assertTrue($entityAssert->assert());
+                $entityAssert->assert();
             } catch (\AssertionError $assertionError) {
                 $this->assertTrue(false, $assertionError->getMessage());
             }

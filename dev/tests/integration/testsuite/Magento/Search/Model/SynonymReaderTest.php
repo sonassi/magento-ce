@@ -9,7 +9,7 @@ namespace Magento\Search\Model;
  * @magentoDbIsolation disabled
  * @magentoDataFixture Magento/Search/_files/synonym_reader.php
  */
-class SynonymReaderTest extends \PHPUnit_Framework_TestCase
+class SynonymReaderTest extends \PHPUnit\Framework\TestCase
 {
     /**
      * @var \Magento\Search\Model\SynonymReader
@@ -19,7 +19,7 @@ class SynonymReaderTest extends \PHPUnit_Framework_TestCase
     protected function setUp()
     {
         $objectManager = \Magento\TestFramework\Helper\Bootstrap::getObjectManager();
-        $this->model = $objectManager->get('Magento\Search\Model\SynonymReader');
+        $this->model = $objectManager->get(\Magento\Search\Model\SynonymReader::class);
     }
 
     /**
@@ -30,9 +30,6 @@ class SynonymReaderTest extends \PHPUnit_Framework_TestCase
         return [
             [
                 'ELIZABETH', []
-            ],
-            [
-                '-+<(ELIZABETH)>*~', []
             ],
             [
                 'ENGLISH', [['synonyms' => 'british,english', 'store_id' => 1, 'website_id' => 0]]
@@ -47,13 +44,10 @@ class SynonymReaderTest extends \PHPUnit_Framework_TestCase
                 'Monarch', [['synonyms' => 'queen,monarch', 'store_id' => 1, 'website_id' => 0]]
             ],
             [
-                '-+<(Monarch)>*~', [['synonyms' => 'queen,monarch', 'store_id' => 1, 'website_id' => 0]]
-            ],
-            [
                 'MONARCH English', [
                 ['synonyms' => 'queen,monarch', 'store_id' => 1, 'website_id' => 0],
                 ['synonyms' => 'british,english', 'store_id' => 1, 'website_id' => 0]
-            ]
+                ]
             ]
         ];
     }

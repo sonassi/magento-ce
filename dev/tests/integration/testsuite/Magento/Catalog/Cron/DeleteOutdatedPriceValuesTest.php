@@ -5,11 +5,17 @@
  */
 namespace Magento\Catalog\Cron;
 
+use Magento\Catalog\Api\Data\ProductAttributeInterface;
 use Magento\Catalog\Api\ProductRepositoryInterface;
+use Magento\Catalog\Observer\SwitchPriceAttributeScopeOnConfigChange;
 use Magento\Framework\App\Config\MutableScopeConfigInterface;
+use Magento\Framework\App\Config\ReinitableConfigInterface;
 use Magento\Framework\App\Config\ScopeConfigInterface;
 
-class DeleteOutdatedPriceValuesTest extends \PHPUnit_Framework_TestCase
+/**
+ * @SuppressWarnings(PHPMD.CouplingBetweenObjects)
+ */
+class DeleteOutdatedPriceValuesTest extends \PHPUnit\Framework\TestCase
 {
     /**
      * @var \Magento\Catalog\Cron\DeleteOutdatedPriceValues
@@ -44,16 +50,30 @@ class DeleteOutdatedPriceValuesTest extends \PHPUnit_Framework_TestCase
      * @magentoDataFixture Magento/Store/_files/second_website_with_two_stores.php
      * @magentoConfigFixture current_store catalog/price/scope 1
      * @magentoDbIsolation enabled
+     * @magentoAppIsolation enabled
      */
     public function testExecute()
     {
-        $defaultStorePrice = 10.00;
-        $secondStorePrice = 9.99;
         $secondStoreId = $this->store->load('fixture_second_store')->getId();
         /** @var \Magento\Catalog\Model\Product\Action $productAction */
         $productAction = $this->objectManager->create(
             \Magento\Catalog\Model\Product\Action::class
         );
+        /** @var ReinitableConfigInterface $reinitiableConfig */
+        $reinitiableConfig = $this->objectManager->get(ReinitableConfigInterface::class);
+        $reinitiableConfig->setValue(
+            'catalog/price/scope',
+            \Magento\Store\Model\Store::PRICE_SCOPE_WEBSITE
+        );
+        $observer = $this->objectManager->get(\Magento\Framework\Event\Observer::class);
+        $this->objectManager->get(SwitchPriceAttributeScopeOnConfigChange::class)
+            ->execute($observer);
+
+        $reflection = new \ReflectionClass(\Magento\Catalog\Model\Attribute\ScopeOverriddenValue::class);
+        $paths = $reflection->getProperty('attributesValues');
+        $paths->setAccessible(true);
+        $paths->setValue($this->objectManager->get(\Magento\Catalog\Model\Attribute\ScopeOverriddenValue::class), null);
+        $paths->setAccessible(false);
 
         $product = $this->productRepository->get('simple');
         $productResource = $this->objectManager->create(\Magento\Catalog\Model\ResourceModel\Product::class);
@@ -64,9 +84,8 @@ class DeleteOutdatedPriceValuesTest extends \PHPUnit_Framework_TestCase
             [$this->store->load('fixture_second_store')->getWebsiteId()],
             'add'
         );
-        $product->setOrigData();
         $product->setStoreId($secondStoreId);
-        $product->setPrice($secondStorePrice);
+        $product->setPrice(9.99);
 
         $productResource->save($product);
         $attribute = $this->objectManager->get(\Magento\Eav\Model\Config::class)
@@ -75,34 +94,37 @@ class DeleteOutdatedPriceValuesTest extends \PHPUnit_Framework_TestCase
                 'price'
             );
         $this->assertEquals(
-            $secondStorePrice,
+            '9.99',
             $productResource->getAttributeRawValue($productId, $attribute->getId(), $secondStoreId)
         );
         /** @var MutableScopeConfigInterface $config */
         $config = $this->objectManager->get(
             MutableScopeConfigInterface::class
         );
-
-        $config->setValue(
-            \Magento\Store\Model\Store::XML_PATH_PRICE_SCOPE,
-            null,
-            ScopeConfigInterface::SCOPE_TYPE_DEFAULT
-        );
-        $this->cron->execute();
-        $this->assertEquals(
-            $secondStorePrice,
-            $productResource->getAttributeRawValue($productId, $attribute->getId(), $secondStoreId)
-        );
-
         $config->setValue(
             \Magento\Store\Model\Store::XML_PATH_PRICE_SCOPE,
             \Magento\Store\Model\Store::PRICE_SCOPE_GLOBAL,
             ScopeConfigInterface::SCOPE_TYPE_DEFAULT
         );
+        /** @var \Magento\Framework\App\Config\ScopeConfigInterface $scopeConfig */
         $this->cron->execute();
         $this->assertEquals(
-            $defaultStorePrice,
+            '10.0000',
             $productResource->getAttributeRawValue($productId, $attribute->getId(), $secondStoreId)
         );
+    }
+
+    public function tearDown()
+    {
+        parent::tearDown();
+        /** @var ReinitableConfigInterface $reinitiableConfig */
+        $reinitiableConfig = $this->objectManager->get(ReinitableConfigInterface::class);
+        $reinitiableConfig->setValue(
+            'catalog/price/scope',
+            \Magento\Store\Model\Store::PRICE_SCOPE_GLOBAL
+        );
+        $observer = $this->objectManager->get(\Magento\Framework\Event\Observer::class);
+        $this->objectManager->get(SwitchPriceAttributeScopeOnConfigChange::class)
+            ->execute($observer);
     }
 }

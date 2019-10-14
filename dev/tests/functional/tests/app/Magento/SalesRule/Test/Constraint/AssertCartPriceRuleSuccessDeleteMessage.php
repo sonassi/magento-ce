@@ -10,7 +10,7 @@ use Magento\SalesRule\Test\Page\Adminhtml\PromoQuoteIndex;
 use Magento\Mtf\Constraint\AbstractConstraint;
 
 /**
- * Assert sales rule delete message.
+ * Assert sales rule delte message.
  */
 class AssertCartPriceRuleSuccessDeleteMessage extends AbstractConstraint
 {
