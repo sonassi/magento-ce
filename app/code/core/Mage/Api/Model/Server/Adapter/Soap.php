@@ -20,7 +20,7 @@
  *
  * @category    Mage
  * @package     Mage_Api
- * @copyright  Copyright (c) 2006-2017 X.commerce, Inc. and affiliates (http://www.magento.com)
+ * @copyright  Copyright (c) 2006-2018 Magento, Inc. (http://www.magento.com)
  * @license    http://opensource.org/licenses/osl-3.0.php  Open Software License (OSL 3.0)
  */
 
@@ -69,6 +69,7 @@ class Mage_Api_Model_Server_Adapter_Soap
         if (isset($queryParams['wsdl'])) {
             unset($queryParams['wsdl']);
         }
+
         $wsdlConfig->setUrl(Mage::helper('api')->getServiceUrl('*/*/*', array('_query' => $queryParams), true));
         $wsdlConfig->setName('Magento');
         $wsdlConfig->setHandler($this->getHandler());
