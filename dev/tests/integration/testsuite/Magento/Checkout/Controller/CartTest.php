@@ -108,6 +108,7 @@ class CartTest extends \Magento\TestFramework\TestCase\AbstractController
      * Test for \Magento\Checkout\Controller\Cart::configureAction() with bundle product
      *
      * @magentoDataFixture Magento/Checkout/_files/quote_with_bundle_product.php
+     * @magentoDbIsolation disabled
      */
     public function testConfigureActionWithBundleProduct()
     {
@@ -298,6 +299,75 @@ class CartTest extends \Magento\TestFramework\TestCase\AbstractController
             'frontend' => ['frontend', 'expected_price' => 10],
             'adminhtml' => ['adminhtml', 'expected_price' => 1]
         ];
+    }
+
+    /**
+     * Test for \Magento\Checkout\Controller\Cart\Add::execute() with simple product and activated redirect to cart
+     *
+     * @magentoDataFixture Magento/Catalog/_files/products.php
+     * @magentoConfigFixture current_store checkout/cart/redirect_to_cart 1
+     * @magentoAppIsolation enabled
+     */
+    public function testMessageAtAddToCartWithRedirect()
+    {
+        $formKey = $this->_objectManager->get(FormKey::class);
+        $postData = [
+            'qty' => '1',
+            'product' => '1',
+            'custom_price' => 1,
+            'form_key' => $formKey->getFormKey(),
+            'isAjax' => 1
+        ];
+        \Magento\TestFramework\Helper\Bootstrap::getInstance()->loadArea('frontend');
+        $this->getRequest()->setPostValue($postData);
+
+        $this->dispatch('checkout/cart/add');
+
+        $this->assertEquals(
+            '{"backUrl":"http:\/\/localhost\/index.php\/checkout\/cart\/"}',
+            $this->getResponse()->getBody()
+        );
+
+        $this->assertSessionMessages(
+            $this->contains(
+                'You added Simple Product to your shopping cart.'
+            ),
+            \Magento\Framework\Message\MessageInterface::TYPE_SUCCESS
+        );
+    }
+
+    /**
+     * Test for \Magento\Checkout\Controller\Cart\Add::execute() with simple product and deactivated redirect to cart
+     *
+     * @magentoDataFixture Magento/Catalog/_files/products.php
+     * @magentoConfigFixture current_store checkout/cart/redirect_to_cart 0
+     * @magentoAppIsolation enabled
+     */
+    public function testMessageAtAddToCartWithoutRedirect()
+    {
+        $formKey = $this->_objectManager->get(FormKey::class);
+        $postData = [
+            'qty' => '1',
+            'product' => '1',
+            'custom_price' => 1,
+            'form_key' => $formKey->getFormKey(),
+            'isAjax' => 1
+        ];
+        \Magento\TestFramework\Helper\Bootstrap::getInstance()->loadArea('frontend');
+        $this->getRequest()->setPostValue($postData);
+
+        $this->dispatch('checkout/cart/add');
+
+        $this->assertFalse($this->getResponse()->isRedirect());
+        $this->assertEquals('[]', $this->getResponse()->getBody());
+
+        $this->assertSessionMessages(
+            $this->contains(
+                "\n" . 'You added Simple Product to your ' .
+                '<a href="http://localhost/index.php/checkout/cart/">shopping cart</a>.'
+            ),
+            \Magento\Framework\Message\MessageInterface::TYPE_SUCCESS
+        );
     }
 
     /**
