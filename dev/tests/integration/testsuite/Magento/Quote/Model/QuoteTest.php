@@ -131,6 +131,9 @@ class QuoteTest extends \PHPUnit\Framework\TestCase
             $this->assertContains($item, $actual);
         }
         $this->assertEquals('test@example.com', $quote->getCustomerEmail());
+        $this->assertEquals('Joe', $quote->getCustomerFirstname());
+        $this->assertEquals('Dou', $quote->getCustomerLastname());
+        $this->assertEquals('Ivan', $quote->getCustomerMiddlename());
     }
 
     /**
@@ -306,6 +309,26 @@ class QuoteTest extends \PHPUnit\Framework\TestCase
                 "'{$field}' value in quote shipping address is invalid."
             );
         }
+    }
+
+    /**
+     * Customer has address with country which not allowed in website
+     *
+     * @magentoDataFixture Magento/Customer/_files/customer.php
+     * @magentoDataFixture Magento/Customer/_files/customer_address.php
+     * @magentoDataFixture Magento/Backend/_files/allowed_countries_fr.php
+     * @return void
+     */
+    public function testAssignCustomerWithAddressChangeWithNotAllowedCountry()
+    {
+        /** @var Quote $quote */
+        $quote = $this->objectManager->create(Quote::class);
+        $customerData = $this->_prepareQuoteForTestAssignCustomerWithAddressChange($quote);
+        $quote->assignCustomerWithAddressChange($customerData);
+
+        /** Check that addresses are empty */
+        $this->assertNull($quote->getBillingAddress()->getCountryId());
+        $this->assertNull($quote->getShippingAddress()->getCountryId());
     }
 
     /**
