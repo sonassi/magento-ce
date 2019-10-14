@@ -61,6 +61,31 @@ class StorageTest extends \PHPUnit_Framework_TestCase
     }
 
     /**
+     * @return void
+     */
+    public function testDeleteDirectory()
+    {
+        $path = $this->objectManager->get(\Magento\Cms\Helper\Wysiwyg\Images::class)->getCurrentPath();
+        $dir = 'testDeleteDirectory';
+        $fullPath = $path . $dir;
+        $this->storage->createDirectory($dir, $path);
+        $this->assertFileExists($fullPath);
+        $this->storage->deleteDirectory($fullPath);
+        $this->assertFileNotExists($fullPath);
+    }
+
+    /**
+     * @return void
+     * @expectedException \Magento\Framework\Exception\LocalizedException
+     * @expectedExceptionMessage We cannot delete directory /downloadable.
+     */
+    public function testDeleteDirectoryWithExcludedDirPath()
+    {
+        $dir = $this->objectManager->get(\Magento\Cms\Helper\Wysiwyg\Images::class)->getCurrentPath() . 'downloadable';
+        $this->storage->deleteDirectory($dir);
+    }
+
+    /**
      * @inheritdoc
      */
     protected function setUp()
@@ -127,26 +152,77 @@ class StorageTest extends \PHPUnit_Framework_TestCase
     /**
      * @return void
      * @expectedException \Magento\Framework\Exception\LocalizedException
+     * @expectedExceptionMessage We can't upload the file to current folder right now. Please try another folder.
+     */
+    public function testUploadFileWithExcludedDirPath()
+    {
+        $fileName = 'magento_small_image.jpg';
+        $tmpDirectory = $this->filesystem->getDirectoryWrite(\Magento\Framework\App\Filesystem\DirectoryList::SYS_TMP);
+        $filePath = $tmpDirectory->getAbsolutePath($fileName);
+        $fixtureDir = realpath(__DIR__ . '/../../../../Catalog/_files');
+        copy($fixtureDir . DIRECTORY_SEPARATOR . $fileName, $filePath);
+
+        $_FILES['image'] = [
+            'name' => $fileName,
+            'type' => 'image/jpeg',
+            'tmp_name' => $filePath,
+            'error' => 0,
+            'size' => 12500,
+        ];
+
+        $dir = $this->objectManager->get(\Magento\Cms\Helper\Wysiwyg\Images::class)->getCurrentPath() . 'downloadable';
+        $this->storage->uploadFile($dir);
+    }
+
+    /**
+     * @param string $fileName
+     * @param string $fileType
+     * @param string|null $storageType
+     *
+     * @return void
+     * @dataProvider testUploadFileWithWrongExtensionDataProvider
+     * @expectedException \Magento\Framework\Exception\LocalizedException
      * @expectedExceptionMessage File validation failed.
      */
-    public function testUploadFileWithWrongExtension()
+    public function testUploadFileWithWrongExtension($fileName, $fileType, $storageType = null)
     {
         $fileName = 'text.txt';
         $tmpDirectory = $this->filesystem->getDirectoryWrite(\Magento\Framework\App\Filesystem\DirectoryList::SYS_TMP);
         $filePath = $tmpDirectory->getAbsolutePath($fileName);
         $file = fopen($filePath, "wb");
         fwrite($file, 'just a text');
+        $fixtureDir = realpath(__DIR__ . '/../../../_files');
+        copy($fixtureDir . DIRECTORY_SEPARATOR . $fileName, $filePath);
 
         $_FILES['image'] = [
             'name' => $fileName,
             'type' => 'text/plain',
+            'type' => $fileType,
             'tmp_name' => $filePath,
             'error' => 0,
             'size' => 12500,
         ];
 
-        $this->storage->uploadFile(self::$_baseDir);
+        $this->storage->uploadFile(self::$_baseDir, $storageType);
         $this->assertFalse(is_file(self::$_baseDir . DIRECTORY_SEPARATOR . $fileName));
+    }
+
+    /**
+     * @return array
+     */
+    public function testUploadFileWithWrongExtensionDataProvider()
+    {
+        return [
+            [
+                'fileName' => 'text.txt',
+                'fileType' => 'text/plain',
+            ],
+            [
+                'fileName' => 'test.swf',
+                'fileType' => 'application/x-shockwave-flash',
+                'storageType' => 'media',
+            ],
+        ];
     }
 
     /**
