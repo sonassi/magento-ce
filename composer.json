@@ -2,13 +2,13 @@
     "name": "magento/project-community-edition",
     "description": "eCommerce Platform for Growth (Community Edition)",
     "type": "project",
-    "version": "2.1.12",
+    "version": "2.1.13",
     "license": [
         "OSL-3.0",
         "AFL-3.0"
     ],
     "require": {
-        "magento/product-community-edition": "2.1.12",
+        "magento/product-community-edition": "2.1.13",
         "composer/composer": "@alpha"
     },
     "require-dev": {
@@ -30,7 +30,9 @@
             "Magento\\": "app/code/Magento/"
         },
         "psr-0": {
-            "": "app/code/"
+            "": [
+                "app/code/"
+            ]
         },
         "files": [
             "app/etc/NonComposerComponentRegistration.php"
